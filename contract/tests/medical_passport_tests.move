@@ -125,7 +125,7 @@ module cure_pocket::medical_passport_tests {
 
     /// Test 4: 空のwalrus_blob_idでエラーになることを確認
     #[test]
-    #[expected_failure(abort_code = 1)]
+    #[expected_failure(abort_code = 1, location = medical_passport)]
     fun test_create_passport_rejects_empty_walrus_blob_id() {
         let mut scenario = ts::begin(ADMIN);
         {
@@ -148,7 +148,7 @@ module cure_pocket::medical_passport_tests {
 
     /// Test 5: 空のseal_idでエラーになることを確認
     #[test]
-    #[expected_failure(abort_code = 2)]
+    #[expected_failure(abort_code = 2, location = medical_passport)]
     fun test_create_passport_rejects_empty_seal_id() {
         let mut scenario = ts::begin(ADMIN);
         {
@@ -171,7 +171,7 @@ module cure_pocket::medical_passport_tests {
 
     /// Test 6: 空のcountry_codeでエラーになることを確認
     #[test]
-    #[expected_failure(abort_code = 3)]
+    #[expected_failure(abort_code = 3, location = medical_passport)]
     fun test_create_passport_rejects_empty_country_code() {
         let mut scenario = ts::begin(ADMIN);
         {
