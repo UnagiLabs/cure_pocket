@@ -1,0 +1,127 @@
+{
+  "appName": "CurePocket",
+  "tagline": "Your global, privacy-preserving medication passport.",
+  "actions": {
+    "connectWallet": "Connect Sui Wallet",
+    "addMedication": "Add medication",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "generateNew": "Generate new link",
+    "scanQR": "Scan QR Code",
+    "scanBarcode": "Scan Barcode",
+    "manualEntry": "Manual Entry"
+  },
+  "tabs": {
+    "home": "Home",
+    "add": "Add",
+    "card": "Card",
+    "settings": "Settings",
+    "medications": "Medications",
+    "emergency": "Emergency"
+  },
+  "home": {
+    "greeting": "Hello",
+    "title": "Your Pocket Today",
+    "activeCount": "{{count}} active medications",
+    "activeMedications": "Active Medications",
+    "lastUpdated": "Last updated: {{time}}",
+    "addWithQR": "Add medication with QR code",
+    "history": "History",
+    "share": "Share",
+    "emergencyCard": "Emergency Card"
+  },
+  "add": {
+    "title": "Add Medication",
+    "subtitle": "Choose how to add",
+    "qrScan": "QR Code Scan",
+    "qrDescription": "Scan prescription QR code",
+    "barcodeScan": "Barcode Scan",
+    "barcodeDescription": "Scan from medication package",
+    "manual": "Manual Entry",
+    "manualDescription": "Enter medication information manually",
+    "hint": "Hint",
+    "hintText": "You can easily register from prescription QR codes or medication barcodes",
+    "drugName": "Drug Name",
+    "genericName": "Generic Name (optional)",
+    "strength": "Strength",
+    "form": "Form",
+    "dose": "Dose",
+    "frequency": "Frequency",
+    "startDate": "Start Date",
+    "endDate": "End Date (optional)",
+    "reason": "Reason"
+  },
+  "medications": {
+    "title": "Your Medications",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "night": "Night",
+    "asNeeded": "As Needed",
+    "clinic": "Clinic",
+    "warning": "Warning"
+  },
+  "card": {
+    "title": "Emergency Card",
+    "subtitle": "Emergency medical information",
+    "description": "Share your medication information with healthcare providers in emergencies",
+    "generateQR": "Generate QR Code",
+    "validFor": "Valid for: {{duration}}",
+    "downloadPDF": "Download PDF",
+    "printCard": "Print Card",
+    "currentMedications": "Current Medications",
+    "scanToView": "Scan to view",
+    "englishVersion": "English version available"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Notebook theme",
+    "language": "Language",
+    "analyticsOptIn": "Share anonymized data for research",
+    "analyticsDescription": "Your personal records are always encrypted. Only aggregated, anonymized statistics may be used when you opt in.",
+    "emergencyCard": "Emergency Card Settings",
+    "showName": "Show name on card",
+    "displayName": "Display name",
+    "ageBand": "Age band",
+    "country": "Country",
+    "allergies": "Allergies",
+    "profile": "Profile",
+    "dataExport": "Data Export",
+    "walletConnected": "Wallet Connected",
+    "walrusStorage": "Walrus Storage",
+    "encrypted": "Encrypted",
+    "lastSync": "Last sync: {{time}}"
+  },
+  "wallet": {
+    "connect": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "address": "Address"
+  },
+  "themes": {
+    "classic-blue": "Classic Blue",
+    "mint-clinic": "Mint Clinic",
+    "sakura-notebook": "Sakura Notebook",
+    "midnight-travel": "Midnight Travel"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "Tablet",
+    "capsule": "Capsule",
+    "liquid": "Liquid",
+    "other": "Other"
+  },
+  "status": {
+    "active": "Active",
+    "stopped": "Stopped"
+  }
+}

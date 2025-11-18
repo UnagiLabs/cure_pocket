@@ -1,0 +1,127 @@
+{
+  "appName": "CurePocket",
+  "tagline": "あなたのグローバルお薬パスポート、プライバシー保護を重視。",
+  "actions": {
+    "connectWallet": "ウォレット接続",
+    "addMedication": "お薬を追加",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "delete": "削除",
+    "generateNew": "新しいリンクを生成",
+    "scanQR": "QRコードスキャン",
+    "scanBarcode": "バーコードスキャン",
+    "manualEntry": "手動入力"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "add": "追加",
+    "card": "カード",
+    "settings": "設定",
+    "medications": "お薬",
+    "emergency": "緊急"
+  },
+  "home": {
+    "greeting": "こんにちは",
+    "title": "今日のポケット",
+    "activeCount": "{{count}}種類の薬",
+    "activeMedications": "服用中の薬",
+    "lastUpdated": "最終更新: {{time}}",
+    "addWithQR": "QRコードで薬を追加",
+    "history": "履歴",
+    "share": "共有",
+    "emergencyCard": "緊急カード"
+  },
+  "add": {
+    "title": "薬を追加",
+    "subtitle": "追加方法を選択してください",
+    "qrScan": "QRコードスキャン",
+    "qrDescription": "処方箋のQRコードを読み取り",
+    "barcodeScan": "バーコードスキャン",
+    "barcodeDescription": "薬のパッケージから読み取り",
+    "manual": "手動入力",
+    "manualDescription": "薬の情報を直接入力",
+    "hint": "ヒント",
+    "hintText": "処方箋のQRコードや薬のバーコードから簡単に登録できます",
+    "drugName": "薬名",
+    "genericName": "一般名（任意）",
+    "strength": "強度",
+    "form": "剤形",
+    "dose": "用量",
+    "frequency": "頻度",
+    "startDate": "開始日",
+    "endDate": "終了日（任意）",
+    "reason": "理由"
+  },
+  "medications": {
+    "title": "服用中のお薬",
+    "morning": "朝",
+    "afternoon": "昼",
+    "evening": "夕",
+    "night": "夜",
+    "asNeeded": "頓服",
+    "clinic": "クリニック",
+    "warning": "注意"
+  },
+  "card": {
+    "title": "緊急カード",
+    "subtitle": "緊急時お薬情報",
+    "description": "緊急時に医療従事者とお薬情報を共有",
+    "generateQR": "QRコード生成",
+    "validFor": "有効期限: {{duration}}",
+    "downloadPDF": "PDFダウンロード",
+    "printCard": "印刷用カード生成",
+    "currentMedications": "服用薬一覧",
+    "scanToView": "スキャンすると",
+    "englishVersion": "英語版も表示"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "language": "言語",
+    "analyticsOptIn": "研究への匿名データ提供",
+    "analyticsDescription": "個人記録は常に暗号化されています。オプトイン時のみ、集計された匿名統計が使用されます。",
+    "emergencyCard": "緊急カード設定",
+    "showName": "カードに名前を表示",
+    "displayName": "表示名",
+    "ageBand": "年齢層",
+    "country": "国",
+    "allergies": "アレルギー",
+    "profile": "プロフィール設定",
+    "dataExport": "データエクスポート",
+    "walletConnected": "ウォレット接続中",
+    "walrusStorage": "Walrus保存状態",
+    "encrypted": "暗号化済み",
+    "lastSync": "最終同期: {{time}}"
+  },
+  "wallet": {
+    "connect": "ウォレット接続",
+    "disconnect": "切断",
+    "connecting": "接続中...",
+    "connected": "接続済み",
+    "address": "アドレス"
+  },
+  "themes": {
+    "classic-blue": "クラシックブルー",
+    "mint-clinic": "ミントクリニック",
+    "sakura-notebook": "桜ノート",
+    "midnight-travel": "ミッドナイトトラベル"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "錠剤",
+    "capsule": "カプセル",
+    "liquid": "液剤",
+    "other": "その他"
+  },
+  "status": {
+    "active": "服用中",
+    "stopped": "中止"
+  }
+}

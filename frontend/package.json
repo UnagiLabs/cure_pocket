@@ -10,9 +10,12 @@
     "check": "biome check --write"
   },
   "dependencies": {
+    "lucide-react": "^0.554.0",
     "next": "16.0.3",
+    "next-intl": "^4.5.3",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",

@@ -1,0 +1,127 @@
+{
+  "appName": "CurePocket",
+  "tagline": "Seu passaporte global de medicamentos, preservando a privacidade.",
+  "actions": {
+    "connectWallet": "Conectar Carteira",
+    "addMedication": "Adicionar medicamento",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "generateNew": "Gerar novo link",
+    "scanQR": "Escanear código QR",
+    "scanBarcode": "Escanear código de barras",
+    "manualEntry": "Entrada manual"
+  },
+  "tabs": {
+    "home": "Início",
+    "add": "Adicionar",
+    "card": "Cartão",
+    "settings": "Configurações",
+    "medications": "Medicamentos",
+    "emergency": "Emergência"
+  },
+  "home": {
+    "greeting": "Olá",
+    "title": "Seu bolso hoje",
+    "activeCount": "{{count}} medicamentos ativos",
+    "activeMedications": "Medicamentos ativos",
+    "lastUpdated": "Última atualização: {{time}}",
+    "addWithQR": "Adicionar medicamento com código QR",
+    "history": "Histórico",
+    "share": "Compartilhar",
+    "emergencyCard": "Cartão de emergência"
+  },
+  "add": {
+    "title": "Adicionar medicamento",
+    "subtitle": "Escolha como adicionar",
+    "qrScan": "Escanear código QR",
+    "qrDescription": "Escanear código QR da receita",
+    "barcodeScan": "Escanear código de barras",
+    "barcodeDescription": "Escanear da embalagem do medicamento",
+    "manual": "Entrada manual",
+    "manualDescription": "Inserir informações do medicamento manualmente",
+    "hint": "Dica",
+    "hintText": "Você pode facilmente registrar a partir de códigos QR de receitas ou códigos de barras de medicamentos",
+    "drugName": "Nome do medicamento",
+    "genericName": "Nome genérico (opcional)",
+    "strength": "Dosagem",
+    "form": "Forma",
+    "dose": "Dose",
+    "frequency": "Frequência",
+    "startDate": "Data de início",
+    "endDate": "Data de término (opcional)",
+    "reason": "Motivo"
+  },
+  "medications": {
+    "title": "Seus medicamentos",
+    "morning": "Manhã",
+    "afternoon": "Tarde",
+    "evening": "Noite",
+    "night": "Madrugada",
+    "asNeeded": "Conforme necessário",
+    "clinic": "Clínica",
+    "warning": "Aviso"
+  },
+  "card": {
+    "title": "Cartão de emergência",
+    "subtitle": "Informações médicas de emergência",
+    "description": "Compartilhe suas informações de medicamentos com profissionais de saúde em emergências",
+    "generateQR": "Gerar código QR",
+    "validFor": "Válido por: {{duration}}",
+    "downloadPDF": "Baixar PDF",
+    "printCard": "Imprimir cartão",
+    "currentMedications": "Medicamentos atuais",
+    "scanToView": "Escanear para visualizar",
+    "englishVersion": "Versão em inglês disponível"
+  },
+  "settings": {
+    "title": "Configurações",
+    "theme": "Tema do caderno",
+    "language": "Idioma",
+    "analyticsOptIn": "Compartilhar dados anonimizados para pesquisa",
+    "analyticsDescription": "Seus registros pessoais são sempre criptografados. Apenas estatísticas agregadas e anonimizadas podem ser usadas quando você optar por participar.",
+    "emergencyCard": "Configurações do cartão de emergência",
+    "showName": "Mostrar nome no cartão",
+    "displayName": "Nome de exibição",
+    "ageBand": "Faixa etária",
+    "country": "País",
+    "allergies": "Alergias",
+    "profile": "Perfil",
+    "dataExport": "Exportar dados",
+    "walletConnected": "Carteira conectada",
+    "walrusStorage": "Armazenamento Walrus",
+    "encrypted": "Criptografado",
+    "lastSync": "Última sincronização: {{time}}"
+  },
+  "wallet": {
+    "connect": "Conectar carteira",
+    "disconnect": "Desconectar",
+    "connecting": "Conectando...",
+    "connected": "Conectado",
+    "address": "Endereço"
+  },
+  "themes": {
+    "classic-blue": "Azul clássico",
+    "mint-clinic": "Clínica menta",
+    "sakura-notebook": "Caderno sakura",
+    "midnight-travel": "Viagem à meia-noite"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "Comprimido",
+    "capsule": "Cápsula",
+    "liquid": "Líquido",
+    "other": "Outro"
+  },
+  "status": {
+    "active": "Ativo",
+    "stopped": "Parado"
+  }
+}

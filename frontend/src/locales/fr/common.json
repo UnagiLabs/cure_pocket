@@ -1,0 +1,127 @@
+{
+  "appName": "CurePocket",
+  "tagline": "Votre passeport médicamenteux mondial, préservant la confidentialité.",
+  "actions": {
+    "connectWallet": "Connecter le portefeuille",
+    "addMedication": "Ajouter un médicament",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "generateNew": "Générer un nouveau lien",
+    "scanQR": "Scanner le code QR",
+    "scanBarcode": "Scanner le code-barres",
+    "manualEntry": "Saisie manuelle"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "add": "Ajouter",
+    "card": "Carte",
+    "settings": "Paramètres",
+    "medications": "Médicaments",
+    "emergency": "Urgence"
+  },
+  "home": {
+    "greeting": "Bonjour",
+    "title": "Votre poche aujourd'hui",
+    "activeCount": "{{count}} médicaments actifs",
+    "activeMedications": "Médicaments actifs",
+    "lastUpdated": "Dernière mise à jour : {{time}}",
+    "addWithQR": "Ajouter un médicament avec QR code",
+    "history": "Historique",
+    "share": "Partager",
+    "emergencyCard": "Carte d'urgence"
+  },
+  "add": {
+    "title": "Ajouter un médicament",
+    "subtitle": "Choisissez comment ajouter",
+    "qrScan": "Scanner le code QR",
+    "qrDescription": "Scanner le code QR de l'ordonnance",
+    "barcodeScan": "Scanner le code-barres",
+    "barcodeDescription": "Scanner depuis l'emballage du médicament",
+    "manual": "Saisie manuelle",
+    "manualDescription": "Entrer manuellement les informations du médicament",
+    "hint": "Conseil",
+    "hintText": "Vous pouvez facilement enregistrer à partir des codes QR d'ordonnance ou des codes-barres de médicaments",
+    "drugName": "Nom du médicament",
+    "genericName": "Nom générique (facultatif)",
+    "strength": "Dosage",
+    "form": "Forme",
+    "dose": "Dose",
+    "frequency": "Fréquence",
+    "startDate": "Date de début",
+    "endDate": "Date de fin (facultatif)",
+    "reason": "Raison"
+  },
+  "medications": {
+    "title": "Vos médicaments",
+    "morning": "Matin",
+    "afternoon": "Après-midi",
+    "evening": "Soir",
+    "night": "Nuit",
+    "asNeeded": "Si nécessaire",
+    "clinic": "Clinique",
+    "warning": "Avertissement"
+  },
+  "card": {
+    "title": "Carte d'urgence",
+    "subtitle": "Informations médicales d'urgence",
+    "description": "Partagez vos informations sur les médicaments avec les prestataires de soins en cas d'urgence",
+    "generateQR": "Générer un code QR",
+    "validFor": "Valide pour : {{duration}}",
+    "downloadPDF": "Télécharger le PDF",
+    "printCard": "Imprimer la carte",
+    "currentMedications": "Médicaments actuels",
+    "scanToView": "Scanner pour voir",
+    "englishVersion": "Version anglaise disponible"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème du carnet",
+    "language": "Langue",
+    "analyticsOptIn": "Partager des données anonymisées pour la recherche",
+    "analyticsDescription": "Vos dossiers personnels sont toujours cryptés. Seules des statistiques agrégées et anonymisées peuvent être utilisées lorsque vous y consentez.",
+    "emergencyCard": "Paramètres de la carte d'urgence",
+    "showName": "Afficher le nom sur la carte",
+    "displayName": "Nom d'affichage",
+    "ageBand": "Tranche d'âge",
+    "country": "Pays",
+    "allergies": "Allergies",
+    "profile": "Profil",
+    "dataExport": "Export de données",
+    "walletConnected": "Portefeuille connecté",
+    "walrusStorage": "Stockage Walrus",
+    "encrypted": "Crypté",
+    "lastSync": "Dernière synchronisation : {{time}}"
+  },
+  "wallet": {
+    "connect": "Connecter le portefeuille",
+    "disconnect": "Déconnecter",
+    "connecting": "Connexion...",
+    "connected": "Connecté",
+    "address": "Adresse"
+  },
+  "themes": {
+    "classic-blue": "Bleu classique",
+    "mint-clinic": "Clinique menthe",
+    "sakura-notebook": "Carnet sakura",
+    "midnight-travel": "Voyage de minuit"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "Comprimé",
+    "capsule": "Gélule",
+    "liquid": "Liquide",
+    "other": "Autre"
+  },
+  "status": {
+    "active": "Actif",
+    "stopped": "Arrêté"
+  }
+}
