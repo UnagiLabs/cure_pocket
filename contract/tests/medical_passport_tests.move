@@ -547,4 +547,54 @@ module cure_pocket::medical_passport_tests {
 
         ts::end(scenario);
     }
+
+    /// Test 14: accessor経由でhas_passportが正しく動作する
+    ///
+    /// 仕様:
+    /// - accessor::has_passport() が public API として正しく動作する
+    /// - フロントエンドから呼び出し可能であることを確認
+    #[test]
+    fun test_accessor_has_passport() {
+        let user = @0xABCD;
+        let mut scenario = ts::begin(user);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // mint前: accessor経由でfalseを確認
+        ts::next_tx(&mut scenario, user);
+        {
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+            assert!(!medical_passport_accessor::has_passport(&registry, user), 0);
+            ts::return_shared(registry);
+        };
+
+        // パスポートをmint
+        ts::next_tx(&mut scenario, user);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-test"),
+                string::utf8(b"seal-test"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // mint後: accessor経由でtrueを確認
+        ts::next_tx(&mut scenario, user);
+        {
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+            assert!(medical_passport_accessor::has_passport(&registry, user), 1);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
 }

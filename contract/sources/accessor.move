@@ -129,11 +129,24 @@ public fun get_country_code(passport: &MedicalPassport): &String {
 ///
 /// ## 返り値
 /// - タプル: (walrus_blob_id, seal_id, country_code)
-///
-/// ## 使用例
-/// ```
-/// let (walrus_id, seal_id, country) = get_all_fields(&passport);
-/// ```
 public fun get_all_fields(passport: &MedicalPassport): (&String, &String, &String) {
     medical_passport::get_all_fields(passport)
+}
+
+/// 指定アドレスが既にパスポートを所持しているか確認
+///
+/// ## 用途
+/// - フロントエンドでmint前のチェックに使用
+/// - UIで「既にパスポートを所持している」メッセージを表示
+/// - mintボタンの有効/無効切り替え
+///
+/// ## パラメータ
+/// - `registry`: PassportRegistryへの参照（共有オブジェクト）
+/// - `owner`: 確認するアドレス
+///
+/// ## 返り値
+/// - `true`: 既にパスポートを所持している
+/// - `false`: まだパスポートを所持していない
+public fun has_passport(registry: &PassportRegistry, owner: address): bool {
+    medical_passport::has_passport(registry, owner)
 }
