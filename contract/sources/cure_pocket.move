@@ -3,6 +3,8 @@
 /// パッケージ初期化と管理者権限の定義
 module cure_pocket::cure_pocket;
 
+use cure_pocket::medical_passport;
+
 // ============================================================
 // 管理者権限構造体
 // ============================================================
@@ -31,16 +33,19 @@ public struct AdminCap has key, store {
 ///
 /// ## 動作
 /// - `AdminCap` を1つ生成し、デプロイヤー（tx送信者）に転送
+/// - `PassportRegistry` を1つ生成し、共有オブジェクトとして公開
 ///
 /// ## パラメータ
 /// - `ctx`: トランザクションコンテキスト
 fun init(ctx: &mut tx_context::TxContext) {
+    // AdminCap を生成してデプロイヤーに転送
     let admin = AdminCap {
         id: object::new(ctx)
     };
-
-    // デプロイヤーに AdminCap を転送
     sui::transfer::public_transfer(admin, tx_context::sender(ctx));
+
+    // PassportRegistry を生成して共有オブジェクトとして公開
+    medical_passport::create_and_share_passport_registry(ctx);
 }
 
 // ============================================================

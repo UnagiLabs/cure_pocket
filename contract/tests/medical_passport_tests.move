@@ -12,7 +12,7 @@ module cure_pocket::medical_passport_tests {
     use sui::test_utils;
     use std::string::{Self, String};
 
-    use cure_pocket::medical_passport::{Self, MedicalPassport};
+    use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
     use cure_pocket::medical_passport_admin::{Self};
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::cure_pocket::{Self, AdminCap};
@@ -97,17 +97,20 @@ module cure_pocket::medical_passport_tests {
     /// 仕様:
     /// - mint_medical_passport() が abort せずに実行完了すること
     /// - AdminCap を持っている場合のみ実行可能であること
+    /// - 1ウォレット1枚制約が機能すること
     #[test]
     fun test_mint_medical_passport_compiles_and_does_not_abort() {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
             let admin = cure_pocket::test_init_for_tests(ctx);
+            let mut registry = medical_passport::create_passport_registry(ctx);
             let (walrus, seal, country) = create_test_passport_data();
 
             // mint操作（entry関数なのでtransferされる）
             medical_passport_admin::mint_medical_passport(
                 &admin,
+                &mut registry,
                 walrus,
                 seal,
                 country,
@@ -115,6 +118,7 @@ module cure_pocket::medical_passport_tests {
             );
 
             test_utils::destroy(admin);
+            test_utils::destroy(registry);
         };
         ts::end(scenario);
     }
@@ -199,26 +203,29 @@ module cure_pocket::medical_passport_tests {
     /// Test 7: 管理者がパスポートをmintし、ユーザーが受け取るフロー
     ///
     /// 仕様:
-    /// - init() で AdminCap が ADMIN に転送される
+    /// - init() で AdminCap が ADMIN に転送され、PassportRegistry が共有される
     /// - ADMIN が mint_medical_passport() を実行
     /// - mint したユーザーが MedicalPassport を受け取る
+    /// - 1ウォレット1枚制約が機能すること
     #[test]
     fun test_scenario_admin_can_mint_passport() {
         let mut scenario = ts::begin(ADMIN);
 
-        // Step 1: init関数を実行（AdminCapがADMINに転送される）
+        // Step 1: init関数を実行（AdminCapとPassportRegistryが作成される）
         {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // Step 2: ADMINがAdminCapを取得し、パスポートをmint
+        // Step 2: ADMINがAdminCapとRegistryを取得し、パスポートをmint
         ts::next_tx(&mut scenario, ADMIN);
         {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
             medical_passport_admin::mint_medical_passport(
                 &admin_cap,
+                &mut registry,
                 walrus,
                 seal,
                 country,
@@ -226,6 +233,7 @@ module cure_pocket::medical_passport_tests {
             );
 
             ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
         };
 
         // Step 3: ADMINがMedicalPassportを受け取ったことを確認
@@ -266,10 +274,12 @@ module cure_pocket::medical_passport_tests {
         ts::next_tx(&mut scenario, ADMIN);
         {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
             medical_passport_admin::mint_medical_passport(
                 &admin_cap,
+                &mut registry,
                 walrus,
                 seal,
                 country,
@@ -277,6 +287,7 @@ module cure_pocket::medical_passport_tests {
             );
 
             ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
         };
 
         // パスポートを取得
@@ -336,13 +347,42 @@ module cure_pocket::medical_passport_tests {
         ts::end(scenario);
     }
 
-    /// Test 10: 同一ユーザーに複数のパスポートを発行可能
+    // ============================================================
+    // 新規テスト: 1ウォレット1枚制約 (Registry Tests)
+    // ============================================================
+
+    /// Test 10: init関数がPassportRegistryを共有オブジェクトとして作成
     ///
     /// 仕様:
-    /// - 同じユーザーが複数の MedicalPassport を所有できること
-    /// - それぞれのパスポートが独立したオブジェクトであること
+    /// - init() で PassportRegistry が共有オブジェクトとして作成される
+    /// - PassportRegistry は take_shared で取得可能
     #[test]
-    fun test_scenario_multiple_passports_to_same_user() {
+    fun test_init_creates_shared_registry() {
+        let mut scenario = ts::begin(ADMIN);
+
+        // init関数を実行
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // Registryが共有オブジェクトとして存在することを確認
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 11: 同じアドレスが2回mintしようとするとabort
+    ///
+    /// 仕様:
+    /// - 1回目のmintは成功する
+    /// - 2回目のmintはE_ALREADY_HAS_PASSPORT (4) でabortする
+    #[test]
+    #[expected_failure(abort_code = 4, location = medical_passport_admin)]
+    fun test_scenario_cannot_mint_twice() {
         let mut scenario = ts::begin(ADMIN);
 
         // 初期化
@@ -350,13 +390,15 @@ module cure_pocket::medical_passport_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // 1つ目のパスポートをmint
+        // 1回目のmint（成功）
         ts::next_tx(&mut scenario, ADMIN);
         {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
             medical_passport_admin::mint_medical_passport(
                 &admin_cap,
+                &mut registry,
                 string::utf8(b"walrus-blob-1"),
                 string::utf8(b"seal-key-1"),
                 string::utf8(b"JP"),
@@ -364,15 +406,18 @@ module cure_pocket::medical_passport_tests {
             );
 
             ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
         };
 
-        // 2つ目のパスポートをmint
+        // 2回目のmint（E_ALREADY_HAS_PASSPORTでabort）
         ts::next_tx(&mut scenario, ADMIN);
         {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
             medical_passport_admin::mint_medical_passport(
                 &admin_cap,
+                &mut registry,
                 string::utf8(b"walrus-blob-2"),
                 string::utf8(b"seal-key-2"),
                 string::utf8(b"US"),
@@ -380,14 +425,124 @@ module cure_pocket::medical_passport_tests {
             );
 
             ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
         };
 
-        // 両方のパスポートを取得できることを確認
+        ts::end(scenario);
+    }
+
+    /// Test 12: 異なるユーザーは各自パスポートをmint可能
+    ///
+    /// 仕様:
+    /// - 異なるアドレスは各自1枚ずつパスポートを持てる
+    /// - それぞれのmintが独立して成功する
+    #[test]
+    fun test_different_users_can_mint() {
+        let user1 = @0xA1;
+        let user2 = @0xA2;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-blob-user1"),
+                string::utf8(b"seal-key-user1"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // User1がパスポートを受け取ったことを確認
+        ts::next_tx(&mut scenario, user1);
+        {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
+            ts::return_to_sender(&scenario, passport);
+        };
+
+        // User2がパスポートをmint
+        ts::next_tx(&mut scenario, user2);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-blob-user2"),
+                string::utf8(b"seal-key-user2"),
+                string::utf8(b"US"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // User2がパスポートを受け取ったことを確認
+        ts::next_tx(&mut scenario, user2);
+        {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
+            ts::return_to_sender(&scenario, passport);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 13: has_passport が正しい状態を返す
+    ///
+    /// 仕様:
+    /// - mint前は has_passport が false を返す
+    /// - mint後は has_passport が true を返す
+    #[test]
+    fun test_has_passport_returns_correct_status() {
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // mint前: has_passport は false
         ts::next_tx(&mut scenario, ADMIN);
         {
-            // IDsを取得して複数のパスポートが存在することを確認
-            let ids = ts::ids_for_sender<MedicalPassport>(&scenario);
-            assert!(ids.length() == 2, 0);  // 2つのパスポートが存在
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+            assert!(!medical_passport::has_passport(&registry, ADMIN), 0);
+            ts::return_shared(registry);
+        };
+
+        // パスポートをmint
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_admin::mint_medical_passport(
+                &admin_cap,
+                &mut registry,
+                string::utf8(b"walrus-blob"),
+                string::utf8(b"seal-key"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // mint後: has_passport は true
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+            assert!(medical_passport::has_passport(&registry, ADMIN), 1);
+            ts::return_shared(registry);
         };
 
         ts::end(scenario);

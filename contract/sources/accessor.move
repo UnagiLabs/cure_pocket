@@ -12,7 +12,7 @@
 /// - 将来的な検索・照会機能の追加余地
 module cure_pocket::medical_passport_accessor;
 use std::string::String;
-use cure_pocket::medical_passport::{Self, MedicalPassport};
+use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 
 /// メディカルパスポートの発行（mint）
 ///
@@ -20,12 +20,19 @@ use cure_pocket::medical_passport::{Self, MedicalPassport};
 /// - 誰でも呼び出し可能（AdminCap不要）
 /// - 各ユーザーが自分のパスポートを自由に発行できる
 ///
+/// ## 制約
+/// - 1ウォレット1枚まで: 既にパスポートを所持している場合はabort
+/// - PassportRegistry で所有状態を管理
+///
 /// ## 動作
-/// 1. 内部関数 `create_passport_internal()` でパスポートを生成
-/// 2. 生成したパスポートを tx 送信者に転送
-/// 3. パスポートは Soulbound（譲渡不可）となる
+/// 1. Registry で既存パスポートの有無をチェック
+/// 2. 内部関数 `create_passport_internal()` でパスポートを生成
+/// 3. 生成したパスポートを tx 送信者に転送
+/// 4. Registry にパスポート所有マーカーを登録
+/// 5. パスポートは Soulbound（譲渡不可）となる
 ///
 /// ## パラメータ
+/// - `registry`: PassportRegistry の可変参照（共有オブジェクト）
 /// - `walrus_blob_id`: Walrus上の医療データblob ID
 /// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
 /// - `country_code`: 発行国コード
@@ -35,15 +42,22 @@ use cure_pocket::medical_passport::{Self, MedicalPassport};
 /// - tx送信者に `MedicalPassport` が転送される
 ///
 /// ## Aborts
+/// - `E_ALREADY_HAS_PASSPORT`: 既にパスポートを所持している
 /// - `E_EMPTY_WALRUS_BLOB_ID`: walrus_blob_idが空文字列
 /// - `E_EMPTY_SEAL_ID`: seal_idが空文字列
 /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列
 entry fun mint_medical_passport(
+    registry: &mut PassportRegistry,
     walrus_blob_id: String,
     seal_id: String,
     country_code: String,
     ctx: &mut tx_context::TxContext
 ) {
+    let sender = tx_context::sender(ctx);
+
+    // 1ウォレット1枚制約: 既にパスポートを持っていないかチェック
+    assert!(!medical_passport::has_passport(registry, sender), medical_passport::e_already_has_passport());
+
     // パスポートを生成
     let passport = medical_passport::create_passport_internal(
         walrus_blob_id,
@@ -53,7 +67,10 @@ entry fun mint_medical_passport(
     );
 
     // tx送信者に転送（Soulbound: この後は譲渡不可）
-    medical_passport::transfer_to(passport, tx_context::sender(ctx));
+    medical_passport::transfer_to(passport, sender);
+
+    // Registry にパスポート所有マーカーを登録
+    medical_passport::register_passport(registry, sender);
 }
 
 /// Walrus blob IDを取得
