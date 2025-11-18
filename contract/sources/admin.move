@@ -12,8 +12,9 @@
 module cure_pocket::medical_passport_admin;
 
 use std::string::String;
+use sui::clock::Clock;
 use cure_pocket::cure_pocket::AdminCap;
-use cure_pocket::medical_passport::{Self, PassportRegistry};
+use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
 
     // ============================================================
     // 管理者専用操作（将来の拡張用）
@@ -78,4 +79,94 @@ use cure_pocket::medical_passport::{Self, PassportRegistry};
 
         // Registry にパスポート所有マーカーを登録
         medical_passport::register_passport(registry, sender);
+    }
+
+    /// パスポート移行（管理者専用）
+    ///
+    /// ## 権限
+    /// - `AdminCap` への参照を引数として要求
+    /// - `AdminCap` を所有している者のみが呼び出し可能
+    ///
+    /// ## 用途
+    /// - ユーザーがウォレットを紛失した際のパスポート移行
+    /// - 既存のパスポートデータ（walrus_blob_id, seal_id, country_code）を
+    ///   新しいアドレスに移行し、元のパスポートは削除
+    ///
+    /// ## 制約
+    /// - 移行先は必ず空のアドレス（パスポート未所持）でなければならない
+    /// - 1ウォレット1枚制約を厳守
+    ///
+    /// ## 動作フロー
+    /// 1. 移行先の状態チェック（既にパスポートを所持していないか）
+    /// 2. 移行元の所有マーカーを削除
+    /// 3. パスポートデータを取得
+    /// 4. 移行イベントを構築・発行（監査証跡）
+    /// 5. 元のパスポートを削除（burn）
+    /// 6. 同じデータで新しいパスポートを作成
+    /// 7. 新しいパスポートを移行先に転送
+    /// 8. 移行先の所有マーカーを登録
+    ///
+    /// ## パラメータ
+    /// - `_admin`: AdminCapへの参照（権限証明）
+    /// - `registry`: PassportRegistry の可変参照（共有オブジェクト）
+    /// - `old_owner`: 移行元アドレス
+    /// - `new_owner`: 移行先アドレス
+    /// - `passport`: 移行するMedicalPassport（所有権を受け取る）
+    /// - `clock`: 時刻取得用のClockオブジェクト
+    /// - `ctx`: トランザクションコンテキスト
+    ///
+    /// ## 結果
+    /// - 移行先アドレスに新しい `MedicalPassport` が転送される
+    /// - `PassportMigrationEvent` が発行される
+    ///
+    /// ## Aborts
+    /// - `E_MIGRATION_TARGET_HAS_PASSPORT`: 移行先が既にパスポートを所持している
+    public fun migrate_passport(
+        _admin: &AdminCap,
+        registry: &mut PassportRegistry,
+        old_owner: address,
+        new_owner: address,
+        passport: MedicalPassport,
+        clock: &Clock,
+        ctx: &mut tx_context::TxContext
+    ) {
+        // 1. 移行先の状態チェック: 既にパスポートを持っていないか確認
+        assert!(
+            !medical_passport::has_passport(registry, new_owner),
+            medical_passport::e_migration_target_has_passport()
+        );
+
+        // 2. 移行元の所有マーカーを削除
+        medical_passport::unregister_passport(registry, old_owner);
+
+        // 3. パスポートデータを取得（値のコピー）
+        let (walrus_blob_id, seal_id, country_code) = medical_passport::get_passport_data(&passport);
+
+        // 4. 移行イベントを構築・発行
+        let passport_id = object::id(&passport);
+        let timestamp_ms = sui::clock::timestamp_ms(clock);
+        medical_passport::emit_migration_event(
+            old_owner,
+            new_owner,
+            passport_id,
+            walrus_blob_id,
+            timestamp_ms
+        );
+
+        // 5. 元のパスポートを削除（burn）
+        medical_passport::burn_passport(passport);
+
+        // 6. 同じデータで新しいパスポートを作成
+        let new_passport = medical_passport::create_passport_internal(
+            walrus_blob_id,
+            seal_id,
+            country_code,
+            ctx
+        );
+
+        // 7. 新しいパスポートを移行先に転送
+        medical_passport::transfer_to(new_passport, new_owner);
+
+        // 8. 移行先の所有マーカーを登録
+        medical_passport::register_passport(registry, new_owner);
     }

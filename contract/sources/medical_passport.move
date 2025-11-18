@@ -60,9 +60,30 @@ public struct PassportRegistry has key {
 /// - address -> PassportMarker の対応で「このアドレスは既にパスポートを持っている」を記録
 ///
 /// ## 設計
-/// - `has store` のみ（Dynamic Fieldに格納可能）
+/// - `has store, drop` （Dynamic Fieldに格納可能、削除可能）
 /// - 空の構造体（マーカーとしての役割のみ）
-public struct PassportMarker has store {}
+public struct PassportMarker has store, drop {}
+
+/// パスポート移行イベント
+///
+/// ## 用途
+/// - 管理者によるパスポート移行の記録
+/// - 監査証跡として使用
+/// - オフチェーンでの移行履歴追跡
+///
+/// ## フィールド
+/// - `old_owner`: 移行元アドレス
+/// - `new_owner`: 移行先アドレス
+/// - `passport_id`: 移行されたパスポートのID（burnされる前のID）
+/// - `walrus_blob_id`: 医療データ識別子
+/// - `timestamp_ms`: 移行実行時刻（ミリ秒）
+public struct PassportMigrationEvent has copy, drop {
+    old_owner: address,
+    new_owner: address,
+    passport_id: object::ID,
+    walrus_blob_id: String,
+    timestamp_ms: u64,
+}
 
 // ============================================================
 // エラーコード
@@ -80,6 +101,9 @@ const E_EMPTY_COUNTRY_CODE: u64 = 3;
 /// 既にパスポートを所持している
 const E_ALREADY_HAS_PASSPORT: u64 = 4;
 
+/// 移行先アドレスが既にパスポートを所持している
+const E_MIGRATION_TARGET_HAS_PASSPORT: u64 = 5;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -94,6 +118,18 @@ const E_ALREADY_HAS_PASSPORT: u64 = 4;
 /// - エラーコード `E_ALREADY_HAS_PASSPORT` の値
 public(package) fun e_already_has_passport(): u64 {
     E_ALREADY_HAS_PASSPORT
+}
+
+/// E_MIGRATION_TARGET_HAS_PASSPORT エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+/// - Move 2024 では const を public にできないため、ゲッター経由でアクセス
+///
+/// ## 返り値
+/// - エラーコード `E_MIGRATION_TARGET_HAS_PASSPORT` の値
+public(package) fun e_migration_target_has_passport(): u64 {
+    E_MIGRATION_TARGET_HAS_PASSPORT
 }
 
 // ============================================================
@@ -260,6 +296,91 @@ public(package) fun has_passport(registry: &PassportRegistry, owner: address): b
 /// - Dynamic Fieldの add が失敗する場合（既に同じキーが存在する場合）
 public(package) fun register_passport(registry: &mut PassportRegistry, owner: address) {
     df::add(&mut registry.id, owner, PassportMarker {});
+}
+
+/// 指定アドレスからパスポート所有マーカーを削除
+///
+/// ## 用途
+/// - パスポート移行時に移行元のマーカーを削除
+/// - Dynamic Fieldから address -> PassportMarker の対応を削除
+///
+/// ## 注意
+/// - マーカーが存在しない場合はabort
+/// - 通常は has_passport() で事前チェックを行う
+///
+/// ## パラメータ
+/// - `registry`: PassportRegistryへの可変参照
+/// - `owner`: 削除するアドレス
+///
+/// ## Aborts
+/// - Dynamic Fieldの remove が失敗する場合（キーが存在しない場合）
+public(package) fun unregister_passport(registry: &mut PassportRegistry, owner: address) {
+    let _marker = df::remove<address, PassportMarker>(&mut registry.id, owner);
+}
+
+/// パスポートのデータを取得（値のコピー）
+///
+/// ## 用途
+/// - パスポート移行時にデータをコピーして新しいパスポートを作成
+/// - 参照ではなく値を返すため、元のパスポートをburn後も使用可能
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportへの参照
+///
+/// ## 返り値
+/// - タプル: (walrus_blob_id, seal_id, country_code) の値のコピー
+public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, String) {
+    (
+        passport.walrus_blob_id,
+        passport.seal_id,
+        passport.country_code
+    )
+}
+
+/// パスポートを削除（burn）
+///
+/// ## 用途
+/// - パスポート移行時に元のパスポートを削除
+/// - オブジェクトを完全に削除し、ストレージを解放
+///
+/// ## 注意
+/// - この関数は移行時にのみ使用される
+/// - 単独のburn機能は提供しない（移行のみ可能）
+///
+/// ## パラメータ
+/// - `passport`: 削除するMedicalPassport（所有権を受け取る）
+public(package) fun burn_passport(passport: MedicalPassport) {
+    let MedicalPassport { id, walrus_blob_id: _, seal_id: _, country_code: _ } = passport;
+    object::delete(id);
+}
+
+/// パスポート移行イベントを発行
+///
+/// ## 用途
+/// - パスポート移行時に監査証跡としてイベントを発行
+/// - オフチェーンでの移行履歴追跡
+///
+/// ## パラメータ
+/// - `old_owner`: 移行元アドレス
+/// - `new_owner`: 移行先アドレス
+/// - `passport_id`: 移行されたパスポートのID
+/// - `walrus_blob_id`: 医療データ識別子
+/// - `timestamp_ms`: 移行実行時刻（ミリ秒）
+public(package) fun emit_migration_event(
+    old_owner: address,
+    new_owner: address,
+    passport_id: object::ID,
+    walrus_blob_id: String,
+    timestamp_ms: u64
+) {
+    let migration_event = PassportMigrationEvent {
+        old_owner,
+        new_owner,
+        passport_id,
+        walrus_blob_id,
+        timestamp_ms,
+    };
+    sui::event::emit(migration_event);
 }
 
 // ============================================================

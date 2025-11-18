@@ -10,6 +10,7 @@
 module cure_pocket::medical_passport_tests {
     use sui::test_scenario::{Self as ts};
     use sui::test_utils;
+    use sui::clock;
     use std::string::{Self, String};
 
     use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
@@ -592,6 +593,512 @@ module cure_pocket::medical_passport_tests {
         {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
             assert!(medical_passport_accessor::has_passport(&registry, user), 1);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    // ============================================================
+    // パスポート移行テスト (Migration Tests)
+    // ============================================================
+
+    /// Test 15: 正常なパスポート移行
+    ///
+    /// 仕様:
+    /// - adminが user1 → user2 へパスポートを移行
+    /// - user2 がパスポートを受け取る
+    /// - user1 のマーカーが削除される
+    /// - user2 のマーカーが登録される
+    /// - データが正しく継承される
+    #[test]
+    fun test_successful_migration() {
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-original"),
+                string::utf8(b"seal-original"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // Adminがuser1からuser2へ移行
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // User2がパスポートを受け取ったことを確認
+        ts::next_tx(&mut scenario, user2);
+        {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            // データが継承されていることを確認
+            assert!(
+                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-original"),
+                0
+            );
+            assert!(
+                medical_passport_accessor::get_seal_id(&passport) == &string::utf8(b"seal-original"),
+                1
+            );
+            assert!(
+                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                2
+            );
+
+            // User1のマーカーが削除され、User2のマーカーが登録されていることを確認
+            assert!(!medical_passport::has_passport(&registry, user1), 3);
+            assert!(medical_passport::has_passport(&registry, user2), 4);
+
+            ts::return_to_sender(&scenario, passport);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 16: 移行先が既にパスポート所持している場合のエラー
+    ///
+    /// 仕様:
+    /// - user1, user2 が両方パスポート所持
+    /// - admin が user1 → user2 へ移行を試みる
+    /// - E_MIGRATION_TARGET_HAS_PASSPORT でabort
+    #[test]
+    #[expected_failure(abort_code = 5, location = medical_passport_admin)]
+    fun test_migration_target_already_has_passport() {
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-user1"),
+                string::utf8(b"seal-user1"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // User2もパスポートをmint
+        ts::next_tx(&mut scenario, user2);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-user2"),
+                string::utf8(b"seal-user2"),
+                string::utf8(b"US"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // Adminがuser1からuser2へ移行を試みる（エラーになるはず）
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 17: 移行後の再mint確認
+    ///
+    /// 仕様:
+    /// - user1 から user2 に移行後
+    /// - user1 が再度mintを試みる → 成功（マーカーが削除されているため）
+    /// - user2 が再度mintを試みる → E_ALREADY_HAS_PASSPORT でabort
+    #[test]
+    fun test_remint_after_migration() {
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-first"),
+                string::utf8(b"seal-first"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // Adminがuser1からuser2へ移行
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // User1が再度mintを試みる（成功するはず）
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-second"),
+                string::utf8(b"seal-second"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // User1が新しいパスポートを受け取ったことを確認
+        ts::next_tx(&mut scenario, user1);
+        {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
+            assert!(
+                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-second"),
+                0
+            );
+            ts::return_to_sender(&scenario, passport);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 18: user2が移行後に再mintを試みるとエラー
+    ///
+    /// 仕様:
+    /// - user1 から user2 に移行後
+    /// - user2 が再度mintを試みる → E_ALREADY_HAS_PASSPORT でabort
+    #[test]
+    #[expected_failure(abort_code = 4, location = medical_passport_accessor)]
+    fun test_migration_target_cannot_remint() {
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-original"),
+                string::utf8(b"seal-original"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // Adminがuser1からuser2へ移行
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // User2が再度mintを試みる（エラーになるはず）
+        ts::next_tx(&mut scenario, user2);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-new"),
+                string::utf8(b"seal-new"),
+                string::utf8(b"US"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 19: 複数回の移行テスト
+    ///
+    /// 仕様:
+    /// - user1 → user2 → user3 と連続して移行
+    /// - 各段階でデータが正しく継承される
+    /// - マーカーが正しく管理される
+    #[test]
+    fun test_multiple_migrations() {
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let user3 = @0xA33;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-chain"),
+                string::utf8(b"seal-chain"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // 第1回移行: user1 → user2
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // 第2回移行: user2 → user3
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user2);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user2,
+                user3,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        // User3が最終的にパスポートを持っていることを確認
+        ts::next_tx(&mut scenario, user3);
+        {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
+            let registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            // データが全て継承されていることを確認
+            assert!(
+                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-chain"),
+                0
+            );
+            assert!(
+                medical_passport_accessor::get_seal_id(&passport) == &string::utf8(b"seal-chain"),
+                1
+            );
+            assert!(
+                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                2
+            );
+
+            // マーカーの状態を確認
+            assert!(!medical_passport::has_passport(&registry, user1), 3);
+            assert!(!medical_passport::has_passport(&registry, user2), 4);
+            assert!(medical_passport::has_passport(&registry, user3), 5);
+
+            ts::return_to_sender(&scenario, passport);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 20: 移行関数はAdminCapが必要
+    ///
+    /// 仕様:
+    /// - AdminCapなしでは移行関数を呼び出せない
+    /// - 型システムで保証されているため、コンパイルエラーで保護
+    /// 注: この制約は型システムレベルで保証されているため、
+    ///     実行時テストではなくコンパイル時にチェックされる
+    #[test]
+    fun test_migration_requires_admin_cap() {
+        // このテストは型システムで保証されているため、
+        // 実際の実行テストは不要（コンパイル時にチェック済み）
+        // ここでは正常系のみを確認
+        let user1 = @0xA11;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(ADMIN);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がパスポートをmint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-test"),
+                string::utf8(b"seal-test"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+
+            ts::return_shared(registry);
+        };
+
+        // AdminCapを持つADMINのみが移行可能
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            // AdminCapを持っているため成功
+            medical_passport_admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user1,
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
             ts::return_shared(registry);
         };
 
