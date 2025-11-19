@@ -1155,16 +1155,12 @@ module cure_pocket::consent_token_tests {
     // スコープ検証テスト（Phase 2）
     // ============================================================
 
-    /// Test 20: スコープ外アクセスが拒否されるべき（現在の実装ではNGが出ない）
+    /// Test 20: スコープ外アクセスが拒否されるべき
     ///
     /// 仕様:
     /// - ConsentTokenを作成（スコープ: ["medication"]のみ）
     /// - seal_approve_consent()でrequested_scope = "lab_results"を指定
     /// - E_SCOPE_NOT_ALLOWEDでabortされるべき
-    ///
-    /// 注意: このテストは実装前は失敗する（スコープ検証がないため、abortしない）
-    /// これはTDDのRed状態を確認するためのテスト
-    /// Phase 2でスコープ検証を実装した後、このテストがPassするようになる
     #[test]
     #[expected_failure(abort_code = 209, location = consent_token)]
     fun test_seal_approve_consent_scope_not_allowed() {

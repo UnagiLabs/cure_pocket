@@ -444,3 +444,43 @@ public(package) fun verify_consent_internal(
 
     // 検証成功（関数終了 = 検証OK）
 }
+
+// ============================================================
+// パッケージ内部関数: スコープ検証
+// ============================================================
+
+/// スコープ検証関数
+///
+/// ## 概要
+/// ConsentTokenの`scopes`フィールドに指定されたスコープが含まれているかを確認します。
+/// スコープが許可されていない場合は`E_SCOPE_NOT_ALLOWED`でabortします。
+///
+/// ## パラメータ
+/// - `token`: ConsentTokenへの参照
+/// - `requested_scope`: 検証対象のスコープ文字列
+///
+/// ## 注意
+/// - 文字列の完全一致で比較（大文字小文字は区別）
+/// - スコープが許可されていない場合は`E_SCOPE_NOT_ALLOWED`でabort
+///
+/// ## Aborts
+/// - `E_SCOPE_NOT_ALLOWED`: スコープが許可されていない
+public(package) fun verify_scope(
+    token: &ConsentToken,
+    requested_scope: String
+) {
+    let scopes = get_scopes(token);
+    let len = vector::length(scopes);
+    let mut i = 0;
+    
+    while (i < len) {
+        let scope = vector::borrow(scopes, i);
+        if (*scope == requested_scope) {
+            return // スコープが見つかったので検証成功
+        };
+        i = i + 1;
+    };
+    
+    // スコープが見つからなかった場合はabort
+    abort E_SCOPE_NOT_ALLOWED
+}

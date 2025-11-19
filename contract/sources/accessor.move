@@ -325,13 +325,13 @@ entry fun seal_approve_consent(
     let mut bcs_cursor = bcs::new(id);
     let secret = bcs::peel_vec_u8(&mut bcs_cursor);
     let target_passport_id = bcs::peel_address(&mut bcs_cursor);
-    let _requested_scope_bytes = bcs::peel_vec_u8(&mut bcs_cursor); // Phase 2で使用予定
-    let _requested_scope = string::utf8(_requested_scope_bytes); // Phase 2で使用予定
+    let requested_scope_bytes = bcs::peel_vec_u8(&mut bcs_cursor);
+    let requested_scope = string::utf8(requested_scope_bytes);
 
     // 2. パスポートIDをID型に変換（addressからIDへ）
     let target_passport_id_obj = object::id_from_address(target_passport_id);
 
-    // 3. 検証ロジックを内部関数に委譲
+    // 3. 基本検証ロジックを内部関数に委譲
     // コードの重複を削減し、保守性を向上
     consent_token::verify_consent_internal(
         token,
@@ -340,12 +340,10 @@ entry fun seal_approve_consent(
         clock
     );
 
-    // 4. スコープ検証（将来実装予定）
-    // TODO: Phase 2で実装予定
-    // assert!(
-    //     consent_token::verify_scope(token, requested_scope),
-    //     consent_token::e_scope_not_allowed()
-    // );
+    // 4. スコープ検証
+    // ConsentTokenのscopesフィールドにrequested_scopeが含まれているかを確認
+    // スコープが許可されていない場合はE_SCOPE_NOT_ALLOWEDでabort
+    consent_token::verify_scope(token, requested_scope);
 
     // 検証成功（関数終了 = Sealが「OK」と判断）
 }
