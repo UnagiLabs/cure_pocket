@@ -106,7 +106,9 @@
     "disconnect": "Déconnecter",
     "connecting": "Connexion...",
     "connected": "Connecté",
-    "address": "Adresse"
+    "address": "Adresse",
+    "notInstalled": "Sui Wallet n'est pas installé.\nVeuillez l'installer depuis https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
+    "connectionFailed": "Échec de la connexion du portefeuille. Veuillez réessayer."
   },
   "themes": {
     "classic-blue": "Bleu classique",

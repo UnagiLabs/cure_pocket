@@ -106,7 +106,9 @@
     "disconnect": "断开连接",
     "connecting": "连接中...",
     "connected": "已连接",
-    "address": "地址"
+    "address": "地址",
+    "notInstalled": "未安装Sui Wallet。\n请从 https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil 安装。",
+    "connectionFailed": "钱包连接失败。请重试。"
   },
   "themes": {
     "classic-blue": "经典蓝",

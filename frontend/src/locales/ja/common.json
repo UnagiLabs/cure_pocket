@@ -106,7 +106,9 @@
     "disconnect": "切断",
     "connecting": "接続中...",
     "connected": "接続済み",
-    "address": "アドレス"
+    "address": "アドレス",
+    "notInstalled": "Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。",
+    "connectionFailed": "ウォレット接続に失敗しました。もう一度お試しください。"
   },
   "themes": {
     "classic-blue": "クラシックブルー",

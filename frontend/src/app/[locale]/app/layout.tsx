@@ -47,7 +47,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const availableWallet = wallets[0];
     
     if (!availableWallet) {
-      alert('Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。');
+      alert(t('wallet.notInstalled'));
       return;
     }
 
@@ -60,8 +60,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
           // 接続成功
         },
         onError: (error) => {
+          // ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
+          const errorMessage = error?.message || String(error);
+          if (errorMessage.includes('User rejected') || errorMessage.includes('rejected')) {
+            // ユーザーが意図的に拒否した場合は、静かに処理する
+            return;
+          }
+          // その他のエラーの場合のみ、エラーメッセージを表示
           console.error('Failed to connect wallet:', error);
-          alert('ウォレット接続に失敗しました。もう一度お試しください。');
+          alert(t('wallet.connectionFailed'));
         },
       },
     );
