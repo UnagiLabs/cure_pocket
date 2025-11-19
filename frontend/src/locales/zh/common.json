@@ -1,8 +1,8 @@
 {
   "appName": "CurePocket",
-  "tagline": "您的全球隐私保护药物护照。",
+  "tagline": "您的全球健康护照",
   "actions": {
-    "connectWallet": "连接钱包",
+    "connectWallet": "Connect Wallet",
     "addMedication": "添加药物",
     "save": "保存",
     "cancel": "取消",
@@ -30,7 +30,14 @@
     "addWithQR": "通过二维码添加药物",
     "history": "历史",
     "share": "分享",
-    "emergencyCard": "紧急卡"
+    "emergencyCard": "紧急卡",
+    "guestGreeting": "你好，访客",
+    "greetingWithName": "你好，{{name}}",
+    "profileSetupBanner": {
+      "title": "设置您的个人资料",
+      "description": "注册您的基本信息，以获得更安全、更准确的医疗服务。",
+      "button": "设置个人资料"
+    }
   },
   "add": {
     "title": "添加药物",
@@ -123,5 +130,115 @@
   "status": {
     "active": "活动",
     "stopped": "已停止"
+  },
+  "allergies": {
+    "title": "过敏",
+    "add": "添加过敏",
+    "substance": "过敏原",
+    "severity": "严重程度",
+    "symptoms": "症状",
+    "onsetDate": "发病日期",
+    "diagnosedBy": "诊断机构",
+    "notes": "备注",
+    "severities": {
+      "mild": "轻度",
+      "moderate": "中度",
+      "severe": "重度",
+      "life-threatening": "危及生命"
+    },
+    "noAllergies": "未注册过敏"
+  },
+  "histories": {
+    "title": "病史",
+    "add": "添加病史",
+    "type": "类型",
+    "diagnosis": "诊断/手术名称",
+    "diagnosisDate": "诊断/手术日期",
+    "diagnosedBy": "诊断机构",
+    "description": "描述",
+    "status": "状态",
+    "notes": "备注",
+    "types": {
+      "condition": "疾病",
+      "surgery": "手术",
+      "procedure": "程序",
+      "other": "其他"
+    },
+    "statuses": {
+      "active": "进行中",
+      "resolved": "已解决",
+      "chronic": "慢性"
+    },
+    "noHistories": "未注册病史"
+  },
+  "labs": {
+    "title": "检验结果",
+    "add": "添加检验结果",
+    "testName": "检验名称",
+    "value": "检验值",
+    "unit": "单位",
+    "referenceRange": "参考范围",
+    "testDate": "检验日期",
+    "testedBy": "检验机构",
+    "category": "类别",
+    "notes": "备注",
+    "noResults": "未注册检验结果"
+  },
+  "imaging": {
+    "title": "影像报告",
+    "add": "添加影像报告",
+    "type": "影像类型",
+    "bodyPart": "检查部位",
+    "examDate": "检查日期",
+    "performedBy": "检查机构",
+    "summary": "摘要/发现",
+    "findings": "发现详情",
+    "impression": "印象",
+    "types": {
+      "xray": "X光",
+      "ct": "CT",
+      "mri": "MRI",
+      "ultrasound": "超声",
+      "other": "其他"
+    },
+    "noReports": "未注册影像报告"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "summary": {
+      "medications": "当前用药",
+      "allergies": "过敏",
+      "histories": "重要病史",
+      "labs": "最新检验结果",
+      "imaging": "最新影像"
+    },
+    "recentUpdates": "最近更新",
+    "addData": "添加数据"
+  },
+  "dataTypes": {
+    "medication": "药物",
+    "allergy": "过敏",
+    "history": "病史",
+    "lab": "检验结果",
+    "imaging": "影像报告"
+  },
+  "profile": {
+    "name": "姓名"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "隐私优先",
+        "description": "您的健康数据经过加密并存储在Walrus上"
+      },
+      "global": {
+        "title": "全球访问",
+        "description": "随时随地访问您的健康护照"
+      },
+      "blockchain": {
+        "title": "区块链驱动",
+        "description": "基于Sui区块链构建，确保安全性和透明度"
+      }
+    }
   }
 }

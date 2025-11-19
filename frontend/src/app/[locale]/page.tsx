@@ -4,39 +4,58 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslations } from 'next-intl';
-import { walletService } from '@/lib/walletService';
+import { useConnectWallet, useCurrentAccount, useWallets } from '@mysten/dapp-kit';
 import { Wallet, Globe } from 'lucide-react';
 import { useState } from 'react';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 
 export default function LandingPage() {
-  const t = useTranslations();
-  const router = useRouter();
-  const params = useParams();
-  const currentLocale = (params.locale as Locale) || 'en';
-  const { walletAddress, setWalletAddress } = useApp();
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedLocale, setSelectedLocale] = useState<Locale>(currentLocale);
+    const t = useTranslations();
+    const router = useRouter();
+    const params = useParams();
+    const currentLocale = (params.locale as Locale) || 'en';
+    const { walletAddress } = useApp();
+    const [selectedLocale, setSelectedLocale] = useState<Locale>(currentLocale);
 
-  useEffect(() => {
-    // If already connected, redirect to app
-    if (walletAddress) {
-      router.push(`/${currentLocale}/app`);
-    }
-  }, [walletAddress, router, currentLocale]);
+    // Mysten dApp Kitのフック
+    const { mutate: connectWallet, isPending: isConnecting } = useConnectWallet();
+    const currentAccount = useCurrentAccount();
+    const wallets = useWallets();
 
-  const handleConnect = async () => {
-    try {
-      setIsConnecting(true);
-      const address = await walletService.connect();
-      setWalletAddress(address);
-      router.push(`/${selectedLocale}/app`);
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+    useEffect(() => {
+        // If already connected, redirect to app
+        if (walletAddress || currentAccount) {
+            router.push(`/${currentLocale}/app`);
+        }
+    }, [walletAddress, currentAccount, router, currentLocale]);
+
+    const handleConnect = () => {
+        // 利用可能なウォレットのうち、最初のものを選択
+        // 通常はSui Walletが利用可能
+        const availableWallet = wallets[0];
+        
+        if (!availableWallet) {
+            // ウォレットがインストールされていない場合
+            alert('Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。');
+            return;
+        }
+
+        connectWallet(
+            {
+                wallet: availableWallet,
+            },
+            {
+                onSuccess: () => {
+                    // 接続成功後、アプリにリダイレクト
+                    router.push(`/${selectedLocale}/app`);
+                },
+                onError: (error) => {
+                    console.error('Failed to connect wallet:', error);
+                    alert('ウォレット接続に失敗しました。もう一度お試しください。');
+                },
+            },
+        );
+    };
 
   const handleLanguageChange = (newLocale: Locale) => {
     setSelectedLocale(newLocale);
@@ -65,30 +84,30 @@ export default function LandingPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-2 flex items-center">
               <span className="mr-3 text-2xl">🔒</span>
-              <h3 className="font-semibold text-gray-900">Privacy-First</h3>
+              <h3 className="font-semibold text-gray-900">{t('landing.features.privacy.title')}</h3>
             </div>
             <p className="text-sm text-gray-600">
-              Your medication data is encrypted and stored on Walrus
+              {t('landing.features.privacy.description')}
             </p>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-2 flex items-center">
               <span className="mr-3 text-2xl">🌍</span>
-              <h3 className="font-semibold text-gray-900">Global Access</h3>
+              <h3 className="font-semibold text-gray-900">{t('landing.features.global.title')}</h3>
             </div>
             <p className="text-sm text-gray-600">
-              Access your medication passport anywhere, anytime
+              {t('landing.features.global.description')}
             </p>
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-2 flex items-center">
               <span className="mr-3 text-2xl">⛓️</span>
-              <h3 className="font-semibold text-gray-900">Blockchain Powered</h3>
+              <h3 className="font-semibold text-gray-900">{t('landing.features.blockchain.title')}</h3>
             </div>
             <p className="text-sm text-gray-600">
-              Built on Sui blockchain for security and transparency
+              {t('landing.features.blockchain.description')}
             </p>
           </div>
         </div>

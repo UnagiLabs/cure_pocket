@@ -1,21 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { useTranslations, useLocale } from 'next-intl';
-import { Package, QrCode, Camera, Calendar, Shield, AlertCircle, Sun, Cloud, Moon } from 'lucide-react';
+import {
+  Package,
+  AlertTriangle,
+  FileText,
+  FlaskConical,
+  Scan,
+  Plus,
+  AlertCircle,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTheme } from '@/lib/themes';
-import type { Medication, TimingOfDay } from '@/types';
+import type { Medication } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * ホーム画面（ダッシュボード）
+ * 全データタイプのサマリーと最近の更新を表示
+ */
 export default function HomePage() {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
-  const { medications, settings, setMedications, walletAddress } = useApp();
+  const {
+    medications,
+    allergies,
+    medicalHistories,
+    labResults,
+    imagingReports,
+    settings,
+    profile,
+    setMedications,
+    walletAddress,
+  } = useApp();
   const theme = getTheme(settings.theme);
-  const [userName] = useState('沼水'); // Demo user name
+  
+  // ユーザー名をプロフィールから取得、未設定時はGuest表示
+  const displayName = profile?.name || null;
 
   useEffect(() => {
     // Load demo medications if empty
@@ -57,147 +81,239 @@ export default function HomePage() {
     }
   }, [medications.length, walletAddress, setMedications]);
 
-  const activeCount = medications.filter((m) => m.status === 'active').length;
+  const activeMedicationsCount = medications.filter((m) => m.status === 'active').length;
+  const importantHistoriesCount = medicalHistories.filter(
+    (h) => h.status === 'active' || h.type === 'surgery'
+  ).length;
 
-  const getTimingIcon = (timing?: TimingOfDay) => {
-    switch (timing) {
-      case 'morning':
-        return <Sun className="mr-2 h-5 w-5 text-orange-400" />;
-      case 'afternoon':
-        return <Cloud className="mr-2 h-5 w-5 text-blue-400" />;
-      case 'evening':
-        return <Sun className="mr-2 h-5 w-5 text-orange-600" />;
-      case 'night':
-        return <Moon className="mr-2 h-5 w-5 text-indigo-400" />;
-      default:
-        return null;
-    }
-  };
+  // 最近の更新を時系列で取得
+  const recentUpdates = useMemo(() => {
+    const updates: Array<{
+      id: string;
+      type: 'medication' | 'allergy' | 'history' | 'lab' | 'imaging';
+      title: string;
+      date: string;
+      icon: typeof Package;
+    }> = [];
 
-  const medicationsByTiming = medications.reduce((acc, med) => {
-    const timing = med.timing || 'asNeeded';
-    if (!acc[timing]) acc[timing] = [];
-    acc[timing].push(med);
-    return acc;
-  }, {} as Record<string, Medication[]>);
+    medications.forEach((med) => {
+      updates.push({
+        id: med.id,
+        type: 'medication',
+        title: med.name,
+        date: med.startDate || new Date().toISOString(),
+        icon: Package,
+      });
+    });
+
+    allergies.forEach((allergy) => {
+      updates.push({
+        id: allergy.id,
+        type: 'allergy',
+        title: allergy.substance,
+        date: allergy.onsetDate || new Date().toISOString(),
+        icon: AlertTriangle,
+      });
+    });
+
+    medicalHistories.forEach((history) => {
+      updates.push({
+        id: history.id,
+        type: 'history',
+        title: history.diagnosis,
+        date: history.diagnosisDate || new Date().toISOString(),
+        icon: FileText,
+      });
+    });
+
+    labResults.forEach((lab) => {
+      updates.push({
+        id: lab.id,
+        type: 'lab',
+        title: `${lab.testName}: ${lab.value}${lab.unit || ''}`,
+        date: lab.testDate,
+        icon: FlaskConical,
+      });
+    });
+
+    imagingReports.forEach((report) => {
+      updates.push({
+        id: report.id,
+        type: 'imaging',
+        title: report.summary.substring(0, 30) + (report.summary.length > 30 ? '...' : ''),
+        date: report.examDate,
+        icon: Scan,
+      });
+    });
+
+    return updates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+  }, [medications, allergies, medicalHistories, labResults, imagingReports]);
+
+  const summaryCards = [
+    {
+      id: 'medications',
+      icon: Package,
+      title: t('dashboard.summary.medications'),
+      count: activeMedicationsCount,
+      color: theme.colors.primary,
+    },
+    {
+      id: 'allergies',
+      icon: AlertTriangle,
+      title: t('dashboard.summary.allergies'),
+      count: allergies.length,
+      color: '#EF4444',
+    },
+    {
+      id: 'histories',
+      icon: FileText,
+      title: t('dashboard.summary.histories'),
+      count: importantHistoriesCount,
+      color: '#8B5CF6',
+    },
+    {
+      id: 'labs',
+      icon: FlaskConical,
+      title: t('dashboard.summary.labs'),
+      count: labResults.length,
+      color: '#10B981',
+    },
+    {
+      id: 'imaging',
+      icon: Scan,
+      title: t('dashboard.summary.imaging'),
+      count: imagingReports.length,
+      color: '#3B82F6',
+    },
+  ];
 
   return (
-    <div className="p-4">
+    <div className="p-4 md:p-6">
       {/* Greeting */}
-      <div className="mb-6">
-        <h2 className="mb-1 text-lg" style={{ color: theme.colors.textSecondary }}>
+      <div className="mb-6 md:mb-8">
+        <h2 className="mb-1 text-lg md:text-xl" style={{ color: theme.colors.textSecondary }}>
           {t('home.greeting')}
         </h2>
-        <h1 className="text-2xl font-bold" style={{ color: theme.colors.text }}>
-          {userName}さん
+        <h1 className="text-2xl font-bold md:text-3xl" style={{ color: theme.colors.text }}>
+          {displayName
+            ? t('home.greetingWithName', { name: displayName })
+            : t('home.guestGreeting')}
         </h1>
       </div>
 
-      {/* Active Medications Card */}
-      <div
-        className="mb-6 rounded-2xl p-6 shadow-lg"
-        style={{
-          background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-        }}
-      >
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <Package className="mr-3 h-8 w-8 text-white" />
-            <span className="text-lg font-medium text-white">
-              {t('home.activeMedications')}
-            </span>
+      {/* Profile Setup Banner */}
+      {!profile && (
+        <div
+          className="mb-6 rounded-xl border-2 p-4"
+          style={{
+            backgroundColor: theme.colors.primary + '10',
+            borderColor: theme.colors.primary,
+          }}
+        >
+          <div className="mb-2 flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5" style={{ color: theme.colors.primary }} />
+            <h3 className="font-bold" style={{ color: theme.colors.text }}>
+              {t('home.profileSetupBanner.title')}
+            </h3>
           </div>
+          <p className="mb-3 text-sm" style={{ color: theme.colors.textSecondary }}>
+            {t('home.profileSetupBanner.description')}
+          </p>
+          <button
+            onClick={() => router.push(`/${locale}/app/profile`)}
+            className="w-full rounded-lg p-2 text-sm font-medium text-white"
+            style={{ backgroundColor: theme.colors.primary }}
+          >
+            {t('home.profileSetupBanner.button')}
+          </button>
         </div>
-        <div className="text-3xl font-bold text-white">{activeCount}種類</div>
-        <div className="mt-1 text-sm text-white/80">最終更新: 2分前</div>
+      )}
+
+      {/* Summary Cards Grid */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 md:gap-4">
+        {summaryCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.id}
+              onClick={() => {
+                const paths: Record<string, string> = {
+                  medications: `/${locale}/app/medications`,
+                  allergies: `/${locale}/app/allergies`,
+                  histories: `/${locale}/app/histories`,
+                  labs: `/${locale}/app/labs`,
+                  imaging: `/${locale}/app/imaging`,
+                };
+                router.push(paths[card.id] || `/${locale}/app`);
+              }}
+              className="rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <Icon className="mx-auto mb-2 h-8 w-8" style={{ color: card.color }} />
+              <span className="block text-xs font-medium" style={{ color: theme.colors.textSecondary }}>
+                {card.title}
+              </span>
+              <div className="mt-1 text-2xl font-bold" style={{ color: theme.colors.text }}>
+                {card.count}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Quick Actions */}
-      <button
-        onClick={() => router.push(`/${locale}/app/add`)}
-        className="mb-6 flex w-full items-center justify-center rounded-xl p-4 shadow-md transition-transform active:scale-95"
-        style={{ backgroundColor: theme.colors.accent, color: 'white' }}
-      >
-        <QrCode className="mr-2 h-6 w-6" />
-        <span className="font-medium">{t('home.addWithQR')}</span>
-        <Camera className="ml-2 h-5 w-5" />
-      </button>
-
-      {/* Quick Nav Grid */}
-      <div className="mb-6 grid grid-cols-3 gap-3">
+      {/* Quick Action Buttons */}
+      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         <button
-          onClick={() => router.push(`/${locale}/app`)}
-          className="rounded-xl p-4 shadow-sm transition-transform active:scale-95"
-          style={{ backgroundColor: theme.colors.surface }}
+          onClick={() => router.push(`/${locale}/app/add`)}
+          className="flex w-full items-center justify-center rounded-xl p-4 shadow-md transition-transform active:scale-95 md:p-5"
+          style={{ backgroundColor: theme.colors.accent, color: 'white' }}
         >
-          <Package className="mx-auto mb-2 h-8 w-8" style={{ color: theme.colors.primary }} />
-          <span className="text-xs font-medium" style={{ color: theme.colors.text }}>
-            {t('tabs.medications')}
-          </span>
+          <Plus className="mr-2 h-6 w-6" />
+          <span className="font-medium md:text-lg">{t('dashboard.addData')}</span>
         </button>
-        <button className="rounded-xl p-4 shadow-sm transition-transform active:scale-95"
-          style={{ backgroundColor: theme.colors.surface }}>
-          <Calendar className="mx-auto mb-2 h-8 w-8" style={{ color: theme.colors.accent }} />
-          <span className="text-xs font-medium" style={{ color: theme.colors.text }}>
-            {t('home.history')}
-          </span>
-        </button>
+
         <button
           onClick={() => router.push(`/${locale}/app/card`)}
-          className="rounded-xl p-4 shadow-sm transition-transform active:scale-95"
-          style={{ backgroundColor: theme.colors.surface }}
+          className="flex w-full items-center justify-center rounded-xl border-2 p-4 shadow-sm transition-transform active:scale-95 md:p-5"
+          style={{
+            backgroundColor: theme.colors.surface,
+            borderColor: '#FCA5A5',
+            color: '#DC2626',
+          }}
         >
-          <Shield className="mx-auto mb-2 h-8 w-8 text-purple-500" />
-          <span className="text-xs font-medium" style={{ color: theme.colors.text }}>
-            {t('home.share')}
-          </span>
+          <AlertCircle className="mr-2 h-6 w-6" />
+          <span className="font-medium md:text-lg">{t('home.emergencyCard')}</span>
         </button>
       </div>
 
-      {/* Emergency Card Button */}
-      <button
-        onClick={() => router.push(`/${locale}/app/card`)}
-        className="flex w-full items-center justify-center rounded-xl border-2 p-4 shadow-sm transition-transform active:scale-95"
-        style={{
-          backgroundColor: theme.colors.surface,
-          borderColor: '#FCA5A5',
-          color: '#DC2626',
-        }}
-      >
-        <AlertCircle className="mr-2 h-6 w-6" />
-        <span className="font-medium">{t('home.emergencyCard')}</span>
-      </button>
-
-      {/* Recent Medications Preview */}
-      {medications.length > 0 && (
-        <div className="mt-6">
-          <h3 className="mb-3 font-bold" style={{ color: theme.colors.text }}>
-            最近の薬
+      {/* Recent Updates */}
+      {recentUpdates.length > 0 && (
+        <div className="mt-6 md:mt-8">
+          <h3 className="mb-3 font-bold md:text-lg" style={{ color: theme.colors.text }}>
+            {t('dashboard.recentUpdates')}
           </h3>
-          <div className="space-y-3">
-            {medications.slice(0, 3).map((med) => (
-              <div
-                key={med.id}
-                className="rounded-xl p-4 shadow-sm"
-                style={{ backgroundColor: theme.colors.surface }}
-              >
-                <div className="mb-1 flex items-center">
-                  <span className="mr-2 text-2xl">💊</span>
-                  <span className="font-bold" style={{ color: theme.colors.text }}>
-                    {med.name}
-                  </span>
-                </div>
-                <div className="text-sm" style={{ color: theme.colors.textSecondary }}>
-                  {med.dose} / {med.frequency}
-                </div>
-                {med.warning && (
-                  <div className="mt-1 flex items-center text-sm font-medium text-orange-600">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {med.warning}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {recentUpdates.map((update) => {
+              const Icon = update.icon;
+              return (
+                <div
+                  key={update.id}
+                  className="rounded-xl p-4 shadow-sm md:p-5"
+                  style={{ backgroundColor: theme.colors.surface }}
+                >
+                  <div className="mb-1 flex items-center">
+                    <Icon className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: theme.colors.primary }} />
+                    <span className="font-bold md:text-base" style={{ color: theme.colors.text }}>
+                      {update.title}
+                    </span>
                   </div>
-                )}
-              </div>
-            ))}
+                  <div className="text-xs md:text-sm" style={{ color: theme.colors.textSecondary }}>
+                    {t(`dataTypes.${update.type}`)} •{' '}
+                    {new Date(update.date).toLocaleDateString('ja-JP')}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

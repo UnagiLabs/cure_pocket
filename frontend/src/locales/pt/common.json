@@ -1,8 +1,8 @@
 {
   "appName": "CurePocket",
-  "tagline": "Seu passaporte global de medicamentos, preservando a privacidade.",
+  "tagline": "Seu passaporte de saúde global",
   "actions": {
-    "connectWallet": "Conectar Carteira",
+    "connectWallet": "Connect Wallet",
     "addMedication": "Adicionar medicamento",
     "save": "Salvar",
     "cancel": "Cancelar",
@@ -30,7 +30,14 @@
     "addWithQR": "Adicionar medicamento com código QR",
     "history": "Histórico",
     "share": "Compartilhar",
-    "emergencyCard": "Cartão de emergência"
+    "emergencyCard": "Cartão de emergência",
+    "guestGreeting": "Olá, Convidado",
+    "greetingWithName": "Olá, {{name}}",
+    "profileSetupBanner": {
+      "title": "Configure seu perfil",
+      "description": "Registre suas informações básicas para receber serviços de saúde mais seguros e precisos.",
+      "button": "Configurar perfil"
+    }
   },
   "add": {
     "title": "Adicionar medicamento",
@@ -123,5 +130,115 @@
   "status": {
     "active": "Ativo",
     "stopped": "Parado"
+  },
+  "allergies": {
+    "title": "Alergias",
+    "add": "Adicionar alergia",
+    "substance": "Alérgeno",
+    "severity": "Gravidade",
+    "symptoms": "Sintomas",
+    "onsetDate": "Data de início",
+    "diagnosedBy": "Diagnosticado por",
+    "notes": "Notas",
+    "severities": {
+      "mild": "Leve",
+      "moderate": "Moderada",
+      "severe": "Grave",
+      "life-threatening": "Com risco de vida"
+    },
+    "noAllergies": "Nenhuma alergia registrada"
+  },
+  "histories": {
+    "title": "Histórico médico",
+    "add": "Adicionar histórico médico",
+    "type": "Tipo",
+    "diagnosis": "Diagnóstico / Nome da cirurgia",
+    "diagnosisDate": "Data do diagnóstico / cirurgia",
+    "diagnosedBy": "Diagnosticado por",
+    "description": "Descrição",
+    "status": "Status",
+    "notes": "Notas",
+    "types": {
+      "condition": "Condição",
+      "surgery": "Cirurgia",
+      "procedure": "Procedimento",
+      "other": "Outro"
+    },
+    "statuses": {
+      "active": "Ativo",
+      "resolved": "Resolvido",
+      "chronic": "Crônico"
+    },
+    "noHistories": "Nenhum histórico médico registrado"
+  },
+  "labs": {
+    "title": "Resultados de laboratório",
+    "add": "Adicionar resultado de laboratório",
+    "testName": "Nome do teste",
+    "value": "Valor",
+    "unit": "Unidade",
+    "referenceRange": "Faixa de referência",
+    "testDate": "Data do teste",
+    "testedBy": "Instalação de teste",
+    "category": "Categoria",
+    "notes": "Notas",
+    "noResults": "Nenhum resultado de laboratório registrado"
+  },
+  "imaging": {
+    "title": "Relatórios de imagem",
+    "add": "Adicionar relatório de imagem",
+    "type": "Tipo de imagem",
+    "bodyPart": "Parte do corpo",
+    "examDate": "Data do exame",
+    "performedBy": "Realizado por",
+    "summary": "Resumo / Achados",
+    "findings": "Detalhes dos achados",
+    "impression": "Impressão",
+    "types": {
+      "xray": "Raio-X",
+      "ct": "CT",
+      "mri": "Ressonância magnética",
+      "ultrasound": "Ultrassom",
+      "other": "Outro"
+    },
+    "noReports": "Nenhum relatório de imagem registrado"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "summary": {
+      "medications": "Medicamentos ativos",
+      "allergies": "Alergias",
+      "histories": "Histórico importante",
+      "labs": "Últimos resultados de laboratório",
+      "imaging": "Última imagem"
+    },
+    "recentUpdates": "Atualizações recentes",
+    "addData": "Adicionar dados"
+  },
+  "dataTypes": {
+    "medication": "Medicamento",
+    "allergy": "Alergia",
+    "history": "Histórico",
+    "lab": "Resultado de laboratório",
+    "imaging": "Relatório de imagem"
+  },
+  "profile": {
+    "name": "Nome"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "Privacidade em primeiro lugar",
+        "description": "Seus dados de saúde são criptografados e armazenados no Walrus"
+      },
+      "global": {
+        "title": "Acesso global",
+        "description": "Acesse seu passaporte de saúde em qualquer lugar, a qualquer momento"
+      },
+      "blockchain": {
+        "title": "Alimentado por blockchain",
+        "description": "Construído na blockchain Sui para segurança e transparência"
+      }
+    }
   }
 }
