@@ -109,7 +109,7 @@ module cure_pocket::medical_passport_tests {
             let (walrus, seal, country) = create_test_passport_data();
 
             // mint操作（entry関数なのでtransferされる）
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin,
                 &mut registry,
                 walrus,
@@ -224,7 +224,7 @@ module cure_pocket::medical_passport_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 walrus,
@@ -278,7 +278,7 @@ module cure_pocket::medical_passport_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 walrus,
@@ -397,7 +397,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob-1"),
@@ -416,7 +416,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob-2"),
@@ -525,7 +525,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            admin::mint_medical_passport(
+            admin::admin_mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob"),
