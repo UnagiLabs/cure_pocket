@@ -47,32 +47,36 @@ public(package) fun e_no_access(): u64 {
 ///
 /// ## アクセス制御ロジック
 /// 1. `ctx.sender()`（復号リクエスト送信者）を取得
-/// 2. `PassportRegistry`のDynamic Fieldで所有権を確認
-/// 3. senderがパスポートを所有していなければabort（アクセス拒否）
-/// 4. 所有していれば関数終了（アクセス許可）
+/// 2. `passport`のIDを取得
+/// 3. `PassportRegistry`の`address -> object::ID`マッピングで、特定のパスポートがsenderのものかを確認
+/// 4. senderが指定パスポートを所有していなければabort（アクセス拒否）
+/// 5. 所有していれば関数終了（アクセス許可）
 ///
 /// ## 注意
 /// - この関数は`public(package)`スコープ（パッケージ内部のみアクセス可能）
 /// - 外部から呼び出す場合は`accessor.move`の`entry fun`を使用すること
 ///
 /// ## パラメータ
-/// - `passport`: MedicalPassportオブジェクトへの参照（現在未使用だが、将来的な拡張のため保持）
+/// - `passport`: MedicalPassportオブジェクトへの参照（パスポートID取得用）
 /// - `registry`: PassportRegistryへの参照（所有権確認用）
 /// - `ctx`: トランザクションコンテキスト（sender取得用）
 ///
 /// ## Aborts
-/// - `E_NO_ACCESS`: senderがパスポートを所有していない（アクセス拒否）
+/// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
 public(package) fun seal_approve_patient_only_internal(
-    _passport: &MedicalPassport,
+    passport: &MedicalPassport,
     registry: &PassportRegistry,
     ctx: &tx_context::TxContext
 ) {
     // 1. トランザクション送信者を取得
     let sender = tx_context::sender(ctx);
 
-    // 2. PassportRegistryのDynamic Fieldで所有権を確認
-    // has_passport()は、senderがパスポートを所有しているかを確認
-    assert!(medical_passport::has_passport(registry, sender), E_NO_ACCESS);
+    // 2. パスポートIDを取得
+    let passport_id = object::id(passport);
 
-    // 3. 所有していれば関数終了（Sealが「OK」と判断）
+    // 3. PassportRegistryの`address -> object::ID`マッピングで、特定のパスポートがsenderのものかを確認
+    // is_passport_owner()は、senderが指定パスポートを所有しているかを確認
+    assert!(medical_passport::is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
+
+    // 4. 所有していれば関数終了（Sealが「OK」と判断）
 }

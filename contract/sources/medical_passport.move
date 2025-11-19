@@ -42,27 +42,21 @@ public struct MedicalPassport has key {
 ///
 /// ## 設計
 /// - 共有オブジェクト（shared object）として初期化時に1つだけ作成
-/// - Dynamic Fieldsで address -> PassportMarker の対応を管理
+/// - Dynamic Fieldsで address -> object::ID の対応を管理
 /// - すべてのmint操作は &mut PassportRegistry を受け取る
 ///
 /// ## 制約保証
 /// - 共有オブジェクトの &mut 参照により、同時mint時の競合を防止
-/// - has_passport() で既存チェック、register_passport() で登録
+/// - has_passport() で既存チェック、register_passport_with_id() で登録
 /// - 同じアドレスへの二重mintは E_ALREADY_HAS_PASSPORT でabort
+///
+/// ## マッピング
+/// - `address -> object::ID`: アドレスとパスポートIDの対応を管理
+/// - 1ウォレット1枚制約: addressがキーに存在するかで確認
+/// - 特定のパスポートの所有者確認: address -> object::ID から取得したパスポートIDと比較
 public struct PassportRegistry has key {
     id: object::UID,
 }
-
-/// パスポート所有マーカー
-///
-/// ## 用途
-/// - Dynamic Fieldの値として使用
-/// - address -> PassportMarker の対応で「このアドレスは既にパスポートを持っている」を記録
-///
-/// ## 設計
-/// - `has store, drop` （Dynamic Fieldに格納可能、削除可能）
-/// - 空の構造体（マーカーとしての役割のみ）
-public struct PassportMarker has store, drop {}
 
 /// パスポート移行イベント
 ///
@@ -268,7 +262,7 @@ public(package) fun create_and_share_passport_registry(ctx: &mut tx_context::TxC
 ///
 /// ## 注意
 /// - Dynamic Fieldの存在チェックを行う
-/// - パスポートの実体ではなく、PassportMarkerの存在を確認
+/// - `address -> object::ID` マッピングの存在を確認
 ///
 /// ## パラメータ
 /// - `registry`: PassportRegistryへの参照
@@ -281,31 +275,36 @@ public(package) fun has_passport(registry: &PassportRegistry, owner: address): b
     df::exists_<address>(&registry.id, owner)
 }
 
-/// 指定アドレスにパスポート所有マーカーを登録
+/// 指定アドレスにパスポートIDを登録
 ///
 /// ## 注意
 /// - mint成功後に呼び出される
-/// - Dynamic Fieldとして address -> PassportMarker を追加
+/// - Dynamic Fieldとして address -> object::ID を追加
 /// - 既に登録されている場合はabort（通常は has_passport() で事前チェック済み）
 ///
 /// ## パラメータ
 /// - `registry`: PassportRegistryへの可変参照
+/// - `passport_id`: 登録するパスポートのID
 /// - `owner`: 登録するアドレス
 ///
 /// ## Aborts
 /// - Dynamic Fieldの add が失敗する場合（既に同じキーが存在する場合）
-public(package) fun register_passport(registry: &mut PassportRegistry, owner: address) {
-    df::add(&mut registry.id, owner, PassportMarker {});
+public(package) fun register_passport_with_id(
+    registry: &mut PassportRegistry,
+    passport_id: object::ID,
+    owner: address
+) {
+    df::add(&mut registry.id, owner, passport_id);
 }
 
-/// 指定アドレスからパスポート所有マーカーを削除
+/// 指定アドレスからパスポートIDを削除
 ///
 /// ## 用途
-/// - パスポート移行時に移行元のマーカーを削除
-/// - Dynamic Fieldから address -> PassportMarker の対応を削除
+/// - パスポート移行時に移行元のマッピングを削除
+/// - Dynamic Fieldから address -> object::ID の対応を削除
 ///
 /// ## 注意
-/// - マーカーが存在しない場合はabort
+/// - マッピングが存在しない場合はabort
 /// - 通常は has_passport() で事前チェックを行う
 ///
 /// ## パラメータ
@@ -314,8 +313,34 @@ public(package) fun register_passport(registry: &mut PassportRegistry, owner: ad
 ///
 /// ## Aborts
 /// - Dynamic Fieldの remove が失敗する場合（キーが存在しない場合）
-public(package) fun unregister_passport(registry: &mut PassportRegistry, owner: address) {
-    let _marker = df::remove<address, PassportMarker>(&mut registry.id, owner);
+public(package) fun unregister_passport_by_owner(registry: &mut PassportRegistry, owner: address) {
+    let _passport_id = df::remove<address, object::ID>(&mut registry.id, owner);
+}
+
+/// 特定のパスポートが指定アドレスのものかを確認
+///
+/// ## 用途
+/// - Sealアクセス制御などで、特定のパスポートがsenderのものかを確認
+/// - `address -> object::ID` から取得したパスポートIDと引数のパスポートIDを比較
+///
+/// ## パラメータ
+/// - `registry`: PassportRegistryへの参照
+/// - `passport_id`: 確認するパスポートのID
+/// - `owner`: 確認するアドレス
+///
+/// ## 返り値
+/// - `true`: 指定アドレスが指定パスポートを所有している
+/// - `false`: 指定アドレスが指定パスポートを所有していない（パスポート未所持、または別のパスポートを所持）
+public(package) fun is_passport_owner(
+    registry: &PassportRegistry,
+    passport_id: object::ID,
+    owner: address
+): bool {
+    if (!df::exists_<address>(&registry.id, owner)) {
+        return false
+    };
+    let registered_id = df::borrow<address, object::ID>(&registry.id, owner);
+    *registered_id == passport_id
 }
 
 /// パスポートのデータを取得（値のコピー）

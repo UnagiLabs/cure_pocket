@@ -68,11 +68,14 @@ entry fun mint_medical_passport(
         ctx
     );
 
+    // パスポートIDを取得
+    let passport_id = object::id(&passport);
+
     // tx送信者に転送（Soulbound: この後は譲渡不可）
     medical_passport::transfer_to(passport, sender);
 
-    // Registry にパスポート所有マーカーを登録
-    medical_passport::register_passport(registry, sender);
+    // Registry にパスポートIDを登録
+    medical_passport::register_passport_with_id(registry, passport_id, sender);
 }
 
 /// Walrus blob IDを取得
@@ -162,17 +165,18 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool {
 ///
 /// ## アクセス制御ロジック
 /// 1. `ctx.sender()`（復号リクエスト送信者）を取得
-/// 2. `PassportRegistry`のDynamic Fieldで所有権を確認
-/// 3. senderがパスポートを所有していなければabort（アクセス拒否）
-/// 4. 所有していれば関数終了（アクセス許可）
+/// 2. `passport`のIDを取得
+/// 3. `PassportRegistry`の`address -> object::ID`マッピングで、特定のパスポートがsenderのものかを確認
+/// 4. senderが指定パスポートを所有していなければabort（アクセス拒否）
+/// 5. 所有していれば関数終了（アクセス許可）
 ///
 /// ## パラメータ
-/// - `passport`: MedicalPassportオブジェクトへの参照（現在未使用だが、将来的な拡張のため保持）
+/// - `passport`: MedicalPassportオブジェクトへの参照（パスポートID取得用）
 /// - `registry`: PassportRegistryへの参照（所有権確認用）
 /// - `ctx`: トランザクションコンテキスト（sender取得用）
 ///
 /// ## Aborts
-/// - `E_NO_ACCESS`: senderがパスポートを所有していない（アクセス拒否）
+/// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
 entry fun seal_approve_patient_only(
     passport: &MedicalPassport,
     registry: &PassportRegistry,

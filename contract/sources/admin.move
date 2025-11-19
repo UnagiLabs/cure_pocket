@@ -53,7 +53,7 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
     /// - `E_EMPTY_WALRUS_BLOB_ID`: walrus_blob_idが空文字列（create_passport_internalでabort）
     /// - `E_EMPTY_SEAL_ID`: seal_idが空文字列（create_passport_internalでabort）
     /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列（create_passport_internalでabort）
-    public fun mint_medical_passport(
+    public fun admin_mint_medical_passport(
         _admin: &AdminCap,  // 所有していることが権限証明（内容は使用しない）
         registry: &mut PassportRegistry,
         walrus_blob_id: String,
@@ -74,11 +74,14 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
             ctx
         );
 
+        // パスポートIDを取得
+        let passport_id = object::id(&passport);
+
         // tx送信者に転送（Soulbound: この後は譲渡不可）
         medical_passport::transfer_to(passport, sender);
 
-        // Registry にパスポート所有マーカーを登録
-        medical_passport::register_passport(registry, sender);
+        // Registry にパスポートIDを登録
+        medical_passport::register_passport_with_id(registry, passport_id, sender);
     }
 
     /// パスポート移行（管理者専用）
@@ -98,13 +101,14 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
     ///
     /// ## 動作フロー
     /// 1. 移行先の状態チェック（既にパスポートを所持していないか）
-    /// 2. 移行元の所有マーカーを削除
+    /// 2. 移行元のマッピングを削除
     /// 3. パスポートデータを取得
     /// 4. 移行イベントを構築・発行（監査証跡）
     /// 5. 元のパスポートを削除（burn）
     /// 6. 同じデータで新しいパスポートを作成
-    /// 7. 新しいパスポートを移行先に転送
-    /// 8. 移行先の所有マーカーを登録
+    /// 7. 新しいパスポートIDを取得
+    /// 8. 新しいパスポートを移行先に転送
+    /// 9. 移行先のパスポートIDを登録
     ///
     /// ## パラメータ
     /// - `_admin`: AdminCapへの参照（権限証明）
@@ -136,8 +140,8 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
             medical_passport::e_migration_target_has_passport()
         );
 
-        // 2. 移行元の所有マーカーを削除
-        medical_passport::unregister_passport(registry, old_owner);
+        // 2. 移行元のマッピングを削除
+        medical_passport::unregister_passport_by_owner(registry, old_owner);
 
         // 3. パスポートデータを取得（値のコピー）
         let (walrus_blob_id, seal_id, country_code) = medical_passport::get_passport_data(&passport);
@@ -164,9 +168,12 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
             ctx
         );
 
-        // 7. 新しいパスポートを移行先に転送
+        // 7. 新しいパスポートIDを取得（転送前に取得）
+        let new_passport_id = object::id(&new_passport);
+
+        // 8. 新しいパスポートを移行先に転送
         medical_passport::transfer_to(new_passport, new_owner);
 
-        // 8. 移行先の所有マーカーを登録
-        medical_passport::register_passport(registry, new_owner);
+        // 9. 移行先のパスポートIDを登録
+        medical_passport::register_passport_with_id(registry, new_passport_id, new_owner);
     }
