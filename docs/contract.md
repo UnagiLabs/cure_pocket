@@ -1379,12 +1379,4 @@ sui move test
 sui client publish --gas-budget 100000000
 ```
 
----
-
-**文書管理**:
-- **作成日**: 2025-11-18
-- **作成者**: Cure Pocket Development Team
-- **ファイルパス**: `/Users/tomoyukiusui/Documents/GitHub/cure_pocket/docs/contract.md`
-- **レポジトリ**: https://github.com/tomoyukiusui/cure_pocket
-
 **この要件定義書は「生きたドキュメント」です。機能追加時は本ドキュメントを更新してください。**
