@@ -10,11 +10,16 @@
 /// ## 提供API
 /// - パスポートフィールドへの読み取りアクセス
 /// - Sealアクセス制御関数
+/// - ConsentToken作成・検証関数
 /// - 将来的な検索・照会機能の追加余地
 module cure_pocket::medical_passport_accessor;
 use std::string::String;
+use sui::bcs;
+use sui::clock::{Self, Clock};
+use std::hash;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 use cure_pocket::seal_accessor;
+use cure_pocket::consent_token::{Self, ConsentToken};
 
 /// メディカルパスポートの発行（mint）
 ///
@@ -183,4 +188,130 @@ entry fun seal_approve_patient_only(
     ctx: &tx_context::TxContext
 ) {
     seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
+}
+
+/// ConsentTokenを作成して共有オブジェクトとして公開
+///
+/// ## 概要
+/// 患者（grantor）が医師などに閲覧権限を付与する際に使用するトークンを作成します。
+/// 作成されたトークンは共有オブジェクトとして公開され、Seal認証時に使用されます。
+///
+/// ## 権限
+/// - 誰でも呼び出し可能
+/// - ただし、`grantor`は実際のトランザクション送信者である必要がある（将来的に検証を追加可能）
+///
+/// ## 動作
+/// 1. バリデーション（secret_hash、duration_ms、scopesが有効か）
+/// 2. 現在時刻を取得
+/// 3. 有効期限を計算（現在時刻 + duration_ms）
+/// 4. ConsentTokenを生成
+/// 5. 共有オブジェクトとして公開
+///
+/// ## パラメータ
+/// - `passport_id`: 紐づくパスポートID
+/// - `secret_hash`: 合言葉のハッシュ（sha3_256）
+/// - `scopes`: 閲覧許可スコープ（例: "medication", "lab_results"）
+/// - `duration_ms`: 有効期限の期間（ミリ秒）
+/// - `clock`: Sui Clock（現在時刻取得用）
+/// - `ctx`: トランザクションコンテキスト
+///
+/// ## 結果
+/// - 共有オブジェクトとして公開された `ConsentToken` が作成される
+///
+/// ## Aborts
+/// - `E_EMPTY_SECRET`: secret_hashが空
+/// - `E_INVALID_DURATION`: duration_msが0
+/// - `E_EMPTY_SCOPES`: scopesが空
+entry fun create_consent_token(
+    passport_id: object::ID,
+    secret_hash: vector<u8>,
+    scopes: vector<String>,
+    duration_ms: u64,
+    clock: &Clock,
+    ctx: &mut tx_context::TxContext
+) {
+    let grantor = tx_context::sender(ctx);
+
+    // ConsentTokenを作成
+    let token = consent_token::create_consent_internal(
+        passport_id,
+        grantor,
+        secret_hash,
+        scopes,
+        duration_ms,
+        clock,
+        ctx
+    );
+
+    // 共有オブジェクトとして公開
+    consent_token::share_consent_token(token);
+}
+
+/// Seal用アクセス検証関数（Dry Run専用）
+///
+/// ## 概要
+/// Sealキーサーバーが復号リクエストを受け取った際に、
+/// `.dry_run_transaction_block`上で実行されるアクセス制御関数。
+/// ConsentTokenを使用した閲覧権限の検証を行います。
+/// この関数がabortしなければ、復号鍵の提供が許可されます。
+///
+/// ## アクセス制御ロジック
+/// 1. `id`（BCSエンコードされた`SealAuthPayload`）をデシリアライズ
+/// 2. Payloadを分解して`secret`と`target_passport_id`を取得
+/// 3. ConsentTokenがアクティブか確認
+/// 4. 有効期限を確認
+/// 5. パスポートIDの整合性を確認（Payloadの`target_passport_id`とTokenの`passport_id`が一致するか）
+/// 6. ハッシュロック検証（生`secret`をハッシュ化し、オンチェーンの`secret_hash`と比較）
+///
+/// ## パラメータ
+/// - `id`: BCSエンコードされた`SealAuthPayload`（`vector<u8>`）
+/// - `token`: 検証対象のConsentToken（共有オブジェクト）
+/// - `clock`: Sui Clock（現在時刻取得用）
+///
+/// ## 返り値
+/// - なし（entry関数なのでvoid）
+///
+/// ## 副作用
+/// - なし（検証のみ）
+///
+/// ## Aborts
+/// - `E_CONSENT_REVOKED`: ConsentTokenが無効化されている
+/// - `E_CONSENT_EXPIRED`: ConsentTokenの有効期限が切れている
+/// - `E_INVALID_PASSPORT_ID`: パスポートIDが一致しない
+/// - `E_INVALID_SECRET`: 合言葉（secret）が一致しない
+entry fun seal_approve_consent(
+    id: vector<u8>,
+    token: &ConsentToken,
+    clock: &Clock
+) {
+    // 1. BCSデシリアライズ（peel_*系の関数を使用）
+    // SealAuthPayload構造体をBCSから読み取る
+    let mut bcs_cursor = bcs::new(id);
+    let secret = bcs::peel_vec_u8(&mut bcs_cursor);
+    let target_passport_id = bcs::peel_address(&mut bcs_cursor);
+
+    // 2. パスポートIDをID型に変換（addressからIDへ）
+    let target_passport_id_obj = object::id_from_address(target_passport_id);
+
+    // 3. アクティブ確認
+    assert!(consent_token::is_active(token), consent_token::e_consent_revoked());
+
+    // 4. 期限確認
+    let now = clock::timestamp_ms(clock);
+    assert!(now < consent_token::get_expiration(token), consent_token::e_consent_expired());
+
+    // 5. パスポートID整合性確認
+    // Payload(医師が要求している対象) == Token(患者が許可した対象) か？
+    assert!(
+        consent_token::get_passport_id(token) == target_passport_id_obj,
+        consent_token::e_invalid_passport_id()
+    );
+
+    // 6. ハッシュロック検証
+    // 生secretをハッシュ化し、オンチェーンのハッシュと比較
+    let input_hash = hash::sha3_256(secret);
+    let stored_hash = consent_token::get_secret_hash(token);
+    assert!(input_hash == stored_hash, consent_token::e_invalid_secret());
+
+    // 検証成功（関数終了 = Sealが「OK」と判断）
 }
