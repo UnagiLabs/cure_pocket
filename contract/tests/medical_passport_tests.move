@@ -14,7 +14,7 @@ module cure_pocket::medical_passport_tests {
     use std::string::{Self, String};
 
     use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
-    use cure_pocket::medical_passport_admin::{Self};
+    use cure_pocket::admin;
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::cure_pocket::{Self, AdminCap};
 
@@ -109,7 +109,7 @@ module cure_pocket::medical_passport_tests {
             let (walrus, seal, country) = create_test_passport_data();
 
             // mint操作（entry関数なのでtransferされる）
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin,
                 &mut registry,
                 walrus,
@@ -224,7 +224,7 @@ module cure_pocket::medical_passport_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 walrus,
@@ -278,7 +278,7 @@ module cure_pocket::medical_passport_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 walrus,
@@ -382,7 +382,7 @@ module cure_pocket::medical_passport_tests {
     /// - 1回目のmintは成功する
     /// - 2回目のmintはE_ALREADY_HAS_PASSPORT (4) でabortする
     #[test]
-    #[expected_failure(abort_code = 4, location = medical_passport_admin)]
+    #[expected_failure(abort_code = 4, location = admin)]
     fun test_scenario_cannot_mint_twice() {
         let mut scenario = ts::begin(ADMIN);
 
@@ -397,7 +397,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob-1"),
@@ -416,7 +416,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob-2"),
@@ -525,7 +525,7 @@ module cure_pocket::medical_passport_tests {
             let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_admin::mint_medical_passport(
+            admin::mint_medical_passport(
                 &admin_cap,
                 &mut registry,
                 string::utf8(b"walrus-blob"),
@@ -646,7 +646,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,
@@ -699,7 +699,7 @@ module cure_pocket::medical_passport_tests {
     /// - admin が user1 → user2 へ移行を試みる
     /// - E_MIGRATION_TARGET_HAS_PASSPORT でabort
     #[test]
-    #[expected_failure(abort_code = 5, location = medical_passport_admin)]
+    #[expected_failure(abort_code = 5, location = admin)]
     fun test_migration_target_already_has_passport() {
         let user1 = @0xA11;
         let user2 = @0xA22;
@@ -750,7 +750,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,
@@ -809,7 +809,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,
@@ -895,7 +895,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,
@@ -971,7 +971,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,
@@ -994,7 +994,7 @@ module cure_pocket::medical_passport_tests {
             let passport = ts::take_from_address<MedicalPassport>(&scenario, user2);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user2,
@@ -1087,7 +1087,7 @@ module cure_pocket::medical_passport_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
             // AdminCapを持っているため成功
-            medical_passport_admin::migrate_passport(
+            admin::migrate_passport(
                 &admin_cap,
                 &mut registry,
                 user1,

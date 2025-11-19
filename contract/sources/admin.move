@@ -9,7 +9,7 @@
 ///
 /// ## 公開API
 /// - `mint_medical_passport`: AdminCapを持つ者がパスポートを発行
-module cure_pocket::medical_passport_admin;
+module cure_pocket::admin;
 
 use std::string::String;
 use sui::clock::Clock;

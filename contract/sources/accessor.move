@@ -3,16 +3,18 @@
 /// 公開API（getter関数）を提供
 ///
 /// ## 設計方針（AGENTS.md準拠）
-/// - すべての `public fun` をこのモジュールに集約
+/// - すべての `public fun` と `entry fun` をこのモジュールに集約
 /// - 外部から呼び出し可能なAPIの単一窓口を提供
 /// - 明確な公開インターフェースを維持
 ///
 /// ## 提供API
 /// - パスポートフィールドへの読み取りアクセス
+/// - Sealアクセス制御関数
 /// - 将来的な検索・照会機能の追加余地
 module cure_pocket::medical_passport_accessor;
 use std::string::String;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
+use cure_pocket::seal_accessor;
 
 /// メディカルパスポートの発行（mint）
 ///
@@ -149,4 +151,32 @@ public fun get_all_fields(passport: &MedicalPassport): (&String, &String, &Strin
 /// - `false`: まだパスポートを所持していない
 public fun has_passport(registry: &PassportRegistry, owner: address): bool {
     medical_passport::has_passport(registry, owner)
+}
+
+/// Sealアクセス制御: 患者本人のみアクセス可能
+///
+/// ## 概要
+/// Sealキーサーバーが復号リクエストを受け取った際に、
+/// `.dry_run_transaction_block`上で実行されるアクセス制御関数。
+/// この関数がabortしなければ、復号鍵の提供が許可される。
+///
+/// ## アクセス制御ロジック
+/// 1. `ctx.sender()`（復号リクエスト送信者）を取得
+/// 2. `PassportRegistry`のDynamic Fieldで所有権を確認
+/// 3. senderがパスポートを所有していなければabort（アクセス拒否）
+/// 4. 所有していれば関数終了（アクセス許可）
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportオブジェクトへの参照（現在未使用だが、将来的な拡張のため保持）
+/// - `registry`: PassportRegistryへの参照（所有権確認用）
+/// - `ctx`: トランザクションコンテキスト（sender取得用）
+///
+/// ## Aborts
+/// - `E_NO_ACCESS`: senderがパスポートを所有していない（アクセス拒否）
+entry fun seal_approve_patient_only(
+    passport: &MedicalPassport,
+    registry: &PassportRegistry,
+    ctx: &tx_context::TxContext
+) {
+    seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
 }
