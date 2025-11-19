@@ -1215,8 +1215,8 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 
 #### Phase 3: アクセス制御
 
-- **ConsentToken**: 閲覧権限管理
-- **時限付きアクセス権**: 有効期限付き閲覧許可
+- **ConsentToken**: 閲覧権限管理 ✅ **実装済み（v1.2.0）**
+- **時限付きアクセス権**: 有効期限付き閲覧許可 ✅ **実装済み（ConsentTokenに含まれる）**
 - **緊急アクセス**: 救命時の特別アクセス
 
 #### Phase 4: データ経済
@@ -1269,6 +1269,34 @@ public struct MedicalVault has key {
 ---
 
 ## 12. 変更履歴
+
+### v1.2.0 (2025-01-XX)
+
+**ConsentToken完全実装**: ConsentToken機能の完全実装を完了
+
+#### 実装内容
+- `revoke_consent_token()` entry関数追加（トークン無効化機能）
+- `verify_consent_internal()` 内部関数追加（検証ロジックの分離）
+- `revoke_consent_internal()` 内部関数追加（無効化ロジック）
+- 整数オーバーフロー対策追加（`E_EXPIRATION_OVERFLOW`）
+- `seal_approve_consent()` のリファクタリング（検証ロジックを内部関数に委譲）
+- エラーコード追加（`E_EXPIRATION_OVERFLOW`, `E_SCOPE_NOT_ALLOWED`, `E_NON_GRANTOR_REVOKE`）
+- ConsentTokenテストファイル追加（`consent_token_tests.move`）
+
+#### ファイル
+- `contract/sources/consent_token.move`（更新）
+- `contract/sources/accessor.move`（更新）
+- `contract/tests/consent_token_tests.move`（新規）
+
+#### API追加
+- `revoke_consent_token(token: &mut ConsentToken, ctx: &tx_context::TxContext)` - トークン無効化
+
+#### エラーコード追加
+- `E_EXPIRATION_OVERFLOW (208)`: 有効期限計算時のオーバーフロー
+- `E_SCOPE_NOT_ALLOWED (209)`: スコープ不一致（将来用）
+- `E_NON_GRANTOR_REVOKE (210)`: grantor以外による無効化試行（将来用）
+
+---
 
 ### v1.1.0 (2025-11-19)
 

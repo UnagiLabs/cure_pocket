@@ -13,9 +13,9 @@
 /// - 公開APIは `accessor.move` に集約
 module cure_pocket::consent_token;
 
-use sui::object;
 use sui::clock::Clock;
 use std::string::String;
+use std::hash;
 
 // ============================================================
 // 型定義
@@ -93,6 +93,15 @@ const E_INVALID_DURATION: u64 = 206;
 /// スコープが空
 const E_EMPTY_SCOPES: u64 = 207;
 
+/// 有効期限計算時のオーバーフロー
+const E_EXPIRATION_OVERFLOW: u64 = 208;
+
+/// スコープ不一致（将来用）
+const E_SCOPE_NOT_ALLOWED: u64 = 209;
+
+/// grantor以外による無効化試行（将来用）
+const E_NON_GRANTOR_REVOKE: u64 = 210;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -140,6 +149,39 @@ public(package) fun e_invalid_passport_id(): u64 {
 /// - エラーコード `E_INVALID_SECRET` の値
 public(package) fun e_invalid_secret(): u64 {
     E_INVALID_SECRET
+}
+
+/// E_EXPIRATION_OVERFLOW エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+///
+/// ## 返り値
+/// - エラーコード `E_EXPIRATION_OVERFLOW` の値
+public(package) fun e_expiration_overflow(): u64 {
+    E_EXPIRATION_OVERFLOW
+}
+
+/// E_SCOPE_NOT_ALLOWED エラーコードを取得（将来用）
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+///
+/// ## 返り値
+/// - エラーコード `E_SCOPE_NOT_ALLOWED` の値
+public(package) fun e_scope_not_allowed(): u64 {
+    E_SCOPE_NOT_ALLOWED
+}
+
+/// E_NON_GRANTOR_REVOKE エラーコードを取得（将来用）
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+///
+/// ## 返り値
+/// - エラーコード `E_NON_GRANTOR_REVOKE` の値
+public(package) fun e_non_grantor_revoke(): u64 {
+    E_NON_GRANTOR_REVOKE
 }
 
 // ============================================================
@@ -251,6 +293,7 @@ public(package) fun get_scopes(token: &ConsentToken): &vector<String> {
 /// - `E_EMPTY_SECRET`: secret_hashが空
 /// - `E_INVALID_DURATION`: duration_msが0
 /// - `E_EMPTY_SCOPES`: scopesが空
+/// - `E_EXPIRATION_OVERFLOW`: 有効期限計算時のオーバーフロー
 public(package) fun create_consent_internal(
     passport_id: object::ID,
     grantor: address,
@@ -273,6 +316,9 @@ public(package) fun create_consent_internal(
     let now = sui::clock::timestamp_ms(clock);
 
     // 有効期限を計算（現在時刻 + 期間）
+    // 整数オーバーフロー対策: u64::MAXを超えないことを確認
+    // u64::MAX = 18446744073709551615
+    assert!(now <= (18446744073709551615u64 - duration_ms), E_EXPIRATION_OVERFLOW);
     let expiration_ms = now + duration_ms;
 
     // ConsentTokenオブジェクトの生成
@@ -304,4 +350,95 @@ public(package) fun create_consent_internal(
 #[allow(lint(custom_state_change), lint(share_owned))]
 public(package) fun share_consent_token(token: ConsentToken) {
     sui::transfer::share_object(token);
+}
+
+// ============================================================
+// パッケージ内部関数: ConsentToken無効化
+// ============================================================
+
+/// ConsentToken無効化の内部ロジック
+///
+/// ## 概要
+/// 患者（grantor）がConsentTokenを無効化する際に使用する内部関数。
+/// `is_active`フラグを`false`に設定します。
+///
+/// ## バリデーション
+/// - トークンが既に無効化されていないことを確認
+/// - grantorがトークンの発行者と一致することを確認（将来的な拡張のため、現時点では検証なしでも可）
+///
+/// ## パラメータ
+/// - `token`: 無効化するトークンへの可変参照
+/// - `grantor`: 発行者アドレス（検証用）
+///
+/// ## Aborts
+/// - `E_CONSENT_REVOKED`: 既に無効化されている（重複無効化防止）
+public(package) fun revoke_consent_internal(
+    token: &mut ConsentToken,
+    _grantor: address
+) {
+    // バリデーション: 既に無効化されていないことを確認
+    assert!(token.is_active, E_CONSENT_REVOKED);
+
+    // バリデーション: grantorがトークンの発行者と一致することを確認
+    // 将来的な拡張のため、現時点では実装をスキップ（Phase 2で実装予定）
+    // assert!(token.grantor == grantor, E_NON_GRANTOR_REVOKE);
+
+    // トークンを無効化
+    token.is_active = false;
+}
+
+// ============================================================
+// パッケージ内部関数: ConsentToken検証
+// ============================================================
+
+/// ConsentToken検証の内部ロジック
+///
+/// ## 概要
+/// ConsentTokenの検証ロジックを`seal_approve_consent()`から分離した内部関数。
+/// アクティブ状態、有効期限、パスポートID、secretハッシュの検証を行います。
+///
+/// ## バリデーション
+/// 1. トークンがアクティブであることを確認
+/// 2. 有効期限が切れていないことを確認
+/// 3. パスポートIDが一致することを確認
+/// 4. secretハッシュが一致することを確認
+///
+/// ## パラメータ
+/// - `token`: 検証対象トークンへの参照
+/// - `secret`: 検証用の生secret
+/// - `target_passport_id`: 検証対象のパスポートID
+/// - `clock`: 現在時刻取得用のClock参照
+///
+/// ## Aborts
+/// - `E_CONSENT_REVOKED`: トークンが無効化されている
+/// - `E_CONSENT_EXPIRED`: 有効期限切れ
+/// - `E_INVALID_PASSPORT_ID`: パスポートID不一致
+/// - `E_INVALID_SECRET`: secretハッシュ不一致
+public(package) fun verify_consent_internal(
+    token: &ConsentToken,
+    secret: vector<u8>,
+    target_passport_id: object::ID,
+    clock: &Clock
+) {
+    // 1. アクティブ確認
+    assert!(is_active(token), E_CONSENT_REVOKED);
+
+    // 2. 期限確認
+    let now = sui::clock::timestamp_ms(clock);
+    assert!(now < get_expiration(token), E_CONSENT_EXPIRED);
+
+    // 3. パスポートID整合性確認
+    // Payload(医師が要求している対象) == Token(患者が許可した対象) か？
+    assert!(
+        get_passport_id(token) == target_passport_id,
+        E_INVALID_PASSPORT_ID
+    );
+
+    // 4. ハッシュロック検証
+    // 生secretをハッシュ化し、オンチェーンのハッシュと比較
+    let input_hash = hash::sha3_256(secret);
+    let stored_hash = get_secret_hash(token);
+    assert!(input_hash == stored_hash, E_INVALID_SECRET);
+
+    // 検証成功（関数終了 = 検証OK）
 }

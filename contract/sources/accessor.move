@@ -15,8 +15,7 @@
 module cure_pocket::medical_passport_accessor;
 use std::string::String;
 use sui::bcs;
-use sui::clock::{Self, Clock};
-use std::hash;
+use sui::clock::Clock;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 use cure_pocket::seal_accessor;
 use cure_pocket::consent_token::{Self, ConsentToken};
@@ -247,6 +246,43 @@ entry fun create_consent_token(
     consent_token::share_consent_token(token);
 }
 
+/// ConsentTokenを無効化する
+///
+/// ## 概要
+/// 患者（grantor）がConsentTokenを無効化する際に使用するentry関数。
+/// トークンの`is_active`フラグを`false`に設定します。
+///
+/// ## 権限
+/// - トークンの発行者（grantor）のみが無効化可能
+/// - トランザクション送信者がgrantorと一致する必要がある
+///
+/// ## 動作
+/// 1. トランザクション送信者を取得
+/// 2. 送信者がトークンのgrantorと一致することを確認
+/// 3. `consent_token::revoke_consent_internal()`を呼び出して無効化
+///
+/// ## パラメータ
+/// - `token`: 無効化するトークン（共有オブジェクト）
+/// - `ctx`: トランザクションコンテキスト（送信者取得用）
+///
+/// ## Aborts
+/// - `E_CONSENT_REVOKED`: 既に無効化されている（重複無効化防止）
+entry fun revoke_consent_token(
+    token: &mut ConsentToken,
+    ctx: &tx_context::TxContext
+) {
+    let sender = tx_context::sender(ctx);
+
+    // バリデーション: senderがトークンのgrantorと一致することを確認
+    assert!(
+        consent_token::get_grantor(token) == sender,
+        consent_token::e_non_grantor_revoke()
+    );
+
+    // トークンを無効化
+    consent_token::revoke_consent_internal(token, sender);
+}
+
 /// Seal用アクセス検証関数（Dry Run専用）
 ///
 /// ## 概要
@@ -293,25 +329,14 @@ entry fun seal_approve_consent(
     // 2. パスポートIDをID型に変換（addressからIDへ）
     let target_passport_id_obj = object::id_from_address(target_passport_id);
 
-    // 3. アクティブ確認
-    assert!(consent_token::is_active(token), consent_token::e_consent_revoked());
-
-    // 4. 期限確認
-    let now = clock::timestamp_ms(clock);
-    assert!(now < consent_token::get_expiration(token), consent_token::e_consent_expired());
-
-    // 5. パスポートID整合性確認
-    // Payload(医師が要求している対象) == Token(患者が許可した対象) か？
-    assert!(
-        consent_token::get_passport_id(token) == target_passport_id_obj,
-        consent_token::e_invalid_passport_id()
+    // 3. 検証ロジックを内部関数に委譲
+    // コードの重複を削減し、保守性を向上
+    consent_token::verify_consent_internal(
+        token,
+        secret,
+        target_passport_id_obj,
+        clock
     );
-
-    // 6. ハッシュロック検証
-    // 生secretをハッシュ化し、オンチェーンのハッシュと比較
-    let input_hash = hash::sha3_256(secret);
-    let stored_hash = consent_token::get_secret_hash(token);
-    assert!(input_hash == stored_hash, consent_token::e_invalid_secret());
 
     // 検証成功（関数終了 = Sealが「OK」と判断）
 }
