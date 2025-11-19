@@ -1,8 +1,8 @@
 {
   "appName": "CurePocket",
-  "tagline": "Your global, privacy-preserving medication passport.",
+  "tagline": "Your global health passport",
   "actions": {
-    "connectWallet": "Connect Sui Wallet",
+    "connectWallet": "Connect Wallet",
     "addMedication": "Add medication",
     "save": "Save",
     "cancel": "Cancel",
@@ -30,7 +30,14 @@
     "addWithQR": "Add medication with QR code",
     "history": "History",
     "share": "Share",
-    "emergencyCard": "Emergency Card"
+    "emergencyCard": "Emergency Card",
+    "guestGreeting": "Hello Guest",
+    "greetingWithName": "Hello, {{name}}",
+    "profileSetupBanner": {
+      "title": "Set up your profile",
+      "description": "Register your basic information to receive safer and more accurate healthcare services.",
+      "button": "Set up profile"
+    }
   },
   "add": {
     "title": "Add Medication",
@@ -123,5 +130,115 @@
   "status": {
     "active": "Active",
     "stopped": "Stopped"
+  },
+  "allergies": {
+    "title": "Allergies",
+    "add": "Add Allergy",
+    "substance": "Allergen",
+    "severity": "Severity",
+    "symptoms": "Symptoms",
+    "onsetDate": "Onset Date",
+    "diagnosedBy": "Diagnosed By",
+    "notes": "Notes",
+    "severities": {
+      "mild": "Mild",
+      "moderate": "Moderate",
+      "severe": "Severe",
+      "life-threatening": "Life-threatening"
+    },
+    "noAllergies": "No allergies registered"
+  },
+  "histories": {
+    "title": "Medical History",
+    "add": "Add Medical History",
+    "type": "Type",
+    "diagnosis": "Diagnosis / Surgery Name",
+    "diagnosisDate": "Diagnosis / Surgery Date",
+    "diagnosedBy": "Diagnosed By",
+    "description": "Description",
+    "status": "Status",
+    "notes": "Notes",
+    "types": {
+      "condition": "Condition",
+      "surgery": "Surgery",
+      "procedure": "Procedure",
+      "other": "Other"
+    },
+    "statuses": {
+      "active": "Active",
+      "resolved": "Resolved",
+      "chronic": "Chronic"
+    },
+    "noHistories": "No medical history registered"
+  },
+  "labs": {
+    "title": "Lab Results",
+    "add": "Add Lab Result",
+    "testName": "Test Name",
+    "value": "Value",
+    "unit": "Unit",
+    "referenceRange": "Reference Range",
+    "testDate": "Test Date",
+    "testedBy": "Test Facility",
+    "category": "Category",
+    "notes": "Notes",
+    "noResults": "No lab results registered"
+  },
+  "imaging": {
+    "title": "Imaging Reports",
+    "add": "Add Imaging Report",
+    "type": "Imaging Type",
+    "bodyPart": "Body Part",
+    "examDate": "Exam Date",
+    "performedBy": "Performed By",
+    "summary": "Summary / Findings",
+    "findings": "Findings Details",
+    "impression": "Impression",
+    "types": {
+      "xray": "X-ray",
+      "ct": "CT",
+      "mri": "MRI",
+      "ultrasound": "Ultrasound",
+      "other": "Other"
+    },
+    "noReports": "No imaging reports registered"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "summary": {
+      "medications": "Active Medications",
+      "allergies": "Allergies",
+      "histories": "Important History",
+      "labs": "Latest Lab Results",
+      "imaging": "Latest Imaging"
+    },
+    "recentUpdates": "Recent Updates",
+    "addData": "Add Data"
+  },
+  "dataTypes": {
+    "medication": "Medication",
+    "allergy": "Allergy",
+    "history": "History",
+    "lab": "Lab Result",
+    "imaging": "Imaging Report"
+  },
+  "profile": {
+    "name": "Name"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "Privacy-First",
+        "description": "Your health data is encrypted and stored on Walrus"
+      },
+      "global": {
+        "title": "Global Access",
+        "description": "Access your health passport anywhere, anytime"
+      },
+      "blockchain": {
+        "title": "Blockchain Powered",
+        "description": "Built on Sui blockchain for security and transparency"
+      }
+    }
   }
 }

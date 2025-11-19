@@ -1,8 +1,8 @@
 {
   "appName": "CurePocket",
-  "tagline": "あなたのグローバルお薬パスポート、プライバシー保護を重視。",
+  "tagline": "あなたのグローバルヘルスパスポート",
   "actions": {
-    "connectWallet": "ウォレット接続",
+    "connectWallet": "Connect Wallet",
     "addMedication": "お薬を追加",
     "save": "保存",
     "cancel": "キャンセル",
@@ -30,7 +30,14 @@
     "addWithQR": "QRコードで薬を追加",
     "history": "履歴",
     "share": "共有",
-    "emergencyCard": "緊急カード"
+    "emergencyCard": "緊急カード",
+    "guestGreeting": "こんにちは、ゲスト",
+    "greetingWithName": "こんにちは、{{name}}さん",
+    "profileSetupBanner": {
+      "title": "プロフィールを設定しましょう",
+      "description": "基本情報を登録すると、より安全で正確なヘルスケアサービスを受けられます。",
+      "button": "プロフィールを設定する"
+    }
   },
   "add": {
     "title": "薬を追加",
@@ -123,5 +130,115 @@
   "status": {
     "active": "服用中",
     "stopped": "中止"
+  },
+  "allergies": {
+    "title": "アレルギー",
+    "add": "アレルギーを追加",
+    "substance": "アレルギー物質",
+    "severity": "重症度",
+    "symptoms": "症状",
+    "onsetDate": "発症日",
+    "diagnosedBy": "診断した医療機関",
+    "notes": "メモ",
+    "severities": {
+      "mild": "軽度",
+      "moderate": "中等度",
+      "severe": "重度",
+      "life-threatening": "生命に関わる"
+    },
+    "noAllergies": "アレルギーは登録されていません"
+  },
+  "histories": {
+    "title": "病歴",
+    "add": "病歴を追加",
+    "type": "タイプ",
+    "diagnosis": "診断名・手術名",
+    "diagnosisDate": "診断日・手術日",
+    "diagnosedBy": "診断した医療機関",
+    "description": "詳細説明",
+    "status": "状態",
+    "notes": "メモ",
+    "types": {
+      "condition": "基礎疾患",
+      "surgery": "手術歴",
+      "procedure": "処置歴",
+      "other": "その他"
+    },
+    "statuses": {
+      "active": "進行中",
+      "resolved": "治癒",
+      "chronic": "慢性"
+    },
+    "noHistories": "病歴は登録されていません"
+  },
+  "labs": {
+    "title": "検査値",
+    "add": "検査値を追加",
+    "testName": "検査名",
+    "value": "検査値",
+    "unit": "単位",
+    "referenceRange": "基準範囲",
+    "testDate": "検査日",
+    "testedBy": "検査機関",
+    "category": "カテゴリー",
+    "notes": "メモ",
+    "noResults": "検査値は登録されていません"
+  },
+  "imaging": {
+    "title": "画像レポート",
+    "add": "画像レポートを追加",
+    "type": "画像タイプ",
+    "bodyPart": "検査部位",
+    "examDate": "検査実施日",
+    "performedBy": "実施機関",
+    "summary": "要約・所見",
+    "findings": "所見の詳細",
+    "impression": "診断的所見",
+    "types": {
+      "xray": "レントゲン",
+      "ct": "CT",
+      "mri": "MRI",
+      "ultrasound": "超音波",
+      "other": "その他"
+    },
+    "noReports": "画像レポートは登録されていません"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "summary": {
+      "medications": "服用中の薬",
+      "allergies": "アレルギー",
+      "histories": "重要な病歴",
+      "labs": "最新の検査値",
+      "imaging": "最新の画像"
+    },
+    "recentUpdates": "最近の更新",
+    "addData": "データを追加"
+  },
+  "dataTypes": {
+    "medication": "薬",
+    "allergy": "アレルギー",
+    "history": "病歴",
+    "lab": "検査値",
+    "imaging": "画像レポート"
+  },
+  "profile": {
+    "name": "名前"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "プライバシー重視",
+        "description": "あなたのヘルスデータは暗号化され、Walrusに保存されます"
+      },
+      "global": {
+        "title": "グローバルアクセス",
+        "description": "いつでも、どこでもヘルスパスポートにアクセスできます"
+      },
+      "blockchain": {
+        "title": "ブロックチェーン対応",
+        "description": "セキュリティと透明性のためにSuiブロックチェーン上に構築されています"
+      }
+    }
   }
 }

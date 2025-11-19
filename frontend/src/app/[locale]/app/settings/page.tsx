@@ -29,20 +29,20 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 md:p-6">
       {/* Theme Section */}
       <div className="mb-8">
-        <h2 className="mb-4 text-lg font-bold" style={{ color: theme.colors.text }}>
+        <h2 className="mb-4 text-lg font-bold md:text-xl" style={{ color: theme.colors.text }}>
           {t('settings.theme')}
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {Object.values(themes).map((themeOption) => {
             const isSelected = settings.theme === themeOption.id;
             return (
               <button
                 key={themeOption.id}
                 onClick={() => handleThemeChange(themeOption.id)}
-                className="relative overflow-hidden rounded-xl p-4 shadow-sm transition-transform active:scale-95"
+                className="relative overflow-hidden rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6 hover:shadow-md"
                 style={{
                   backgroundColor: themeOption.colors.surface,
                   border: isSelected
@@ -52,19 +52,19 @@ export default function SettingsPage() {
               >
                 {isSelected && (
                   <div
-                    className="absolute right-2 top-2 rounded-full p-1"
+                    className="absolute right-2 top-2 rounded-full p-1 md:p-1.5"
                     style={{ backgroundColor: theme.colors.primary }}
                   >
-                    <Check className="h-4 w-4 text-white" />
+                    <Check className="h-4 w-4 text-white md:h-5 md:w-5" />
                   </div>
                 )}
                 <div
-                  className="mb-3 h-8 rounded-lg"
+                  className="mb-3 h-8 rounded-lg md:h-12"
                   style={{
                     background: `linear-gradient(135deg, ${themeOption.colors.primary}, ${themeOption.colors.secondary})`,
                   }}
                 />
-                <div className="text-sm font-medium" style={{ color: themeOption.colors.text }}>
+                <div className="text-sm font-medium md:text-base" style={{ color: themeOption.colors.text }}>
                   {t(`themes.${themeOption.id}`)}
                 </div>
               </button>
@@ -183,6 +183,25 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Profile Section */}
+      <div className="mb-8">
+        <h2 className="mb-4 text-lg font-bold" style={{ color: theme.colors.text }}>
+          {t('settings.profile')}
+        </h2>
+        <button
+          onClick={() => router.push(`/${settings.locale}/app/profile`)}
+          className="flex w-full items-center justify-between rounded-xl p-4 shadow-sm transition-transform active:scale-95"
+          style={{ backgroundColor: theme.colors.surface }}
+        >
+          <span className="font-medium" style={{ color: theme.colors.text }}>
+            プロフィール設定
+          </span>
+          <span className="text-sm" style={{ color: theme.colors.textSecondary }}>
+            →
+          </span>
+        </button>
       </div>
 
       {/* Wallet Info */}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppProvider } from "@/contexts/AppContext";
+import { SuiProviders } from "@/components/providers/SuiProviders";
+import '@mysten/dapp-kit/dist/index.css';
 
 export const metadata: Metadata = {
   title: "CurePocket - Your Global Medication Passport",
@@ -15,9 +17,11 @@ export default function RootLayout({
   return (
     <html>
       <body className="antialiased">
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <SuiProviders>
+          <AppProvider>
+            {children}
+          </AppProvider>
+        </SuiProviders>
       </body>
     </html>
   );

@@ -1,8 +1,8 @@
 {
   "appName": "CurePocket",
-  "tagline": "Votre passeport médicamenteux mondial, préservant la confidentialité.",
+  "tagline": "Votre passeport de santé mondial",
   "actions": {
-    "connectWallet": "Connecter le portefeuille",
+    "connectWallet": "Connect Wallet",
     "addMedication": "Ajouter un médicament",
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -30,7 +30,14 @@
     "addWithQR": "Ajouter un médicament avec QR code",
     "history": "Historique",
     "share": "Partager",
-    "emergencyCard": "Carte d'urgence"
+    "emergencyCard": "Carte d'urgence",
+    "guestGreeting": "Bonjour, Invité",
+    "greetingWithName": "Bonjour, {{name}}",
+    "profileSetupBanner": {
+      "title": "Configurez votre profil",
+      "description": "Enregistrez vos informations de base pour recevoir des services de santé plus sûrs et plus précis.",
+      "button": "Configurer le profil"
+    }
   },
   "add": {
     "title": "Ajouter un médicament",
@@ -123,5 +130,115 @@
   "status": {
     "active": "Actif",
     "stopped": "Arrêté"
+  },
+  "allergies": {
+    "title": "Allergies",
+    "add": "Ajouter une allergie",
+    "substance": "Allergène",
+    "severity": "Gravité",
+    "symptoms": "Symptômes",
+    "onsetDate": "Date d'apparition",
+    "diagnosedBy": "Diagnostiqué par",
+    "notes": "Notes",
+    "severities": {
+      "mild": "Légère",
+      "moderate": "Modérée",
+      "severe": "Sévère",
+      "life-threatening": "Menace pour la vie"
+    },
+    "noAllergies": "Aucune allergie enregistrée"
+  },
+  "histories": {
+    "title": "Antécédents médicaux",
+    "add": "Ajouter des antécédents médicaux",
+    "type": "Type",
+    "diagnosis": "Diagnostic / Nom de la chirurgie",
+    "diagnosisDate": "Date du diagnostic / de la chirurgie",
+    "diagnosedBy": "Diagnostiqué par",
+    "description": "Description",
+    "status": "Statut",
+    "notes": "Notes",
+    "types": {
+      "condition": "Condition",
+      "surgery": "Chirurgie",
+      "procedure": "Procédure",
+      "other": "Autre"
+    },
+    "statuses": {
+      "active": "Actif",
+      "resolved": "Résolu",
+      "chronic": "Chronique"
+    },
+    "noHistories": "Aucun antécédent médical enregistré"
+  },
+  "labs": {
+    "title": "Résultats de laboratoire",
+    "add": "Ajouter un résultat de laboratoire",
+    "testName": "Nom du test",
+    "value": "Valeur",
+    "unit": "Unité",
+    "referenceRange": "Plage de référence",
+    "testDate": "Date du test",
+    "testedBy": "Installation de test",
+    "category": "Catégorie",
+    "notes": "Notes",
+    "noResults": "Aucun résultat de laboratoire enregistré"
+  },
+  "imaging": {
+    "title": "Rapports d'imagerie",
+    "add": "Ajouter un rapport d'imagerie",
+    "type": "Type d'imagerie",
+    "bodyPart": "Partie du corps",
+    "examDate": "Date d'examen",
+    "performedBy": "Effectué par",
+    "summary": "Résumé / Constatations",
+    "findings": "Détails des constatations",
+    "impression": "Impression",
+    "types": {
+      "xray": "Radiographie",
+      "ct": "CT",
+      "mri": "IRM",
+      "ultrasound": "Échographie",
+      "other": "Autre"
+    },
+    "noReports": "Aucun rapport d'imagerie enregistré"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "summary": {
+      "medications": "Médicaments actifs",
+      "allergies": "Allergies",
+      "histories": "Antécédents importants",
+      "labs": "Derniers résultats de laboratoire",
+      "imaging": "Dernière imagerie"
+    },
+    "recentUpdates": "Mises à jour récentes",
+    "addData": "Ajouter des données"
+  },
+  "dataTypes": {
+    "medication": "Médicament",
+    "allergy": "Allergie",
+    "history": "Antécédents",
+    "lab": "Résultat de laboratoire",
+    "imaging": "Rapport d'imagerie"
+  },
+  "profile": {
+    "name": "Nom"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "Confidentialité d'abord",
+        "description": "Vos données de santé sont cryptées et stockées sur Walrus"
+      },
+      "global": {
+        "title": "Accès mondial",
+        "description": "Accédez à votre passeport de santé n'importe où, n'importe quand"
+      },
+      "blockchain": {
+        "title": "Alimenté par la blockchain",
+        "description": "Construit sur la blockchain Sui pour la sécurité et la transparence"
+      }
+    }
   }
 }
