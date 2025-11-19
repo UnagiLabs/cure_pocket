@@ -57,6 +57,7 @@ public struct ConsentToken has key, store {
 /// ## フィールド
 /// - `secret`: 生の合言葉（32bytes random + salt想定）
 /// - `target_passport_id`: 閲覧対象のパスポートID（address型としてBCSシリアライズ）
+/// - `requested_scope`: 要求されるスコープ（例: "medication", "lab_results"）
 ///
 /// ## 注意
 /// - Move側では直接使用されず、BCSのバイト列から直接読み取る
@@ -66,6 +67,7 @@ public struct ConsentToken has key, store {
 public struct SealAuthPayload has drop {
     secret: vector<u8>,
     target_passport_id: object::ID,
+    requested_scope: String,
 }
 
 // ============================================================

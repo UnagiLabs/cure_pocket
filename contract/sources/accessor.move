@@ -13,7 +13,7 @@
 /// - ConsentToken作成・検証関数
 /// - 将来的な検索・照会機能の追加余地
 module cure_pocket::medical_passport_accessor;
-use std::string::String;
+use std::string::{Self as string, String};
 use sui::bcs;
 use sui::clock::Clock;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
@@ -325,6 +325,8 @@ entry fun seal_approve_consent(
     let mut bcs_cursor = bcs::new(id);
     let secret = bcs::peel_vec_u8(&mut bcs_cursor);
     let target_passport_id = bcs::peel_address(&mut bcs_cursor);
+    let _requested_scope_bytes = bcs::peel_vec_u8(&mut bcs_cursor); // Phase 2で使用予定
+    let _requested_scope = string::utf8(_requested_scope_bytes); // Phase 2で使用予定
 
     // 2. パスポートIDをID型に変換（addressからIDへ）
     let target_passport_id_obj = object::id_from_address(target_passport_id);
@@ -337,6 +339,13 @@ entry fun seal_approve_consent(
         target_passport_id_obj,
         clock
     );
+
+    // 4. スコープ検証（将来実装予定）
+    // TODO: Phase 2で実装予定
+    // assert!(
+    //     consent_token::verify_scope(token, requested_scope),
+    //     consent_token::e_scope_not_allowed()
+    // );
 
     // 検証成功（関数終了 = Sealが「OK」と判断）
 }

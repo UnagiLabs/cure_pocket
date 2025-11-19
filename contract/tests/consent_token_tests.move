@@ -490,11 +490,14 @@ module cure_pocket::consent_token_tests {
             let secret = create_test_secret();
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -571,11 +574,14 @@ module cure_pocket::consent_token_tests {
             let secret = create_test_secret();
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -643,11 +649,14 @@ module cure_pocket::consent_token_tests {
             let wrong_passport_id = object::id_from_address(@0xB2); // 異なるID
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&wrong_passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -710,11 +719,14 @@ module cure_pocket::consent_token_tests {
             let wrong_secret = vector[99u8, 98u8, 97u8]; // 異なるsecret
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&wrong_secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -780,11 +792,14 @@ module cure_pocket::consent_token_tests {
             let secret = create_test_secret();
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -861,11 +876,14 @@ module cure_pocket::consent_token_tests {
             let secret = create_test_secret();
 
             // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8とbcs::peel_addressの順序でシリアライズ
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
             let mut bcs_bytes = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
             vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication");
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
 
             medical_passport_accessor::seal_approve_consent(
                 bcs_bytes,
@@ -1127,6 +1145,156 @@ module cure_pocket::consent_token_tests {
             );
             consent_token::share_consent_token(token);
 
+            clock::destroy_for_testing(clock);
+        };
+
+        ts::end(scenario);
+    }
+
+    // ============================================================
+    // スコープ検証テスト（Phase 2）
+    // ============================================================
+
+    /// Test 20: スコープ外アクセスが拒否されるべき（現在の実装ではNGが出ない）
+    ///
+    /// 仕様:
+    /// - ConsentTokenを作成（スコープ: ["medication"]のみ）
+    /// - seal_approve_consent()でrequested_scope = "lab_results"を指定
+    /// - E_SCOPE_NOT_ALLOWEDでabortされるべき
+    ///
+    /// 注意: このテストは実装前は失敗する（スコープ検証がないため、abortしない）
+    /// これはTDDのRed状態を確認するためのテスト
+    /// Phase 2でスコープ検証を実装した後、このテストがPassするようになる
+    #[test]
+    #[expected_failure(abort_code = 209, location = consent_token)]
+    fun test_seal_approve_consent_scope_not_allowed() {
+        let mut scenario = ts::begin(USER1);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がConsentTokenを作成（スコープ: ["medication"]のみ）
+        let passport_id;
+        ts::next_tx(&mut scenario, USER1);
+        {
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            passport_id = object::id_from_address(PASSPORT_ID);
+            let secret_hash = create_test_secret_hash();
+            let mut scopes = vector::empty<String>();
+            vector::push_back(&mut scopes, string::utf8(b"medication")); // medicationのみ
+            let duration_ms = 86400000u64;
+
+            let token = consent_token::create_consent_internal(
+                passport_id,
+                USER1,  // grantor
+                secret_hash,
+                scopes,
+                duration_ms,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+            consent_token::share_consent_token(token);
+
+            clock::destroy_for_testing(clock);
+        };
+
+        // スコープ外アクセス（lab_results）を試みる
+        // 現在の実装ではスコープ検証がないため、abortしない（Passしてしまう）
+        ts::next_tx(&mut scenario, USER1);
+        {
+            let token = ts::take_shared<ConsentToken>(&scenario);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let secret = create_test_secret();
+
+            // BCSエンコードされたペイロードを作成
+            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
+            let mut bcs_bytes = bcs::to_bytes(&secret);
+            let passport_address = object::id_to_address(&passport_id);
+            let passport_bytes = bcs::to_bytes(&passport_address);
+            vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"lab_results"); // スコープ外
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
+
+            // 現在の実装ではスコープ検証がないため、abortしない
+            medical_passport_accessor::seal_approve_consent(
+                bcs_bytes,
+                &token,
+                &clock
+            );
+
+            ts::return_shared(token);
+            clock::destroy_for_testing(clock);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 21: スコープ内アクセスが許可される（既存の動作確認）
+    ///
+    /// 仕様:
+    /// - ConsentTokenを作成（スコープ: ["medication", "lab_results"]）
+    /// - seal_approve_consent()でrequested_scope = "medication"を指定
+    /// - abortしないことを確認（正常系）
+    #[test]
+    fun test_seal_approve_consent_scope_allowed() {
+        let mut scenario = ts::begin(USER1);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // User1がConsentTokenを作成（スコープ: ["medication", "lab_results"]）
+        let passport_id;
+        ts::next_tx(&mut scenario, USER1);
+        {
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            passport_id = object::id_from_address(PASSPORT_ID);
+            let secret_hash = create_test_secret_hash();
+            let scopes = create_test_scopes(); // ["medication", "lab_results"]
+            let duration_ms = 86400000u64;
+
+            let token = consent_token::create_consent_internal(
+                passport_id,
+                USER1,  // grantor
+                secret_hash,
+                scopes,
+                duration_ms,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+            consent_token::share_consent_token(token);
+
+            clock::destroy_for_testing(clock);
+        };
+
+        // スコープ内アクセス（medication）を試みる
+        ts::next_tx(&mut scenario, USER1);
+        {
+            let token = ts::take_shared<ConsentToken>(&scenario);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let secret = create_test_secret();
+
+            // BCSエンコードされたペイロードを作成
+            let mut bcs_bytes = bcs::to_bytes(&secret);
+            let passport_address = object::id_to_address(&passport_id);
+            let passport_bytes = bcs::to_bytes(&passport_address);
+            vector::append(&mut bcs_bytes, passport_bytes);
+            let requested_scope = string::utf8(b"medication"); // スコープ内
+            let scope_bytes = bcs::to_bytes(&requested_scope);
+            vector::append(&mut bcs_bytes, scope_bytes);
+
+            // abortしないことを確認
+            medical_passport_accessor::seal_approve_consent(
+                bcs_bytes,
+                &token,
+                &clock
+            );
+
+            ts::return_shared(token);
             clock::destroy_for_testing(clock);
         };
 
