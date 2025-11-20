@@ -134,6 +134,14 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
         clock: &Clock,
         ctx: &mut tx_context::TxContext
     ) {
+        // 移行元オーナーの整合性を検証
+        medical_passport::assert_passport_owner(
+            registry,
+            object::id(&passport),
+            old_owner,
+            medical_passport::e_not_owner_for_migration()
+        );
+
         // 1. 移行先の状態チェック: 既にパスポートを持っていないか確認
         assert!(
             !medical_passport::has_passport(registry, new_owner),

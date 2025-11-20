@@ -376,14 +376,13 @@ public(package) fun share_consent_token(token: ConsentToken) {
 /// - `E_CONSENT_REVOKED`: 既に無効化されている（重複無効化防止）
 public(package) fun revoke_consent_internal(
     token: &mut ConsentToken,
-    _grantor: address
+    grantor: address
 ) {
     // バリデーション: 既に無効化されていないことを確認
     assert!(token.is_active, E_CONSENT_REVOKED);
 
     // バリデーション: grantorがトークンの発行者と一致することを確認
-    // 将来的な拡張のため、現時点では実装をスキップ（Phase 2で実装予定）
-    // assert!(token.grantor == grantor, E_NON_GRANTOR_REVOKE);
+    assert!(token.grantor == grantor, E_NON_GRANTOR_REVOKE);
 
     // トークンを無効化
     token.is_active = false;

@@ -118,6 +118,15 @@ const E_ALREADY_HAS_PASSPORT: u64 = 4;
 /// 移行先アドレスが既にパスポートを所持している
 const E_MIGRATION_TARGET_HAS_PASSPORT: u64 = 5;
 
+/// Registryに既に登録済み
+const E_REGISTRY_ALREADY_REGISTERED: u64 = 6;
+
+/// Registryにエントリーが存在しない
+const E_REGISTRY_NOT_FOUND: u64 = 7;
+
+/// 移行元オーナーが不一致
+const E_NOT_OWNER_FOR_MIGRATION: u64 = 8;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -156,6 +165,21 @@ public(package) fun e_migration_target_has_passport(): u64 {
 /// - エラーコード `E_EMPTY_WALRUS_BLOB_ID` の値
 public(package) fun e_empty_walrus_blob_id(): u64 {
     E_EMPTY_WALRUS_BLOB_ID
+}
+
+/// E_REGISTRY_ALREADY_REGISTERED エラーコードを取得
+public(package) fun e_registry_already_registered(): u64 {
+    E_REGISTRY_ALREADY_REGISTERED
+}
+
+/// E_REGISTRY_NOT_FOUND エラーコードを取得
+public(package) fun e_registry_not_found(): u64 {
+    E_REGISTRY_NOT_FOUND
+}
+
+/// E_NOT_OWNER_FOR_MIGRATION エラーコードを取得
+public(package) fun e_not_owner_for_migration(): u64 {
+    E_NOT_OWNER_FOR_MIGRATION
 }
 
 // ============================================================
@@ -326,6 +350,11 @@ public(package) fun register_passport_with_id(
     passport_id: object::ID,
     owner: address
 ) {
+    // 二重登録の明示的ガード（ユーザーUX向上）
+    assert!(
+        !df::exists_<address>(&registry.id, owner),
+        E_REGISTRY_ALREADY_REGISTERED
+    );
     df::add(&mut registry.id, owner, passport_id);
 }
 
@@ -346,6 +375,11 @@ public(package) fun register_passport_with_id(
 /// ## Aborts
 /// - Dynamic Fieldの remove が失敗する場合（キーが存在しない場合）
 public(package) fun unregister_passport_by_owner(registry: &mut PassportRegistry, owner: address) {
+    // 未登録なら明示的にabortし、フロントのエラーハンドリングを簡潔にする
+    assert!(
+        df::exists_<address>(&registry.id, owner),
+        E_REGISTRY_NOT_FOUND
+    );
     let _passport_id = df::remove<address, object::ID>(&mut registry.id, owner);
 }
 
@@ -477,6 +511,9 @@ public(package) fun update_walrus_blob_id_internal(
     new_blob_id: String,
     clock: &Clock
 ) {
+    // セーフガード（二重バリデーション）
+    assert!(!string::is_empty(&new_blob_id), E_EMPTY_WALRUS_BLOB_ID);
+
     // 現在のwalrus_blob_idを保存（イベント発行時に使用）
     let old_blob_id = passport.walrus_blob_id;
 

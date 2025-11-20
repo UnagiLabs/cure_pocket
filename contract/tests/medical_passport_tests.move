@@ -1041,6 +1041,131 @@ module cure_pocket::medical_passport_tests {
         ts::end(scenario);
     }
 
+    /// Test 21: 移行元オーナー不一致でabort
+    ///
+    /// 仕様:
+    /// - user1がパスポートを所持
+    /// - adminがold_ownerを誤ってuserXとして移行実行
+    /// - `E_NOT_OWNER_FOR_MIGRATION (8)`でabortする
+    #[test]
+    #[expected_failure(abort_code = 8, location = medical_passport)]
+    fun test_migration_wrong_old_owner_aborts() {
+        let admin_addr = ADMIN;
+        let user1 = @0xA11;
+        let user_x = @0xA55;
+        let user2 = @0xA22;
+        let mut scenario = ts::begin(admin_addr);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // user1 mint
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-mig"),
+                string::utf8(b"seal-mig"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+            ts::return_shared(registry);
+        };
+
+        // admin migration with wrong old_owner
+        ts::next_tx(&mut scenario, admin_addr);
+        {
+            let admin_cap = ts::take_from_sender<AdminCap>(&scenario);
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            let passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+
+            admin::migrate_passport(
+                &admin_cap,
+                &mut registry,
+                user_x,  // wrong owner provided
+                user2,
+                passport,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+
+            clock::destroy_for_testing(clock);
+            ts::return_to_sender(&scenario, admin_cap);
+            ts::return_shared(registry);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 22: walrus blob 更新内部関数が空文字でabort
+    ///
+    /// 仕様:
+    /// - update_walrus_blob_id_internalに空文字を渡すとE_EMPTY_WALRUS_BLOB_ID(1)でabort
+    #[test]
+    #[expected_failure(abort_code = 1, location = medical_passport)]
+    fun test_update_walrus_internal_empty_aborts() {
+        let user1 = @0xA11;
+        let mut scenario = ts::begin(user1);
+
+        // 初期化とmint
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        ts::next_tx(&mut scenario, user1);
+        {
+            let mut registry = ts::take_shared<PassportRegistry>(&scenario);
+            medical_passport_accessor::mint_medical_passport(
+                &mut registry,
+                string::utf8(b"walrus-old"),
+                string::utf8(b"seal-old"),
+                string::utf8(b"JP"),
+                ts::ctx(&mut scenario)
+            );
+            ts::return_shared(registry);
+        };
+
+        // 新しいトランザクションでパスポートを取得
+        ts::next_tx(&mut scenario, user1);
+        let mut passport = ts::take_from_address<MedicalPassport>(&scenario, user1);
+
+        // 呼び出し
+        {
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            medical_passport::update_walrus_blob_id_internal(
+                &mut passport,
+                string::utf8(b""),
+                &clock
+            );
+            clock::destroy_for_testing(clock);
+        };
+
+        // 片付け
+        test_utils::destroy(passport);
+        ts::end(scenario);
+    }
+
+    /// Test 23: Registry未登録削除で明示的エラーを返す
+    ///
+    /// 仕様:
+    /// - unregistered ownerでunregister_passport_by_ownerを呼ぶとE_REGISTRY_NOT_FOUND(7)でabort
+    #[test]
+    #[expected_failure(abort_code = 7, location = medical_passport)]
+    fun test_unregister_without_entry_aborts() {
+        let mut scenario = ts::begin(ADMIN);
+        {
+            let ctx = ts::ctx(&mut scenario);
+            let mut registry = medical_passport::create_passport_registry(ctx);
+            medical_passport::unregister_passport_by_owner(&mut registry, @0xBEEF);
+            test_utils::destroy(registry);
+        };
+        ts::end(scenario);
+    }
+
     /// Test 20: 移行関数はAdminCapが必要
     ///
     /// 仕様:

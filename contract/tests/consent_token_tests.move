@@ -8,6 +8,7 @@ module cure_pocket::consent_token_tests {
     use sui::bcs;
     use std::string::{Self, String};
     use std::hash;
+    use sui::test_utils;
 
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::consent_token::{Self, ConsentToken};
@@ -434,6 +435,51 @@ module cure_pocket::consent_token_tests {
             );
 
             ts::return_shared(token);
+        };
+
+        ts::end(scenario);
+    }
+
+    /// Test 8b: 内部関数でもgrantor不一致でabort
+    ///
+    /// 仕様:
+    /// - consent_token::revoke_consent_internalにgrantor不一致を渡すとE_NON_GRANTOR_REVOKE(210)でabort
+    #[test]
+    #[expected_failure(abort_code = 210, location = consent_token)]
+    fun test_revoke_consent_internal_non_grantor() {
+        let mut scenario = ts::begin(USER1);
+
+        // 初期化
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // トークン作成
+        let token = {
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let passport_id = object::id_from_address(PASSPORT_ID);
+            let secret_hash = create_test_secret_hash();
+            let scopes = create_test_scopes();
+            let duration_ms = 86400000u64;
+
+            let t = consent_token::create_consent_internal(
+                passport_id,
+                USER1,
+                secret_hash,
+                scopes,
+                duration_ms,
+                &clock,
+                ts::ctx(&mut scenario)
+            );
+            clock::destroy_for_testing(clock);
+            t
+        };
+
+        // grantor不一致で内部無効化
+        {
+            let mut token_mut = token;
+            consent_token::revoke_consent_internal(&mut token_mut, USER2);
+            test_utils::destroy(token_mut);
         };
 
         ts::end(scenario);
