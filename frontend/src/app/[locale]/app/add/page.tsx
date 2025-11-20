@@ -87,6 +87,7 @@ export default function AddDataPage() {
           const Icon = dataType.icon;
           return (
             <button
+              type="button"
               key={dataType.id}
               onClick={() => router.push(dataType.route)}
               className="w-full rounded-xl p-6 shadow-sm transition-transform active:scale-95 md:p-8 hover:shadow-md"
@@ -95,7 +96,7 @@ export default function AddDataPage() {
               <div className="flex items-center md:flex-col md:text-center">
                 <div
                   className="mr-4 rounded-full p-3 md:mr-0 md:mb-3"
-                  style={{ backgroundColor: dataType.color + "20" }}
+                  style={{ backgroundColor: `${dataType.color}20` }}
                 >
                   <Icon
                     className="h-8 w-8 md:h-12 md:w-12"

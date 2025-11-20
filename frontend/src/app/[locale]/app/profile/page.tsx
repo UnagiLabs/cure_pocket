@@ -11,7 +11,6 @@ import {
 } from "@/lib/chronicConditions";
 import { getTheme } from "@/lib/themes";
 import type {
-  AgeBand,
   AlcoholUse,
   ChronicCondition,
   ExerciseFrequency,
@@ -26,9 +25,9 @@ import type {
  */
 export default function ProfilePage() {
   const t = useTranslations();
-  const router = useRouter();
+  const _router = useRouter();
   const locale = useLocale();
-  const { settings, profile, updateProfile, walletAddress } = useApp();
+  const { settings, profile, updateProfile } = useApp();
   const theme = getTheme(settings.theme);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -84,7 +83,18 @@ export default function ProfilePage() {
     });
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (
+    field: string,
+    value:
+      | string
+      | number
+      | Gender
+      | SmokingStatus
+      | AlcoholUse
+      | ExerciseFrequency
+      | null
+      | undefined,
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -190,12 +200,14 @@ export default function ProfilePage() {
           {/* 名前入力欄 */}
           <div className="md:col-span-2">
             <label
+              htmlFor="profile-name"
               className="mb-1 block text-sm font-medium md:text-base"
               style={{ color: theme.colors.text }}
             >
               {t("profile.name")}
             </label>
             <input
+              id="profile-name"
               type="text"
               value={formData.name || ""}
               onChange={(e) =>
@@ -204,7 +216,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3 text-sm md:text-base"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
               placeholder={t("profile.name")}
@@ -213,12 +225,14 @@ export default function ProfilePage() {
 
           <div>
             <label
+              htmlFor="profile-ageBand"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               年齢帯 *
             </label>
             <select
+              id="profile-ageBand"
               value={formData.ageBand || ""}
               onChange={(e) =>
                 handleInputChange("ageBand", e.target.value || null)
@@ -226,7 +240,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             >
@@ -243,16 +257,17 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label
-              className="mb-1 block text-sm font-medium"
+            <div
+              className="mb-1 text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               性別 *
-            </label>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {(["male", "female", "other", "unknown"] as Gender[]).map(
                 (gender) => (
                   <button
+                    type="button"
                     key={gender}
                     onClick={() => handleInputChange("gender", gender)}
                     className={`rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
@@ -264,10 +279,10 @@ export default function ProfilePage() {
                       borderColor:
                         formData.gender === gender
                           ? theme.colors.primary
-                          : theme.colors.textSecondary + "40",
+                          : `${theme.colors.textSecondary}40`,
                       backgroundColor:
                         formData.gender === gender
-                          ? theme.colors.primary + "10"
+                          ? `${theme.colors.primary}10`
                           : theme.colors.surface,
                       color: theme.colors.text,
                     }}
@@ -285,12 +300,14 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-4 md:col-span-2">
             <div>
               <label
+                htmlFor="profile-heightCm"
                 className="mb-1 block text-sm font-medium md:text-base"
                 style={{ color: theme.colors.text }}
               >
                 身長 (cm)
               </label>
               <input
+                id="profile-heightCm"
                 type="number"
                 value={formData.heightCm || ""}
                 onChange={(e) =>
@@ -302,7 +319,7 @@ export default function ProfilePage() {
                 className="w-full rounded-lg border p-3"
                 style={{
                   backgroundColor: theme.colors.background,
-                  borderColor: theme.colors.textSecondary + "40",
+                  borderColor: `${theme.colors.textSecondary}40`,
                   color: theme.colors.text,
                 }}
                 placeholder="170"
@@ -311,12 +328,14 @@ export default function ProfilePage() {
 
             <div>
               <label
+                htmlFor="profile-weightKg"
                 className="mb-1 block text-sm font-medium"
                 style={{ color: theme.colors.text }}
               >
                 体重 (kg)
               </label>
               <input
+                id="profile-weightKg"
                 type="number"
                 value={formData.weightKg || ""}
                 onChange={(e) =>
@@ -328,7 +347,7 @@ export default function ProfilePage() {
                 className="w-full rounded-lg border p-3"
                 style={{
                   backgroundColor: theme.colors.background,
-                  borderColor: theme.colors.textSecondary + "40",
+                  borderColor: `${theme.colors.textSecondary}40`,
                   color: theme.colors.text,
                 }}
                 placeholder="65"
@@ -338,12 +357,14 @@ export default function ProfilePage() {
 
           <div>
             <label
+              htmlFor="profile-bloodType"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               血液型
             </label>
             <select
+              id="profile-bloodType"
               value={formData.bloodType || ""}
               onChange={(e) =>
                 handleInputChange("bloodType", e.target.value || undefined)
@@ -351,7 +372,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             >
@@ -410,9 +431,9 @@ export default function ProfilePage() {
                   style={{
                     borderColor: isSelected
                       ? theme.colors.primary
-                      : theme.colors.textSecondary + "40",
+                      : `${theme.colors.textSecondary}40`,
                     backgroundColor: isSelected
-                      ? theme.colors.primary + "10"
+                      ? `${theme.colors.primary}10`
                       : "transparent",
                   }}
                 >
@@ -439,8 +460,8 @@ export default function ProfilePage() {
         <div
           className="mb-4 rounded-lg border-l-4 p-3 md:p-4"
           style={{
-            borderColor: theme.colors.primary + "40",
-            backgroundColor: theme.colors.primary + "05",
+            borderColor: `${theme.colors.primary}40`,
+            backgroundColor: `${theme.colors.primary}05`,
           }}
         >
           <p
@@ -465,9 +486,10 @@ export default function ProfilePage() {
               <div
                 key={category.id}
                 className="rounded-lg border"
-                style={{ borderColor: theme.colors.textSecondary + "40" }}
+                style={{ borderColor: `${theme.colors.textSecondary}40` }}
               >
                 <button
+                  type="button"
                   onClick={() => toggleCategory(category.id)}
                   className="flex w-full items-center justify-between p-3"
                   style={{ backgroundColor: theme.colors.background }}
@@ -494,7 +516,7 @@ export default function ProfilePage() {
                 {isExpanded && (
                   <div
                     className="space-y-2 border-t p-3"
-                    style={{ borderColor: theme.colors.textSecondary + "20" }}
+                    style={{ borderColor: `${theme.colors.textSecondary}20` }}
                   >
                     {category.conditions.map((condition) => {
                       const isSelected = selectedConditions.some(
@@ -507,9 +529,9 @@ export default function ProfilePage() {
                           style={{
                             borderColor: isSelected
                               ? theme.colors.primary
-                              : theme.colors.textSecondary + "30",
+                              : `${theme.colors.textSecondary}30`,
                             backgroundColor: isSelected
-                              ? theme.colors.primary + "10"
+                              ? `${theme.colors.primary}10`
                               : "transparent",
                           }}
                         >
@@ -541,18 +563,20 @@ export default function ProfilePage() {
         {/* その他（自由記載） */}
         <div className="mt-4">
           <label
+            htmlFor="profile-other-conditions"
             className="mb-2 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             その他の疾患（自由記載）
           </label>
           <input
+            id="profile-other-conditions"
             type="text"
             placeholder="該当する疾患名を入力してください"
             className="w-full rounded-lg border p-3 text-sm"
             style={{
               backgroundColor: theme.colors.background,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             onKeyPress={(e) => {
@@ -585,7 +609,7 @@ export default function ProfilePage() {
             className="flex-1 rounded-lg border p-2"
             style={{
               backgroundColor: theme.colors.background,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             onKeyPress={(e) => {
@@ -596,6 +620,7 @@ export default function ProfilePage() {
             }}
           />
           <button
+            type="button"
             onClick={(e) => {
               const input = e.currentTarget
                 .previousElementSibling as HTMLInputElement;
@@ -609,14 +634,19 @@ export default function ProfilePage() {
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
-          {(formData.foodAllergies || []).map((allergy, index) => (
+          {(formData.foodAllergies || []).map((allergy) => (
             <span
-              key={index}
+              key={allergy}
               className="flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-sm"
             >
               {allergy}
               <button
-                onClick={() => handleFoodAllergyRemove(index)}
+                type="button"
+                onClick={() =>
+                  handleFoodAllergyRemove(
+                    formData.foodAllergies?.indexOf(allergy) || 0,
+                  )
+                }
                 className="text-red-600 hover:text-red-800"
               >
                 ×
@@ -641,12 +671,14 @@ export default function ProfilePage() {
         <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
           <div>
             <label
+              htmlFor="profile-smoking"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               喫煙
             </label>
             <select
+              id="profile-smoking"
               value={formData.smokingStatus || "unknown"}
               onChange={(e) =>
                 handleInputChange(
@@ -657,7 +689,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             >
@@ -670,12 +702,14 @@ export default function ProfilePage() {
 
           <div>
             <label
+              htmlFor="profile-alcohol"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               飲酒
             </label>
             <select
+              id="profile-alcohol"
               value={formData.alcoholUse || "unknown"}
               onChange={(e) =>
                 handleInputChange("alcoholUse", e.target.value as AlcoholUse)
@@ -683,7 +717,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             >
@@ -697,12 +731,14 @@ export default function ProfilePage() {
 
           <div>
             <label
+              htmlFor="profile-exercise"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               運動習慣
             </label>
             <select
+              id="profile-exercise"
               value={formData.exercise || "unknown"}
               onChange={(e) =>
                 handleInputChange(
@@ -713,7 +749,7 @@ export default function ProfilePage() {
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             >
@@ -742,6 +778,7 @@ export default function ProfilePage() {
           </div>
         )}
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSaving || !formData.ageBand}
           className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 disabled:opacity-50 md:max-w-md md:mx-auto md:p-5 md:text-lg"

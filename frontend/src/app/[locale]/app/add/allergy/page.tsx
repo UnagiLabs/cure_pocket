@@ -55,6 +55,7 @@ export default function AddAllergyPage() {
       {/* Header */}
       <div className="mb-6 flex items-center md:mb-8">
         <button
+          type="button"
           onClick={() => router.push(`/${locale}/app/add`)}
           className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
@@ -75,19 +76,21 @@ export default function AddAllergyPage() {
       <div className="space-y-4">
         <div>
           <label
+            htmlFor="allergy-substance"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.substance")} *
           </label>
           <input
+            id="allergy-substance"
             type="text"
             value={formData.substance}
             onChange={(e) => handleInputChange("substance", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("allergies.substance")}
@@ -96,12 +99,14 @@ export default function AddAllergyPage() {
 
         <div>
           <label
+            htmlFor="allergy-severity"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.severity")} *
           </label>
           <select
+            id="allergy-severity"
             value={formData.severity}
             onChange={(e) =>
               handleInputChange("severity", e.target.value as AllergySeverity)
@@ -109,7 +114,7 @@ export default function AddAllergyPage() {
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
           >
@@ -126,19 +131,21 @@ export default function AddAllergyPage() {
 
         <div>
           <label
+            htmlFor="allergy-symptoms"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.symptoms")}
           </label>
           <textarea
+            id="allergy-symptoms"
             value={formData.symptoms}
             onChange={(e) => handleInputChange("symptoms", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("allergies.symptoms")}
@@ -147,19 +154,21 @@ export default function AddAllergyPage() {
 
         <div>
           <label
+            htmlFor="allergy-onsetDate"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.onsetDate")}
           </label>
           <input
+            id="allergy-onsetDate"
             type="date"
             value={formData.onsetDate}
             onChange={(e) => handleInputChange("onsetDate", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
           />
@@ -167,19 +176,21 @@ export default function AddAllergyPage() {
 
         <div>
           <label
+            htmlFor="allergy-diagnosedBy"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.diagnosedBy")}
           </label>
           <input
+            id="allergy-diagnosedBy"
             type="text"
             value={formData.diagnosedBy}
             onChange={(e) => handleInputChange("diagnosedBy", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("allergies.diagnosedBy")}
@@ -188,19 +199,21 @@ export default function AddAllergyPage() {
 
         <div>
           <label
+            htmlFor="allergy-notes"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("allergies.notes")}
           </label>
           <textarea
+            id="allergy-notes"
             value={formData.notes}
             onChange={(e) => handleInputChange("notes", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("allergies.notes")}
@@ -209,16 +222,18 @@ export default function AddAllergyPage() {
 
         <div className="flex gap-3 md:max-w-md md:mx-auto">
           <button
+            type="button"
             onClick={() => router.push(`/${locale}/app/add`)}
             className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95"
             style={{
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
           >
             {t("actions.cancel")}
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!formData.substance}
             className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
 import { useMintPassport } from "@/hooks/useMintPassport";
@@ -243,7 +243,7 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: theme.colors.primary + "10",
+            backgroundColor: `${theme.colors.primary}10`,
             borderColor: theme.colors.primary,
           }}
         >
@@ -263,6 +263,7 @@ export default function HomePage() {
             {t("home.profileSetupBanner.description")}
           </p>
           <button
+            type="button"
             onClick={() => router.push(`/${locale}/app/profile`)}
             className="w-full rounded-lg p-2 text-sm font-medium text-white"
             style={{ backgroundColor: theme.colors.primary }}
@@ -319,7 +320,7 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: theme.colors.primary + "10",
+            backgroundColor: `${theme.colors.primary}10`,
             borderColor: theme.colors.primary,
           }}
         >
@@ -347,6 +348,7 @@ export default function HomePage() {
             </div>
           )}
           <button
+            type="button"
             onClick={handle_mint_passport}
             disabled={is_mint_pending}
             className="w-full rounded-lg p-2 text-sm font-medium text-white disabled:opacity-50"
@@ -391,6 +393,7 @@ export default function HomePage() {
           const Icon = card.icon;
           return (
             <button
+              type="button"
               key={card.id}
               onClick={() => {
                 const paths: Record<string, string> = {
@@ -429,6 +432,7 @@ export default function HomePage() {
       {/* Quick Action Buttons */}
       <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         <button
+          type="button"
           onClick={() => router.push(`/${locale}/app/add`)}
           className="flex w-full items-center justify-center rounded-xl p-4 shadow-md transition-transform active:scale-95 md:p-5"
           style={{ backgroundColor: theme.colors.accent, color: "white" }}
@@ -440,6 +444,7 @@ export default function HomePage() {
         </button>
 
         <button
+          type="button"
           onClick={() => router.push(`/${locale}/app/card`)}
           className="flex w-full items-center justify-center rounded-xl border-2 p-4 shadow-sm transition-transform active:scale-95 md:p-5"
           style={{

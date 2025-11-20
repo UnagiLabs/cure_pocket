@@ -118,6 +118,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex md:gap-2 md:items-center md:flex-shrink-0">
             <button
+              type="button"
               onClick={() => navigateTo("/app", "home")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
                 activeTab === "home" ? "bg-white/20" : "hover:bg-white/10"
@@ -126,12 +127,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
               {t("tabs.home")}
             </button>
             <button
+              type="button"
               onClick={() => navigateTo("/app/add", "add")}
               className="rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 whitespace-nowrap"
             >
               {t("tabs.add")}
             </button>
             <button
+              type="button"
               onClick={() => navigateTo("/app/card", "card")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
                 activeTab === "card" ? "bg-white/20" : "hover:bg-white/10"
@@ -140,6 +143,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               {t("tabs.card")}
             </button>
             <button
+              type="button"
               onClick={() => navigateTo("/app/settings", "settings")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
                 activeTab === "settings" ? "bg-white/20" : "hover:bg-white/10"
@@ -158,6 +162,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   {currentAccount?.address.slice(-4)}
                 </span>
                 <button
+                  type="button"
                   onClick={handleDisconnectWallet}
                   className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 whitespace-nowrap"
                   title="ウォレットを切断"
@@ -170,6 +175,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleConnectWallet}
                 disabled={isConnecting}
                 className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50 whitespace-nowrap"
@@ -189,6 +195,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setShowMenu(!showMenu)}
             className="rounded-lg p-2 text-white transition-colors hover:bg-white/10 md:hidden flex-shrink-0"
           >
@@ -207,11 +214,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className="fixed bottom-0 left-0 right-0 border-t md:hidden"
         style={{
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.textSecondary + "20",
+          borderColor: `${theme.colors.textSecondary}20`,
         }}
       >
         <div className="flex justify-around py-2">
           <button
+            type="button"
             onClick={() => navigateTo("/app", "home")}
             className={`flex flex-col items-center p-2 transition-colors ${
               activeTab === "home" ? "" : "opacity-50"
@@ -228,6 +236,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </button>
 
           <button
+            type="button"
             onClick={() => navigateTo("/app/add", "add")}
             className="flex flex-col items-center p-2"
           >
@@ -246,6 +255,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </button>
 
           <button
+            type="button"
             onClick={() => navigateTo("/app/card", "card")}
             className={`flex flex-col items-center p-2 transition-colors ${
               activeTab === "card" ? "" : "opacity-50"
@@ -262,6 +272,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </button>
 
           <button
+            type="button"
             onClick={() => navigateTo("/app/settings", "settings")}
             className={`flex flex-col items-center p-2 transition-colors ${
               activeTab === "settings" ? "" : "opacity-50"
@@ -281,28 +292,46 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Menu Overlay (Mobile Only) */}
       {showMenu && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 md:hidden"
+        <button
+          type="button"
+          className="fixed inset-0 z-50 border-0 bg-black/50 p-0 md:hidden"
           onClick={() => setShowMenu(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowMenu(false);
+            }
+          }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
             className="absolute right-0 top-20 w-64 rounded-l-xl p-4 shadow-lg"
             style={{ backgroundColor: theme.colors.surface }}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             <div className="space-y-3">
-              <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
+              <button
+                type="button"
+                className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100"
+              >
                 <div className="font-medium">{t("settings.profile")}</div>
               </button>
-              <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
+              <button
+                type="button"
+                className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100"
+              >
                 <div className="font-medium">{t("settings.dataExport")}</div>
               </button>
-              <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
+              <button
+                type="button"
+                className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100"
+              >
                 <div className="font-medium">{t("settings.language")}</div>
               </button>
               <div
                 className="border-t pt-3"
-                style={{ borderColor: theme.colors.textSecondary + "20" }}
+                style={{ borderColor: `${theme.colors.textSecondary}20` }}
               >
                 {isWalletConnected ? (
                   <div className="space-y-2">
@@ -317,10 +346,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={handleDisconnectWallet}
                       className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors"
                       style={{
-                        borderColor: theme.colors.textSecondary + "40",
+                        borderColor: `${theme.colors.textSecondary}40`,
                         color: theme.colors.text,
                       }}
                     >
@@ -330,12 +360,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleConnectWallet}
                     disabled={isConnecting}
                     className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors disabled:opacity-50"
                     style={{
                       borderColor: theme.colors.primary,
-                      backgroundColor: theme.colors.primary + "10",
+                      backgroundColor: `${theme.colors.primary}10`,
                       color: theme.colors.primary,
                     }}
                   >
@@ -348,7 +379,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
           </div>
-        </div>
+        </button>
       )}
     </div>
   );

@@ -43,6 +43,7 @@ export default function SettingsPage() {
             const isSelected = settings.theme === themeOption.id;
             return (
               <button
+                type="button"
                 key={themeOption.id}
                 onClick={() => handleThemeChange(themeOption.id)}
                 className="relative overflow-hidden rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6 hover:shadow-md"
@@ -92,6 +93,7 @@ export default function SettingsPage() {
             const isSelected = settings.locale === locale;
             return (
               <button
+                type="button"
                 key={locale}
                 onClick={() => handleLanguageChange(locale)}
                 className="flex w-full items-center justify-between rounded-xl p-4 shadow-sm transition-transform active:scale-95"
@@ -143,6 +145,7 @@ export default function SettingsPage() {
               研究への貢献
             </span>
             <button
+              type="button"
               onClick={handleAnalyticsToggle}
               className={`relative h-7 w-12 rounded-full transition-colors ${
                 settings.analyticsOptIn ? "bg-green-500" : "bg-gray-300"
@@ -159,7 +162,7 @@ export default function SettingsPage() {
           {settings.analyticsOptIn && (
             <div
               className="mb-3 rounded-lg p-3"
-              style={{ backgroundColor: theme.colors.accent + "20" }}
+              style={{ backgroundColor: `${theme.colors.accent}20` }}
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm" style={{ color: theme.colors.text }}>
@@ -218,6 +221,7 @@ export default function SettingsPage() {
           {t("settings.profile")}
         </h2>
         <button
+          type="button"
           onClick={() => router.push(`/${settings.locale}/app/profile`)}
           className="flex w-full items-center justify-between rounded-xl p-4 shadow-sm transition-transform active:scale-95"
           style={{ backgroundColor: theme.colors.surface }}

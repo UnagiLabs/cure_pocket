@@ -136,15 +136,16 @@ export default function EmergencyCardPage() {
             const isSelected = selectedCategories.includes(option.id);
             return (
               <button
+                type="button"
                 key={option.id}
                 onClick={() => handleCategoryToggle(option.id)}
                 className="flex w-full items-center rounded-lg border-2 p-3 transition-colors md:p-4 hover:shadow-sm"
                 style={{
                   borderColor: isSelected
                     ? theme.colors.primary
-                    : theme.colors.textSecondary + "40",
+                    : `${theme.colors.textSecondary}40`,
                   backgroundColor: isSelected
-                    ? theme.colors.primary + "10"
+                    ? `${theme.colors.primary}10`
                     : "transparent",
                 }}
               >
@@ -231,6 +232,7 @@ export default function EmergencyCardPage() {
         )}
 
         <button
+          type="button"
           onClick={handleGenerateQR}
           disabled={isGenerating || selectedCategories.length === 0}
           className="w-full rounded-lg p-3 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
@@ -368,6 +370,7 @@ export default function EmergencyCardPage() {
       {/* Action Buttons */}
       <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         <button
+          type="button"
           className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
           style={{ backgroundColor: theme.colors.primary }}
         >
@@ -375,6 +378,7 @@ export default function EmergencyCardPage() {
           <span>{t("card.downloadPDF")}</span>
         </button>
         <button
+          type="button"
           className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
           style={{ backgroundColor: "#374151" }}
         >
@@ -386,7 +390,7 @@ export default function EmergencyCardPage() {
       {/* Info Section */}
       <div
         className="mt-6 rounded-xl p-4"
-        style={{ backgroundColor: theme.colors.primary + "10" }}
+        style={{ backgroundColor: `${theme.colors.primary}10` }}
       >
         <div className="flex items-start">
           <span className="mr-3 text-2xl">ℹ️</span>

@@ -54,6 +54,7 @@ export default function AddImagingPage() {
       {/* Header */}
       <div className="mb-6 flex items-center md:mb-8">
         <button
+          type="button"
           onClick={() => router.push(`/${locale}/app/add`)}
           className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
@@ -74,12 +75,14 @@ export default function AddImagingPage() {
       <div className="space-y-4">
         <div>
           <label
+            htmlFor="imaging-type"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("imaging.type")} *
           </label>
           <select
+            id="imaging-type"
             value={formData.type}
             onChange={(e) =>
               handleInputChange("type", e.target.value as ImagingType)
@@ -87,7 +90,7 @@ export default function AddImagingPage() {
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
           >
@@ -102,19 +105,21 @@ export default function AddImagingPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label
+              htmlFor="imaging-bodyPart"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               {t("imaging.bodyPart")}
             </label>
             <input
+              id="imaging-bodyPart"
               type="text"
               value={formData.bodyPart}
               onChange={(e) => handleInputChange("bodyPart", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
               placeholder="胸部"
@@ -123,19 +128,21 @@ export default function AddImagingPage() {
 
           <div>
             <label
+              htmlFor="imaging-examDate"
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
               {t("imaging.examDate")} *
             </label>
             <input
+              id="imaging-examDate"
               type="date"
               value={formData.examDate}
               onChange={(e) => handleInputChange("examDate", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + "40",
+                borderColor: `${theme.colors.textSecondary}40`,
                 color: theme.colors.text,
               }}
             />
@@ -144,19 +151,21 @@ export default function AddImagingPage() {
 
         <div>
           <label
+            htmlFor="imaging-performedBy"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("imaging.performedBy")}
           </label>
           <input
+            id="imaging-performedBy"
             type="text"
             value={formData.performedBy}
             onChange={(e) => handleInputChange("performedBy", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("imaging.performedBy")}
@@ -165,19 +174,21 @@ export default function AddImagingPage() {
 
         <div>
           <label
+            htmlFor="imaging-summary"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("imaging.summary")} *
           </label>
           <textarea
+            id="imaging-summary"
             value={formData.summary}
             onChange={(e) => handleInputChange("summary", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={4}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("imaging.summary")}
@@ -186,19 +197,21 @@ export default function AddImagingPage() {
 
         <div>
           <label
+            htmlFor="imaging-findings"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("imaging.findings")}
           </label>
           <textarea
+            id="imaging-findings"
             value={formData.findings}
             onChange={(e) => handleInputChange("findings", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={4}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("imaging.findings")}
@@ -207,19 +220,21 @@ export default function AddImagingPage() {
 
         <div>
           <label
+            htmlFor="imaging-impression"
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
             {t("imaging.impression")}
           </label>
           <textarea
+            id="imaging-impression"
             value={formData.impression}
             onChange={(e) => handleInputChange("impression", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
             placeholder={t("imaging.impression")}
@@ -228,16 +243,18 @@ export default function AddImagingPage() {
 
         <div className="flex gap-3 md:max-w-md md:mx-auto">
           <button
+            type="button"
             onClick={() => router.push(`/${locale}/app/add`)}
             className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95"
             style={{
-              borderColor: theme.colors.textSecondary + "40",
+              borderColor: `${theme.colors.textSecondary}40`,
               color: theme.colors.text,
             }}
           >
             {t("actions.cancel")}
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={!formData.summary}
             className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"

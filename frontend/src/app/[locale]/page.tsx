@@ -131,6 +131,7 @@ export default function LandingPage() {
 
         {/* Connect Wallet Button */}
         <button
+          type="button"
           onClick={handleConnect}
           disabled={isConnecting}
           className="mb-6 flex w-full items-center justify-center rounded-xl bg-blue-500 px-6 py-4 font-semibold text-white shadow-lg transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50"
@@ -148,6 +149,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-2">
             {locales.map((locale) => (
               <button
+                type="button"
                 key={locale}
                 onClick={() => handleLanguageChange(locale)}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${

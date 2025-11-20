@@ -23,7 +23,7 @@ import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { bcs } from "@mysten/sui/bcs";
 import { Transaction } from "@mysten/sui/transactions";
 import { useEffect, useState } from "react";
-import type { MedicalPassport, PassportStatus } from "@/types";
+import type { PassportStatus } from "@/types";
 
 /**
  * パッケージIDを取得
