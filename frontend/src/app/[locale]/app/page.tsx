@@ -11,11 +11,15 @@ import {
   Scan,
   Plus,
   AlertCircle,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTheme } from '@/lib/themes';
 import type { Medication } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { usePassport } from '@/hooks/usePassport';
+import { useMintPassport } from '@/hooks/useMintPassport';
 
 /**
  * ホーム画面（ダッシュボード）
@@ -40,6 +44,23 @@ export default function HomePage() {
   
   // ユーザー名をプロフィールから取得、未設定時はGuest表示
   const displayName = profile?.name || null;
+
+  // パスポート状態を取得
+  const passport_status = usePassport();
+  const { mint, is_pending: is_mint_pending, error: mint_error } = useMintPassport();
+
+  /**
+   * パスポートを発行するハンドラー
+   */
+  async function handle_mint_passport() {
+    try {
+      // MVP段階ではモック値を使用
+      await mint('init_blob', 'init_seal');
+    } catch (error) {
+      // エラーはuseMintPassportで処理される
+      console.error('パスポート発行エラー:', error);
+    }
+  }
 
   useEffect(() => {
     // Load demo medications if empty
@@ -226,6 +247,98 @@ export default function HomePage() {
           >
             {t('home.profileSetupBanner.button')}
           </button>
+        </div>
+      )}
+
+      {/* Passport Status Banner */}
+      {passport_status.loading ? (
+        <div
+          className="mb-6 rounded-xl border-2 p-4"
+          style={{
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.primary,
+          }}
+        >
+          <div className="flex items-center justify-center">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" style={{ color: theme.colors.primary }} />
+            <span className="text-sm" style={{ color: theme.colors.textSecondary }}>
+              パスポート状態を確認中...
+            </span>
+          </div>
+        </div>
+      ) : passport_status.error ? (
+        <div
+          className="mb-6 rounded-xl border-2 p-4"
+          style={{
+            backgroundColor: '#FEE2E2',
+            borderColor: '#EF4444',
+          }}
+        >
+          <div className="mb-2 flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5" style={{ color: '#EF4444' }} />
+            <h3 className="font-bold" style={{ color: '#DC2626' }}>
+              パスポート確認エラー
+            </h3>
+          </div>
+          <p className="text-sm" style={{ color: '#991B1B' }}>
+            {passport_status.error}
+          </p>
+        </div>
+      ) : !passport_status.has_passport ? (
+        <div
+          className="mb-6 rounded-xl border-2 p-4"
+          style={{
+            backgroundColor: theme.colors.primary + '10',
+            borderColor: theme.colors.primary,
+          }}
+        >
+          <div className="mb-2 flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5" style={{ color: theme.colors.primary }} />
+            <h3 className="font-bold" style={{ color: theme.colors.text }}>
+              パスポートを発行してください
+            </h3>
+          </div>
+          <p className="mb-3 text-sm" style={{ color: theme.colors.textSecondary }}>
+            メディカルパスポートを発行すると、医療データを安全に管理できます。
+          </p>
+          {mint_error && (
+            <div className="mb-3 rounded-lg p-2 text-sm" style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}>
+              {mint_error.message}
+            </div>
+          )}
+          <button
+            onClick={handle_mint_passport}
+            disabled={is_mint_pending}
+            className="w-full rounded-lg p-2 text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: theme.colors.primary }}
+          >
+            {is_mint_pending ? (
+              <span className="flex items-center justify-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                発行中...
+              </span>
+            ) : (
+              'パスポートを発行する'
+            )}
+          </button>
+        </div>
+      ) : (
+        <div
+          className="mb-6 rounded-xl border-2 p-4"
+          style={{
+            backgroundColor: '#D1FAE5',
+            borderColor: '#10B981',
+          }}
+        >
+          <div className="mb-2 flex items-center">
+            <CheckCircle className="mr-2 h-5 w-5" style={{ color: '#10B981' }} />
+            <h3 className="font-bold" style={{ color: '#059669' }}>
+              パスポートを所持しています
+            </h3>
+          </div>
+          <p className="text-sm" style={{ color: '#047857' }}>
+            メディカルパスポートが正常に発行されています。
+          </p>
         </div>
       )}
 

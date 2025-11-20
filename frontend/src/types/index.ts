@@ -254,3 +254,20 @@ export interface ThemeConfig {
     textSecondary: string;
   };
 }
+
+/**
+ * MedicalPassport関連の型定義
+ */
+export interface MedicalPassport {
+  id: string; // Sui Object ID
+  walrusBlobId: string;
+  sealId: string;
+  countryCode: string;
+}
+
+export interface PassportStatus {
+  has_passport: boolean;
+  passport: MedicalPassport | null;
+  loading: boolean;
+  error: string | null;
+}
