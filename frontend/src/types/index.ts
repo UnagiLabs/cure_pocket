@@ -289,3 +289,25 @@ export interface PassportStatus {
   loading: boolean;
   error: string | null;
 }
+
+// ==========================================
+// Health Data Schema (International Standards)
+// ==========================================
+// Re-export types from healthData.ts for convenience
+export type {
+  HealthData,
+  MetaData,
+  LocalizedString,
+  UserProfile,
+  Medication as MedicationHealthData,
+  Condition,
+  LabResult,
+  LabItem,
+  ImagingStudy,
+  Allergy as AllergyHealthData,
+  AnonymousStatsPayload,
+  AnalyticsSubmission,
+  AsyncStatus,
+  ApiResponse,
+  WalrusBlobReference,
+} from "./healthData";
