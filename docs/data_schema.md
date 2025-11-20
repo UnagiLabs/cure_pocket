@@ -276,3 +276,36 @@ MVP実装時、フォーム入力等で以下のバリデーションを推奨�
 4.  **データサイズ**:
     *   Walrusへの保存単位は1つのBlobとなるため、画像本体（DICOM）はここには含めず、別途保存して `dicom_blob_id` で参照する方式をとる。
     *   このJSON自体は数KB〜数十KB程度に収まる想定。
+
+---
+
+## 6. Analytics Data Schema (Stats JSON)
+
+クライアントサイドで匿名化・集計した統計データの送信用スキーマ。
+個票データは送信せず、統計値のみをサーバー/オンチェーンに渡す。
+
+### 6.1 匿名化ルール
+
+- 年齢: 10歳刻みのバンド（例: `"30-39"`）
+- 地域: 国コードのみ（ISO 3166-1 alpha-2）
+- 薬剤: ATCコード上4桁（Level 3）のみ
+- 疾患: ICD-10コード上3桁（Category）のみ
+- 検査: 具体値を含めない。LOINCコードと異常フラグ（`H`/`L`/`N`）のみ
+
+### 6.2 JSONスキーマ例
+
+```json
+{
+  "meta": { "schema_version": "1.0.0", "report_period": "YYYY-MM" },
+  "demographics": { "country": "JP", "age_band": "30-39", "sex": "M" },
+  "medication_stats": [{ "atc_l3_code": "A10B", "active_count": 1 }],
+  "condition_stats": [{ "icd10_l3_code": "E11", "status": "active" }],
+  "lab_stats_summary": [{ "loinc_code": "4548-4", "result_flag": "H" }]
+}
+```
+
+### 6.3 生成・送信の前提
+
+- 端末内でWalrus復号 → 匿名化 → Stats JSON生成。
+- 個票や再同定に使える識別子は送信しない。
+- Stats JSONは後続の報酬請求データとは分離して送信する。
