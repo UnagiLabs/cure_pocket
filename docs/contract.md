@@ -1217,7 +1217,6 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 
 - **ConsentToken**: 閲覧権限管理 ✅ **実装済み（v1.2.0）**
 - **時限付きアクセス権**: 有効期限付き閲覧許可 ✅ **実装済み（ConsentTokenに含まれる）**
-- **緊急アクセス**: 救命時の特別アクセス
 
 #### Phase 4: データ経済
 
