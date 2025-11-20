@@ -1,246 +1,246 @@
 {
-  "appName": "CurePocket",
-  "tagline": "Your global health passport",
-  "actions": {
-    "connectWallet": "Connect Wallet",
-    "addMedication": "Add medication",
-    "save": "Save",
-    "cancel": "Cancel",
-    "edit": "Edit",
-    "delete": "Delete",
-    "generateNew": "Generate new link",
-    "scanQR": "Scan QR Code",
-    "scanBarcode": "Scan Barcode",
-    "manualEntry": "Manual Entry"
-  },
-  "tabs": {
-    "home": "Home",
-    "add": "Add",
-    "card": "Card",
-    "settings": "Settings",
-    "medications": "Medications",
-    "emergency": "Emergency"
-  },
-  "home": {
-    "greeting": "Hello",
-    "title": "Your Pocket Today",
-    "activeCount": "{{count}} active medications",
-    "activeMedications": "Active Medications",
-    "lastUpdated": "Last updated: {{time}}",
-    "addWithQR": "Add medication with QR code",
-    "history": "History",
-    "share": "Share",
-    "emergencyCard": "Emergency Card",
-    "guestGreeting": "Hello Guest",
-    "greetingWithName": "Hello, {{name}}",
-    "profileSetupBanner": {
-      "title": "Set up your profile",
-      "description": "Register your basic information to receive safer and more accurate healthcare services.",
-      "button": "Set up profile"
-    }
-  },
-  "add": {
-    "title": "Add Medication",
-    "subtitle": "Choose how to add",
-    "qrScan": "QR Code Scan",
-    "qrDescription": "Scan prescription QR code",
-    "barcodeScan": "Barcode Scan",
-    "barcodeDescription": "Scan from medication package",
-    "manual": "Manual Entry",
-    "manualDescription": "Enter medication information manually",
-    "hint": "Hint",
-    "hintText": "You can easily register from prescription QR codes or medication barcodes",
-    "drugName": "Drug Name",
-    "genericName": "Generic Name (optional)",
-    "strength": "Strength",
-    "form": "Form",
-    "dose": "Dose",
-    "frequency": "Frequency",
-    "startDate": "Start Date",
-    "endDate": "End Date (optional)",
-    "reason": "Reason"
-  },
-  "medications": {
-    "title": "Your Medications",
-    "morning": "Morning",
-    "afternoon": "Afternoon",
-    "evening": "Evening",
-    "night": "Night",
-    "asNeeded": "As Needed",
-    "clinic": "Clinic",
-    "warning": "Warning"
-  },
-  "card": {
-    "title": "Emergency Card",
-    "subtitle": "Emergency medical information",
-    "description": "Share your medication information with healthcare providers in emergencies",
-    "generateQR": "Generate QR Code",
-    "validFor": "Valid for: {{duration}}",
-    "downloadPDF": "Download PDF",
-    "printCard": "Print Card",
-    "currentMedications": "Current Medications",
-    "scanToView": "Scan to view",
-    "englishVersion": "English version available"
-  },
-  "settings": {
-    "title": "Settings",
-    "theme": "Notebook theme",
-    "language": "Language",
-    "analyticsOptIn": "Share anonymized data for research",
-    "analyticsDescription": "Your personal records are always encrypted. Only aggregated, anonymized statistics may be used when you opt in.",
-    "emergencyCard": "Emergency Card Settings",
-    "showName": "Show name on card",
-    "displayName": "Display name",
-    "ageBand": "Age band",
-    "country": "Country",
-    "allergies": "Allergies",
-    "profile": "Profile",
-    "dataExport": "Data Export",
-    "walletConnected": "Wallet Connected",
-    "walrusStorage": "Walrus Storage",
-    "encrypted": "Encrypted",
-    "lastSync": "Last sync: {{time}}"
-  },
-  "wallet": {
-    "connect": "Connect Wallet",
-    "disconnect": "Disconnect",
-    "connecting": "Connecting...",
-    "connected": "Connected",
-    "address": "Address",
-    "notInstalled": "Sui Wallet is not installed.\nPlease install it from https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
-    "connectionFailed": "Failed to connect wallet. Please try again."
-  },
-  "themes": {
-    "classic-blue": "Classic Blue",
-    "mint-clinic": "Mint Clinic",
-    "sakura-notebook": "Sakura Notebook",
-    "midnight-travel": "Midnight Travel"
-  },
-  "languages": {
-    "en": "English",
-    "ja": "日本語",
-    "zh": "中文",
-    "fr": "Français",
-    "pt": "Português"
-  },
-  "forms": {
-    "tablet": "Tablet",
-    "capsule": "Capsule",
-    "liquid": "Liquid",
-    "other": "Other"
-  },
-  "status": {
-    "active": "Active",
-    "stopped": "Stopped"
-  },
-  "allergies": {
-    "title": "Allergies",
-    "add": "Add Allergy",
-    "substance": "Allergen",
-    "severity": "Severity",
-    "symptoms": "Symptoms",
-    "onsetDate": "Onset Date",
-    "diagnosedBy": "Diagnosed By",
-    "notes": "Notes",
-    "severities": {
-      "mild": "Mild",
-      "moderate": "Moderate",
-      "severe": "Severe",
-      "life-threatening": "Life-threatening"
-    },
-    "noAllergies": "No allergies registered"
-  },
-  "histories": {
-    "title": "Medical History",
-    "add": "Add Medical History",
-    "type": "Type",
-    "diagnosis": "Diagnosis / Surgery Name",
-    "diagnosisDate": "Diagnosis / Surgery Date",
-    "diagnosedBy": "Diagnosed By",
-    "description": "Description",
-    "status": "Status",
-    "notes": "Notes",
-    "types": {
-      "condition": "Condition",
-      "surgery": "Surgery",
-      "procedure": "Procedure",
-      "other": "Other"
-    },
-    "statuses": {
-      "active": "Active",
-      "resolved": "Resolved",
-      "chronic": "Chronic"
-    },
-    "noHistories": "No medical history registered"
-  },
-  "labs": {
-    "title": "Lab Results",
-    "add": "Add Lab Result",
-    "testName": "Test Name",
-    "value": "Value",
-    "unit": "Unit",
-    "referenceRange": "Reference Range",
-    "testDate": "Test Date",
-    "testedBy": "Test Facility",
-    "category": "Category",
-    "notes": "Notes",
-    "noResults": "No lab results registered"
-  },
-  "imaging": {
-    "title": "Imaging Reports",
-    "add": "Add Imaging Report",
-    "type": "Imaging Type",
-    "bodyPart": "Body Part",
-    "examDate": "Exam Date",
-    "performedBy": "Performed By",
-    "summary": "Summary / Findings",
-    "findings": "Findings Details",
-    "impression": "Impression",
-    "types": {
-      "xray": "X-ray",
-      "ct": "CT",
-      "mri": "MRI",
-      "ultrasound": "Ultrasound",
-      "other": "Other"
-    },
-    "noReports": "No imaging reports registered"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "summary": {
-      "medications": "Active Medications",
-      "allergies": "Allergies",
-      "histories": "Important History",
-      "labs": "Latest Lab Results",
-      "imaging": "Latest Imaging"
-    },
-    "recentUpdates": "Recent Updates",
-    "addData": "Add Data"
-  },
-  "dataTypes": {
-    "medication": "Medication",
-    "allergy": "Allergy",
-    "history": "History",
-    "lab": "Lab Result",
-    "imaging": "Imaging Report"
-  },
-  "profile": {
-    "name": "Name"
-  },
-  "landing": {
-    "features": {
-      "privacy": {
-        "title": "Privacy-First",
-        "description": "Your health data is encrypted and stored on Walrus"
-      },
-      "global": {
-        "title": "Global Access",
-        "description": "Access your health passport anywhere, anytime"
-      },
-      "blockchain": {
-        "title": "Blockchain Powered",
-        "description": "Built on Sui blockchain for security and transparency"
-      }
-    }
-  }
+	"appName": "CurePocket",
+	"tagline": "Your global health passport",
+	"actions": {
+		"connectWallet": "Connect Wallet",
+		"addMedication": "Add medication",
+		"save": "Save",
+		"cancel": "Cancel",
+		"edit": "Edit",
+		"delete": "Delete",
+		"generateNew": "Generate new link",
+		"scanQR": "Scan QR Code",
+		"scanBarcode": "Scan Barcode",
+		"manualEntry": "Manual Entry"
+	},
+	"tabs": {
+		"home": "Home",
+		"add": "Add",
+		"card": "Card",
+		"settings": "Settings",
+		"medications": "Medications",
+		"emergency": "Emergency"
+	},
+	"home": {
+		"greeting": "Hello",
+		"title": "Your Pocket Today",
+		"activeCount": "{{count}} active medications",
+		"activeMedications": "Active Medications",
+		"lastUpdated": "Last updated: {{time}}",
+		"addWithQR": "Add medication with QR code",
+		"history": "History",
+		"share": "Share",
+		"emergencyCard": "Emergency Card",
+		"guestGreeting": "Hello Guest",
+		"greetingWithName": "Hello, {{name}}",
+		"profileSetupBanner": {
+			"title": "Set up your profile",
+			"description": "Register your basic information to receive safer and more accurate healthcare services.",
+			"button": "Set up profile"
+		}
+	},
+	"add": {
+		"title": "Add Medication",
+		"subtitle": "Choose how to add",
+		"qrScan": "QR Code Scan",
+		"qrDescription": "Scan prescription QR code",
+		"barcodeScan": "Barcode Scan",
+		"barcodeDescription": "Scan from medication package",
+		"manual": "Manual Entry",
+		"manualDescription": "Enter medication information manually",
+		"hint": "Hint",
+		"hintText": "You can easily register from prescription QR codes or medication barcodes",
+		"drugName": "Drug Name",
+		"genericName": "Generic Name (optional)",
+		"strength": "Strength",
+		"form": "Form",
+		"dose": "Dose",
+		"frequency": "Frequency",
+		"startDate": "Start Date",
+		"endDate": "End Date (optional)",
+		"reason": "Reason"
+	},
+	"medications": {
+		"title": "Your Medications",
+		"morning": "Morning",
+		"afternoon": "Afternoon",
+		"evening": "Evening",
+		"night": "Night",
+		"asNeeded": "As Needed",
+		"clinic": "Clinic",
+		"warning": "Warning"
+	},
+	"card": {
+		"title": "Emergency Card",
+		"subtitle": "Emergency medical information",
+		"description": "Share your medication information with healthcare providers in emergencies",
+		"generateQR": "Generate QR Code",
+		"validFor": "Valid for: {{duration}}",
+		"downloadPDF": "Download PDF",
+		"printCard": "Print Card",
+		"currentMedications": "Current Medications",
+		"scanToView": "Scan to view",
+		"englishVersion": "English version available"
+	},
+	"settings": {
+		"title": "Settings",
+		"theme": "Notebook theme",
+		"language": "Language",
+		"analyticsOptIn": "Share anonymized data for research",
+		"analyticsDescription": "Your personal records are always encrypted. Only aggregated, anonymized statistics may be used when you opt in.",
+		"emergencyCard": "Emergency Card Settings",
+		"showName": "Show name on card",
+		"displayName": "Display name",
+		"ageBand": "Age band",
+		"country": "Country",
+		"allergies": "Allergies",
+		"profile": "Profile",
+		"dataExport": "Data Export",
+		"walletConnected": "Wallet Connected",
+		"walrusStorage": "Walrus Storage",
+		"encrypted": "Encrypted",
+		"lastSync": "Last sync: {{time}}"
+	},
+	"wallet": {
+		"connect": "Connect Wallet",
+		"disconnect": "Disconnect",
+		"connecting": "Connecting...",
+		"connected": "Connected",
+		"address": "Address",
+		"notInstalled": "Sui Wallet is not installed.\nPlease install it from https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
+		"connectionFailed": "Failed to connect wallet. Please try again."
+	},
+	"themes": {
+		"classic-blue": "Classic Blue",
+		"mint-clinic": "Mint Clinic",
+		"sakura-notebook": "Sakura Notebook",
+		"midnight-travel": "Midnight Travel"
+	},
+	"languages": {
+		"en": "English",
+		"ja": "日本語",
+		"zh": "中文",
+		"fr": "Français",
+		"pt": "Português"
+	},
+	"forms": {
+		"tablet": "Tablet",
+		"capsule": "Capsule",
+		"liquid": "Liquid",
+		"other": "Other"
+	},
+	"status": {
+		"active": "Active",
+		"stopped": "Stopped"
+	},
+	"allergies": {
+		"title": "Allergies",
+		"add": "Add Allergy",
+		"substance": "Allergen",
+		"severity": "Severity",
+		"symptoms": "Symptoms",
+		"onsetDate": "Onset Date",
+		"diagnosedBy": "Diagnosed By",
+		"notes": "Notes",
+		"severities": {
+			"mild": "Mild",
+			"moderate": "Moderate",
+			"severe": "Severe",
+			"life-threatening": "Life-threatening"
+		},
+		"noAllergies": "No allergies registered"
+	},
+	"histories": {
+		"title": "Medical History",
+		"add": "Add Medical History",
+		"type": "Type",
+		"diagnosis": "Diagnosis / Surgery Name",
+		"diagnosisDate": "Diagnosis / Surgery Date",
+		"diagnosedBy": "Diagnosed By",
+		"description": "Description",
+		"status": "Status",
+		"notes": "Notes",
+		"types": {
+			"condition": "Condition",
+			"surgery": "Surgery",
+			"procedure": "Procedure",
+			"other": "Other"
+		},
+		"statuses": {
+			"active": "Active",
+			"resolved": "Resolved",
+			"chronic": "Chronic"
+		},
+		"noHistories": "No medical history registered"
+	},
+	"labs": {
+		"title": "Lab Results",
+		"add": "Add Lab Result",
+		"testName": "Test Name",
+		"value": "Value",
+		"unit": "Unit",
+		"referenceRange": "Reference Range",
+		"testDate": "Test Date",
+		"testedBy": "Test Facility",
+		"category": "Category",
+		"notes": "Notes",
+		"noResults": "No lab results registered"
+	},
+	"imaging": {
+		"title": "Imaging Reports",
+		"add": "Add Imaging Report",
+		"type": "Imaging Type",
+		"bodyPart": "Body Part",
+		"examDate": "Exam Date",
+		"performedBy": "Performed By",
+		"summary": "Summary / Findings",
+		"findings": "Findings Details",
+		"impression": "Impression",
+		"types": {
+			"xray": "X-ray",
+			"ct": "CT",
+			"mri": "MRI",
+			"ultrasound": "Ultrasound",
+			"other": "Other"
+		},
+		"noReports": "No imaging reports registered"
+	},
+	"dashboard": {
+		"title": "Dashboard",
+		"summary": {
+			"medications": "Active Medications",
+			"allergies": "Allergies",
+			"histories": "Important History",
+			"labs": "Latest Lab Results",
+			"imaging": "Latest Imaging"
+		},
+		"recentUpdates": "Recent Updates",
+		"addData": "Add Data"
+	},
+	"dataTypes": {
+		"medication": "Medication",
+		"allergy": "Allergy",
+		"history": "History",
+		"lab": "Lab Result",
+		"imaging": "Imaging Report"
+	},
+	"profile": {
+		"name": "Name"
+	},
+	"landing": {
+		"features": {
+			"privacy": {
+				"title": "Privacy-First",
+				"description": "Your health data is encrypted and stored on Walrus"
+			},
+			"global": {
+				"title": "Global Access",
+				"description": "Access your health passport anywhere, anytime"
+			},
+			"blockchain": {
+				"title": "Blockchain Powered",
+				"description": "Built on Sui blockchain for security and transparency"
+			}
+		}
+	}
 }

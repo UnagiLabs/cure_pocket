@@ -21,15 +21,15 @@ import type { WalrusBlobReference } from "@/types/healthData";
  * Walrus Publisher endpoint (for uploads)
  */
 const WALRUS_PUBLISHER =
-  process.env.NEXT_PUBLIC_WALRUS_RPC_URL ||
-  "https://walrus-testnet-publisher.mystenlabs.com";
+	process.env.NEXT_PUBLIC_WALRUS_RPC_URL ||
+	"https://walrus-testnet-publisher.mystenlabs.com";
 
 /**
  * Walrus Aggregator endpoint (for downloads)
  */
 const WALRUS_AGGREGATOR =
-  process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_URL ||
-  "https://walrus-testnet-aggregator.mystenlabs.com";
+	process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_URL ||
+	"https://walrus-testnet-aggregator.mystenlabs.com";
 
 /**
  * Maximum blob size (1MB default)
@@ -44,50 +44,50 @@ const MAX_BLOB_SIZE = 1 * 1024 * 1024;
  * Walrus upload response for newly created blobs
  */
 interface WalrusNewlyCreatedResponse {
-  newlyCreated: {
-    blobObject: {
-      id: string; // Sui object ID
-      storedEpoch: number;
-      blobId: string; // Content-addressed blob ID
-      size: number;
-      erasureCodeType: string;
-      certifiedEpoch: number;
-      storage: {
-        id: string;
-        startEpoch: number;
-        endEpoch: number;
-        storageSize: number;
-      };
-    };
-    encodedSize: number;
-    cost: number;
-  };
+	newlyCreated: {
+		blobObject: {
+			id: string; // Sui object ID
+			storedEpoch: number;
+			blobId: string; // Content-addressed blob ID
+			size: number;
+			erasureCodeType: string;
+			certifiedEpoch: number;
+			storage: {
+				id: string;
+				startEpoch: number;
+				endEpoch: number;
+				storageSize: number;
+			};
+		};
+		encodedSize: number;
+		cost: number;
+	};
 }
 
 /**
  * Walrus upload response for already certified blobs
  */
 interface WalrusAlreadyCertifiedResponse {
-  alreadyCertified: {
-    blobId: string;
-    objectId: string;
-    endEpoch: number;
-  };
+	alreadyCertified: {
+		blobId: string;
+		objectId: string;
+		endEpoch: number;
+	};
 }
 
 /**
  * Union type for Walrus upload responses
  */
 type WalrusUploadResponse =
-  | WalrusNewlyCreatedResponse
-  | WalrusAlreadyCertifiedResponse;
+	| WalrusNewlyCreatedResponse
+	| WalrusAlreadyCertifiedResponse;
 
 /**
  * Walrus error response
  */
 interface WalrusErrorResponse {
-  error: string;
-  message?: string;
+	error: string;
+	message?: string;
 }
 
 // ==========================================
@@ -109,58 +109,58 @@ interface WalrusErrorResponse {
  * @throws Error if upload fails or data exceeds size limit
  */
 export async function uploadToWalrus(
-  data: Uint8Array,
-  _epochs: number = 1,
+	data: Uint8Array,
+	_epochs: number = 1,
 ): Promise<WalrusBlobReference> {
-  // Validate size
-  if (data.length > MAX_BLOB_SIZE) {
-    throw new Error(
-      `Data size ${data.length} bytes exceeds maximum ${MAX_BLOB_SIZE} bytes`,
-    );
-  }
+	// Validate size
+	if (data.length > MAX_BLOB_SIZE) {
+		throw new Error(
+			`Data size ${data.length} bytes exceeds maximum ${MAX_BLOB_SIZE} bytes`,
+		);
+	}
 
-  try {
-    // Upload to Walrus
-    const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs`, {
-      method: "PUT",
-      body: data,
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-    });
+	try {
+		// Upload to Walrus
+		const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs`, {
+			method: "PUT",
+			body: data,
+			headers: {
+				"Content-Type": "application/octet-stream",
+			},
+		});
 
-    if (!response.ok) {
-      const errorData = (await response.json()) as WalrusErrorResponse;
-      throw new Error(
-        `Walrus upload failed: ${errorData.error || response.statusText}`,
-      );
-    }
+		if (!response.ok) {
+			const errorData = (await response.json()) as WalrusErrorResponse;
+			throw new Error(
+				`Walrus upload failed: ${errorData.error || response.statusText}`,
+			);
+		}
 
-    const result = (await response.json()) as WalrusUploadResponse;
+		const result = (await response.json()) as WalrusUploadResponse;
 
-    // Handle both response types
-    if ("newlyCreated" in result) {
-      return {
-        blobId: result.newlyCreated.blobObject.blobId,
-        uploadedAt: Date.now(),
-        size: result.newlyCreated.blobObject.size,
-      };
-    } else if ("alreadyCertified" in result) {
-      // Blob already exists, return existing reference
-      return {
-        blobId: result.alreadyCertified.blobId,
-        uploadedAt: Date.now(),
-        size: data.length,
-      };
-    } else {
-      throw new Error("Unexpected Walrus response format");
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to upload to Walrus: ${error.message}`);
-    }
-    throw new Error("Failed to upload to Walrus: Unknown error");
-  }
+		// Handle both response types
+		if ("newlyCreated" in result) {
+			return {
+				blobId: result.newlyCreated.blobObject.blobId,
+				uploadedAt: Date.now(),
+				size: result.newlyCreated.blobObject.size,
+			};
+		} else if ("alreadyCertified" in result) {
+			// Blob already exists, return existing reference
+			return {
+				blobId: result.alreadyCertified.blobId,
+				uploadedAt: Date.now(),
+				size: data.length,
+			};
+		} else {
+			throw new Error("Unexpected Walrus response format");
+		}
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to upload to Walrus: ${error.message}`);
+		}
+		throw new Error("Failed to upload to Walrus: Unknown error");
+	}
 }
 
 /**
@@ -176,31 +176,31 @@ export async function uploadToWalrus(
  * @throws Error if download fails or blob not found
  */
 export async function downloadFromWalrusByBlobId(
-  blobId: string,
+	blobId: string,
 ): Promise<Uint8Array> {
-  try {
-    const response = await fetch(
-      `${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-      {
-        method: "GET",
-      },
-    );
+	try {
+		const response = await fetch(
+			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			{
+				method: "GET",
+			},
+		);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Blob not found: ${blobId}`);
-      }
-      throw new Error(`Walrus download failed: ${response.statusText}`);
-    }
+		if (!response.ok) {
+			if (response.status === 404) {
+				throw new Error(`Blob not found: ${blobId}`);
+			}
+			throw new Error(`Walrus download failed: ${response.statusText}`);
+		}
 
-    const arrayBuffer = await response.arrayBuffer();
-    return new Uint8Array(arrayBuffer);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to download from Walrus: ${error.message}`);
-    }
-    throw new Error("Failed to download from Walrus: Unknown error");
-  }
+		const arrayBuffer = await response.arrayBuffer();
+		return new Uint8Array(arrayBuffer);
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to download from Walrus: ${error.message}`);
+		}
+		throw new Error("Failed to download from Walrus: Unknown error");
+	}
 }
 
 /**
@@ -213,31 +213,31 @@ export async function downloadFromWalrusByBlobId(
  * @throws Error if download fails or blob not found
  */
 export async function downloadFromWalrusByObjectId(
-  objectId: string,
+	objectId: string,
 ): Promise<Uint8Array> {
-  try {
-    const response = await fetch(
-      `${WALRUS_AGGREGATOR}/v1/blobs/by-object-id/${objectId}`,
-      {
-        method: "GET",
-      },
-    );
+	try {
+		const response = await fetch(
+			`${WALRUS_AGGREGATOR}/v1/blobs/by-object-id/${objectId}`,
+			{
+				method: "GET",
+			},
+		);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Blob object not found: ${objectId}`);
-      }
-      throw new Error(`Walrus download failed: ${response.statusText}`);
-    }
+		if (!response.ok) {
+			if (response.status === 404) {
+				throw new Error(`Blob object not found: ${objectId}`);
+			}
+			throw new Error(`Walrus download failed: ${response.statusText}`);
+		}
 
-    const arrayBuffer = await response.arrayBuffer();
-    return new Uint8Array(arrayBuffer);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to download from Walrus: ${error.message}`);
-    }
-    throw new Error("Failed to download from Walrus: Unknown error");
-  }
+		const arrayBuffer = await response.arrayBuffer();
+		return new Uint8Array(arrayBuffer);
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to download from Walrus: ${error.message}`);
+		}
+		throw new Error("Failed to download from Walrus: Unknown error");
+	}
 }
 
 /**
@@ -247,17 +247,17 @@ export async function downloadFromWalrusByObjectId(
  * @returns True if blob exists, false otherwise
  */
 export async function blobExists(blobId: string): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-      {
-        method: "HEAD",
-      },
-    );
-    return response.ok;
-  } catch {
-    return false;
-  }
+	try {
+		const response = await fetch(
+			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			{
+				method: "HEAD",
+			},
+		);
+		return response.ok;
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -270,13 +270,13 @@ export async function blobExists(blobId: string): Promise<boolean> {
  * @returns True if deleted, false otherwise
  */
 export async function deleteBlob(blobId: string): Promise<boolean> {
-  // Walrus is immutable storage
-  // Deletion would require burning the on-chain blob object
-  // This is typically handled through smart contract calls
-  console.warn(
-    `Walrus blob deletion not implemented: ${blobId}. Blobs are immutable.`,
-  );
-  return false;
+	// Walrus is immutable storage
+	// Deletion would require burning the on-chain blob object
+	// This is typically handled through smart contract calls
+	console.warn(
+		`Walrus blob deletion not implemented: ${blobId}. Blobs are immutable.`,
+	);
+	return false;
 }
 
 /**
@@ -289,40 +289,40 @@ export async function deleteBlob(blobId: string): Promise<boolean> {
  * @throws Error if blob not found
  */
 export async function getBlobMetadata(blobId: string): Promise<{
-  size: number;
-  contentType: string;
-  certified: boolean;
+	size: number;
+	contentType: string;
+	certified: boolean;
 }> {
-  try {
-    const response = await fetch(
-      `${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-      {
-        method: "HEAD",
-      },
-    );
+	try {
+		const response = await fetch(
+			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			{
+				method: "HEAD",
+			},
+		);
 
-    if (!response.ok) {
-      throw new Error(`Blob not found: ${blobId}`);
-    }
+		if (!response.ok) {
+			throw new Error(`Blob not found: ${blobId}`);
+		}
 
-    const size = Number.parseInt(
-      response.headers.get("Content-Length") || "0",
-      10,
-    );
-    const contentType =
-      response.headers.get("Content-Type") || "application/octet-stream";
+		const size = Number.parseInt(
+			response.headers.get("Content-Length") || "0",
+			10,
+		);
+		const contentType =
+			response.headers.get("Content-Type") || "application/octet-stream";
 
-    return {
-      size,
-      contentType,
-      certified: true, // Walrus blobs are always certified
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to get blob metadata: ${error.message}`);
-    }
-    throw new Error("Failed to get blob metadata: Unknown error");
-  }
+		return {
+			size,
+			contentType,
+			certified: true, // Walrus blobs are always certified
+		};
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to get blob metadata: ${error.message}`);
+		}
+		throw new Error("Failed to get blob metadata: Unknown error");
+	}
 }
 
 /**
@@ -336,11 +336,11 @@ export async function getBlobMetadata(blobId: string): Promise<{
  * @returns Estimated cost in MIST (1 SUI = 1,000,000,000 MIST)
  */
 export function estimateStorageCost(
-  sizeBytes: number,
-  epochs: number = 1,
+	sizeBytes: number,
+	epochs: number = 1,
 ): number {
-  // Placeholder formula: 1 MIST per KB per epoch
-  // TODO: Update with actual Walrus pricing
-  const sizeKB = Math.ceil(sizeBytes / 1024);
-  return sizeKB * epochs * 1_000; // Cost in MIST
+	// Placeholder formula: 1 MIST per KB per epoch
+	// TODO: Update with actual Walrus pricing
+	const sizeKB = Math.ceil(sizeBytes / 1024);
+	return sizeKB * epochs * 1_000; // Cost in MIST
 }

@@ -4,24 +4,24 @@ import { getMessages } from "next-intl/server";
 import { locales } from "@/i18n/config";
 
 export default async function LocaleLayout({
-  children,
-  params,
+	children,
+	params,
 }: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+	children: React.ReactNode;
+	params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+	const { locale } = await params;
 
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as (typeof locales)[number])) {
-    notFound();
-  }
+	// Validate that the incoming `locale` parameter is valid
+	if (!locales.includes(locale as (typeof locales)[number])) {
+		notFound();
+	}
 
-  const messages = await getMessages();
+	const messages = await getMessages();
 
-  return (
-    <NextIntlClientProvider messages={messages}>
-      {children}
-    </NextIntlClientProvider>
-  );
+	return (
+		<NextIntlClientProvider messages={messages}>
+			{children}
+		</NextIntlClientProvider>
+	);
 }

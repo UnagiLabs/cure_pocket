@@ -21,10 +21,10 @@ import type { MedicalPassport } from "@/types";
  * Sui network configuration
  */
 const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
-  | "mainnet"
-  | "testnet"
-  | "devnet"
-  | "localnet";
+	| "mainnet"
+	| "testnet"
+	| "devnet"
+	| "localnet";
 
 /**
  * Smart contract addresses
@@ -40,22 +40,22 @@ const PASSPORT_REGISTRY_ID = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
  * MedicalPassport object structure from Move contract
  */
 interface MedicalPassportObject {
-  id: string; // Sui object ID
-  walrus_blob_id: string;
-  seal_id: string;
-  country_code: string;
+	id: string; // Sui object ID
+	walrus_blob_id: string;
+	seal_id: string;
+	country_code: string;
 }
 
 /**
  * Dynamic Field info for PassportRegistry
  */
 interface DynamicFieldInfo {
-  name: {
-    type: string;
-    value: string; // Wallet address
-  };
-  objectType: string;
-  objectId: string; // MedicalPassport object ID
+	name: {
+		type: string;
+		value: string; // Wallet address
+	};
+	objectType: string;
+	objectId: string; // MedicalPassport object ID
 }
 
 // ==========================================
@@ -74,18 +74,18 @@ let suiClientInstance: SuiClient | null = null;
  * @returns SuiClient configured for the current network
  */
 export function getSuiClient(): SuiClient {
-  if (!suiClientInstance) {
-    const url = getFullnodeUrl(SUI_NETWORK);
-    suiClientInstance = new SuiClient({ url });
-  }
-  return suiClientInstance;
+	if (!suiClientInstance) {
+		const url = getFullnodeUrl(SUI_NETWORK);
+		suiClientInstance = new SuiClient({ url });
+	}
+	return suiClientInstance;
 }
 
 /**
  * Reset SuiClient instance (useful for testing)
  */
 export function resetSuiClient(): void {
-  suiClientInstance = null;
+	suiClientInstance = null;
 }
 
 // ==========================================
@@ -100,42 +100,42 @@ export function resetSuiClient(): void {
  * @throws Error if passport not found or fetch fails
  */
 export async function getMedicalPassport(
-  passportObjectId: string,
+	passportObjectId: string,
 ): Promise<MedicalPassport> {
-  const client = getSuiClient();
+	const client = getSuiClient();
 
-  try {
-    const response = await client.getObject({
-      id: passportObjectId,
-      options: {
-        showContent: true,
-        showType: true,
-      },
-    });
+	try {
+		const response = await client.getObject({
+			id: passportObjectId,
+			options: {
+				showContent: true,
+				showType: true,
+			},
+		});
 
-    if (!response.data) {
-      throw new Error(`MedicalPassport not found: ${passportObjectId}`);
-    }
+		if (!response.data) {
+			throw new Error(`MedicalPassport not found: ${passportObjectId}`);
+		}
 
-    const content = response.data.content;
-    if (content?.dataType !== "moveObject") {
-      throw new Error("Invalid passport object structure");
-    }
+		const content = response.data.content;
+		if (content?.dataType !== "moveObject") {
+			throw new Error("Invalid passport object structure");
+		}
 
-    const fields = content.fields as unknown as MedicalPassportObject;
+		const fields = content.fields as unknown as MedicalPassportObject;
 
-    return {
-      id: response.data.objectId,
-      walrusBlobId: fields.walrus_blob_id,
-      sealId: fields.seal_id,
-      countryCode: fields.country_code,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to fetch MedicalPassport: ${error.message}`);
-    }
-    throw new Error("Failed to fetch MedicalPassport: Unknown error");
-  }
+		return {
+			id: response.data.objectId,
+			walrusBlobId: fields.walrus_blob_id,
+			sealId: fields.seal_id,
+			countryCode: fields.country_code,
+		};
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to fetch MedicalPassport: ${error.message}`);
+		}
+		throw new Error("Failed to fetch MedicalPassport: Unknown error");
+	}
 }
 
 /**
@@ -154,47 +154,47 @@ export async function getMedicalPassport(
  * @throws Error if registry query fails
  */
 export async function getPassportIdByAddress(
-  walletAddress: string,
+	walletAddress: string,
 ): Promise<string | null> {
-  const client = getSuiClient();
+	const client = getSuiClient();
 
-  if (!PASSPORT_REGISTRY_ID) {
-    throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID not configured");
-  }
+	if (!PASSPORT_REGISTRY_ID) {
+		throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID not configured");
+	}
 
-  try {
-    // Query dynamic field with wallet address as key
-    const dynamicFieldName = {
-      type: "address",
-      value: walletAddress,
-    };
+	try {
+		// Query dynamic field with wallet address as key
+		const dynamicFieldName = {
+			type: "address",
+			value: walletAddress,
+		};
 
-    const response = await client.getDynamicFieldObject({
-      parentId: PASSPORT_REGISTRY_ID,
-      name: dynamicFieldName,
-    });
+		const response = await client.getDynamicFieldObject({
+			parentId: PASSPORT_REGISTRY_ID,
+			name: dynamicFieldName,
+		});
 
-    if (!response.data) {
-      // No passport found for this address
-      return null;
-    }
+		if (!response.data) {
+			// No passport found for this address
+			return null;
+		}
 
-    // The dynamic field value is the MedicalPassport object ID
-    return response.data.objectId;
-  } catch (error) {
-    // If error is "Dynamic field not found", return null
-    if (
-      error instanceof Error &&
-      error.message.includes("Dynamic field not found")
-    ) {
-      return null;
-    }
+		// The dynamic field value is the MedicalPassport object ID
+		return response.data.objectId;
+	} catch (error) {
+		// If error is "Dynamic field not found", return null
+		if (
+			error instanceof Error &&
+			error.message.includes("Dynamic field not found")
+		) {
+			return null;
+		}
 
-    if (error instanceof Error) {
-      throw new Error(`Failed to query PassportRegistry: ${error.message}`);
-    }
-    throw new Error("Failed to query PassportRegistry: Unknown error");
-  }
+		if (error instanceof Error) {
+			throw new Error(`Failed to query PassportRegistry: ${error.message}`);
+		}
+		throw new Error("Failed to query PassportRegistry: Unknown error");
+	}
 }
 
 /**
@@ -207,15 +207,15 @@ export async function getPassportIdByAddress(
  * @throws Error if fetch fails
  */
 export async function getPassportByAddress(
-  walletAddress: string,
+	walletAddress: string,
 ): Promise<MedicalPassport | null> {
-  const passportId = await getPassportIdByAddress(walletAddress);
+	const passportId = await getPassportIdByAddress(walletAddress);
 
-  if (!passportId) {
-    return null;
-  }
+	if (!passportId) {
+		return null;
+	}
 
-  return await getMedicalPassport(passportId);
+	return await getMedicalPassport(passportId);
 }
 
 /**
@@ -225,12 +225,12 @@ export async function getPassportByAddress(
  * @returns True if passport exists, false otherwise
  */
 export async function hasPassport(walletAddress: string): Promise<boolean> {
-  try {
-    const passportId = await getPassportIdByAddress(walletAddress);
-    return passportId !== null;
-  } catch {
-    return false;
-  }
+	try {
+		const passportId = await getPassportIdByAddress(walletAddress);
+		return passportId !== null;
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -244,30 +244,30 @@ export async function hasPassport(walletAddress: string): Promise<boolean> {
  * @throws Error if registry query fails
  */
 export async function getAllPassports(
-  limit: number = 100,
+	limit: number = 100,
 ): Promise<Array<[string, string]>> {
-  const client = getSuiClient();
+	const client = getSuiClient();
 
-  if (!PASSPORT_REGISTRY_ID) {
-    throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID not configured");
-  }
+	if (!PASSPORT_REGISTRY_ID) {
+		throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID not configured");
+	}
 
-  try {
-    const dynamicFields = await client.getDynamicFields({
-      parentId: PASSPORT_REGISTRY_ID,
-      limit,
-    });
+	try {
+		const dynamicFields = await client.getDynamicFields({
+			parentId: PASSPORT_REGISTRY_ID,
+			limit,
+		});
 
-    return dynamicFields.data.map((field: DynamicFieldInfo) => [
-      field.name.value, // wallet address
-      field.objectId, // passport object ID
-    ]);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to fetch all passports: ${error.message}`);
-    }
-    throw new Error("Failed to fetch all passports: Unknown error");
-  }
+		return dynamicFields.data.map((field: DynamicFieldInfo) => [
+			field.name.value, // wallet address
+			field.objectId, // passport object ID
+		]);
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Failed to fetch all passports: ${error.message}`);
+		}
+		throw new Error("Failed to fetch all passports: Unknown error");
+	}
 }
 
 /**
@@ -280,29 +280,29 @@ export async function getAllPassports(
  * @returns Transaction block ready for signing
  */
 export function buildUpdateBlobIdTransaction(params: {
-  passportObjectId: string;
-  registryObjectId: string;
-  newBlobId: string;
+	passportObjectId: string;
+	registryObjectId: string;
+	newBlobId: string;
 }): {
-  packageId: string;
-  module: string;
-  function: string;
-  arguments: string[];
+	packageId: string;
+	module: string;
+	function: string;
+	arguments: string[];
 } {
-  if (!PACKAGE_ID) {
-    throw new Error("NEXT_PUBLIC_PACKAGE_ID not configured");
-  }
+	if (!PACKAGE_ID) {
+		throw new Error("NEXT_PUBLIC_PACKAGE_ID not configured");
+	}
 
-  return {
-    packageId: PACKAGE_ID,
-    module: "accessor",
-    function: "update_walrus_blob_id",
-    arguments: [
-      params.passportObjectId,
-      params.registryObjectId,
-      params.newBlobId,
-    ],
-  };
+	return {
+		packageId: PACKAGE_ID,
+		module: "accessor",
+		function: "update_walrus_blob_id",
+		arguments: [
+			params.passportObjectId,
+			params.registryObjectId,
+			params.newBlobId,
+		],
+	};
 }
 
 /**
@@ -312,7 +312,7 @@ export function buildUpdateBlobIdTransaction(params: {
  * @returns True if matches, false otherwise
  */
 export function verifyPackageId(packageId: string): boolean {
-  return packageId === PACKAGE_ID;
+	return packageId === PACKAGE_ID;
 }
 
 /**
@@ -321,13 +321,13 @@ export function verifyPackageId(packageId: string): boolean {
  * @returns Network name and package details
  */
 export function getNetworkConfig(): {
-  network: string;
-  packageId: string;
-  registryId: string;
+	network: string;
+	packageId: string;
+	registryId: string;
 } {
-  return {
-    network: SUI_NETWORK,
-    packageId: PACKAGE_ID,
-    registryId: PASSPORT_REGISTRY_ID,
-  };
+	return {
+		network: SUI_NETWORK,
+		packageId: PACKAGE_ID,
+		registryId: PASSPORT_REGISTRY_ID,
+	};
 }

@@ -16,30 +16,30 @@
  * Root structure for all health data stored in Walrus
  */
 export interface HealthData {
-  meta: MetaData;
-  profile: UserProfile;
-  medications: Medication[];
-  conditions: Condition[];
-  lab_results: LabResult[];
-  imaging: ImagingStudy[];
-  allergies: Allergy[];
+	meta: MetaData;
+	profile: UserProfile;
+	medications: Medication[];
+	conditions: Condition[];
+	lab_results: LabResult[];
+	imaging: ImagingStudy[];
+	allergies: Allergy[];
 }
 
 /**
  * Metadata about the data structure and updates
  */
 export interface MetaData {
-  schema_version: string; // e.g., "1.0.0"
-  updated_at: number; // Unix Timestamp (milliseconds)
-  generator: string; // e.g., "CurePocket_Web_v1"
+	schema_version: string; // e.g., "1.0.0"
+	updated_at: number; // Unix Timestamp (milliseconds)
+	generator: string; // e.g., "CurePocket_Web_v1"
 }
 
 /**
  * Localized string for international + local language support
  */
 export interface LocalizedString {
-  en: string; // English (for Emergency Card display)
-  local: string; // Local language (for daily use)
+	en: string; // English (for Emergency Card display)
+	local: string; // Local language (for daily use)
 }
 
 // ==========================================
@@ -47,15 +47,15 @@ export interface LocalizedString {
 // ==========================================
 
 export interface UserProfile {
-  birth_year: number; // For age calculation (privacy: year only, not full DOB)
-  gender: "male" | "female" | "other";
-  country: string; // ISO 3166-1 alpha-2 (e.g., "JP", "US")
-  blood_type?: string; // e.g., "A+", "O-", "Unknown"
-  biometrics?: {
-    height_cm: number;
-    weight_kg: number;
-    bmi: number; // Auto-calculated from height/weight
-  };
+	birth_year: number; // For age calculation (privacy: year only, not full DOB)
+	gender: "male" | "female" | "other";
+	country: string; // ISO 3166-1 alpha-2 (e.g., "JP", "US")
+	blood_type?: string; // e.g., "A+", "O-", "Unknown"
+	biometrics?: {
+		height_cm: number;
+		weight_kg: number;
+		bmi: number; // Auto-calculated from height/weight
+	};
 }
 
 // ==========================================
@@ -63,18 +63,18 @@ export interface UserProfile {
 // ==========================================
 
 export interface Medication {
-  id: string; // UUID v4
-  status: "active" | "completed" | "stopped";
-  codes: {
-    atc?: string; // WHO ATC Code (Anatomical Therapeutic Chemical)
-    rxnorm?: string; // RxNorm CUI (Global standard for drug ingredients)
-    local_code?: string; // YJ Code (Japan) or NDC (USA)
-  };
-  name: LocalizedString; // Drug brand name or generic name
-  dosage: string; // Dosage and frequency (e.g., "1 tablet twice daily")
-  start_date: string; // YYYY-MM-DD
-  end_date?: string; // YYYY-MM-DD (optional)
-  prescriber?: string; // Prescribing doctor or clinic name (optional)
+	id: string; // UUID v4
+	status: "active" | "completed" | "stopped";
+	codes: {
+		atc?: string; // WHO ATC Code (Anatomical Therapeutic Chemical)
+		rxnorm?: string; // RxNorm CUI (Global standard for drug ingredients)
+		local_code?: string; // YJ Code (Japan) or NDC (USA)
+	};
+	name: LocalizedString; // Drug brand name or generic name
+	dosage: string; // Dosage and frequency (e.g., "1 tablet twice daily")
+	start_date: string; // YYYY-MM-DD
+	end_date?: string; // YYYY-MM-DD (optional)
+	prescriber?: string; // Prescribing doctor or clinic name (optional)
 }
 
 // ==========================================
@@ -82,14 +82,14 @@ export interface Medication {
 // ==========================================
 
 export interface Condition {
-  id: string; // UUID v4
-  status: "active" | "remission" | "resolved";
-  codes: {
-    icd10?: string; // ICD-10 Code (e.g., "E11.9" for Type 2 Diabetes)
-  };
-  name: LocalizedString; // Condition name
-  onset_date?: string; // YYYY-MM-DD (optional)
-  note?: string; // Free-text notes (optional)
+	id: string; // UUID v4
+	status: "active" | "remission" | "resolved";
+	codes: {
+		icd10?: string; // ICD-10 Code (e.g., "E11.9" for Type 2 Diabetes)
+	};
+	name: LocalizedString; // Condition name
+	onset_date?: string; // YYYY-MM-DD (optional)
+	note?: string; // Free-text notes (optional)
 }
 
 // ==========================================
@@ -97,22 +97,22 @@ export interface Condition {
 // ==========================================
 
 export interface LabResult {
-  id: string; // UUID v4
-  date: string; // Test date YYYY-MM-DD
-  category: "biochemistry" | "hematology" | "immunology" | "other";
-  items: LabItem[]; // Array of test items (one lab session can have multiple tests)
+	id: string; // UUID v4
+	date: string; // Test date YYYY-MM-DD
+	category: "biochemistry" | "hematology" | "immunology" | "other";
+	items: LabItem[]; // Array of test items (one lab session can have multiple tests)
 }
 
 export interface LabItem {
-  codes: {
-    loinc?: string; // LOINC Code (e.g., "4548-4" for HbA1c)
-  };
-  name: LocalizedString; // Test item name
-  value: number; // Test result value
-  unit: string; // Unit (e.g., "%", "mg/dL")
-  range_low?: number; // Reference range lower bound (optional)
-  range_high?: number; // Reference range upper bound (optional)
-  flag?: "H" | "L" | "N"; // H=High, L=Low, N=Normal/Null
+	codes: {
+		loinc?: string; // LOINC Code (e.g., "4548-4" for HbA1c)
+	};
+	name: LocalizedString; // Test item name
+	value: number; // Test result value
+	unit: string; // Unit (e.g., "%", "mg/dL")
+	range_low?: number; // Reference range lower bound (optional)
+	range_high?: number; // Reference range upper bound (optional)
+	flag?: "H" | "L" | "N"; // H=High, L=Low, N=Normal/Null
 }
 
 // ==========================================
@@ -120,13 +120,13 @@ export interface LabItem {
 // ==========================================
 
 export interface ImagingStudy {
-  id: string; // UUID v4
-  date: string; // Imaging date YYYY-MM-DD
-  modality: "CT" | "MR" | "US" | "XR" | "XA" | "OT"; // DICOM Modality Codes
-  body_site: LocalizedString; // Body part (e.g., "Chest", "Head")
-  summary: LocalizedString; // Radiologist report summary
-  abnormal_flag: boolean; // Whether abnormalities were found
-  dicom_blob_id?: string; // Future use: DICOM image data Walrus Blob ID
+	id: string; // UUID v4
+	date: string; // Imaging date YYYY-MM-DD
+	modality: "CT" | "MR" | "US" | "XR" | "XA" | "OT"; // DICOM Modality Codes
+	body_site: LocalizedString; // Body part (e.g., "Chest", "Head")
+	summary: LocalizedString; // Radiologist report summary
+	abnormal_flag: boolean; // Whether abnormalities were found
+	dicom_blob_id?: string; // Future use: DICOM image data Walrus Blob ID
 }
 
 // ==========================================
@@ -134,14 +134,14 @@ export interface ImagingStudy {
 // ==========================================
 
 export interface Allergy {
-  id: string; // UUID v4
-  substance: {
-    code_type?: "rxnorm" | "atc" | "food" | "other";
-    code?: string;
-    name: string;
-  };
-  severity: "mild" | "moderate" | "severe";
-  reaction?: string; // Reaction description (e.g., "Rash", "Anaphylaxis")
+	id: string; // UUID v4
+	substance: {
+		code_type?: "rxnorm" | "atc" | "food" | "other";
+		code?: string;
+		name: string;
+	};
+	severity: "mild" | "moderate" | "severe";
+	reaction?: string; // Reaction description (e.g., "Rash", "Anaphylaxis")
 }
 
 // ==========================================
@@ -153,38 +153,38 @@ export interface Allergy {
  * This data is completely separated from personal health data
  */
 export interface AnonymousStatsPayload {
-  meta: {
-    schema_version: string;
-    report_period: string; // YYYY-MM
-  };
-  demographics: {
-    country: string; // ISO 3166-1 alpha-2
-    age_band: string; // e.g., "30-39" (10-year bands)
-    sex: "M" | "F" | "O"; // Male, Female, Other
-  };
-  medication_stats: Array<{
-    atc_l3_code: string; // ATC Level 3 (first 4 characters)
-    active_count: number;
-  }>;
-  condition_stats: Array<{
-    icd10_l3_code: string; // ICD-10 Level 3 (first 3 characters)
-    status: string;
-  }>;
-  lab_stats_summary: Array<{
-    loinc_code: string;
-    result_flag: "H" | "L" | "N";
-  }>;
+	meta: {
+		schema_version: string;
+		report_period: string; // YYYY-MM
+	};
+	demographics: {
+		country: string; // ISO 3166-1 alpha-2
+		age_band: string; // e.g., "30-39" (10-year bands)
+		sex: "M" | "F" | "O"; // Male, Female, Other
+	};
+	medication_stats: Array<{
+		atc_l3_code: string; // ATC Level 3 (first 4 characters)
+		active_count: number;
+	}>;
+	condition_stats: Array<{
+		icd10_l3_code: string; // ICD-10 Level 3 (first 3 characters)
+		status: string;
+	}>;
+	lab_stats_summary: Array<{
+		loinc_code: string;
+		result_flag: "H" | "L" | "N";
+	}>;
 }
 
 /**
  * Analytics submission with separated reward claim
  */
 export interface AnalyticsSubmission {
-  stats_payload: AnonymousStatsPayload; // Anonymized data
-  reward_claim: {
-    walletAddress: string;
-    signature: string;
-  }; // Separated for privacy
+	stats_payload: AnonymousStatsPayload; // Anonymized data
+	reward_claim: {
+		walletAddress: string;
+		signature: string;
+	}; // Separated for privacy
 }
 
 // ==========================================
@@ -200,16 +200,16 @@ export type AsyncStatus = "idle" | "loading" | "success" | "error";
  * API response wrapper
  */
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+	success: boolean;
+	data?: T;
+	error?: string;
 }
 
 /**
  * Walrus blob reference
  */
 export interface WalrusBlobReference {
-  blobId: string;
-  uploadedAt: number; // Unix timestamp
-  size: number; // Blob size in bytes
+	blobId: string;
+	uploadedAt: number; // Unix timestamp
+	size: number; // Blob size in bytes
 }

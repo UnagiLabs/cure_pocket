@@ -5,23 +5,23 @@ import { AppProvider } from "@/contexts/AppContext";
 import "@mysten/dapp-kit/dist/index.css";
 
 export const metadata: Metadata = {
-  title: "CurePocket - Your Global Medication Passport",
-  description:
-    "Privacy-preserving medication management powered by Sui and Walrus",
+	title: "CurePocket - Your Global Medication Passport",
+	description:
+		"Privacy-preserving medication management powered by Sui and Walrus",
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body className="antialiased">
-        <SuiProviders>
-          <AppProvider>{children}</AppProvider>
-        </SuiProviders>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="en">
+			<body className="antialiased">
+				<SuiProviders>
+					<AppProvider>{children}</AppProvider>
+				</SuiProviders>
+			</body>
+		</html>
+	);
 }

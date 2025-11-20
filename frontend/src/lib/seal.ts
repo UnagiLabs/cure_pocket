@@ -28,9 +28,9 @@ import type { HealthData } from "@/types/healthData";
  * Comma-separated list of key server object IDs
  */
 const SEAL_KEY_SERVERS =
-  process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
-    .map((id) => id.trim())
-    .filter(Boolean) || [];
+	process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
+		.map((id) => id.trim())
+		.filter(Boolean) || [];
 
 /**
  * Default threshold (t-of-n)
@@ -52,18 +52,18 @@ const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
  * Sui network for key server lookup
  */
 const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
-  | "mainnet"
-  | "testnet"
-  | "devnet"
-  | "localnet";
+	| "mainnet"
+	| "testnet"
+	| "devnet"
+	| "localnet";
 
 /**
  * Verify key server URLs against on-chain metadata
  * Enable in production to prevent endpoint spoofing
  */
 const VERIFY_KEY_SERVERS =
-  (process.env.NEXT_PUBLIC_SEAL_VERIFY_KEY_SERVERS || "").toLowerCase() ===
-  "true";
+	(process.env.NEXT_PUBLIC_SEAL_VERIFY_KEY_SERVERS || "").toLowerCase() ===
+	"true";
 
 // ==========================================
 // Core Seal Functions
@@ -76,15 +76,15 @@ const VERIFY_KEY_SERVERS =
  * @returns Array of key server object IDs
  */
 function resolveKeyServers(
-  network: "mainnet" | "testnet" | "devnet" | "localnet",
+	network: "mainnet" | "testnet" | "devnet" | "localnet",
 ): string[] {
-  if (SEAL_KEY_SERVERS.length > 0) {
-    return SEAL_KEY_SERVERS;
-  }
-  // No SDK helper available in @mysten/seal v0.9.x; require env configuration.
-  throw new Error(
-    `No Seal key servers configured for ${network}. Set NEXT_PUBLIC_SEAL_KEY_SERVERS.`,
-  );
+	if (SEAL_KEY_SERVERS.length > 0) {
+		return SEAL_KEY_SERVERS;
+	}
+	// No SDK helper available in @mysten/seal v0.9.x; require env configuration.
+	throw new Error(
+		`No Seal key servers configured for ${network}. Set NEXT_PUBLIC_SEAL_KEY_SERVERS.`,
+	);
 }
 
 /**
@@ -95,27 +95,27 @@ function resolveKeyServers(
  * @throws Error if KeyServer configuration is invalid
  */
 export function createSealClient(suiClient: SuiClient): SealClient {
-  // Get key server object IDs
-  const serverObjectIds = resolveKeyServers(SUI_NETWORK);
+	// Get key server object IDs
+	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
 
-  if (serverObjectIds.length === 0) {
-    throw new Error(
-      "No Seal key servers configured. Set NEXT_PUBLIC_SEAL_KEY_SERVERS or use allowlisted servers.",
-    );
-  }
+	if (serverObjectIds.length === 0) {
+		throw new Error(
+			"No Seal key servers configured. Set NEXT_PUBLIC_SEAL_KEY_SERVERS or use allowlisted servers.",
+		);
+	}
 
-  // Create server configs with equal weights
-  const serverConfigs = serverObjectIds.map((objectId) => ({
-    objectId,
-    weight: 1,
-  }));
+	// Create server configs with equal weights
+	const serverConfigs = serverObjectIds.map((objectId) => ({
+		objectId,
+		weight: 1,
+	}));
 
-  // Initialize SealClient
-  return new SealClient({
-    suiClient,
-    serverConfigs,
-    verifyKeyServers: VERIFY_KEY_SERVERS,
-  });
+	// Initialize SealClient
+	return new SealClient({
+		suiClient,
+		serverConfigs,
+		verifyKeyServers: VERIFY_KEY_SERVERS,
+	});
 }
 
 /**
@@ -131,21 +131,21 @@ export function createSealClient(suiClient: SuiClient): SealClient {
  * @returns Initialized SessionKey (not yet signed)
  */
 export async function createSessionKey(options: {
-  address: string;
-  suiClient: SuiClient;
-  ttlMin?: number;
+	address: string;
+	suiClient: SuiClient;
+	ttlMin?: number;
 }): Promise<SessionKey> {
-  const { address, suiClient, ttlMin = DEFAULT_SESSION_TTL_MIN } = options;
+	const { address, suiClient, ttlMin = DEFAULT_SESSION_TTL_MIN } = options;
 
-  // Create SessionKey
-  const sessionKey = await SessionKey.create({
-    address,
-    packageId: PACKAGE_ID,
-    ttlMin,
-    suiClient,
-  });
+	// Create SessionKey
+	const sessionKey = await SessionKey.create({
+		address,
+		packageId: PACKAGE_ID,
+		ttlMin,
+		suiClient,
+	});
 
-  return sessionKey;
+	return sessionKey;
 }
 
 /**
@@ -158,16 +158,16 @@ export async function createSessionKey(options: {
  * @returns seal_id as Uint8Array
  */
 export async function generateSealId(
-  passportObjectId: string,
+	passportObjectId: string,
 ): Promise<string> {
-  // Use SHA-256 to generate deterministic seal_id
-  const encoder = new TextEncoder();
-  const data = encoder.encode(passportObjectId);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+	// Use SHA-256 to generate deterministic seal_id
+	const encoder = new TextEncoder();
+	const data = encoder.encode(passportObjectId);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+	return Array.from(new Uint8Array(hashBuffer))
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("");
 }
 
 /**
@@ -183,31 +183,31 @@ export async function generateSealId(
  * @returns Encrypted data and symmetric key
  */
 export async function encryptHealthData(params: {
-  healthData: HealthData;
-  sealClient: SealClient;
-  sealId: string; // hex string (without package prefix)
-  threshold?: number;
+	healthData: HealthData;
+	sealClient: SealClient;
+	sealId: string; // hex string (without package prefix)
+	threshold?: number;
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
-  const {
-    healthData,
-    sealClient,
-    sealId,
-    threshold = DEFAULT_THRESHOLD,
-  } = params;
+	const {
+		healthData,
+		sealClient,
+		sealId,
+		threshold = DEFAULT_THRESHOLD,
+	} = params;
 
-  // Serialize to JSON
-  const json = JSON.stringify(healthData);
-  const data = new TextEncoder().encode(json);
+	// Serialize to JSON
+	const json = JSON.stringify(healthData);
+	const data = new TextEncoder().encode(json);
 
-  // Encrypt with Seal
-  const { encryptedObject, key: backupKey } = await sealClient.encrypt({
-    threshold,
-    packageId: PACKAGE_ID,
-    id: sealId,
-    data,
-  });
+	// Encrypt with Seal
+	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
+		threshold,
+		packageId: PACKAGE_ID,
+		id: sealId,
+		data,
+	});
 
-  return { encryptedObject, backupKey };
+	return { encryptedObject, backupKey };
 }
 
 /**
@@ -224,36 +224,36 @@ export async function encryptHealthData(params: {
  * @throws Error if access is denied or decryption fails
  */
 export async function decryptHealthData(params: {
-  encryptedData: Uint8Array;
-  sealClient: SealClient;
-  sessionKey: SessionKey;
-  txBytes: Uint8Array;
-  sealId?: string;
+	encryptedData: Uint8Array;
+	sealClient: SealClient;
+	sessionKey: SessionKey;
+	txBytes: Uint8Array;
+	sealId?: string;
 }): Promise<HealthData> {
-  const { encryptedData, sealClient, sessionKey, txBytes, sealId } = params;
+	const { encryptedData, sealClient, sessionKey, txBytes, sealId } = params;
 
-  // Optional sanity check: ensure the encrypted object matches expected id
-  if (sealId) {
-    const parsed = EncryptedObject.parse(encryptedData);
-    const normalize = (value: string) =>
-      value.startsWith("0x") ? value.slice(2) : value;
-    if (normalize(parsed.id) !== normalize(sealId)) {
-      throw new Error("Encrypted object seal_id mismatch");
-    }
-  }
+	// Optional sanity check: ensure the encrypted object matches expected id
+	if (sealId) {
+		const parsed = EncryptedObject.parse(encryptedData);
+		const normalize = (value: string) =>
+			value.startsWith("0x") ? value.slice(2) : value;
+		if (normalize(parsed.id) !== normalize(sealId)) {
+			throw new Error("Encrypted object seal_id mismatch");
+		}
+	}
 
-  // Decrypt with Seal
-  const decryptedBytes = await sealClient.decrypt({
-    data: encryptedData,
-    sessionKey,
-    txBytes,
-  });
+	// Decrypt with Seal
+	const decryptedBytes = await sealClient.decrypt({
+		data: encryptedData,
+		sessionKey,
+		txBytes,
+	});
 
-  // Parse JSON
-  const json = new TextDecoder().decode(decryptedBytes);
-  const healthData = JSON.parse(json) as HealthData;
+	// Parse JSON
+	const json = new TextDecoder().decode(decryptedBytes);
+	const healthData = JSON.parse(json) as HealthData;
 
-  return healthData;
+	return healthData;
 }
 
 /**
@@ -268,33 +268,33 @@ export async function decryptHealthData(params: {
  * @returns Transaction bytes for Seal verification
  */
 export async function buildPatientAccessPTB(params: {
-  passportObjectId: string;
-  registryObjectId: string;
-  suiClient: SuiClient;
-  sealId: string;
+	passportObjectId: string;
+	registryObjectId: string;
+	suiClient: SuiClient;
+	sealId: string;
 }): Promise<Uint8Array> {
-  const { passportObjectId, registryObjectId, suiClient, sealId } = params;
+	const { passportObjectId, registryObjectId, suiClient, sealId } = params;
 
-  const tx = new Transaction();
+	const tx = new Transaction();
 
-  // Call seal_approve_patient_only(id, passport, registry)
-  // First argument is the identity (seal_id), excluding package ID prefix
-  tx.moveCall({
-    target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
-    arguments: [
-      tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
-      tx.object(passportObjectId),
-      tx.object(registryObjectId),
-    ],
-  });
+	// Call seal_approve_patient_only(id, passport, registry)
+	// First argument is the identity (seal_id), excluding package ID prefix
+	tx.moveCall({
+		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
+		arguments: [
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
+			tx.object(passportObjectId),
+			tx.object(registryObjectId),
+		],
+	});
 
-  // Build transaction bytes with onlyTransactionKind: true
-  const txBytes = await tx.build({
-    client: suiClient,
-    onlyTransactionKind: true,
-  });
+	// Build transaction bytes with onlyTransactionKind: true
+	const txBytes = await tx.build({
+		client: suiClient,
+		onlyTransactionKind: true,
+	});
 
-  return txBytes;
+	return txBytes;
 }
 
 /**
@@ -304,41 +304,41 @@ export async function buildPatientAccessPTB(params: {
  * @returns Transaction bytes for Seal verification
  */
 export async function buildConsentAccessPTB(params: {
-  passportObjectId: string;
-  registryObjectId: string;
-  consentTokenObjectId: string;
-  suiClient: SuiClient;
-  sealId: string;
+	passportObjectId: string;
+	registryObjectId: string;
+	consentTokenObjectId: string;
+	suiClient: SuiClient;
+	sealId: string;
 }): Promise<Uint8Array> {
-  const {
-    passportObjectId,
-    registryObjectId,
-    consentTokenObjectId,
-    suiClient,
-    sealId,
-  } = params;
+	const {
+		passportObjectId,
+		registryObjectId,
+		consentTokenObjectId,
+		suiClient,
+		sealId,
+	} = params;
 
-  const tx = new Transaction();
+	const tx = new Transaction();
 
-  // Call seal_approve_consent(id, passport, registry, consent_token, clock)
-  tx.moveCall({
-    target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
-    arguments: [
-      tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
-      tx.object(passportObjectId),
-      tx.object(registryObjectId),
-      tx.object(consentTokenObjectId),
-      tx.object("0x6"), // Clock object
-    ],
-  });
+	// Call seal_approve_consent(id, passport, registry, consent_token, clock)
+	tx.moveCall({
+		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
+		arguments: [
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
+			tx.object(passportObjectId),
+			tx.object(registryObjectId),
+			tx.object(consentTokenObjectId),
+			tx.object("0x6"), // Clock object
+		],
+	});
 
-  // Build transaction bytes with onlyTransactionKind: true
-  const txBytes = await tx.build({
-    client: suiClient,
-    onlyTransactionKind: true,
-  });
+	// Build transaction bytes with onlyTransactionKind: true
+	const txBytes = await tx.build({
+		client: suiClient,
+		onlyTransactionKind: true,
+	});
 
-  return txBytes;
+	return txBytes;
 }
 
 /**
@@ -356,10 +356,10 @@ export async function buildConsentAccessPTB(params: {
  * @param signPersonalMessage - Wallet's signPersonalMessage function
  */
 export async function signSessionKey(
-  sessionKey: SessionKey,
-  signPersonalMessage: (message: Uint8Array) => Promise<{ signature: string }>,
+	sessionKey: SessionKey,
+	signPersonalMessage: (message: Uint8Array) => Promise<{ signature: string }>,
 ): Promise<void> {
-  const message = sessionKey.getPersonalMessage();
-  const { signature } = await signPersonalMessage(message);
-  await sessionKey.setPersonalMessageSignature(signature);
+	const message = sessionKey.getPersonalMessage();
+	const { signature } = await signPersonalMessage(message);
+	await sessionKey.setPersonalMessageSignature(signature);
 }
