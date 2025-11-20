@@ -53,6 +53,19 @@ export const themes: Record<ThemeId, ThemeConfig> = {
       textSecondary: '#D1D5DB', // gray-300
     },
   },
+  'soft-warm-gradient': {
+    id: 'soft-warm-gradient',
+    name: 'Soft Warm Gradient',
+    colors: {
+      primary: '#FF8DA1', // ロゴ中心のピンク
+      secondary: '#FFA98C', // サーモン系
+      accent: '#FFD9A0', // クリームイエロー
+      background: '#F7F4F4', // やさしい薄グレー
+      surface: '#FFFFFF', // Pure White
+      text: '#585858', // 大事な文字用の濃グレー
+      textSecondary: '#888888', // セカンダリテキスト用のグレー
+    },
+  },
 };
 
 export const getTheme = (themeId: ThemeId): ThemeConfig => {

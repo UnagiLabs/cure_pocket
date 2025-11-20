@@ -2,7 +2,8 @@ export type ThemeId =
   | 'classic-blue'
   | 'mint-clinic'
   | 'sakura-notebook'
-  | 'midnight-travel';
+  | 'midnight-travel'
+  | 'soft-warm-gradient';
 
 export type LocaleId = 'en' | 'ja' | 'zh' | 'fr' | 'pt';
 
