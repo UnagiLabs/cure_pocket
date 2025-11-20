@@ -17,11 +17,11 @@
  * - 既にパスポートを所持している場合はトランザクションが失敗する
  * - ネットワークエラー時は適切にエラーメッセージを返す
  */
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { useState } from "react";
 
 /**
  * パッケージIDを取得
@@ -32,7 +32,7 @@ import { Transaction } from '@mysten/sui/transactions';
 function get_package_id(): string {
   const package_id = process.env.NEXT_PUBLIC_PACKAGE_ID;
   if (!package_id) {
-    throw new Error('NEXT_PUBLIC_PACKAGE_ID is not set');
+    throw new Error("NEXT_PUBLIC_PACKAGE_ID is not set");
   }
   return package_id;
 }
@@ -46,7 +46,7 @@ function get_package_id(): string {
 function get_registry_id(): string {
   const registry_id = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID;
   if (!registry_id) {
-    throw new Error('NEXT_PUBLIC_PASSPORT_REGISTRY_ID is not set');
+    throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID is not set");
   }
   return registry_id;
 }
@@ -58,8 +58,8 @@ function get_registry_id(): string {
  */
 function get_default_country_code(): string {
   // ブラウザのロケールから国コードを取得を試みる
-  const locale = navigator.language || 'ja-JP';
-  const country_code = locale.split('-')[1]?.toUpperCase() || 'JP';
+  const locale = navigator.language || "ja-JP";
+  const country_code = locale.split("-")[1]?.toUpperCase() || "JP";
   return country_code;
 }
 
@@ -78,7 +78,7 @@ export interface UseMintPassportReturn {
   mint: (
     walrus_blob_id: string,
     seal_id: string,
-    country_code?: string
+    country_code?: string,
   ) => Promise<void>;
   /**
    * トランザクション送信中かどうか
@@ -96,8 +96,11 @@ export interface UseMintPassportReturn {
  * @returns パスポート発行関数、ローディング状態、エラー情報
  */
 export function useMintPassport(): UseMintPassportReturn {
-  const { mutate: sign_and_execute, is_pending, error } =
-    useSignAndExecuteTransaction();
+  const {
+    mutate: sign_and_execute,
+    is_pending,
+    error,
+  } = useSignAndExecuteTransaction();
   const [mint_error, set_mint_error] = useState<Error | null>(null);
 
   /**
@@ -110,7 +113,7 @@ export function useMintPassport(): UseMintPassportReturn {
   async function mint(
     walrus_blob_id: string,
     seal_id: string,
-    country_code?: string
+    country_code?: string,
   ): Promise<void> {
     try {
       // 環境変数の確認
@@ -151,17 +154,15 @@ export function useMintPassport(): UseMintPassportReturn {
             const error_message =
               error instanceof Error
                 ? error.message
-                : 'パスポート発行に失敗しました';
+                : "パスポート発行に失敗しました";
             set_mint_error(new Error(error_message));
           },
-        }
+        },
       );
     } catch (error) {
       // エラーハンドリング
       const error_message =
-        error instanceof Error
-          ? error.message
-          : 'パスポート発行に失敗しました';
+        error instanceof Error ? error.message : "パスポート発行に失敗しました";
       set_mint_error(new Error(error_message));
       throw error;
     }

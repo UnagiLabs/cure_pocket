@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
-import { ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { getTheme } from '@/lib/themes';
-import type { Medication, MedicationForm } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useApp } from "@/contexts/AppContext";
+import { getTheme } from "@/lib/themes";
+import type { Medication, MedicationForm } from "@/types";
 
 /**
  * 薬の追加フォームページ
@@ -20,17 +20,17 @@ export default function AddMedicationPage() {
   const theme = getTheme(settings.theme);
 
   const [formData, setFormData] = useState({
-    name: '',
-    genericName: '',
-    strength: '',
-    form: 'tablet' as MedicationForm,
-    dose: '',
-    frequency: '',
-    startDate: '',
-    endDate: '',
-    reason: '',
-    clinic: '',
-    warning: '',
+    name: "",
+    genericName: "",
+    strength: "",
+    form: "tablet" as MedicationForm,
+    dose: "",
+    frequency: "",
+    startDate: "",
+    endDate: "",
+    reason: "",
+    clinic: "",
+    warning: "",
   });
 
   const handleInputChange = (field: string, value: string | MedicationForm) => {
@@ -51,7 +51,7 @@ export default function AddMedicationPage() {
       reason: formData.reason || undefined,
       clinic: formData.clinic || undefined,
       warning: formData.warning || undefined,
-      status: 'active',
+      status: "active",
     };
 
     addMedication(medication);
@@ -66,10 +66,16 @@ export default function AddMedicationPage() {
           onClick={() => router.push(`/${locale}/app/add`)}
           className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
-          <ChevronLeft className="h-6 w-6" style={{ color: theme.colors.text }} />
+          <ChevronLeft
+            className="h-6 w-6"
+            style={{ color: theme.colors.text }}
+          />
         </button>
-        <h1 className="text-lg font-bold md:text-2xl" style={{ color: theme.colors.text }}>
-          {t('add.title')}
+        <h1
+          className="text-lg font-bold md:text-2xl"
+          style={{ color: theme.colors.text }}
+        >
+          {t("add.title")}
         </h1>
       </div>
 
@@ -80,19 +86,19 @@ export default function AddMedicationPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('add.drugName')} *
+            {t("add.drugName")} *
           </label>
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
+            onChange={(e) => handleInputChange("name", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('add.drugName')}
+            placeholder={t("add.drugName")}
           />
         </div>
 
@@ -101,38 +107,38 @@ export default function AddMedicationPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('add.genericName')}
+            {t("add.genericName")}
           </label>
           <input
             type="text"
             value={formData.genericName}
-            onChange={(e) => handleInputChange('genericName', e.target.value)}
+            onChange={(e) => handleInputChange("genericName", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('add.genericName')}
+            placeholder={t("add.genericName")}
           />
         </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label
-                className="mb-1 block text-sm font-medium md:text-base"
-                style={{ color: theme.colors.text }}
-              >
-                {t('add.strength')}
-              </label>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium md:text-base"
+              style={{ color: theme.colors.text }}
+            >
+              {t("add.strength")}
+            </label>
             <input
               type="text"
               value={formData.strength}
-              onChange={(e) => handleInputChange('strength', e.target.value)}
+              onChange={(e) => handleInputChange("strength", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="5mg"
@@ -144,22 +150,24 @@ export default function AddMedicationPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('add.form')}
+              {t("add.form")}
             </label>
             <select
               value={formData.form}
-              onChange={(e) => handleInputChange('form', e.target.value as MedicationForm)}
+              onChange={(e) =>
+                handleInputChange("form", e.target.value as MedicationForm)
+              }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
-              <option value="tablet">{t('forms.tablet')}</option>
-              <option value="capsule">{t('forms.capsule')}</option>
-              <option value="liquid">{t('forms.liquid')}</option>
-              <option value="other">{t('forms.other')}</option>
+              <option value="tablet">{t("forms.tablet")}</option>
+              <option value="capsule">{t("forms.capsule")}</option>
+              <option value="liquid">{t("forms.liquid")}</option>
+              <option value="other">{t("forms.other")}</option>
             </select>
           </div>
         </div>
@@ -170,16 +178,16 @@ export default function AddMedicationPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('add.dose')}
+              {t("add.dose")}
             </label>
             <input
               type="text"
               value={formData.dose}
-              onChange={(e) => handleInputChange('dose', e.target.value)}
+              onChange={(e) => handleInputChange("dose", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="1 tablet"
@@ -191,16 +199,16 @@ export default function AddMedicationPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('add.frequency')}
+              {t("add.frequency")}
             </label>
             <input
               type="text"
               value={formData.frequency}
-              onChange={(e) => handleInputChange('frequency', e.target.value)}
+              onChange={(e) => handleInputChange("frequency", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="1日2回"
@@ -214,16 +222,16 @@ export default function AddMedicationPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('add.startDate')}
+              {t("add.startDate")}
             </label>
             <input
               type="date"
               value={formData.startDate}
-              onChange={(e) => handleInputChange('startDate', e.target.value)}
+              onChange={(e) => handleInputChange("startDate", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             />
@@ -234,16 +242,16 @@ export default function AddMedicationPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('add.endDate')}
+              {t("add.endDate")}
             </label>
             <input
               type="date"
               value={formData.endDate}
-              onChange={(e) => handleInputChange('endDate', e.target.value)}
+              onChange={(e) => handleInputChange("endDate", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             />
@@ -255,19 +263,19 @@ export default function AddMedicationPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('medications.clinic')}
+            {t("medications.clinic")}
           </label>
           <input
             type="text"
             value={formData.clinic}
-            onChange={(e) => handleInputChange('clinic', e.target.value)}
+            onChange={(e) => handleInputChange("clinic", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('medications.clinic')}
+            placeholder={t("medications.clinic")}
           />
         </div>
 
@@ -276,19 +284,19 @@ export default function AddMedicationPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('add.reason')}
+            {t("add.reason")}
           </label>
           <textarea
             value={formData.reason}
-            onChange={(e) => handleInputChange('reason', e.target.value)}
+            onChange={(e) => handleInputChange("reason", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('add.reason')}
+            placeholder={t("add.reason")}
           />
         </div>
 
@@ -297,19 +305,19 @@ export default function AddMedicationPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('medications.warning')}
+            {t("medications.warning")}
           </label>
           <input
             type="text"
             value={formData.warning}
-            onChange={(e) => handleInputChange('warning', e.target.value)}
+            onChange={(e) => handleInputChange("warning", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('medications.warning')}
+            placeholder={t("medications.warning")}
           />
         </div>
 
@@ -318,11 +326,11 @@ export default function AddMedicationPage() {
             onClick={() => router.push(`/${locale}/app/add`)}
             className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-sm"
             style={{
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
           >
-            {t('actions.cancel')}
+            {t("actions.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -330,11 +338,10 @@ export default function AddMedicationPage() {
             className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50 md:p-5 md:text-lg hover:shadow-lg"
             style={{ backgroundColor: theme.colors.primary }}
           >
-            {t('actions.save')}
+            {t("actions.save")}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

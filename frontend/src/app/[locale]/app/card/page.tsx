@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations } from 'next-intl';
 import {
-  QrCode,
-  Download,
-  Printer,
   AlertCircle,
-  Clock,
-  Package,
   AlertTriangle,
+  Clock,
+  Download,
   FileText,
   FlaskConical,
+  Package,
+  Printer,
+  QrCode,
   Scan,
-} from 'lucide-react';
-import { getTheme } from '@/lib/themes';
-import { apiClient } from '@/lib/apiClient';
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useApp } from "@/contexts/AppContext";
+import { apiClient } from "@/lib/apiClient";
+import { getTheme } from "@/lib/themes";
 
 /**
  * 緊急ヘルスカードページ
@@ -34,27 +34,27 @@ export default function EmergencyCardPage() {
     walletAddress,
   } = useApp();
   const theme = getTheme(settings.theme);
-  const [consentUrl, setConsentUrl] = useState('');
-  const [expiresAt, setExpiresAt] = useState('');
+  const [consentUrl, setConsentUrl] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<
-    ('medications' | 'allergies' | 'histories' | 'labs' | 'imaging')[]
-  >(['medications', 'allergies']);
+    ("medications" | "allergies" | "histories" | "labs" | "imaging")[]
+  >(["medications", "allergies"]);
 
-  const activeMedications = medications.filter((m) => m.status === 'active');
+  const activeMedications = medications.filter((m) => m.status === "active");
   const importantHistories = medicalHistories.filter(
-    (h) => h.status === 'active' || h.type === 'surgery'
+    (h) => h.status === "active" || h.type === "surgery",
   );
   const recentLabResults = labResults.slice(0, 3);
   const latestImaging = imagingReports[0];
 
   const handleCategoryToggle = (
-    category: 'medications' | 'allergies' | 'histories' | 'labs' | 'imaging'
+    category: "medications" | "allergies" | "histories" | "labs" | "imaging",
   ) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
-        : [...prev, category]
+        : [...prev, category],
     );
   };
 
@@ -70,10 +70,12 @@ export default function EmergencyCardPage() {
       setConsentUrl(response.consentUrl);
       setExpiresAt(response.expiresAt);
     } catch (error) {
-      console.error('Failed to generate consent token:', error);
+      console.error("Failed to generate consent token:", error);
       // Fallback to mock for now
       const mockUrl = `https://curepocket.app/view/${walletAddress?.slice(0, 8)}`;
-      const mockExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const mockExpires = new Date(
+        Date.now() + 24 * 60 * 60 * 1000,
+      ).toISOString();
       setConsentUrl(mockUrl);
       setExpiresAt(mockExpires);
     } finally {
@@ -82,11 +84,19 @@ export default function EmergencyCardPage() {
   };
 
   const categoryOptions = [
-    { id: 'medications' as const, label: t('dataTypes.medication'), icon: Package },
-    { id: 'allergies' as const, label: t('dataTypes.allergy'), icon: AlertTriangle },
-    { id: 'histories' as const, label: t('dataTypes.history'), icon: FileText },
-    { id: 'labs' as const, label: t('dataTypes.lab'), icon: FlaskConical },
-    { id: 'imaging' as const, label: t('dataTypes.imaging'), icon: Scan },
+    {
+      id: "medications" as const,
+      label: t("dataTypes.medication"),
+      icon: Package,
+    },
+    {
+      id: "allergies" as const,
+      label: t("dataTypes.allergy"),
+      icon: AlertTriangle,
+    },
+    { id: "histories" as const, label: t("dataTypes.history"), icon: FileText },
+    { id: "labs" as const, label: t("dataTypes.lab"), icon: FlaskConical },
+    { id: "imaging" as const, label: t("dataTypes.imaging"), icon: Scan },
   ];
 
   return (
@@ -94,13 +104,19 @@ export default function EmergencyCardPage() {
       {/* Header */}
       <div className="mb-6 flex items-center md:mb-8">
         <AlertCircle className="mr-2 h-5 w-5 text-red-500 md:h-6 md:w-6" />
-        <h1 className="text-lg font-bold md:text-2xl" style={{ color: theme.colors.text }}>
-          {t('card.title')}
+        <h1
+          className="text-lg font-bold md:text-2xl"
+          style={{ color: theme.colors.text }}
+        >
+          {t("card.title")}
         </h1>
       </div>
 
-      <p className="mb-6 text-sm md:text-base" style={{ color: theme.colors.textSecondary }}>
-        {t('card.description')}
+      <p
+        className="mb-6 text-sm md:text-base"
+        style={{ color: theme.colors.textSecondary }}
+      >
+        {t("card.description")}
       </p>
 
       {/* Category Selection */}
@@ -108,7 +124,10 @@ export default function EmergencyCardPage() {
         className="mb-4 rounded-xl p-4 shadow-sm md:p-6"
         style={{ backgroundColor: theme.colors.surface }}
       >
-        <h3 className="mb-3 font-bold md:text-lg" style={{ color: theme.colors.text }}>
+        <h3
+          className="mb-3 font-bold md:text-lg"
+          style={{ color: theme.colors.text }}
+        >
           表示するカテゴリーを選択
         </h3>
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
@@ -123,22 +142,35 @@ export default function EmergencyCardPage() {
                 style={{
                   borderColor: isSelected
                     ? theme.colors.primary
-                    : theme.colors.textSecondary + '40',
-                  backgroundColor: isSelected ? theme.colors.primary + '10' : 'transparent',
+                    : theme.colors.textSecondary + "40",
+                  backgroundColor: isSelected
+                    ? theme.colors.primary + "10"
+                    : "transparent",
                 }}
               >
                 <Icon
                   className="mr-3 h-5 w-5 md:h-6 md:w-6"
-                  style={{ color: isSelected ? theme.colors.primary : theme.colors.textSecondary }}
+                  style={{
+                    color: isSelected
+                      ? theme.colors.primary
+                      : theme.colors.textSecondary,
+                  }}
                 />
                 <span
                   className="flex-1 text-left font-medium md:text-base"
-                  style={{ color: isSelected ? theme.colors.primary : theme.colors.text }}
+                  style={{
+                    color: isSelected
+                      ? theme.colors.primary
+                      : theme.colors.text,
+                  }}
                 >
                   {option.label}
                 </span>
                 {isSelected && (
-                  <span className="text-sm md:text-base" style={{ color: theme.colors.primary }}>
+                  <span
+                    className="text-sm md:text-base"
+                    style={{ color: theme.colors.primary }}
+                  >
                     ✓
                   </span>
                 )}
@@ -163,18 +195,26 @@ export default function EmergencyCardPage() {
                 <div className="mb-2 flex h-32 w-32 items-center justify-center rounded-lg border-4 border-gray-300 bg-white md:h-48 md:w-48">
                   <QrCode className="h-24 w-24 text-gray-600 md:h-36 md:w-36" />
                 </div>
-                <p className="text-sm" style={{ color: theme.colors.textSecondary }}>
-                  {t('card.scanToView')}
+                <p
+                  className="text-sm"
+                  style={{ color: theme.colors.textSecondary }}
+                >
+                  {t("card.scanToView")}
                 </p>
-                <p className="text-sm" style={{ color: theme.colors.textSecondary }}>
-                  {t('card.englishVersion')}
+                <p
+                  className="text-sm"
+                  style={{ color: theme.colors.textSecondary }}
+                >
+                  {t("card.englishVersion")}
                 </p>
               </>
             ) : (
               <>
                 <QrCode className="mx-auto mb-2 h-32 w-32 text-gray-400" />
-                <p className="text-sm text-gray-600">{t('card.scanToView')}</p>
-                <p className="text-sm text-gray-600">{t('card.englishVersion')}</p>
+                <p className="text-sm text-gray-600">{t("card.scanToView")}</p>
+                <p className="text-sm text-gray-600">
+                  {t("card.englishVersion")}
+                </p>
               </>
             )}
           </div>
@@ -186,7 +226,7 @@ export default function EmergencyCardPage() {
             style={{ color: theme.colors.textSecondary }}
           >
             <Clock className="mr-1 h-4 w-4" />
-            {t('card.validFor', { duration: '24時間' })}
+            {t("card.validFor", { duration: "24時間" })}
           </div>
         )}
 
@@ -196,28 +236,34 @@ export default function EmergencyCardPage() {
           className="w-full rounded-lg p-3 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
           style={{ backgroundColor: theme.colors.primary }}
         >
-          {isGenerating ? '生成中...' : t('card.generateQR')}
+          {isGenerating ? "生成中..." : t("card.generateQR")}
         </button>
       </div>
 
       {/* Data Preview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Allergies (Most Important) */}
-        {selectedCategories.includes('allergies') && allergies.length > 0 && (
+        {selectedCategories.includes("allergies") && allergies.length > 0 && (
           <div
             className="rounded-xl p-4 shadow-sm md:p-6"
             style={{ backgroundColor: theme.colors.surface }}
           >
-            <h3 className="mb-3 flex items-center font-bold md:text-lg" style={{ color: theme.colors.text }}>
+            <h3
+              className="mb-3 flex items-center font-bold md:text-lg"
+              style={{ color: theme.colors.text }}
+            >
               <AlertTriangle className="mr-2 h-5 w-5 text-red-500 md:h-6 md:w-6" />
-              {t('allergies.title')}
+              {t("allergies.title")}
             </h3>
             <ul className="space-y-2">
               {allergies.map((allergy) => (
                 <li key={allergy.id} style={{ color: theme.colors.text }}>
                   <span className="font-medium">{allergy.substance}</span>
                   {allergy.severity && (
-                    <span className="ml-2 text-sm" style={{ color: theme.colors.textSecondary }}>
+                    <span
+                      className="ml-2 text-sm"
+                      style={{ color: theme.colors.textSecondary }}
+                    >
                       ({t(`allergies.severities.${allergy.severity}`)})
                     </span>
                   )}
@@ -228,59 +274,67 @@ export default function EmergencyCardPage() {
         )}
 
         {/* Medications */}
-        {selectedCategories.includes('medications') && activeMedications.length > 0 && (
-          <div
-            className="rounded-xl p-4 shadow-sm md:p-6"
-            style={{ backgroundColor: theme.colors.surface }}
-          >
-            <h3 className="mb-3 font-bold md:text-lg" style={{ color: theme.colors.text }}>
-              {t('card.currentMedications')}
-            </h3>
-            <ul className="space-y-2">
-              {activeMedications.map((med) => (
-                <li key={med.id} style={{ color: theme.colors.text }}>
-                  <span className="mr-2">•</span>
-                  {med.name} {med.dose && `${med.dose}`}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {selectedCategories.includes("medications") &&
+          activeMedications.length > 0 && (
+            <div
+              className="rounded-xl p-4 shadow-sm md:p-6"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <h3
+                className="mb-3 font-bold md:text-lg"
+                style={{ color: theme.colors.text }}
+              >
+                {t("card.currentMedications")}
+              </h3>
+              <ul className="space-y-2">
+                {activeMedications.map((med) => (
+                  <li key={med.id} style={{ color: theme.colors.text }}>
+                    <span className="mr-2">•</span>
+                    {med.name} {med.dose && `${med.dose}`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         {/* Medical Histories */}
-        {selectedCategories.includes('histories') && importantHistories.length > 0 && (
-          <div
-            className="rounded-xl p-4 shadow-sm"
-            style={{ backgroundColor: theme.colors.surface }}
-          >
-            <h3 className="mb-3 font-bold" style={{ color: theme.colors.text }}>
-              {t('histories.title')}
-            </h3>
-            <ul className="space-y-2">
-              {importantHistories.map((history) => (
-                <li key={history.id} style={{ color: theme.colors.text }}>
-                  <span className="mr-2">•</span>
-                  {history.diagnosis}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {selectedCategories.includes("histories") &&
+          importantHistories.length > 0 && (
+            <div
+              className="rounded-xl p-4 shadow-sm"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <h3
+                className="mb-3 font-bold"
+                style={{ color: theme.colors.text }}
+              >
+                {t("histories.title")}
+              </h3>
+              <ul className="space-y-2">
+                {importantHistories.map((history) => (
+                  <li key={history.id} style={{ color: theme.colors.text }}>
+                    <span className="mr-2">•</span>
+                    {history.diagnosis}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         {/* Lab Results */}
-        {selectedCategories.includes('labs') && recentLabResults.length > 0 && (
+        {selectedCategories.includes("labs") && recentLabResults.length > 0 && (
           <div
             className="rounded-xl p-4 shadow-sm"
             style={{ backgroundColor: theme.colors.surface }}
           >
             <h3 className="mb-3 font-bold" style={{ color: theme.colors.text }}>
-              {t('labs.title')}
+              {t("labs.title")}
             </h3>
             <ul className="space-y-2">
               {recentLabResults.map((lab) => (
                 <li key={lab.id} style={{ color: theme.colors.text }}>
                   <span className="mr-2">•</span>
-                  {lab.testName}: {lab.value} {lab.unit || ''}
+                  {lab.testName}: {lab.value} {lab.unit || ""}
                 </li>
               ))}
             </ul>
@@ -288,19 +342,22 @@ export default function EmergencyCardPage() {
         )}
 
         {/* Imaging Reports */}
-        {selectedCategories.includes('imaging') && latestImaging && (
+        {selectedCategories.includes("imaging") && latestImaging && (
           <div
             className="rounded-xl p-4 shadow-sm"
             style={{ backgroundColor: theme.colors.surface }}
           >
             <h3 className="mb-3 font-bold" style={{ color: theme.colors.text }}>
-              {t('imaging.title')}
+              {t("imaging.title")}
             </h3>
             <div style={{ color: theme.colors.text }}>
               <p className="font-medium">{latestImaging.summary}</p>
               {latestImaging.examDate && (
-                <p className="mt-1 text-sm" style={{ color: theme.colors.textSecondary }}>
-                  {new Date(latestImaging.examDate).toLocaleDateString('ja-JP')}
+                <p
+                  className="mt-1 text-sm"
+                  style={{ color: theme.colors.textSecondary }}
+                >
+                  {new Date(latestImaging.examDate).toLocaleDateString("ja-JP")}
                 </p>
               )}
             </div>
@@ -315,21 +372,21 @@ export default function EmergencyCardPage() {
           style={{ backgroundColor: theme.colors.primary }}
         >
           <Download className="mr-2 h-5 w-5" />
-          <span>{t('card.downloadPDF')}</span>
+          <span>{t("card.downloadPDF")}</span>
         </button>
         <button
           className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
-          style={{ backgroundColor: '#374151' }}
+          style={{ backgroundColor: "#374151" }}
         >
           <Printer className="mr-2 h-5 w-5" />
-          <span>{t('card.printCard')}</span>
+          <span>{t("card.printCard")}</span>
         </button>
       </div>
 
       {/* Info Section */}
       <div
         className="mt-6 rounded-xl p-4"
-        style={{ backgroundColor: theme.colors.primary + '10' }}
+        style={{ backgroundColor: theme.colors.primary + "10" }}
       >
         <div className="flex items-start">
           <span className="mr-3 text-2xl">ℹ️</span>

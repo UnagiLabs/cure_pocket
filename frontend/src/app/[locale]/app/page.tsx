@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
 import {
-  Package,
+  AlertCircle,
   AlertTriangle,
+  CheckCircle,
   FileText,
   FlaskConical,
-  Scan,
-  Plus,
-  AlertCircle,
-  CheckCircle,
   Loader2,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { getTheme } from '@/lib/themes';
-import type { Medication } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
-import { usePassport } from '@/hooks/usePassport';
-import { useMintPassport } from '@/hooks/useMintPassport';
+  Package,
+  Plus,
+  Scan,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useApp } from "@/contexts/AppContext";
+import { useMintPassport } from "@/hooks/useMintPassport";
+import { usePassport } from "@/hooks/usePassport";
+import { getTheme } from "@/lib/themes";
+import type { Medication } from "@/types";
 
 /**
  * ホーム画面（ダッシュボード）
@@ -41,13 +41,17 @@ export default function HomePage() {
     walletAddress,
   } = useApp();
   const theme = getTheme(settings.theme);
-  
+
   // ユーザー名をプロフィールから取得、未設定時はGuest表示
   const displayName = profile?.name || null;
 
   // パスポート状態を取得
   const passport_status = usePassport();
-  const { mint, is_pending: is_mint_pending, error: mint_error } = useMintPassport();
+  const {
+    mint,
+    is_pending: is_mint_pending,
+    error: mint_error,
+  } = useMintPassport();
 
   /**
    * パスポートを発行するハンドラー
@@ -55,10 +59,10 @@ export default function HomePage() {
   async function handle_mint_passport() {
     try {
       // MVP段階ではモック値を使用
-      await mint('init_blob', 'init_seal');
+      await mint("init_blob", "init_seal");
     } catch (error) {
       // エラーはuseMintPassportで処理される
-      console.error('パスポート発行エラー:', error);
+      console.error("パスポート発行エラー:", error);
     }
   }
 
@@ -68,50 +72,52 @@ export default function HomePage() {
       const demoMedications: Medication[] = [
         {
           id: uuidv4(),
-          name: 'ロスバスタチン',
-          dose: '5mg',
-          frequency: '1日1回',
-          timing: 'morning',
-          clinic: '○○内科',
-          form: 'tablet',
-          status: 'active',
+          name: "ロスバスタチン",
+          dose: "5mg",
+          frequency: "1日1回",
+          timing: "morning",
+          clinic: "○○内科",
+          form: "tablet",
+          status: "active",
         },
         {
           id: uuidv4(),
-          name: 'メトホルミン',
-          dose: '500mg',
-          frequency: '1日2回',
-          timing: 'afternoon',
-          clinic: '△△クリニック',
-          form: 'tablet',
-          warning: '食直前',
-          status: 'active',
+          name: "メトホルミン",
+          dose: "500mg",
+          frequency: "1日2回",
+          timing: "afternoon",
+          clinic: "△△クリニック",
+          form: "tablet",
+          warning: "食直前",
+          status: "active",
         },
         {
           id: uuidv4(),
-          name: 'アムロジピン',
-          dose: '5mg',
-          frequency: '1日1回',
-          timing: 'morning',
-          clinic: '○○内科',
-          form: 'tablet',
-          status: 'active',
+          name: "アムロジピン",
+          dose: "5mg",
+          frequency: "1日1回",
+          timing: "morning",
+          clinic: "○○内科",
+          form: "tablet",
+          status: "active",
         },
       ];
       setMedications(demoMedications);
     }
   }, [medications.length, walletAddress, setMedications]);
 
-  const activeMedicationsCount = medications.filter((m) => m.status === 'active').length;
+  const activeMedicationsCount = medications.filter(
+    (m) => m.status === "active",
+  ).length;
   const importantHistoriesCount = medicalHistories.filter(
-    (h) => h.status === 'active' || h.type === 'surgery'
+    (h) => h.status === "active" || h.type === "surgery",
   ).length;
 
   // 最近の更新を時系列で取得
   const recentUpdates = useMemo(() => {
     const updates: Array<{
       id: string;
-      type: 'medication' | 'allergy' | 'history' | 'lab' | 'imaging';
+      type: "medication" | "allergy" | "history" | "lab" | "imaging";
       title: string;
       date: string;
       icon: typeof Package;
@@ -120,7 +126,7 @@ export default function HomePage() {
     medications.forEach((med) => {
       updates.push({
         id: med.id,
-        type: 'medication',
+        type: "medication",
         title: med.name,
         date: med.startDate || new Date().toISOString(),
         icon: Package,
@@ -130,7 +136,7 @@ export default function HomePage() {
     allergies.forEach((allergy) => {
       updates.push({
         id: allergy.id,
-        type: 'allergy',
+        type: "allergy",
         title: allergy.substance,
         date: allergy.onsetDate || new Date().toISOString(),
         icon: AlertTriangle,
@@ -140,7 +146,7 @@ export default function HomePage() {
     medicalHistories.forEach((history) => {
       updates.push({
         id: history.id,
-        type: 'history',
+        type: "history",
         title: history.diagnosis,
         date: history.diagnosisDate || new Date().toISOString(),
         icon: FileText,
@@ -150,8 +156,8 @@ export default function HomePage() {
     labResults.forEach((lab) => {
       updates.push({
         id: lab.id,
-        type: 'lab',
-        title: `${lab.testName}: ${lab.value}${lab.unit || ''}`,
+        type: "lab",
+        title: `${lab.testName}: ${lab.value}${lab.unit || ""}`,
         date: lab.testDate,
         icon: FlaskConical,
       });
@@ -160,51 +166,55 @@ export default function HomePage() {
     imagingReports.forEach((report) => {
       updates.push({
         id: report.id,
-        type: 'imaging',
-        title: report.summary.substring(0, 30) + (report.summary.length > 30 ? '...' : ''),
+        type: "imaging",
+        title:
+          report.summary.substring(0, 30) +
+          (report.summary.length > 30 ? "..." : ""),
         date: report.examDate,
         icon: Scan,
       });
     });
 
-    return updates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+    return updates
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
   }, [medications, allergies, medicalHistories, labResults, imagingReports]);
 
   const summaryCards = [
     {
-      id: 'medications',
+      id: "medications",
       icon: Package,
-      title: t('dashboard.summary.medications'),
+      title: t("dashboard.summary.medications"),
       count: activeMedicationsCount,
       color: theme.colors.primary,
     },
     {
-      id: 'allergies',
+      id: "allergies",
       icon: AlertTriangle,
-      title: t('dashboard.summary.allergies'),
+      title: t("dashboard.summary.allergies"),
       count: allergies.length,
-      color: '#EF4444',
+      color: "#EF4444",
     },
     {
-      id: 'histories',
+      id: "histories",
       icon: FileText,
-      title: t('dashboard.summary.histories'),
+      title: t("dashboard.summary.histories"),
       count: importantHistoriesCount,
-      color: '#8B5CF6',
+      color: "#8B5CF6",
     },
     {
-      id: 'labs',
+      id: "labs",
       icon: FlaskConical,
-      title: t('dashboard.summary.labs'),
+      title: t("dashboard.summary.labs"),
       count: labResults.length,
-      color: '#10B981',
+      color: "#10B981",
     },
     {
-      id: 'imaging',
+      id: "imaging",
       icon: Scan,
-      title: t('dashboard.summary.imaging'),
+      title: t("dashboard.summary.imaging"),
       count: imagingReports.length,
-      color: '#3B82F6',
+      color: "#3B82F6",
     },
   ];
 
@@ -212,13 +222,19 @@ export default function HomePage() {
     <div className="p-4 md:p-6">
       {/* Greeting */}
       <div className="mb-6 md:mb-8">
-        <h2 className="mb-1 text-lg md:text-xl" style={{ color: theme.colors.textSecondary }}>
-          {t('home.greeting')}
+        <h2
+          className="mb-1 text-lg md:text-xl"
+          style={{ color: theme.colors.textSecondary }}
+        >
+          {t("home.greeting")}
         </h2>
-        <h1 className="text-2xl font-bold md:text-3xl" style={{ color: theme.colors.text }}>
+        <h1
+          className="text-2xl font-bold md:text-3xl"
+          style={{ color: theme.colors.text }}
+        >
           {displayName
-            ? t('home.greetingWithName', { name: displayName })
-            : t('home.guestGreeting')}
+            ? t("home.greetingWithName", { name: displayName })
+            : t("home.guestGreeting")}
         </h1>
       </div>
 
@@ -227,25 +243,31 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: theme.colors.primary + '10',
+            backgroundColor: theme.colors.primary + "10",
             borderColor: theme.colors.primary,
           }}
         >
           <div className="mb-2 flex items-center">
-            <AlertCircle className="mr-2 h-5 w-5" style={{ color: theme.colors.primary }} />
+            <AlertCircle
+              className="mr-2 h-5 w-5"
+              style={{ color: theme.colors.primary }}
+            />
             <h3 className="font-bold" style={{ color: theme.colors.text }}>
-              {t('home.profileSetupBanner.title')}
+              {t("home.profileSetupBanner.title")}
             </h3>
           </div>
-          <p className="mb-3 text-sm" style={{ color: theme.colors.textSecondary }}>
-            {t('home.profileSetupBanner.description')}
+          <p
+            className="mb-3 text-sm"
+            style={{ color: theme.colors.textSecondary }}
+          >
+            {t("home.profileSetupBanner.description")}
           </p>
           <button
             onClick={() => router.push(`/${locale}/app/profile`)}
             className="w-full rounded-lg p-2 text-sm font-medium text-white"
             style={{ backgroundColor: theme.colors.primary }}
           >
-            {t('home.profileSetupBanner.button')}
+            {t("home.profileSetupBanner.button")}
           </button>
         </div>
       )}
@@ -260,8 +282,14 @@ export default function HomePage() {
           }}
         >
           <div className="flex items-center justify-center">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" style={{ color: theme.colors.primary }} />
-            <span className="text-sm" style={{ color: theme.colors.textSecondary }}>
+            <Loader2
+              className="mr-2 h-5 w-5 animate-spin"
+              style={{ color: theme.colors.primary }}
+            />
+            <span
+              className="text-sm"
+              style={{ color: theme.colors.textSecondary }}
+            >
               パスポート状態を確認中...
             </span>
           </div>
@@ -270,17 +298,20 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: '#FEE2E2',
-            borderColor: '#EF4444',
+            backgroundColor: "#FEE2E2",
+            borderColor: "#EF4444",
           }}
         >
           <div className="mb-2 flex items-center">
-            <AlertCircle className="mr-2 h-5 w-5" style={{ color: '#EF4444' }} />
-            <h3 className="font-bold" style={{ color: '#DC2626' }}>
+            <AlertCircle
+              className="mr-2 h-5 w-5"
+              style={{ color: "#EF4444" }}
+            />
+            <h3 className="font-bold" style={{ color: "#DC2626" }}>
               パスポート確認エラー
             </h3>
           </div>
-          <p className="text-sm" style={{ color: '#991B1B' }}>
+          <p className="text-sm" style={{ color: "#991B1B" }}>
             {passport_status.error}
           </p>
         </div>
@@ -288,21 +319,30 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: theme.colors.primary + '10',
+            backgroundColor: theme.colors.primary + "10",
             borderColor: theme.colors.primary,
           }}
         >
           <div className="mb-2 flex items-center">
-            <AlertCircle className="mr-2 h-5 w-5" style={{ color: theme.colors.primary }} />
+            <AlertCircle
+              className="mr-2 h-5 w-5"
+              style={{ color: theme.colors.primary }}
+            />
             <h3 className="font-bold" style={{ color: theme.colors.text }}>
               パスポートを発行してください
             </h3>
           </div>
-          <p className="mb-3 text-sm" style={{ color: theme.colors.textSecondary }}>
+          <p
+            className="mb-3 text-sm"
+            style={{ color: theme.colors.textSecondary }}
+          >
             メディカルパスポートを発行すると、医療データを安全に管理できます。
           </p>
           {mint_error && (
-            <div className="mb-3 rounded-lg p-2 text-sm" style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}>
+            <div
+              className="mb-3 rounded-lg p-2 text-sm"
+              style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}
+            >
               {mint_error.message}
             </div>
           )}
@@ -318,7 +358,7 @@ export default function HomePage() {
                 発行中...
               </span>
             ) : (
-              'パスポートを発行する'
+              "パスポートを発行する"
             )}
           </button>
         </div>
@@ -326,17 +366,20 @@ export default function HomePage() {
         <div
           className="mb-6 rounded-xl border-2 p-4"
           style={{
-            backgroundColor: '#D1FAE5',
-            borderColor: '#10B981',
+            backgroundColor: "#D1FAE5",
+            borderColor: "#10B981",
           }}
         >
           <div className="mb-2 flex items-center">
-            <CheckCircle className="mr-2 h-5 w-5" style={{ color: '#10B981' }} />
-            <h3 className="font-bold" style={{ color: '#059669' }}>
+            <CheckCircle
+              className="mr-2 h-5 w-5"
+              style={{ color: "#10B981" }}
+            />
+            <h3 className="font-bold" style={{ color: "#059669" }}>
               パスポートを所持しています
             </h3>
           </div>
-          <p className="text-sm" style={{ color: '#047857' }}>
+          <p className="text-sm" style={{ color: "#047857" }}>
             メディカルパスポートが正常に発行されています。
           </p>
         </div>
@@ -362,11 +405,20 @@ export default function HomePage() {
               className="rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6"
               style={{ backgroundColor: theme.colors.surface }}
             >
-              <Icon className="mx-auto mb-2 h-8 w-8" style={{ color: card.color }} />
-              <span className="block text-xs font-medium" style={{ color: theme.colors.textSecondary }}>
+              <Icon
+                className="mx-auto mb-2 h-8 w-8"
+                style={{ color: card.color }}
+              />
+              <span
+                className="block text-xs font-medium"
+                style={{ color: theme.colors.textSecondary }}
+              >
                 {card.title}
               </span>
-              <div className="mt-1 text-2xl font-bold" style={{ color: theme.colors.text }}>
+              <div
+                className="mt-1 text-2xl font-bold"
+                style={{ color: theme.colors.text }}
+              >
                 {card.count}
               </div>
             </button>
@@ -379,10 +431,12 @@ export default function HomePage() {
         <button
           onClick={() => router.push(`/${locale}/app/add`)}
           className="flex w-full items-center justify-center rounded-xl p-4 shadow-md transition-transform active:scale-95 md:p-5"
-          style={{ backgroundColor: theme.colors.accent, color: 'white' }}
+          style={{ backgroundColor: theme.colors.accent, color: "white" }}
         >
           <Plus className="mr-2 h-6 w-6" />
-          <span className="font-medium md:text-lg">{t('dashboard.addData')}</span>
+          <span className="font-medium md:text-lg">
+            {t("dashboard.addData")}
+          </span>
         </button>
 
         <button
@@ -390,20 +444,25 @@ export default function HomePage() {
           className="flex w-full items-center justify-center rounded-xl border-2 p-4 shadow-sm transition-transform active:scale-95 md:p-5"
           style={{
             backgroundColor: theme.colors.surface,
-            borderColor: '#FCA5A5',
-            color: '#DC2626',
+            borderColor: "#FCA5A5",
+            color: "#DC2626",
           }}
         >
           <AlertCircle className="mr-2 h-6 w-6" />
-          <span className="font-medium md:text-lg">{t('home.emergencyCard')}</span>
+          <span className="font-medium md:text-lg">
+            {t("home.emergencyCard")}
+          </span>
         </button>
       </div>
 
       {/* Recent Updates */}
       {recentUpdates.length > 0 && (
         <div className="mt-6 md:mt-8">
-          <h3 className="mb-3 font-bold md:text-lg" style={{ color: theme.colors.text }}>
-            {t('dashboard.recentUpdates')}
+          <h3
+            className="mb-3 font-bold md:text-lg"
+            style={{ color: theme.colors.text }}
+          >
+            {t("dashboard.recentUpdates")}
           </h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {recentUpdates.map((update) => {
@@ -415,14 +474,23 @@ export default function HomePage() {
                   style={{ backgroundColor: theme.colors.surface }}
                 >
                   <div className="mb-1 flex items-center">
-                    <Icon className="mr-2 h-5 w-5 md:h-6 md:w-6" style={{ color: theme.colors.primary }} />
-                    <span className="font-bold md:text-base" style={{ color: theme.colors.text }}>
+                    <Icon
+                      className="mr-2 h-5 w-5 md:h-6 md:w-6"
+                      style={{ color: theme.colors.primary }}
+                    />
+                    <span
+                      className="font-bold md:text-base"
+                      style={{ color: theme.colors.text }}
+                    >
                       {update.title}
                     </span>
                   </div>
-                  <div className="text-xs md:text-sm" style={{ color: theme.colors.textSecondary }}>
-                    {t(`dataTypes.${update.type}`)} •{' '}
-                    {new Date(update.date).toLocaleDateString('ja-JP')}
+                  <div
+                    className="text-xs md:text-sm"
+                    style={{ color: theme.colors.textSecondary }}
+                  >
+                    {t(`dataTypes.${update.type}`)} •{" "}
+                    {new Date(update.date).toLocaleDateString("ja-JP")}
                   </div>
                 </div>
               );

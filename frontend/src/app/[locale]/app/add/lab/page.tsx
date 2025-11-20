@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
-import { ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { getTheme } from '@/lib/themes';
-import type { LabResult } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useApp } from "@/contexts/AppContext";
+import { getTheme } from "@/lib/themes";
+import type { LabResult } from "@/types";
 
 /**
  * 検査値の追加フォームページ
@@ -20,14 +20,14 @@ export default function AddLabPage() {
   const theme = getTheme(settings.theme);
 
   const [formData, setFormData] = useState({
-    testName: '',
-    value: '',
-    unit: '',
-    referenceRange: '',
-    testDate: '',
-    testedBy: '',
-    category: '',
-    notes: '',
+    testName: "",
+    value: "",
+    unit: "",
+    referenceRange: "",
+    testDate: "",
+    testedBy: "",
+    category: "",
+    notes: "",
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -41,7 +41,7 @@ export default function AddLabPage() {
       value: formData.value,
       unit: formData.unit || undefined,
       referenceRange: formData.referenceRange || undefined,
-      testDate: formData.testDate || new Date().toISOString().split('T')[0],
+      testDate: formData.testDate || new Date().toISOString().split("T")[0],
       testedBy: formData.testedBy || undefined,
       category: formData.category || undefined,
       notes: formData.notes || undefined,
@@ -59,10 +59,16 @@ export default function AddLabPage() {
           onClick={() => router.push(`/${locale}/app/add`)}
           className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
-          <ChevronLeft className="h-6 w-6" style={{ color: theme.colors.text }} />
+          <ChevronLeft
+            className="h-6 w-6"
+            style={{ color: theme.colors.text }}
+          />
         </button>
-        <h1 className="text-lg font-bold md:text-2xl" style={{ color: theme.colors.text }}>
-          {t('labs.add')}
+        <h1
+          className="text-lg font-bold md:text-2xl"
+          style={{ color: theme.colors.text }}
+        >
+          {t("labs.add")}
         </h1>
       </div>
 
@@ -73,19 +79,19 @@ export default function AddLabPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('labs.testName')} *
+            {t("labs.testName")} *
           </label>
           <input
             type="text"
             value={formData.testName}
-            onChange={(e) => handleInputChange('testName', e.target.value)}
+            onChange={(e) => handleInputChange("testName", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('labs.testName')}
+            placeholder={t("labs.testName")}
           />
         </div>
 
@@ -95,16 +101,16 @@ export default function AddLabPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('labs.value')} *
+              {t("labs.value")} *
             </label>
             <input
               type="text"
               value={formData.value}
-              onChange={(e) => handleInputChange('value', e.target.value)}
+              onChange={(e) => handleInputChange("value", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="100"
@@ -116,16 +122,16 @@ export default function AddLabPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('labs.unit')}
+              {t("labs.unit")}
             </label>
             <input
               type="text"
               value={formData.unit}
-              onChange={(e) => handleInputChange('unit', e.target.value)}
+              onChange={(e) => handleInputChange("unit", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="mg/dL"
@@ -138,16 +144,18 @@ export default function AddLabPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('labs.referenceRange')}
+            {t("labs.referenceRange")}
           </label>
           <input
             type="text"
             value={formData.referenceRange}
-            onChange={(e) => handleInputChange('referenceRange', e.target.value)}
+            onChange={(e) =>
+              handleInputChange("referenceRange", e.target.value)
+            }
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
             placeholder="70-100"
@@ -160,16 +168,16 @@ export default function AddLabPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('labs.testDate')} *
+              {t("labs.testDate")} *
             </label>
             <input
               type="date"
               value={formData.testDate}
-              onChange={(e) => handleInputChange('testDate', e.target.value)}
+              onChange={(e) => handleInputChange("testDate", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             />
@@ -180,16 +188,16 @@ export default function AddLabPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('labs.category')}
+              {t("labs.category")}
             </label>
             <input
               type="text"
               value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
+              onChange={(e) => handleInputChange("category", e.target.value)}
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
               placeholder="血液検査"
@@ -202,19 +210,19 @@ export default function AddLabPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('labs.testedBy')}
+            {t("labs.testedBy")}
           </label>
           <input
             type="text"
             value={formData.testedBy}
-            onChange={(e) => handleInputChange('testedBy', e.target.value)}
+            onChange={(e) => handleInputChange("testedBy", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('labs.testedBy')}
+            placeholder={t("labs.testedBy")}
           />
         </div>
 
@@ -223,19 +231,19 @@ export default function AddLabPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('labs.notes')}
+            {t("labs.notes")}
           </label>
           <textarea
             value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
+            onChange={(e) => handleInputChange("notes", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('labs.notes')}
+            placeholder={t("labs.notes")}
           />
         </div>
 
@@ -244,11 +252,11 @@ export default function AddLabPage() {
             onClick={() => router.push(`/${locale}/app/add`)}
             className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95"
             style={{
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
           >
-            {t('actions.cancel')}
+            {t("actions.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -256,11 +264,10 @@ export default function AddLabPage() {
             className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
             style={{ backgroundColor: theme.colors.primary }}
           >
-            {t('actions.save')}
+            {t("actions.save")}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

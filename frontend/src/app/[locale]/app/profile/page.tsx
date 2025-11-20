@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { Check, Save, ChevronDown, ChevronUp } from 'lucide-react';
-import { getTheme } from '@/lib/themes';
+import { Check, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { useApp } from "@/contexts/AppContext";
 import {
   chronicConditionCategories,
   criticalConditions,
-} from '@/lib/chronicConditions';
+} from "@/lib/chronicConditions";
+import { getTheme } from "@/lib/themes";
 import type {
-  PatientProfile,
   AgeBand,
-  Gender,
-  SmokingStatus,
   AlcoholUse,
-  ExerciseFrequency,
   ChronicCondition,
-} from '@/types';
+  ExerciseFrequency,
+  Gender,
+  PatientProfile,
+  SmokingStatus,
+} from "@/types";
 
 /**
  * 患者プロフィール設定ページ
@@ -33,29 +33,29 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['cardiovascular', 'metabolic'])
+    new Set(["cardiovascular", "metabolic"]),
   );
 
   // フォーム状態
   const [formData, setFormData] = useState<Partial<PatientProfile>>({
     name: undefined,
     ageBand: null,
-    gender: 'unknown',
+    gender: "unknown",
     country: null,
     preferredLanguage: locale,
     bloodType: undefined,
     heightCm: undefined,
     weightKg: undefined,
-    smokingStatus: 'unknown',
-    alcoholUse: 'unknown',
-    exercise: 'unknown',
+    smokingStatus: "unknown",
+    alcoholUse: "unknown",
+    exercise: "unknown",
     drugAllergies: [],
     foodAllergies: [],
     hasAnaphylaxisHistory: null,
     chronicConditions: [],
     surgeries: [],
     dataSharing: {
-      preference: 'deny',
+      preference: "deny",
       shareMedication: false,
       shareLabs: false,
       shareConditions: false,
@@ -126,15 +126,15 @@ export default function ProfilePage() {
     try {
       const profileToSave: PatientProfile = {
         ageBand: formData.ageBand || null,
-        gender: formData.gender || 'unknown',
+        gender: formData.gender || "unknown",
         country: formData.country || null,
         preferredLanguage: formData.preferredLanguage || locale,
         bloodType: formData.bloodType,
         heightCm: formData.heightCm,
         weightKg: formData.weightKg,
-        smokingStatus: formData.smokingStatus || 'unknown',
-        alcoholUse: formData.alcoholUse || 'unknown',
-        exercise: formData.exercise || 'unknown',
+        smokingStatus: formData.smokingStatus || "unknown",
+        alcoholUse: formData.alcoholUse || "unknown",
+        exercise: formData.exercise || "unknown",
         drugAllergies: formData.drugAllergies || [],
         foodAllergies: formData.foodAllergies || [],
         hasAnaphylaxisHistory: formData.hasAnaphylaxisHistory ?? null,
@@ -142,7 +142,7 @@ export default function ProfilePage() {
         surgeries: formData.surgeries || [],
         emergencyContact: formData.emergencyContact,
         dataSharing: formData.dataSharing || {
-          preference: 'deny',
+          preference: "deny",
           shareMedication: false,
           shareLabs: false,
           shareConditions: false,
@@ -157,7 +157,7 @@ export default function ProfilePage() {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
-      console.error('Failed to save profile:', error);
+      console.error("Failed to save profile:", error);
     } finally {
       setIsSaving(false);
     }
@@ -167,7 +167,10 @@ export default function ProfilePage() {
 
   return (
     <div className="p-4 pb-24 md:pb-6 md:p-6">
-      <h1 className="mb-6 text-xl font-bold md:text-2xl" style={{ color: theme.colors.text }}>
+      <h1
+        className="mb-6 text-xl font-bold md:text-2xl"
+        style={{ color: theme.colors.text }}
+      >
         プロフィール設定
       </h1>
 
@@ -176,41 +179,54 @@ export default function ProfilePage() {
         className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
         style={{ backgroundColor: theme.colors.surface }}
       >
-        <h2 className="mb-4 text-lg font-bold md:text-xl" style={{ color: theme.colors.text }}>
+        <h2
+          className="mb-4 text-lg font-bold md:text-xl"
+          style={{ color: theme.colors.text }}
+        >
           基本情報
         </h2>
 
         <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
           {/* 名前入力欄 */}
           <div className="md:col-span-2">
-            <label className="mb-1 block text-sm font-medium md:text-base" style={{ color: theme.colors.text }}>
-              {t('profile.name')}
+            <label
+              className="mb-1 block text-sm font-medium md:text-base"
+              style={{ color: theme.colors.text }}
+            >
+              {t("profile.name")}
             </label>
             <input
               type="text"
-              value={formData.name || ''}
-              onChange={(e) => handleInputChange('name', e.target.value || undefined)}
+              value={formData.name || ""}
+              onChange={(e) =>
+                handleInputChange("name", e.target.value || undefined)
+              }
               className="w-full rounded-lg border p-3 text-sm md:text-base"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
-              placeholder={t('profile.name')}
+              placeholder={t("profile.name")}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               年齢帯 *
             </label>
             <select
-              value={formData.ageBand || ''}
-              onChange={(e) => handleInputChange('ageBand', e.target.value || null)}
+              value={formData.ageBand || ""}
+              onChange={(e) =>
+                handleInputChange("ageBand", e.target.value || null)
+              }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
@@ -227,37 +243,42 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               性別 *
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {(['male', 'female', 'other', 'unknown'] as Gender[]).map((gender) => (
-                <button
-                  key={gender}
-                  onClick={() => handleInputChange('gender', gender)}
-                  className={`rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
-                    formData.gender === gender
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                  style={{
-                    borderColor:
+              {(["male", "female", "other", "unknown"] as Gender[]).map(
+                (gender) => (
+                  <button
+                    key={gender}
+                    onClick={() => handleInputChange("gender", gender)}
+                    className={`rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
                       formData.gender === gender
-                        ? theme.colors.primary
-                        : theme.colors.textSecondary + '40',
-                    backgroundColor:
-                      formData.gender === gender
-                        ? theme.colors.primary + '10'
-                        : theme.colors.surface,
-                    color: theme.colors.text,
-                  }}
-                >
-                  {gender === 'male' && '男性'}
-                  {gender === 'female' && '女性'}
-                  {gender === 'other' && 'その他'}
-                  {gender === 'unknown' && '回答しない'}
-                </button>
-              ))}
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 bg-white"
+                    }`}
+                    style={{
+                      borderColor:
+                        formData.gender === gender
+                          ? theme.colors.primary
+                          : theme.colors.textSecondary + "40",
+                      backgroundColor:
+                        formData.gender === gender
+                          ? theme.colors.primary + "10"
+                          : theme.colors.surface,
+                      color: theme.colors.text,
+                    }}
+                  >
+                    {gender === "male" && "男性"}
+                    {gender === "female" && "女性"}
+                    {gender === "other" && "その他"}
+                    {gender === "unknown" && "回答しない"}
+                  </button>
+                ),
+              )}
             </div>
           </div>
 
@@ -271,14 +292,17 @@ export default function ProfilePage() {
               </label>
               <input
                 type="number"
-                value={formData.heightCm || ''}
+                value={formData.heightCm || ""}
                 onChange={(e) =>
-                  handleInputChange('heightCm', e.target.value ? Number(e.target.value) : undefined)
+                  handleInputChange(
+                    "heightCm",
+                    e.target.value ? Number(e.target.value) : undefined,
+                  )
                 }
                 className="w-full rounded-lg border p-3"
                 style={{
                   backgroundColor: theme.colors.background,
-                  borderColor: theme.colors.textSecondary + '40',
+                  borderColor: theme.colors.textSecondary + "40",
                   color: theme.colors.text,
                 }}
                 placeholder="170"
@@ -294,14 +318,17 @@ export default function ProfilePage() {
               </label>
               <input
                 type="number"
-                value={formData.weightKg || ''}
+                value={formData.weightKg || ""}
                 onChange={(e) =>
-                  handleInputChange('weightKg', e.target.value ? Number(e.target.value) : undefined)
+                  handleInputChange(
+                    "weightKg",
+                    e.target.value ? Number(e.target.value) : undefined,
+                  )
                 }
                 className="w-full rounded-lg border p-3"
                 style={{
                   backgroundColor: theme.colors.background,
-                  borderColor: theme.colors.textSecondary + '40',
+                  borderColor: theme.colors.textSecondary + "40",
                   color: theme.colors.text,
                 }}
                 placeholder="65"
@@ -310,18 +337,21 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               血液型
             </label>
             <select
-              value={formData.bloodType || ''}
+              value={formData.bloodType || ""}
               onChange={(e) =>
-                handleInputChange('bloodType', e.target.value || undefined)
+                handleInputChange("bloodType", e.target.value || undefined)
               }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
@@ -341,24 +371,38 @@ export default function ProfilePage() {
         className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
         style={{ backgroundColor: theme.colors.surface }}
       >
-        <h2 className="mb-2 text-lg font-bold md:text-xl" style={{ color: theme.colors.text }}>
+        <h2
+          className="mb-2 text-lg font-bold md:text-xl"
+          style={{ color: theme.colors.text }}
+        >
           基礎疾患・慢性疾患
         </h2>
-        <p className="mb-4 text-sm md:text-base" style={{ color: theme.colors.textSecondary }}>
+        <p
+          className="mb-4 text-sm md:text-base"
+          style={{ color: theme.colors.textSecondary }}
+        >
           該当するものにチェックを入れてください。カテゴリをタップして展開・折りたたみできます。
         </p>
 
         {/* 最重要疾患（常に表示） */}
         <div className="mb-6">
-          <h3 className="mb-3 text-sm font-bold md:text-base" style={{ color: theme.colors.primary }}>
+          <h3
+            className="mb-3 text-sm font-bold md:text-base"
+            style={{ color: theme.colors.primary }}
+          >
             ⭐ 最重要疾患
           </h3>
-          <p className="mb-4 text-xs md:text-sm italic" style={{ color: theme.colors.textSecondary }}>
+          <p
+            className="mb-4 text-xs md:text-sm italic"
+            style={{ color: theme.colors.textSecondary }}
+          >
             健康管理の上で下記疾病の有無は重要です。該当するものは必ず選択してください。
           </p>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
             {criticalConditions.map((condition) => {
-              const isSelected = selectedConditions.some((c) => c.label === condition.label);
+              const isSelected = selectedConditions.some(
+                (c) => c.label === condition.label,
+              );
               return (
                 <label
                   key={condition.label}
@@ -366,8 +410,10 @@ export default function ProfilePage() {
                   style={{
                     borderColor: isSelected
                       ? theme.colors.primary
-                      : theme.colors.textSecondary + '40',
-                    backgroundColor: isSelected ? theme.colors.primary + '10' : 'transparent',
+                      : theme.colors.textSecondary + "40",
+                    backgroundColor: isSelected
+                      ? theme.colors.primary + "10"
+                      : "transparent",
                   }}
                 >
                   <input
@@ -377,7 +423,12 @@ export default function ProfilePage() {
                     className="mr-3 h-5 w-5 md:h-6 md:w-6"
                     style={{ accentColor: theme.colors.primary }}
                   />
-                  <span className="text-sm md:text-base" style={{ color: theme.colors.text }}>{condition.label}</span>
+                  <span
+                    className="text-sm md:text-base"
+                    style={{ color: theme.colors.text }}
+                  >
+                    {condition.label}
+                  </span>
                 </label>
               );
             })}
@@ -388,14 +439,20 @@ export default function ProfilePage() {
         <div
           className="mb-4 rounded-lg border-l-4 p-3 md:p-4"
           style={{
-            borderColor: theme.colors.primary + '40',
-            backgroundColor: theme.colors.primary + '05',
+            borderColor: theme.colors.primary + "40",
+            backgroundColor: theme.colors.primary + "05",
           }}
         >
-          <p className="text-sm font-medium md:text-base" style={{ color: theme.colors.text }}>
+          <p
+            className="text-sm font-medium md:text-base"
+            style={{ color: theme.colors.text }}
+          >
             詳細情報・上記以外の疾患を登録
           </p>
-          <p className="mt-1 text-xs md:text-sm" style={{ color: theme.colors.textSecondary }}>
+          <p
+            className="mt-1 text-xs md:text-sm"
+            style={{ color: theme.colors.textSecondary }}
+          >
             カテゴリをタップして展開し、該当する疾患にチェックを入れてください。
           </p>
         </div>
@@ -405,26 +462,44 @@ export default function ProfilePage() {
           {chronicConditionCategories.map((category) => {
             const isExpanded = expandedCategories.has(category.id);
             return (
-              <div key={category.id} className="rounded-lg border" style={{ borderColor: theme.colors.textSecondary + '40' }}>
+              <div
+                key={category.id}
+                className="rounded-lg border"
+                style={{ borderColor: theme.colors.textSecondary + "40" }}
+              >
                 <button
                   onClick={() => toggleCategory(category.id)}
                   className="flex w-full items-center justify-between p-3"
                   style={{ backgroundColor: theme.colors.background }}
                 >
-                  <span className="font-medium" style={{ color: theme.colors.text }}>
+                  <span
+                    className="font-medium"
+                    style={{ color: theme.colors.text }}
+                  >
                     {category.label}
                   </span>
                   {isExpanded ? (
-                    <ChevronUp className="h-5 w-5" style={{ color: theme.colors.textSecondary }} />
+                    <ChevronUp
+                      className="h-5 w-5"
+                      style={{ color: theme.colors.textSecondary }}
+                    />
                   ) : (
-                    <ChevronDown className="h-5 w-5" style={{ color: theme.colors.textSecondary }} />
+                    <ChevronDown
+                      className="h-5 w-5"
+                      style={{ color: theme.colors.textSecondary }}
+                    />
                   )}
                 </button>
 
                 {isExpanded && (
-                  <div className="space-y-2 border-t p-3" style={{ borderColor: theme.colors.textSecondary + '20' }}>
+                  <div
+                    className="space-y-2 border-t p-3"
+                    style={{ borderColor: theme.colors.textSecondary + "20" }}
+                  >
                     {category.conditions.map((condition) => {
-                      const isSelected = selectedConditions.some((c) => c.label === condition.label);
+                      const isSelected = selectedConditions.some(
+                        (c) => c.label === condition.label,
+                      );
                       return (
                         <label
                           key={condition.label}
@@ -432,18 +507,25 @@ export default function ProfilePage() {
                           style={{
                             borderColor: isSelected
                               ? theme.colors.primary
-                              : theme.colors.textSecondary + '30',
-                            backgroundColor: isSelected ? theme.colors.primary + '10' : 'transparent',
+                              : theme.colors.textSecondary + "30",
+                            backgroundColor: isSelected
+                              ? theme.colors.primary + "10"
+                              : "transparent",
                           }}
                         >
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => handleChronicConditionToggle(condition)}
+                            onChange={() =>
+                              handleChronicConditionToggle(condition)
+                            }
                             className="mr-2 h-4 w-4"
                             style={{ accentColor: theme.colors.primary }}
                           />
-                          <span className="text-sm" style={{ color: theme.colors.text }}>
+                          <span
+                            className="text-sm"
+                            style={{ color: theme.colors.text }}
+                          >
                             {condition.label}
                           </span>
                         </label>
@@ -458,7 +540,10 @@ export default function ProfilePage() {
 
         {/* その他（自由記載） */}
         <div className="mt-4">
-          <label className="mb-2 block text-sm font-medium" style={{ color: theme.colors.text }}>
+          <label
+            className="mb-2 block text-sm font-medium"
+            style={{ color: theme.colors.text }}
+          >
             その他の疾患（自由記載）
           </label>
           <input
@@ -467,15 +552,15 @@ export default function ProfilePage() {
             className="w-full rounded-lg border p-3 text-sm"
             style={{
               backgroundColor: theme.colors.background,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
             onKeyPress={(e) => {
-              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+              if (e.key === "Enter" && e.currentTarget.value.trim()) {
                 handleChronicConditionToggle({
                   label: e.currentTarget.value.trim(),
                 });
-                e.currentTarget.value = '';
+                e.currentTarget.value = "";
               }
             }}
           />
@@ -487,7 +572,10 @@ export default function ProfilePage() {
         className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
         style={{ backgroundColor: theme.colors.surface }}
       >
-        <h2 className="mb-4 text-lg font-bold md:text-xl" style={{ color: theme.colors.text }}>
+        <h2
+          className="mb-4 text-lg font-bold md:text-xl"
+          style={{ color: theme.colors.text }}
+        >
           食物アレルギー
         </h2>
         <div className="mb-3 flex gap-2">
@@ -497,21 +585,22 @@ export default function ProfilePage() {
             className="flex-1 rounded-lg border p-2"
             style={{
               backgroundColor: theme.colors.background,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
             onKeyPress={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 handleFoodAllergyAdd(e.currentTarget.value);
-                e.currentTarget.value = '';
+                e.currentTarget.value = "";
               }
             }}
           />
           <button
             onClick={(e) => {
-              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+              const input = e.currentTarget
+                .previousElementSibling as HTMLInputElement;
               handleFoodAllergyAdd(input.value);
-              input.value = '';
+              input.value = "";
             }}
             className="rounded-lg px-4 py-2 text-sm font-medium text-white"
             style={{ backgroundColor: theme.colors.primary }}
@@ -542,22 +631,33 @@ export default function ProfilePage() {
         className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
         style={{ backgroundColor: theme.colors.surface }}
       >
-        <h2 className="mb-4 text-lg font-bold md:text-xl" style={{ color: theme.colors.text }}>
+        <h2
+          className="mb-4 text-lg font-bold md:text-xl"
+          style={{ color: theme.colors.text }}
+        >
           生活習慣
         </h2>
 
         <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               喫煙
             </label>
             <select
-              value={formData.smokingStatus || 'unknown'}
-              onChange={(e) => handleInputChange('smokingStatus', e.target.value as SmokingStatus)}
+              value={formData.smokingStatus || "unknown"}
+              onChange={(e) =>
+                handleInputChange(
+                  "smokingStatus",
+                  e.target.value as SmokingStatus,
+                )
+              }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
@@ -569,16 +669,21 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               飲酒
             </label>
             <select
-              value={formData.alcoholUse || 'unknown'}
-              onChange={(e) => handleInputChange('alcoholUse', e.target.value as AlcoholUse)}
+              value={formData.alcoholUse || "unknown"}
+              onChange={(e) =>
+                handleInputChange("alcoholUse", e.target.value as AlcoholUse)
+              }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
@@ -591,18 +696,24 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium" style={{ color: theme.colors.text }}>
+            <label
+              className="mb-1 block text-sm font-medium"
+              style={{ color: theme.colors.text }}
+            >
               運動習慣
             </label>
             <select
-              value={formData.exercise || 'unknown'}
+              value={formData.exercise || "unknown"}
               onChange={(e) =>
-                handleInputChange('exercise', e.target.value as ExerciseFrequency)
+                handleInputChange(
+                  "exercise",
+                  e.target.value as ExerciseFrequency,
+                )
               }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.background,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
@@ -617,11 +728,14 @@ export default function ProfilePage() {
       </div>
 
       {/* 保存ボタン */}
-      <div className="fixed bottom-20 left-0 right-0 p-4 md:static md:bottom-auto md:left-auto md:right-auto md:mt-8" style={{ backgroundColor: theme.colors.background }}>
+      <div
+        className="fixed bottom-20 left-0 right-0 p-4 md:static md:bottom-auto md:left-auto md:right-auto md:mt-8"
+        style={{ backgroundColor: theme.colors.background }}
+      >
         {showSuccess && (
           <div
             className="mb-3 flex items-center justify-center rounded-lg p-3 md:p-4"
-            style={{ backgroundColor: '#10B981', color: 'white' }}
+            style={{ backgroundColor: "#10B981", color: "white" }}
           >
             <Check className="mr-2 h-5 w-5" />
             <span className="md:text-lg">保存しました</span>
@@ -634,10 +748,9 @@ export default function ProfilePage() {
           style={{ backgroundColor: theme.colors.primary }}
         >
           <Save className="mr-2 h-5 w-5" />
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? "保存中..." : "保存"}
         </button>
       </div>
     </div>
   );
 }
-

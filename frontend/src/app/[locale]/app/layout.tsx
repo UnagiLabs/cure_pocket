@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
-import { Home, Plus, CreditCard, Settings, Menu, Wallet, LogOut } from 'lucide-react';
-import { useState } from 'react';
-import { getTheme } from '@/lib/themes';
-import { useConnectWallet, useDisconnectWallet, useCurrentAccount, useWallets } from '@mysten/dapp-kit';
+import {
+  useConnectWallet,
+  useCurrentAccount,
+  useDisconnectWallet,
+  useWallets,
+} from "@mysten/dapp-kit";
+import {
+  CreditCard,
+  Home,
+  LogOut,
+  Menu,
+  Plus,
+  Settings,
+  Wallet,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { useApp } from "@/contexts/AppContext";
+import { getTheme } from "@/lib/themes";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,7 +30,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const locale = useLocale();
   const { walletAddress, settings } = useApp();
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState("home");
   const [showMenu, setShowMenu] = useState(false);
   const theme = getTheme(settings.theme);
 
@@ -45,9 +57,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const handleConnectWallet = () => {
     const availableWallet = wallets[0];
-    
+
     if (!availableWallet) {
-      alert(t('wallet.notInstalled'));
+      alert(t("wallet.notInstalled"));
       return;
     }
 
@@ -62,13 +74,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
         onError: (error) => {
           // ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
           const errorMessage = error?.message || String(error);
-          if (errorMessage.includes('User rejected') || errorMessage.includes('rejected')) {
+          if (
+            errorMessage.includes("User rejected") ||
+            errorMessage.includes("rejected")
+          ) {
             // ユーザーが意図的に拒否した場合は、静かに処理する
             return;
           }
           // その他のエラーの場合のみ、エラーメッセージを表示
-          console.error('Failed to connect wallet:', error);
-          alert(t('wallet.connectionFailed'));
+          console.error("Failed to connect wallet:", error);
+          alert(t("wallet.connectionFailed"));
         },
       },
     );
@@ -94,41 +109,43 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <div className="flex items-center flex-shrink-0">
           <span className="mr-2 text-2xl md:text-3xl">🏥</span>
-          <span className="text-xl font-bold text-white md:text-2xl">{t('appName')}</span>
+          <span className="text-xl font-bold text-white md:text-2xl">
+            {t("appName")}
+          </span>
         </div>
-        
+
         <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
           {/* Desktop Navigation */}
           <nav className="hidden md:flex md:gap-2 md:items-center md:flex-shrink-0">
             <button
-              onClick={() => navigateTo('/app', 'home')}
+              onClick={() => navigateTo("/app", "home")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
-                activeTab === 'home' ? 'bg-white/20' : 'hover:bg-white/10'
+                activeTab === "home" ? "bg-white/20" : "hover:bg-white/10"
               }`}
             >
-              {t('tabs.home')}
+              {t("tabs.home")}
             </button>
             <button
-              onClick={() => navigateTo('/app/add', 'add')}
+              onClick={() => navigateTo("/app/add", "add")}
               className="rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 whitespace-nowrap"
             >
-              {t('tabs.add')}
+              {t("tabs.add")}
             </button>
             <button
-              onClick={() => navigateTo('/app/card', 'card')}
+              onClick={() => navigateTo("/app/card", "card")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
-                activeTab === 'card' ? 'bg-white/20' : 'hover:bg-white/10'
+                activeTab === "card" ? "bg-white/20" : "hover:bg-white/10"
               }`}
             >
-              {t('tabs.card')}
+              {t("tabs.card")}
             </button>
             <button
-              onClick={() => navigateTo('/app/settings', 'settings')}
+              onClick={() => navigateTo("/app/settings", "settings")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors whitespace-nowrap ${
-                activeTab === 'settings' ? 'bg-white/20' : 'hover:bg-white/10'
+                activeTab === "settings" ? "bg-white/20" : "hover:bg-white/10"
               }`}
             >
-              {t('tabs.settings')}
+              {t("tabs.settings")}
             </button>
           </nav>
 
@@ -137,7 +154,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {isWalletConnected ? (
               <div className="flex items-center gap-2">
                 <span className="rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white whitespace-nowrap">
-                  {currentAccount?.address.slice(0, 6)}...{currentAccount?.address.slice(-4)}
+                  {currentAccount?.address.slice(0, 6)}...
+                  {currentAccount?.address.slice(-4)}
                 </span>
                 <button
                   onClick={handleDisconnectWallet}
@@ -145,7 +163,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   title="ウォレットを切断"
                 >
                   <LogOut className="h-3 w-3" />
-                  <span className="hidden lg:inline">{t('wallet.disconnect')}</span>
+                  <span className="hidden lg:inline">
+                    {t("wallet.disconnect")}
+                  </span>
                 </button>
               </div>
             ) : (
@@ -156,10 +176,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               >
                 <Wallet className="h-3 w-3" />
                 <span className="hidden lg:inline">
-                  {isConnecting ? t('wallet.connecting') : t('actions.connectWallet')}
+                  {isConnecting
+                    ? t("wallet.connecting")
+                    : t("actions.connectWallet")}
                 </span>
                 <span className="lg:hidden">
-                  {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
+                  {isConnecting ? t("wallet.connecting") : t("wallet.connect")}
                 </span>
               </button>
             )}
@@ -185,27 +207,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
         className="fixed bottom-0 left-0 right-0 border-t md:hidden"
         style={{
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.textSecondary + '20',
+          borderColor: theme.colors.textSecondary + "20",
         }}
       >
         <div className="flex justify-around py-2">
           <button
-            onClick={() => navigateTo('/app', 'home')}
+            onClick={() => navigateTo("/app", "home")}
             className={`flex flex-col items-center p-2 transition-colors ${
-              activeTab === 'home'
-                ? ''
-                : 'opacity-50'
+              activeTab === "home" ? "" : "opacity-50"
             }`}
             style={{
-              color: activeTab === 'home' ? theme.colors.primary : theme.colors.textSecondary,
+              color:
+                activeTab === "home"
+                  ? theme.colors.primary
+                  : theme.colors.textSecondary,
             }}
           >
             <Home className="h-6 w-6" />
-            <span className="mt-1 text-xs">{t('tabs.home')}</span>
+            <span className="mt-1 text-xs">{t("tabs.home")}</span>
           </button>
 
           <button
-            onClick={() => navigateTo('/app/add', 'add')}
+            onClick={() => navigateTo("/app/add", "add")}
             className="flex flex-col items-center p-2"
           >
             <div
@@ -218,38 +241,40 @@ export default function AppLayout({ children }: AppLayoutProps) {
               className="text-xs"
               style={{ color: theme.colors.textSecondary }}
             >
-              {t('tabs.add')}
+              {t("tabs.add")}
             </span>
           </button>
 
           <button
-            onClick={() => navigateTo('/app/card', 'card')}
+            onClick={() => navigateTo("/app/card", "card")}
             className={`flex flex-col items-center p-2 transition-colors ${
-              activeTab === 'card'
-                ? ''
-                : 'opacity-50'
+              activeTab === "card" ? "" : "opacity-50"
             }`}
             style={{
-              color: activeTab === 'card' ? theme.colors.primary : theme.colors.textSecondary,
+              color:
+                activeTab === "card"
+                  ? theme.colors.primary
+                  : theme.colors.textSecondary,
             }}
           >
             <CreditCard className="h-6 w-6" />
-            <span className="mt-1 text-xs">{t('tabs.card')}</span>
+            <span className="mt-1 text-xs">{t("tabs.card")}</span>
           </button>
 
           <button
-            onClick={() => navigateTo('/app/settings', 'settings')}
+            onClick={() => navigateTo("/app/settings", "settings")}
             className={`flex flex-col items-center p-2 transition-colors ${
-              activeTab === 'settings'
-                ? ''
-                : 'opacity-50'
+              activeTab === "settings" ? "" : "opacity-50"
             }`}
             style={{
-              color: activeTab === 'settings' ? theme.colors.primary : theme.colors.textSecondary,
+              color:
+                activeTab === "settings"
+                  ? theme.colors.primary
+                  : theme.colors.textSecondary,
             }}
           >
             <Settings className="h-6 w-6" />
-            <span className="mt-1 text-xs">{t('tabs.settings')}</span>
+            <span className="mt-1 text-xs">{t("tabs.settings")}</span>
           </button>
         </div>
       </div>
@@ -267,33 +292,40 @@ export default function AppLayout({ children }: AppLayoutProps) {
           >
             <div className="space-y-3">
               <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
-                <div className="font-medium">{t('settings.profile')}</div>
+                <div className="font-medium">{t("settings.profile")}</div>
               </button>
               <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
-                <div className="font-medium">{t('settings.dataExport')}</div>
+                <div className="font-medium">{t("settings.dataExport")}</div>
               </button>
               <button className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-100">
-                <div className="font-medium">{t('settings.language')}</div>
+                <div className="font-medium">{t("settings.language")}</div>
               </button>
-              <div className="border-t pt-3" style={{ borderColor: theme.colors.textSecondary + '20' }}>
+              <div
+                className="border-t pt-3"
+                style={{ borderColor: theme.colors.textSecondary + "20" }}
+              >
                 {isWalletConnected ? (
                   <div className="space-y-2">
-                    <div className="px-3 text-sm" style={{ color: theme.colors.textSecondary }}>
-                      <div>{t('settings.walletConnected')}</div>
+                    <div
+                      className="px-3 text-sm"
+                      style={{ color: theme.colors.textSecondary }}
+                    >
+                      <div>{t("settings.walletConnected")}</div>
                       <div className="mt-1 text-xs font-mono">
-                        {currentAccount?.address.slice(0, 8)}...{currentAccount?.address.slice(-6)}
+                        {currentAccount?.address.slice(0, 8)}...
+                        {currentAccount?.address.slice(-6)}
                       </div>
                     </div>
                     <button
                       onClick={handleDisconnectWallet}
                       className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors"
                       style={{
-                        borderColor: theme.colors.textSecondary + '40',
+                        borderColor: theme.colors.textSecondary + "40",
                         color: theme.colors.text,
                       }}
                     >
                       <LogOut className="h-4 w-4" />
-                      {t('wallet.disconnect')}
+                      {t("wallet.disconnect")}
                     </button>
                   </div>
                 ) : (
@@ -303,12 +335,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors disabled:opacity-50"
                     style={{
                       borderColor: theme.colors.primary,
-                      backgroundColor: theme.colors.primary + '10',
+                      backgroundColor: theme.colors.primary + "10",
                       color: theme.colors.primary,
                     }}
                   >
                     <Wallet className="h-4 w-4" />
-                    {isConnecting ? t('wallet.connecting') : t('actions.connectWallet')}
+                    {isConnecting
+                      ? t("wallet.connecting")
+                      : t("actions.connectWallet")}
                   </button>
                 )}
               </div>

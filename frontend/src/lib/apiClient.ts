@@ -1,14 +1,14 @@
 import type {
-  Medication,
   Allergy,
-  MedicalHistory,
-  LabResult,
   ImagingReport,
-} from '@/types';
+  LabResult,
+  MedicalHistory,
+  Medication,
+} from "@/types";
 
 export interface CreateMedicationPayload {
   walletAddress: string;
-  medication: Omit<Medication, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+  medication: Omit<Medication, "id" | "suiObjectId" | "walrusBlobId">;
 }
 
 export interface CreateMedicationResponse {
@@ -21,7 +21,7 @@ export interface FetchMedicationsResponse {
 
 export interface CreateAllergyPayload {
   walletAddress: string;
-  allergy: Omit<Allergy, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+  allergy: Omit<Allergy, "id" | "suiObjectId" | "walrusBlobId">;
 }
 
 export interface CreateAllergyResponse {
@@ -34,7 +34,7 @@ export interface FetchAllergiesResponse {
 
 export interface CreateMedicalHistoryPayload {
   walletAddress: string;
-  history: Omit<MedicalHistory, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+  history: Omit<MedicalHistory, "id" | "suiObjectId" | "walrusBlobId">;
 }
 
 export interface CreateMedicalHistoryResponse {
@@ -47,7 +47,7 @@ export interface FetchMedicalHistoriesResponse {
 
 export interface CreateLabResultPayload {
   walletAddress: string;
-  result: Omit<LabResult, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+  result: Omit<LabResult, "id" | "suiObjectId" | "walrusBlobId">;
 }
 
 export interface CreateLabResultResponse {
@@ -60,7 +60,7 @@ export interface FetchLabResultsResponse {
 
 export interface CreateImagingReportPayload {
   walletAddress: string;
-  report: Omit<ImagingReport, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+  report: Omit<ImagingReport, "id" | "suiObjectId" | "walrusBlobId">;
 }
 
 export interface CreateImagingReportResponse {
@@ -73,7 +73,13 @@ export interface FetchImagingReportsResponse {
 
 export interface CreateConsentTokenPayload {
   walletAddress: string;
-  categories?: ('medications' | 'allergies' | 'histories' | 'labs' | 'imaging')[]; // 表示するカテゴリー
+  categories?: (
+    | "medications"
+    | "allergies"
+    | "histories"
+    | "labs"
+    | "imaging"
+  )[]; // 表示するカテゴリー
 }
 
 export interface CreateConsentTokenResponse {
@@ -83,210 +89,216 @@ export interface CreateConsentTokenResponse {
 
 export const apiClient = {
   async fetchMedications(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<FetchMedicationsResponse> {
     const res = await fetch(`/api/medications?wallet=${walletAddress}`);
-    if (!res.ok) throw new Error('Failed to fetch medications');
+    if (!res.ok) throw new Error("Failed to fetch medications");
     return res.json();
   },
 
   async createMedication(
-    payload: CreateMedicationPayload
+    payload: CreateMedicationPayload,
   ): Promise<CreateMedicationResponse> {
-    const res = await fetch('/api/medications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/medications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create medication');
+    if (!res.ok) throw new Error("Failed to create medication");
     return res.json();
   },
 
   async updateMedication(
     id: string,
-    updates: Partial<Medication>
+    updates: Partial<Medication>,
   ): Promise<CreateMedicationResponse> {
     const res = await fetch(`/api/medications/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    if (!res.ok) throw new Error('Failed to update medication');
+    if (!res.ok) throw new Error("Failed to update medication");
     return res.json();
   },
 
   async deleteMedication(id: string): Promise<void> {
     const res = await fetch(`/api/medications/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to delete medication');
+    if (!res.ok) throw new Error("Failed to delete medication");
   },
 
   async createConsentToken(
-    payload: CreateConsentTokenPayload
+    payload: CreateConsentTokenPayload,
   ): Promise<CreateConsentTokenResponse> {
-    const res = await fetch('/api/consent-token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/consent-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create consent token');
+    if (!res.ok) throw new Error("Failed to create consent token");
     return res.json();
   },
 
   // Allergy API methods
   async fetchAllergies(walletAddress: string): Promise<FetchAllergiesResponse> {
     const res = await fetch(`/api/allergies?wallet=${walletAddress}`);
-    if (!res.ok) throw new Error('Failed to fetch allergies');
+    if (!res.ok) throw new Error("Failed to fetch allergies");
     return res.json();
   },
 
-  async createAllergy(payload: CreateAllergyPayload): Promise<CreateAllergyResponse> {
-    const res = await fetch('/api/allergies', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+  async createAllergy(
+    payload: CreateAllergyPayload,
+  ): Promise<CreateAllergyResponse> {
+    const res = await fetch("/api/allergies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create allergy');
+    if (!res.ok) throw new Error("Failed to create allergy");
     return res.json();
   },
 
   async updateAllergy(
     id: string,
-    updates: Partial<Allergy>
+    updates: Partial<Allergy>,
   ): Promise<CreateAllergyResponse> {
     const res = await fetch(`/api/allergies/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    if (!res.ok) throw new Error('Failed to update allergy');
+    if (!res.ok) throw new Error("Failed to update allergy");
     return res.json();
   },
 
   async deleteAllergy(id: string): Promise<void> {
     const res = await fetch(`/api/allergies/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to delete allergy');
+    if (!res.ok) throw new Error("Failed to delete allergy");
   },
 
   // MedicalHistory API methods
   async fetchMedicalHistories(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<FetchMedicalHistoriesResponse> {
     const res = await fetch(`/api/histories?wallet=${walletAddress}`);
-    if (!res.ok) throw new Error('Failed to fetch medical histories');
+    if (!res.ok) throw new Error("Failed to fetch medical histories");
     return res.json();
   },
 
   async createMedicalHistory(
-    payload: CreateMedicalHistoryPayload
+    payload: CreateMedicalHistoryPayload,
   ): Promise<CreateMedicalHistoryResponse> {
-    const res = await fetch('/api/histories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/histories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create medical history');
+    if (!res.ok) throw new Error("Failed to create medical history");
     return res.json();
   },
 
   async updateMedicalHistory(
     id: string,
-    updates: Partial<MedicalHistory>
+    updates: Partial<MedicalHistory>,
   ): Promise<CreateMedicalHistoryResponse> {
     const res = await fetch(`/api/histories/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    if (!res.ok) throw new Error('Failed to update medical history');
+    if (!res.ok) throw new Error("Failed to update medical history");
     return res.json();
   },
 
   async deleteMedicalHistory(id: string): Promise<void> {
     const res = await fetch(`/api/histories/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to delete medical history');
+    if (!res.ok) throw new Error("Failed to delete medical history");
   },
 
   // LabResult API methods
-  async fetchLabResults(walletAddress: string): Promise<FetchLabResultsResponse> {
+  async fetchLabResults(
+    walletAddress: string,
+  ): Promise<FetchLabResultsResponse> {
     const res = await fetch(`/api/labs?wallet=${walletAddress}`);
-    if (!res.ok) throw new Error('Failed to fetch lab results');
+    if (!res.ok) throw new Error("Failed to fetch lab results");
     return res.json();
   },
 
-  async createLabResult(payload: CreateLabResultPayload): Promise<CreateLabResultResponse> {
-    const res = await fetch('/api/labs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+  async createLabResult(
+    payload: CreateLabResultPayload,
+  ): Promise<CreateLabResultResponse> {
+    const res = await fetch("/api/labs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create lab result');
+    if (!res.ok) throw new Error("Failed to create lab result");
     return res.json();
   },
 
   async updateLabResult(
     id: string,
-    updates: Partial<LabResult>
+    updates: Partial<LabResult>,
   ): Promise<CreateLabResultResponse> {
     const res = await fetch(`/api/labs/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    if (!res.ok) throw new Error('Failed to update lab result');
+    if (!res.ok) throw new Error("Failed to update lab result");
     return res.json();
   },
 
   async deleteLabResult(id: string): Promise<void> {
     const res = await fetch(`/api/labs/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to delete lab result');
+    if (!res.ok) throw new Error("Failed to delete lab result");
   },
 
   // ImagingReport API methods
   async fetchImagingReports(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<FetchImagingReportsResponse> {
     const res = await fetch(`/api/imaging?wallet=${walletAddress}`);
-    if (!res.ok) throw new Error('Failed to fetch imaging reports');
+    if (!res.ok) throw new Error("Failed to fetch imaging reports");
     return res.json();
   },
 
   async createImagingReport(
-    payload: CreateImagingReportPayload
+    payload: CreateImagingReportPayload,
   ): Promise<CreateImagingReportResponse> {
-    const res = await fetch('/api/imaging', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/imaging", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Failed to create imaging report');
+    if (!res.ok) throw new Error("Failed to create imaging report");
     return res.json();
   },
 
   async updateImagingReport(
     id: string,
-    updates: Partial<ImagingReport>
+    updates: Partial<ImagingReport>,
   ): Promise<CreateImagingReportResponse> {
     const res = await fetch(`/api/imaging/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    if (!res.ok) throw new Error('Failed to update imaging report');
+    if (!res.ok) throw new Error("Failed to update imaging report");
     return res.json();
   },
 
   async deleteImagingReport(id: string): Promise<void> {
     const res = await fetch(`/api/imaging/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error('Failed to delete imaging report');
+    if (!res.ok) throw new Error("Failed to delete imaging report");
   },
 };

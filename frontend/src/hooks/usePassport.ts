@@ -17,13 +17,13 @@
  * - 環境変数が設定されていない場合はエラーを返す
  * - ネットワークエラー時は適切にエラーメッセージを返す
  */
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
-import { bcs } from '@mysten/sui/bcs';
-import type { PassportStatus, MedicalPassport } from '@/types';
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { bcs } from "@mysten/sui/bcs";
+import { Transaction } from "@mysten/sui/transactions";
+import { useEffect, useState } from "react";
+import type { MedicalPassport, PassportStatus } from "@/types";
 
 /**
  * パッケージIDを取得
@@ -34,7 +34,7 @@ import type { PassportStatus, MedicalPassport } from '@/types';
 function get_package_id(): string {
   const package_id = process.env.NEXT_PUBLIC_PACKAGE_ID;
   if (!package_id) {
-    throw new Error('NEXT_PUBLIC_PACKAGE_ID is not set');
+    throw new Error("NEXT_PUBLIC_PACKAGE_ID is not set");
   }
   return package_id;
 }
@@ -48,7 +48,7 @@ function get_package_id(): string {
 function get_registry_id(): string {
   const registry_id = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID;
   if (!registry_id) {
-    throw new Error('NEXT_PUBLIC_PASSPORT_REGISTRY_ID is not set');
+    throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID is not set");
   }
   return registry_id;
 }
@@ -79,7 +79,7 @@ export function usePassport(): PassportStatus {
           has_passport: false,
           passport: null,
           loading: false,
-          error: 'ウォレットが接続されていません',
+          error: "ウォレットが接続されていません",
         });
         return;
       }
@@ -113,11 +113,11 @@ export function usePassport(): PassportStatus {
         // 戻り値をBCSデコード
         const return_values = result.results?.[0]?.returnValues;
         if (!return_values || return_values.length === 0) {
-          throw new Error('No return values from has_passport');
+          throw new Error("No return values from has_passport");
         }
 
         // bool値をデコード
-        const has_passport = bcs.de('bool', return_values[0][1]);
+        const has_passport = bcs.de("bool", return_values[0][1]);
 
         if (!has_passport) {
           // パスポートを所持していない場合
@@ -151,7 +151,7 @@ export function usePassport(): PassportStatus {
         const error_message =
           error instanceof Error
             ? error.message
-            : 'パスポート状態の取得に失敗しました';
+            : "パスポート状態の取得に失敗しました";
         set_status({
           has_passport: false,
           passport: null,

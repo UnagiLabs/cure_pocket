@@ -1,16 +1,21 @@
 export type ThemeId =
-  | 'classic-blue'
-  | 'mint-clinic'
-  | 'sakura-notebook'
-  | 'midnight-travel';
+  | "classic-blue"
+  | "mint-clinic"
+  | "sakura-notebook"
+  | "midnight-travel";
 
-export type LocaleId = 'en' | 'ja' | 'zh' | 'fr' | 'pt';
+export type LocaleId = "en" | "ja" | "zh" | "fr" | "pt";
 
-export type MedicationForm = 'tablet' | 'capsule' | 'liquid' | 'other';
+export type MedicationForm = "tablet" | "capsule" | "liquid" | "other";
 
-export type MedicationStatus = 'active' | 'stopped';
+export type MedicationStatus = "active" | "stopped";
 
-export type TimingOfDay = 'morning' | 'afternoon' | 'evening' | 'night' | 'asNeeded';
+export type TimingOfDay =
+  | "morning"
+  | "afternoon"
+  | "evening"
+  | "night"
+  | "asNeeded";
 
 export interface Medication {
   id: string; // UUID
@@ -36,7 +41,11 @@ export interface Medication {
 /**
  * アレルギー情報
  */
-export type AllergySeverity = 'mild' | 'moderate' | 'severe' | 'life-threatening';
+export type AllergySeverity =
+  | "mild"
+  | "moderate"
+  | "severe"
+  | "life-threatening";
 
 export interface Allergy {
   id: string; // UUID
@@ -55,7 +64,11 @@ export interface Allergy {
 /**
  * 基礎疾患・既往歴・手術歴
  */
-export type MedicalHistoryType = 'condition' | 'surgery' | 'procedure' | 'other';
+export type MedicalHistoryType =
+  | "condition"
+  | "surgery"
+  | "procedure"
+  | "other";
 
 export interface MedicalHistory {
   id: string; // UUID
@@ -64,7 +77,7 @@ export interface MedicalHistory {
   diagnosisDate?: string; // ISO date - 診断日・手術日
   diagnosedBy?: string; // 診断した医療機関・医師名
   description?: string; // 詳細説明
-  status?: 'active' | 'resolved' | 'chronic'; // 状態（進行中、治癒、慢性など）
+  status?: "active" | "resolved" | "chronic"; // 状態（進行中、治癒、慢性など）
   notes?: string; // その他のメモ
 
   // Backend-linked metadata
@@ -94,7 +107,7 @@ export interface LabResult {
 /**
  * 画像レポート（レントゲン・CT・MRIなど）
  */
-export type ImagingType = 'xray' | 'ct' | 'mri' | 'ultrasound' | 'other';
+export type ImagingType = "xray" | "ct" | "mri" | "ultrasound" | "other";
 
 export interface ImagingReport {
   id: string; // UUID
@@ -131,37 +144,42 @@ export interface UserSettings {
 /**
  * 患者プロフィール
  */
-export type Gender = 'male' | 'female' | 'other' | 'unknown';
+export type Gender = "male" | "female" | "other" | "unknown";
 export type AgeBand =
-  | '10s'
-  | '20s'
-  | '30s'
-  | '40s'
-  | '50s'
-  | '60s'
-  | '70s'
-  | '80plus';
+  | "10s"
+  | "20s"
+  | "30s"
+  | "40s"
+  | "50s"
+  | "60s"
+  | "70s"
+  | "80plus";
 
 export type CountryCode = string; // ISO 3166-1 alpha-2
 
-export type SmokingStatus = 'never' | 'former' | 'current' | 'unknown';
-export type AlcoholUse = 'none' | 'light' | 'moderate' | 'heavy' | 'unknown';
-export type ExerciseFrequency = 'none' | '1-2/week' | '3-5/week' | 'daily' | 'unknown';
+export type SmokingStatus = "never" | "former" | "current" | "unknown";
+export type AlcoholUse = "none" | "light" | "moderate" | "heavy" | "unknown";
+export type ExerciseFrequency =
+  | "none"
+  | "1-2/week"
+  | "3-5/week"
+  | "daily"
+  | "unknown";
 
 export type SurgeryCategory =
-  | 'cardiac'
-  | 'orthopedic'
-  | 'gi'
-  | 'gynecology'
-  | 'urology'
-  | 'ophthalmology'
-  | 'other';
+  | "cardiac"
+  | "orthopedic"
+  | "gi"
+  | "gynecology"
+  | "urology"
+  | "ophthalmology"
+  | "other";
 
-export type DataSharingPreference = 'allow' | 'deny' | 'ask-every-time';
+export type DataSharingPreference = "allow" | "deny" | "ask-every-time";
 
 export interface DrugAllergy {
   name: string;
-  severity: 'mild' | 'moderate' | 'severe';
+  severity: "mild" | "moderate" | "severe";
 }
 
 export interface ChronicCondition {
@@ -198,7 +216,7 @@ export interface PatientProfile {
   gender: Gender;
   country: CountryCode | null;
   preferredLanguage: string | null;
-  bloodType?: 'A' | 'B' | 'O' | 'AB' | 'unknown';
+  bloodType?: "A" | "B" | "O" | "AB" | "unknown";
   heightCm?: number;
   weightKg?: number;
 

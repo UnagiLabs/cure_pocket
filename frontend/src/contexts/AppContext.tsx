@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type {
-  AppState,
-  Medication,
   Allergy,
-  MedicalHistory,
-  LabResult,
+  AppState,
   ImagingReport,
-  UserSettings,
+  LabResult,
+  MedicalHistory,
+  Medication,
   PatientProfile,
-} from '@/types';
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { useCurrentAccount } from '@mysten/dapp-kit';
+  UserSettings,
+} from "@/types";
 
 interface AppContextType extends AppState {
   setWalletAddress: (address: string | null) => void;
@@ -42,8 +48,8 @@ interface AppContextType extends AppState {
 }
 
 const defaultSettings: UserSettings = {
-  theme: 'classic-blue',
-  locale: 'en',
+  theme: "classic-blue",
+  locale: "en",
   analyticsOptIn: false,
   emergencyCard: {
     showName: false,
@@ -57,7 +63,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const currentAccount = useCurrentAccount();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
-  const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>([]);
+  const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>(
+    [],
+  );
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [imagingReports, setImagingReports] = useState<ImagingReport[]>([]);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
@@ -70,25 +78,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Restore settings from localStorage on mount
   useEffect(() => {
     // Restore settings from localStorage
-    const savedSettings = localStorage.getItem('userSettings');
+    const savedSettings = localStorage.getItem("userSettings");
     if (savedSettings) {
       try {
         setSettings(JSON.parse(savedSettings));
       } catch (e) {
-        console.error('Failed to parse saved settings', e);
+        console.error("Failed to parse saved settings", e);
       }
     }
   }, []);
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('userSettings', JSON.stringify(settings));
+    localStorage.setItem("userSettings", JSON.stringify(settings));
   }, [settings]);
 
   // setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）
   const setWalletAddress = (_address: string | null) => {
     // dApp Kitが自動的に管理するため、何もしない
-    console.warn('setWalletAddress is deprecated. Wallet address is managed by dApp Kit.');
+    console.warn(
+      "setWalletAddress is deprecated. Wallet address is managed by dApp Kit.",
+    );
   };
 
   const addMedication = (medication: Medication) => {
@@ -97,7 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateMedication = (id: string, updates: Partial<Medication>) => {
     setMedications((prev) =>
-      prev.map((med) => (med.id === id ? { ...med, ...updates } : med))
+      prev.map((med) => (med.id === id ? { ...med, ...updates } : med)),
     );
   };
 
@@ -112,7 +122,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateAllergy = (id: string, updates: Partial<Allergy>) => {
     setAllergies((prev) =>
-      prev.map((allergy) => (allergy.id === id ? { ...allergy, ...updates } : allergy))
+      prev.map((allergy) =>
+        allergy.id === id ? { ...allergy, ...updates } : allergy,
+      ),
     );
   };
 
@@ -125,9 +137,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMedicalHistories((prev) => [...prev, history]);
   };
 
-  const updateMedicalHistory = (id: string, updates: Partial<MedicalHistory>) => {
+  const updateMedicalHistory = (
+    id: string,
+    updates: Partial<MedicalHistory>,
+  ) => {
     setMedicalHistories((prev) =>
-      prev.map((history) => (history.id === id ? { ...history, ...updates } : history))
+      prev.map((history) =>
+        history.id === id ? { ...history, ...updates } : history,
+      ),
     );
   };
 
@@ -142,7 +159,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateLabResult = (id: string, updates: Partial<LabResult>) => {
     setLabResults((prev) =>
-      prev.map((result) => (result.id === id ? { ...result, ...updates } : result))
+      prev.map((result) =>
+        result.id === id ? { ...result, ...updates } : result,
+      ),
     );
   };
 
@@ -157,7 +176,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateImagingReport = (id: string, updates: Partial<ImagingReport>) => {
     setImagingReports((prev) =>
-      prev.map((report) => (report.id === id ? { ...report, ...updates } : report))
+      prev.map((report) =>
+        report.id === id ? { ...report, ...updates } : report,
+      ),
     );
   };
 
@@ -175,19 +196,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // 初期プロフィールを作成
         const defaultProfile: PatientProfile = {
           ageBand: null,
-          gender: 'unknown',
+          gender: "unknown",
           country: null,
           preferredLanguage: null,
-          smokingStatus: 'unknown',
-          alcoholUse: 'unknown',
-          exercise: 'unknown',
+          smokingStatus: "unknown",
+          alcoholUse: "unknown",
+          exercise: "unknown",
           drugAllergies: [],
           foodAllergies: [],
           hasAnaphylaxisHistory: null,
           chronicConditions: [],
           surgeries: [],
           dataSharing: {
-            preference: 'deny',
+            preference: "deny",
             shareMedication: false,
             shareLabs: false,
             shareConditions: false,
@@ -254,7 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export function useApp() {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 }

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { useTranslations, useLocale } from 'next-intl';
-import { ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { getTheme } from '@/lib/themes';
-import type { MedicalHistory, MedicalHistoryType } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useApp } from "@/contexts/AppContext";
+import { getTheme } from "@/lib/themes";
+import type { MedicalHistory, MedicalHistoryType } from "@/types";
 
 /**
  * 病歴の追加フォームページ
@@ -20,18 +20,24 @@ export default function AddHistoryPage() {
   const theme = getTheme(settings.theme);
 
   const [formData, setFormData] = useState({
-    type: 'condition' as MedicalHistoryType,
-    diagnosis: '',
-    diagnosisDate: '',
-    diagnosedBy: '',
-    description: '',
-    status: 'active' as 'active' | 'resolved' | 'chronic' | undefined,
-    notes: '',
+    type: "condition" as MedicalHistoryType,
+    diagnosis: "",
+    diagnosisDate: "",
+    diagnosedBy: "",
+    description: "",
+    status: "active" as "active" | "resolved" | "chronic" | undefined,
+    notes: "",
   });
 
   const handleInputChange = (
     field: string,
-    value: string | MedicalHistoryType | 'active' | 'resolved' | 'chronic' | undefined
+    value:
+      | string
+      | MedicalHistoryType
+      | "active"
+      | "resolved"
+      | "chronic"
+      | undefined,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -60,10 +66,16 @@ export default function AddHistoryPage() {
           onClick={() => router.push(`/${locale}/app/add`)}
           className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
-          <ChevronLeft className="h-6 w-6" style={{ color: theme.colors.text }} />
+          <ChevronLeft
+            className="h-6 w-6"
+            style={{ color: theme.colors.text }}
+          />
         </button>
-        <h1 className="text-lg font-bold md:text-2xl" style={{ color: theme.colors.text }}>
-          {t('histories.add')}
+        <h1
+          className="text-lg font-bold md:text-2xl"
+          style={{ color: theme.colors.text }}
+        >
+          {t("histories.add")}
         </h1>
       </div>
 
@@ -74,22 +86,24 @@ export default function AddHistoryPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('histories.type')} *
+            {t("histories.type")} *
           </label>
           <select
             value={formData.type}
-            onChange={(e) => handleInputChange('type', e.target.value as MedicalHistoryType)}
+            onChange={(e) =>
+              handleInputChange("type", e.target.value as MedicalHistoryType)
+            }
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
           >
-            <option value="condition">{t('histories.types.condition')}</option>
-            <option value="surgery">{t('histories.types.surgery')}</option>
-            <option value="procedure">{t('histories.types.procedure')}</option>
-            <option value="other">{t('histories.types.other')}</option>
+            <option value="condition">{t("histories.types.condition")}</option>
+            <option value="surgery">{t("histories.types.surgery")}</option>
+            <option value="procedure">{t("histories.types.procedure")}</option>
+            <option value="other">{t("histories.types.other")}</option>
           </select>
         </div>
 
@@ -98,19 +112,19 @@ export default function AddHistoryPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('histories.diagnosis')} *
+            {t("histories.diagnosis")} *
           </label>
           <input
             type="text"
             value={formData.diagnosis}
-            onChange={(e) => handleInputChange('diagnosis', e.target.value)}
+            onChange={(e) => handleInputChange("diagnosis", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('histories.diagnosis')}
+            placeholder={t("histories.diagnosis")}
           />
         </div>
 
@@ -120,16 +134,18 @@ export default function AddHistoryPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('histories.diagnosisDate')}
+              {t("histories.diagnosisDate")}
             </label>
             <input
               type="date"
               value={formData.diagnosisDate}
-              onChange={(e) => handleInputChange('diagnosisDate', e.target.value)}
+              onChange={(e) =>
+                handleInputChange("diagnosisDate", e.target.value)
+              }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             />
@@ -140,27 +156,31 @@ export default function AddHistoryPage() {
               className="mb-1 block text-sm font-medium"
               style={{ color: theme.colors.text }}
             >
-              {t('histories.status')}
+              {t("histories.status")}
             </label>
             <select
-              value={formData.status || ''}
+              value={formData.status || ""}
               onChange={(e) =>
                 handleInputChange(
-                  'status',
-                  e.target.value === '' ? undefined : (e.target.value as 'active' | 'resolved' | 'chronic')
+                  "status",
+                  e.target.value === ""
+                    ? undefined
+                    : (e.target.value as "active" | "resolved" | "chronic"),
                 )
               }
               className="w-full rounded-lg border p-3"
               style={{
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.textSecondary + '40',
+                borderColor: theme.colors.textSecondary + "40",
                 color: theme.colors.text,
               }}
             >
               <option value="">選択なし</option>
-              <option value="active">{t('histories.statuses.active')}</option>
-              <option value="resolved">{t('histories.statuses.resolved')}</option>
-              <option value="chronic">{t('histories.statuses.chronic')}</option>
+              <option value="active">{t("histories.statuses.active")}</option>
+              <option value="resolved">
+                {t("histories.statuses.resolved")}
+              </option>
+              <option value="chronic">{t("histories.statuses.chronic")}</option>
             </select>
           </div>
         </div>
@@ -170,19 +190,19 @@ export default function AddHistoryPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('histories.diagnosedBy')}
+            {t("histories.diagnosedBy")}
           </label>
           <input
             type="text"
             value={formData.diagnosedBy}
-            onChange={(e) => handleInputChange('diagnosedBy', e.target.value)}
+            onChange={(e) => handleInputChange("diagnosedBy", e.target.value)}
             className="w-full rounded-lg border p-3"
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('histories.diagnosedBy')}
+            placeholder={t("histories.diagnosedBy")}
           />
         </div>
 
@@ -191,19 +211,19 @@ export default function AddHistoryPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('histories.description')}
+            {t("histories.description")}
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
+            onChange={(e) => handleInputChange("description", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={4}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('histories.description')}
+            placeholder={t("histories.description")}
           />
         </div>
 
@@ -212,19 +232,19 @@ export default function AddHistoryPage() {
             className="mb-1 block text-sm font-medium"
             style={{ color: theme.colors.text }}
           >
-            {t('histories.notes')}
+            {t("histories.notes")}
           </label>
           <textarea
             value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
+            onChange={(e) => handleInputChange("notes", e.target.value)}
             className="w-full rounded-lg border p-3"
             rows={3}
             style={{
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
-            placeholder={t('histories.notes')}
+            placeholder={t("histories.notes")}
           />
         </div>
 
@@ -233,11 +253,11 @@ export default function AddHistoryPage() {
             onClick={() => router.push(`/${locale}/app/add`)}
             className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95"
             style={{
-              borderColor: theme.colors.textSecondary + '40',
+              borderColor: theme.colors.textSecondary + "40",
               color: theme.colors.text,
             }}
           >
-            {t('actions.cancel')}
+            {t("actions.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -245,11 +265,10 @@ export default function AddHistoryPage() {
             className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
             style={{ backgroundColor: theme.colors.primary }}
           >
-            {t('actions.save')}
+            {t("actions.save")}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
