@@ -75,8 +75,8 @@ public(package) fun seal_approve_patient_only_internal(
     let passport_id = object::id(passport);
 
     // 3. PassportRegistryの`address -> object::ID`マッピングで、特定のパスポートがsenderのものかを確認
-    // is_passport_owner()は、senderが指定パスポートを所有しているかを確認
-    assert!(medical_passport::is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
+    // assert_passport_owner()は、senderが指定パスポートを所有していない場合に内部でabort
+    medical_passport::assert_passport_owner(registry, passport_id, sender, E_NO_ACCESS);
 
     // 4. 所有していれば関数終了（Sealが「OK」と判断）
 }

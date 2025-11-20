@@ -6,7 +6,7 @@ module cure_pocket::seal_accessor_tests {
     use sui::test_scenario::{Self as ts};
     use std::string::{Self, String};
 
-    use cure_pocket::medical_passport::{MedicalPassport, PassportRegistry};
+    use cure_pocket::medical_passport::{Self as medical_passport, MedicalPassport, PassportRegistry};
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::seal_accessor;
     use cure_pocket::cure_pocket::Self;
@@ -91,9 +91,9 @@ module cure_pocket::seal_accessor_tests {
     /// - `E_NO_ACCESS`でabortすることを確認
     ///
     /// ## 注意
-    /// - abortは`seal_accessor`モジュールの内部実装で発生する
+    /// - abortは`medical_passport`モジュールの`assert_passport_owner`関数で発生する
     #[test]
-    #[expected_failure(abort_code = 102, location = seal_accessor)]
+    #[expected_failure(abort_code = 102, location = medical_passport)]
     fun test_seal_approve_patient_only_fails_for_non_owner() {
         let mut scenario = ts::begin(USER1);
 
@@ -302,7 +302,7 @@ module cure_pocket::seal_accessor_tests {
     /// - ユーザー2がパスポートAで`seal_approve_patient_only`を呼び出す
     /// - `E_NO_ACCESS`でabortすることを確認
     #[test]
-    #[expected_failure(abort_code = 102, location = seal_accessor)]
+    #[expected_failure(abort_code = 102, location = medical_passport)]
     fun test_seal_approve_patient_only_user2_user1_passport_fails() {
         let mut scenario = ts::begin(USER1);
 
@@ -389,7 +389,7 @@ module cure_pocket::seal_accessor_tests {
     /// - ユーザー1がパスポートBで`seal_approve_patient_only`を呼び出す
     /// - `E_NO_ACCESS`でabortすることを確認
     #[test]
-    #[expected_failure(abort_code = 102, location = seal_accessor)]
+    #[expected_failure(abort_code = 102, location = medical_passport)]
     fun test_seal_approve_patient_only_user1_user2_passport_fails() {
         let mut scenario = ts::begin(USER1);
 
@@ -480,7 +480,7 @@ module cure_pocket::seal_accessor_tests {
     /// - ユーザー2がパスポートAで`seal_approve_patient_only`を呼び出す
     /// - `E_NO_ACCESS`でabortすることを確認
     #[test]
-    #[expected_failure(abort_code = 102, location = seal_accessor)]
+    #[expected_failure(abort_code = 102, location = medical_passport)]
     fun test_seal_approve_patient_only_no_passport_user_fails() {
         let mut scenario = ts::begin(USER1);
 

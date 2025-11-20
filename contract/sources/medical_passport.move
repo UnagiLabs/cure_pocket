@@ -13,6 +13,7 @@
 module cure_pocket::medical_passport;
 
 use std::string::{Self, String};
+use sui::clock::Clock;
 use sui::dynamic_field as df;
 
 // ============================================================
@@ -79,6 +80,25 @@ public struct PassportMigrationEvent has copy, drop {
     timestamp_ms: u64,
 }
 
+/// パスポート更新イベント
+///
+/// ## 用途
+/// - Walrus Blob ID更新の記録
+/// - 監査証跡として使用
+/// - オフチェーンでの更新履歴追跡
+///
+/// ## フィールド
+/// - `passport_id`: 更新されたパスポートのID
+/// - `old_blob_id`: 更新前のWalrus Blob ID
+/// - `new_blob_id`: 更新後のWalrus Blob ID
+/// - `timestamp_ms`: 更新実行時刻（ミリ秒）
+public struct PassportUpdatedEvent has copy, drop {
+    passport_id: object::ID,
+    old_blob_id: String,
+    new_blob_id: String,
+    timestamp_ms: u64,
+}
+
 // ============================================================
 // エラーコード
 // ============================================================
@@ -124,6 +144,18 @@ public(package) fun e_already_has_passport(): u64 {
 /// - エラーコード `E_MIGRATION_TARGET_HAS_PASSPORT` の値
 public(package) fun e_migration_target_has_passport(): u64 {
     E_MIGRATION_TARGET_HAS_PASSPORT
+}
+
+/// E_EMPTY_WALRUS_BLOB_ID エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+/// - Move 2024 では const を public にできないため、ゲッター経由でアクセス
+///
+/// ## 返り値
+/// - エラーコード `E_EMPTY_WALRUS_BLOB_ID` の値
+public(package) fun e_empty_walrus_blob_id(): u64 {
+    E_EMPTY_WALRUS_BLOB_ID
 }
 
 // ============================================================
@@ -317,30 +349,37 @@ public(package) fun unregister_passport_by_owner(registry: &mut PassportRegistry
     let _passport_id = df::remove<address, object::ID>(&mut registry.id, owner);
 }
 
-/// 特定のパスポートが指定アドレスのものかを確認
+/// 特定のパスポートが指定アドレスのものかを確認し、所有していない場合はabort
 ///
 /// ## 用途
 /// - Sealアクセス制御などで、特定のパスポートがsenderのものかを確認
 /// - `address -> object::ID` から取得したパスポートIDと引数のパスポートIDを比較
+/// - 所有していない場合は内部で`assert`を実行してabort
 ///
 /// ## パラメータ
 /// - `registry`: PassportRegistryへの参照
 /// - `passport_id`: 確認するパスポートのID
 /// - `owner`: 確認するアドレス
+/// - `error_code`: 所有していない場合にabortする際のエラーコード
 ///
-/// ## 返り値
-/// - `true`: 指定アドレスが指定パスポートを所有している
-/// - `false`: 指定アドレスが指定パスポートを所有していない（パスポート未所持、または別のパスポートを所持）
-public(package) fun is_passport_owner(
+/// ## Aborts
+/// - `error_code`: 指定アドレスが指定パスポートを所有していない場合（パスポート未所持、または別のパスポートを所持）
+public(package) fun assert_passport_owner(
     registry: &PassportRegistry,
     passport_id: object::ID,
-    owner: address
-): bool {
+    owner: address,
+    error_code: u64
+) {
+    // アドレスがパスポートを所持しているか確認
     if (!df::exists_<address>(&registry.id, owner)) {
-        return false
+        abort error_code
     };
+    
+    // 登録されているパスポートIDを取得
     let registered_id = df::borrow<address, object::ID>(&registry.id, owner);
-    *registered_id == passport_id
+    
+    // パスポートIDが一致するか確認
+    assert!(*registered_id == passport_id, error_code);
 }
 
 /// パスポートのデータを取得（値のコピー）
@@ -406,6 +445,58 @@ public(package) fun emit_migration_event(
         timestamp_ms,
     };
     sui::event::emit(migration_event);
+}
+
+/// Walrus Blob IDを更新する内部関数
+///
+/// ## 概要
+/// MedicalPassportの`walrus_blob_id`フィールドを更新し、
+/// 更新イベントを発行するパッケージ内部関数。
+/// Walrusではデータ更新時にBlob IDが変わるため、
+/// パスポート内のIDを書き換える必要がある。
+///
+/// ## 用途
+/// - Walrus上の医療データが更新された際に、新しいBlob IDをパスポートに反映
+/// - データ更新の監査証跡としてイベントを発行
+///
+/// ## パラメータ
+/// - `passport`: 更新対象のMedicalPassportへの可変参照
+/// - `new_blob_id`: 新しいWalrus Blob ID（空文字列不可）
+/// - `clock`: 現在時刻取得用のClock参照
+///
+/// ## 副作用
+/// - `passport.walrus_blob_id`が`new_blob_id`に更新される
+/// - `PassportUpdatedEvent`イベントが発行される
+///
+/// ## 注意
+/// - この関数はパッケージスコープ（`public(package)`）のため、
+///   外部から直接呼び出し不可
+/// - エントリー関数からのみ呼び出されることを想定
+public(package) fun update_walrus_blob_id_internal(
+    passport: &mut MedicalPassport,
+    new_blob_id: String,
+    clock: &Clock
+) {
+    // 現在のwalrus_blob_idを保存（イベント発行時に使用）
+    let old_blob_id = passport.walrus_blob_id;
+
+    // walrus_blob_idを更新
+    passport.walrus_blob_id = new_blob_id;
+
+    // 現在時刻を取得
+    let timestamp_ms = sui::clock::timestamp_ms(clock);
+
+    // パスポートIDを取得
+    let passport_id = object::id(passport);
+
+    // 更新イベントを発行
+    let updated_event = PassportUpdatedEvent {
+        passport_id,
+        old_blob_id,
+        new_blob_id,
+        timestamp_ms,
+    };
+    sui::event::emit(updated_event);
 }
 
 // ============================================================
