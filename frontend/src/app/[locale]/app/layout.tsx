@@ -120,7 +120,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
         style={{ backgroundColor: theme.colors.primary }}
       >
         <div className="flex items-center flex-shrink-0">
-          <span className="mr-2 text-2xl md:text-3xl">🏥</span>
+          <img 
+            src="/CurePocket.png" 
+            alt={t('appName')} 
+            className="mr-2 h-12 w-12 md:h-[60px] md:w-[60px]"
+          />
           <span className="text-xl font-bold text-white md:text-2xl">{t('appName')}</span>
         </div>
         

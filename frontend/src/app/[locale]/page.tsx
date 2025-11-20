@@ -103,7 +103,11 @@ export default function LandingPage() {
         {/* Logo and Title */}
         <div className="mb-8 text-center">
           <div className="mb-4 flex items-center justify-center">
-            <span className="text-6xl">🏥</span>
+            <img 
+              src="/CurePocket.png" 
+              alt={t('appName')} 
+              className="h-36 w-36 md:h-48 md:w-48"
+            />
           </div>
           <h1 className="mb-2 text-4xl font-bold text-gray-900">
             {t('appName')}
