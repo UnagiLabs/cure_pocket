@@ -70,11 +70,13 @@ update_env_file() {
 
     # 環境変数ファイルが存在しない場合は作成
     if [[ ! -f "$env_file" ]]; then
-        log_warning "環境変数ファイルが見つかりません。作成します..."
-        if ! create_env_from_template "$network"; then
-            log_error "環境変数ファイルの作成に失敗しました。"
-            return 1
-        fi
+        log_info "環境変数ファイルを作成します: ${env_file}"
+        # 空ファイルを作成（必要に応じてコメントヘッダーを追加）
+        {
+            echo "# Environment variables for ${network}"
+            echo "# Generated at: $(date '+%Y-%m-%d %H:%M:%S')"
+            echo ""
+        } > "$env_file"
     fi
 
     # キーが既に存在する場合は更新、存在しない場合は追加
