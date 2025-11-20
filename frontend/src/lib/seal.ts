@@ -10,112 +10,14 @@
  * - SessionKey with wallet signature for time-limited access
  * - Programmable Transaction Blocks (PTB) for policy verification
  *
- * Official Documentation: https://github.com/mystenlabs/seal
+ * Official Documentation: https://seal-docs.wal.app/
  */
 
+import { fromHex } from "@mysten/bcs";
+import { EncryptedObject, SealClient, SessionKey } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { fromHEX } from "@mysten/bcs";
 import type { HealthData } from "@/types/healthData";
-
-// ==========================================
-// Seal SDK Imports
-// ==========================================
-// TODO: Install @mysten/seal package
-// npm install @mysten/seal
-
-// import { SealClient, SessionKey, getAllowlistedKeyServers } from "@mysten/seal";
-
-// Temporary type definitions until @mysten/seal is installed
-interface ServerConfig {
-  objectId: string;
-  weight: number;
-  apiKeyName?: string;
-  apiKey?: string;
-}
-
-interface SealClientConfig {
-  suiClient: SuiClient;
-  serverConfigs: ServerConfig[];
-  verifyKeyServers?: boolean;
-}
-
-interface EncryptOptions {
-  threshold: number;
-  packageId: Uint8Array;
-  id: Uint8Array;
-  data: Uint8Array;
-}
-
-interface EncryptResult {
-  encryptedObject: Uint8Array;
-  key: Uint8Array;
-}
-
-interface SessionKeyCreateOptions {
-  address: string;
-  packageId: Uint8Array;
-  ttlMin: number;
-  suiClient: SuiClient;
-}
-
-interface DecryptOptions {
-  data: Uint8Array;
-  sessionKey: SessionKeyInstance;
-  txBytes: Uint8Array;
-}
-
-interface SessionKeyInstance {
-  getPersonalMessage(): Uint8Array;
-  setPersonalMessageSignature(signature: Uint8Array): void;
-}
-
-// Mock implementation - Replace with real @mysten/seal imports
-class MockSealClient {
-  constructor(_config: SealClientConfig) {}
-
-  async encrypt(options: EncryptOptions): Promise<EncryptResult> {
-    console.warn("Using mock Seal encryption - install @mysten/seal package");
-    // Mock: just return data as-is
-    return {
-      encryptedObject: options.data,
-      key: new Uint8Array(32), // Mock symmetric key
-    };
-  }
-
-  async decrypt(options: DecryptOptions): Promise<Uint8Array> {
-    console.warn("Using mock Seal decryption - install @mysten/seal package");
-    // Mock: just return data as-is
-    return options.data;
-  }
-}
-
-class MockSessionKey implements SessionKeyInstance {
-  private message: Uint8Array;
-  private signature: Uint8Array | null = null;
-
-  constructor(options: SessionKeyCreateOptions) {
-    // Create a mock message to sign
-    const encoder = new TextEncoder();
-    this.message = encoder.encode(
-      `Seal SessionKey for ${options.address} expires at ${Date.now() + options.ttlMin * 60 * 1000}`,
-    );
-  }
-
-  getPersonalMessage(): Uint8Array {
-    return this.message;
-  }
-
-  setPersonalMessageSignature(signature: Uint8Array): void {
-    this.signature = signature;
-  }
-
-  static async create(
-    options: SessionKeyCreateOptions,
-  ): Promise<MockSessionKey> {
-    return new MockSessionKey(options);
-  }
-}
 
 // ==========================================
 // Environment Configuration
@@ -125,9 +27,10 @@ class MockSessionKey implements SessionKeyInstance {
  * Seal KeyServer ObjectIds from environment
  * Comma-separated list of key server object IDs
  */
-const SEAL_KEY_SERVERS = process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
-  .map((id) => id.trim())
-  .filter(Boolean) || [];
+const SEAL_KEY_SERVERS =
+  process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
+    .map((id) => id.trim())
+    .filter(Boolean) || [];
 
 /**
  * Default threshold (t-of-n)
@@ -148,8 +51,19 @@ const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 /**
  * Sui network for key server lookup
  */
-const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK ||
-  "testnet") as "mainnet" | "testnet" | "devnet";
+const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
+  | "mainnet"
+  | "testnet"
+  | "devnet"
+  | "localnet";
+
+/**
+ * Verify key server URLs against on-chain metadata
+ * Enable in production to prevent endpoint spoofing
+ */
+const VERIFY_KEY_SERVERS =
+  (process.env.NEXT_PUBLIC_SEAL_VERIFY_KEY_SERVERS || "").toLowerCase() ===
+  "true";
 
 // ==========================================
 // Core Seal Functions
@@ -161,26 +75,16 @@ const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK ||
  * @param network - Sui network (testnet, mainnet, devnet)
  * @returns Array of key server object IDs
  */
-function getAllowlistedKeyServers(
-  network: "mainnet" | "testnet" | "devnet",
+function resolveKeyServers(
+  network: "mainnet" | "testnet" | "devnet" | "localnet",
 ): string[] {
-  // TODO: Replace with actual getAllowlistedKeyServers from @mysten/seal
-  // For now, return environment variable or empty array
   if (SEAL_KEY_SERVERS.length > 0) {
     return SEAL_KEY_SERVERS;
   }
-
-  // Fallback to some known testnet key servers
-  if (network === "testnet") {
-    return [
-      // Mysten Labs testnet key servers (examples from docs)
-      // Note: These need to be replaced with actual Object IDs
-      // "0x...", // mysten-testnet-1
-      // "0x...", // mysten-testnet-2
-    ];
-  }
-
-  return [];
+  // No SDK helper available in @mysten/seal v0.9.x; require env configuration.
+  throw new Error(
+    `No Seal key servers configured for ${network}. Set NEXT_PUBLIC_SEAL_KEY_SERVERS.`,
+  );
 }
 
 /**
@@ -190,9 +94,9 @@ function getAllowlistedKeyServers(
  * @returns Initialized SealClient instance
  * @throws Error if KeyServer configuration is invalid
  */
-export function createSealClient(suiClient: SuiClient): MockSealClient {
+export function createSealClient(suiClient: SuiClient): SealClient {
   // Get key server object IDs
-  const serverObjectIds = getAllowlistedKeyServers(SUI_NETWORK);
+  const serverObjectIds = resolveKeyServers(SUI_NETWORK);
 
   if (serverObjectIds.length === 0) {
     throw new Error(
@@ -201,17 +105,16 @@ export function createSealClient(suiClient: SuiClient): MockSealClient {
   }
 
   // Create server configs with equal weights
-  const serverConfigs: ServerConfig[] = serverObjectIds.map((objectId) => ({
+  const serverConfigs = serverObjectIds.map((objectId) => ({
     objectId,
     weight: 1,
   }));
 
   // Initialize SealClient
-  // TODO: Replace MockSealClient with real SealClient from @mysten/seal
-  return new MockSealClient({
+  return new SealClient({
     suiClient,
     serverConfigs,
-    verifyKeyServers: false, // Set to true in production
+    verifyKeyServers: VERIFY_KEY_SERVERS,
   });
 }
 
@@ -231,14 +134,13 @@ export async function createSessionKey(options: {
   address: string;
   suiClient: SuiClient;
   ttlMin?: number;
-}): Promise<MockSessionKey> {
+}): Promise<SessionKey> {
   const { address, suiClient, ttlMin = DEFAULT_SESSION_TTL_MIN } = options;
 
   // Create SessionKey
-  // TODO: Replace MockSessionKey with real SessionKey from @mysten/seal
-  const sessionKey = await MockSessionKey.create({
+  const sessionKey = await SessionKey.create({
     address,
-    packageId: fromHEX(PACKAGE_ID),
+    packageId: PACKAGE_ID,
     ttlMin,
     suiClient,
   });
@@ -257,13 +159,15 @@ export async function createSessionKey(options: {
  */
 export async function generateSealId(
   passportObjectId: string,
-): Promise<Uint8Array> {
+): Promise<string> {
   // Use SHA-256 to generate deterministic seal_id
   const encoder = new TextEncoder();
   const data = encoder.encode(passportObjectId);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
-  return new Uint8Array(hashBuffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
@@ -280,8 +184,8 @@ export async function generateSealId(
  */
 export async function encryptHealthData(params: {
   healthData: HealthData;
-  sealClient: MockSealClient;
-  sealId: Uint8Array;
+  sealClient: SealClient;
+  sealId: string; // hex string (without package prefix)
   threshold?: number;
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
   const {
@@ -298,7 +202,7 @@ export async function encryptHealthData(params: {
   // Encrypt with Seal
   const { encryptedObject, key: backupKey } = await sealClient.encrypt({
     threshold,
-    packageId: fromHEX(PACKAGE_ID),
+    packageId: PACKAGE_ID,
     id: sealId,
     data,
   });
@@ -321,11 +225,22 @@ export async function encryptHealthData(params: {
  */
 export async function decryptHealthData(params: {
   encryptedData: Uint8Array;
-  sealClient: MockSealClient;
-  sessionKey: MockSessionKey;
+  sealClient: SealClient;
+  sessionKey: SessionKey;
   txBytes: Uint8Array;
+  sealId?: string;
 }): Promise<HealthData> {
-  const { encryptedData, sealClient, sessionKey, txBytes } = params;
+  const { encryptedData, sealClient, sessionKey, txBytes, sealId } = params;
+
+  // Optional sanity check: ensure the encrypted object matches expected id
+  if (sealId) {
+    const parsed = EncryptedObject.parse(encryptedData);
+    const normalize = (value: string) =>
+      value.startsWith("0x") ? value.slice(2) : value;
+    if (normalize(parsed.id) !== normalize(sealId)) {
+      throw new Error("Encrypted object seal_id mismatch");
+    }
+  }
 
   // Decrypt with Seal
   const decryptedBytes = await sealClient.decrypt({
@@ -356,7 +271,7 @@ export async function buildPatientAccessPTB(params: {
   passportObjectId: string;
   registryObjectId: string;
   suiClient: SuiClient;
-  sealId: Uint8Array;
+  sealId: string;
 }): Promise<Uint8Array> {
   const { passportObjectId, registryObjectId, suiClient, sealId } = params;
 
@@ -367,7 +282,7 @@ export async function buildPatientAccessPTB(params: {
   tx.moveCall({
     target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
     arguments: [
-      tx.pure.vector("u8", Array.from(sealId)), // Identity as vector<u8>
+      tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
       tx.object(passportObjectId),
       tx.object(registryObjectId),
     ],
@@ -393,7 +308,7 @@ export async function buildConsentAccessPTB(params: {
   registryObjectId: string;
   consentTokenObjectId: string;
   suiClient: SuiClient;
-  sealId: Uint8Array;
+  sealId: string;
 }): Promise<Uint8Array> {
   const {
     passportObjectId,
@@ -409,7 +324,7 @@ export async function buildConsentAccessPTB(params: {
   tx.moveCall({
     target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
     arguments: [
-      tx.pure.vector("u8", Array.from(sealId)), // Identity as vector<u8>
+      tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
       tx.object(passportObjectId),
       tx.object(registryObjectId),
       tx.object(consentTokenObjectId),
@@ -441,12 +356,10 @@ export async function buildConsentAccessPTB(params: {
  * @param signPersonalMessage - Wallet's signPersonalMessage function
  */
 export async function signSessionKey(
-  sessionKey: MockSessionKey,
-  signPersonalMessage: (
-    message: Uint8Array,
-  ) => Promise<{ signature: Uint8Array }>,
+  sessionKey: SessionKey,
+  signPersonalMessage: (message: Uint8Array) => Promise<{ signature: string }>,
 ): Promise<void> {
   const message = sessionKey.getPersonalMessage();
   const { signature } = await signPersonalMessage(message);
-  sessionKey.setPersonalMessageSignature(signature);
+  await sessionKey.setPersonalMessageSignature(signature);
 }

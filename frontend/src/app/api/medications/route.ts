@@ -13,6 +13,7 @@
  * WRITE: medications[] → encrypt → walrus → update passport
  */
 
+import { type ExportedSessionKey, SessionKey } from "@mysten/seal";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   buildPatientAccessPTB,
@@ -27,14 +28,6 @@ import type { Medication } from "@/types";
 // ==========================================
 // Type Definitions
 // ==========================================
-
-/**
- * SessionKey from request header
- */
-interface SessionKeyHeader {
-  signature: string; // Base64 encoded signature
-  expiresAt: number; // Unix timestamp in milliseconds
-}
 
 /**
  * Error response format
@@ -59,10 +52,10 @@ interface ErrorResponse {
  * @returns Parsed SessionKey with Uint8Array signature
  * @throws Error if header missing or invalid
  */
-function parseSessionKey(request: NextRequest): {
-  signature: Uint8Array;
-  expiresAt: number;
-} {
+function parseSessionKey(
+  request: NextRequest,
+  suiClient: ReturnType<typeof getSuiClient>,
+): SessionKey {
   const headerValue = request.headers.get("X-Session-Key");
 
   if (!headerValue) {
@@ -70,22 +63,19 @@ function parseSessionKey(request: NextRequest): {
   }
 
   try {
-    const parsed = JSON.parse(headerValue) as SessionKeyHeader;
-
-    // Validate required fields
-    if (!parsed.signature || typeof parsed.expiresAt !== "number") {
-      throw new Error("Invalid SessionKey format");
+    // Allow either raw JSON or base64-encoded JSON
+    let jsonString = headerValue;
+    try {
+      const decoded = Buffer.from(headerValue, "base64").toString("utf8");
+      if (decoded.trim().startsWith("{")) {
+        jsonString = decoded;
+      }
+    } catch {
+      // not base64, assume raw JSON
     }
 
-    // Decode base64 signature to Uint8Array
-    const signatureBytes = Uint8Array.from(atob(parsed.signature), (c) =>
-      c.charCodeAt(0),
-    );
-
-    return {
-      signature: signatureBytes,
-      expiresAt: parsed.expiresAt,
-    };
+    const exported = JSON.parse(jsonString) as ExportedSessionKey;
+    return SessionKey.import(exported, suiClient);
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to parse SessionKey: ${error.message}`);
@@ -100,8 +90,8 @@ function parseSessionKey(request: NextRequest): {
  * @param sessionKey - SessionKey to validate
  * @throws Error if expired
  */
-function validateSessionKey(sessionKey: { expiresAt: number }): void {
-  if (Date.now() > sessionKey.expiresAt) {
+function validateSessionKey(sessionKey: SessionKey): void {
+  if (sessionKey.isExpired()) {
     throw new Error("SessionKey has expired");
   }
 }
@@ -161,8 +151,9 @@ function errorResponse(
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const suiClient = getSuiClient();
     // 1. Parse and validate SessionKey
-    const sessionKey = parseSessionKey(request);
+    const sessionKey = parseSessionKey(request, suiClient);
     validateSessionKey(sessionKey);
 
     // 2. Get wallet address from query
@@ -190,13 +181,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
 
     // 5. Build PTB for patient-only access
-    const suiClient = getSuiClient();
     const registryId = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
 
     const accessPolicyTxBytes = await buildPatientAccessPTB({
       passportObjectId: passport.id,
       registryObjectId: registryId,
       suiClient,
+      sealId: passport.sealId,
     });
 
     // 6. Decrypt with Seal
@@ -206,7 +197,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       encryptedData,
       sealClient,
       sessionKey,
-      accessPolicyTxBytes,
+      txBytes: accessPolicyTxBytes,
+      sealId: passport.sealId,
     });
 
     // 7. Return medications
@@ -275,8 +267,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const suiClient = getSuiClient();
     // 1. Parse and validate SessionKey
-    const sessionKey = parseSessionKey(request);
+    const sessionKey = parseSessionKey(request, suiClient);
     validateSessionKey(sessionKey);
 
     // 2. Parse request body
@@ -317,13 +310,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       passport.walrusBlobId,
     );
 
-    const suiClient = getSuiClient();
     const registryId = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
 
     const accessPolicyTxBytes = await buildPatientAccessPTB({
       passportObjectId: passport.id,
       registryObjectId: registryId,
       suiClient,
+      sealId: passport.sealId,
     });
 
     const sealClient = createSealClient(suiClient);
@@ -332,7 +325,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       encryptedData,
       sealClient,
       sessionKey,
-      accessPolicyTxBytes,
+      txBytes: accessPolicyTxBytes,
+      sealId: passport.sealId,
     });
 
     // 5. Update medications
@@ -346,7 +340,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // 6. Encrypt updated HealthData
-    const newEncryptedData = await encryptHealthData({
+    const { encryptedObject: encryptedPayload } = await encryptHealthData({
       healthData,
       sealClient,
       sealId: passport.sealId,
@@ -354,7 +348,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // 7. Upload to Walrus
-    const blobReference = await uploadToWalrus(newEncryptedData);
+    const blobReference = await uploadToWalrus(encryptedPayload);
 
     // 8. Return new blob reference
     // Note: Client must call update_walrus_blob_id on-chain
