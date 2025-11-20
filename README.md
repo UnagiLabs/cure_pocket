@@ -10,6 +10,7 @@ CurePocket（キュアポケット）は、
 - Seal で暗号鍵とアクセス権を制御  
 - Sui のオブジェクトモデルと SBT で「この人のヘルスパスポート」を表現  
 - Connect Sui Wallet だけで利用開始（メールアドレス登録不要）  
+- Seal によるアクセス制御で、患者本人のみが医療データを復号可能  
 - 医療者に見せたいときだけ、限定的な閲覧権限（QR・リンク）を発行  
 - 匿名化した統計データを研究・企業に提供し、その価値をユーザーへ還元（Opt-in）
 
@@ -91,8 +92,11 @@ CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマ�
 
 - すべての個人データは暗号化して **Walrus** に保存  
 - 暗号鍵の管理とアクセス権限の付与は **Seal**  
-- Sui 上には：
-  - `HealthPassportSBT`（1人に1つのSBT）  
+- Sui 上には（実装済み）：
+  - `MedicalPassport`（1人に1つのSBT、譲渡不可）  
+  - `PassportRegistry`（1ウォレット1枚制約を管理する共有オブジェクト）  
+  - Sealアクセス制御（`seal_accessor`モジュール）  
+- Sui 上には（将来実装予定）：
   - `MedicalVault`（各種データへのインデックス）  
   - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry` など  
   - `ConsentToken`（閲覧権）  
@@ -117,17 +121,20 @@ CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマ�
   **暗号鍵の管理とアクセス制御が最重要**
 - Seal を使うことで：
   - 患者ごとの暗号鍵を安全に管理  
-  - 医師・薬剤師・研究者への **一時的な復号権限** を発行  
+  - **患者本人のみが復号可能**（実装済み：`seal_approve_patient_only`）  
+  - 医師・薬剤師・研究者への **一時的な復号権限** を発行（将来実装予定）  
   - 「誰が・いつ・どのデータにアクセスできるか」をコードで定義
 
 ### Sui を使う理由
 
 - オブジェクト指向のモデルがヘルスパスポートと相性が良い：
-  - `HealthPassportSBT`（唯一のパスポート）  
-  - `MedicalVault`（データの入り口）  
-  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry`  
-  - `ConsentToken`（閲覧権）  
-  - `AnalyticsPool` / `RewardShare`（データ経済）
+  - `MedicalPassport`（唯一のパスポート、実装済み）  
+  - `PassportRegistry`（1ウォレット1枚制約、実装済み）  
+  - Sealアクセス制御（実装済み）  
+  - `MedicalVault`（データの入り口、将来実装予定）  
+  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry`（将来実装予定）  
+  - `ConsentToken`（閲覧権、将来実装予定）  
+  - `AnalyticsPool` / `RewardShare`（データ経済、将来実装予定）
 - 所有権・譲渡不可（SBT）・アクセス権のロジックを  
   L1レベルで安全に扱える
 - 高速・低レイテンシで、QRを見せてすぐ情報にアクセスする  
@@ -167,8 +174,13 @@ objects)    blobs)          control)
   - 多言語対応（日本語/英語/中国語/フランス語/ポルトガル語 など）
   - Emergency Health Card の表示・QR生成
 
-- **Sui**
-  - `HealthPassportSBT`：ユーザーのヘルスパスポートを示す譲渡不可トークン  
+- **Sui**（実装済み）
+  - `MedicalPassport`：ユーザーのヘルスパスポートを示す譲渡不可トークン（SBT）  
+  - `PassportRegistry`：1ウォレット1枚制約を管理する共有オブジェクト  
+  - `seal_accessor`：Sealキーサーバーからの復号リクエストに対するアクセス制御  
+  - `admin`：管理者によるパスポート移行機能
+
+- **Sui**（将来実装予定）
   - `MedicalVault`：Walrus 上のデータ群へのインデックス  
   - 各種 `*Entry`：薬・検査・画像・病歴などへの参照  
   - `ConsentToken`：一時的な閲覧権限  
@@ -180,7 +192,8 @@ objects)    blobs)          control)
 
 - **Seal**
   - 暗号鍵管理（患者ごと、カテゴリーごと）  
-  - `ConsentToken` に応じた復号権の付与・失効
+  - **患者本人のみが復号可能**（実装済み：`seal_approve_patient_only`）  
+  - `ConsentToken` に応じた復号権の付与・失効（将来実装予定）
 
 ---
 
@@ -224,19 +237,26 @@ CurePocket は、データを **2つのレイヤー** に分けて扱います�
 
 1. ユーザーがブラウザで CurePocket を開く  
 2. `Connect Sui Wallet` ボタンからウォレット接続  
-3. 初回アクセス時：
-   - `HealthPassportSBT` と `MedicalVault` をミント（SBTは譲渡不可）
-4. ユーザーが薬情報を追加：
+3. 初回アクセス時（実装済み）：
+   - `MedicalPassport` SBT をミント（譲渡不可、1ウォレット1枚制約）
+   - Walrus に暗号化データをアップロードし、Blob ID を取得
+   - Seal で暗号鍵を生成し、Seal ID を取得
+   - パスポートに `walrus_blob_id`、`seal_id`、`country_code` を設定
+4. ユーザーが医療データを復号（実装済み）：
+   - Sealキーサーバーに復号リクエストを送信
+   - Sealキーサーバーが `.dry_run_transaction_block` で `seal_approve_patient_only` を実行
+   - パスポート所有者のみが復号可能（`PassportRegistry`で所有権検証）
+5. ユーザーが薬情報を追加（将来実装予定）：
    - フロントで入力（MVPではフォーム入力）
    - FHIR風 JSON を生成し、暗号化して Walrus に保存
    - Blob ID を用いて Sui 上で `MedicationEntry` を作成
-5. 緊急用ヘルスカードを表示：
+6. 緊急用ヘルスカードを表示（将来実装予定）：
    - 現在の薬・アレルギー・重要な病歴を英語で表示
    - 医療者向けビューへの QR コードを表示
-6. 医療者が QR を読み取る：
+7. 医療者が QR を読み取る（将来実装予定）：
    - バックエンド側で `ConsentToken` を発行
    - 閲覧用URLにリダイレクトし、限定的な情報だけ参照できる
-7. Analytics のデモ（MVPではモック）：
+8. Analytics のデモ（MVPではモック、将来実装予定）：
    - 匿名化された統計ダッシュボードを表示
    - 「データが使われるとユーザーに報酬が還元される」フローを説明
 
@@ -265,7 +285,7 @@ CurePocket は、データを **2つのレイヤー** に分けて扱います�
 - 医療現場のニーズと分散型技術の橋渡しを担当
 
 **Butasan – バックエンド / スマートコントラクト / セキュリティエンジニア**  
-- Sui スマートコントラクトの実装（HealthPassportSBT, MedicalVault, MedicationEntry, ConsentToken, AnalyticsPool 等）を担当  
+- Sui スマートコントラクトの実装を担当
 - バックエンドロジック、Walrus・Seal との連携、システムアーキテクチャ全般を構築  
 - 暗号化フロー、データ整合性、セキュリティ設計を重視  
 - グローバルかつ安全なヘルスデータ基盤を支えるコアエンジニア
@@ -281,5 +301,4 @@ CurePocket は、データを **2つのレイヤー** に分けて扱います�
 - Key & Access: Seal（暗号鍵管理・アクセス制御）
 - Auth (MVP): Connect Sui Wallet  
   - 将来的には zkLogin（Google/Apple など）対応予定
-
 

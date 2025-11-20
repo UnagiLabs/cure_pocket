@@ -6,7 +6,7 @@ edition = "2024.beta"
 [dependencies]
 
 [addresses]
-cure_pocket_contract = "0x0"
+cure_pocket = "0x0"
 
 [dev-dependencies]
 

@@ -1,0 +1,87 @@
+/// Cure Pocket - メインモジュール
+///
+/// パッケージ初期化と管理者権限の定義
+module cure_pocket::cure_pocket;
+
+use cure_pocket::medical_passport;
+
+// ============================================================
+// 管理者権限構造体
+// ============================================================
+
+/// 管理者権限オブジェクト
+///
+/// ## 用途
+/// - 将来的な管理者専用機能の権限証明
+/// - この構造体を所有していること自体が権限の証明となる
+///
+/// ## 譲渡性
+/// - `has key, store` を持つため、譲渡可能
+/// - 必要に応じて管理権限を他のアドレスに委譲できる
+public struct AdminCap has key, store {
+    id: object::UID
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+
+/// パッケージ初期化関数
+///
+/// ## 実行タイミング
+/// - パッケージがSuiネットワークにデプロイされた際に自動実行される
+///
+/// ## 動作
+/// - `AdminCap` を1つ生成し、デプロイヤー（tx送信者）に転送
+/// - `PassportRegistry` を1つ生成し、共有オブジェクトとして公開
+///
+/// ## パラメータ
+/// - `ctx`: トランザクションコンテキスト
+fun init(ctx: &mut tx_context::TxContext) {
+    // AdminCap を生成してデプロイヤーに転送
+    let admin = AdminCap {
+        id: object::new(ctx)
+    };
+    sui::transfer::public_transfer(admin, tx_context::sender(ctx));
+
+    // PassportRegistry を生成して共有オブジェクトとして公開
+    medical_passport::create_and_share_passport_registry(ctx);
+}
+
+// ============================================================
+// テスト専用関数
+// ============================================================
+
+/// テスト専用: AdminCapを生成して返す
+///
+/// ## 注意
+/// - この関数はテストコードからのみ呼び出し可能（`#[test_only]`）
+/// - 本番環境では `init()` のみが AdminCap を生成する
+///
+/// ## 用途
+/// - ユニットテストでの AdminCap 取得
+/// - transfer をシミュレートせずに直接 AdminCap を取得
+///
+/// ## パラメータ
+/// - `ctx`: トランザクションコンテキスト
+///
+/// ## 返り値
+/// - `AdminCap`: 新しく生成された管理者権限オブジェクト
+#[test_only]
+public fun test_init_for_tests(ctx: &mut tx_context::TxContext): AdminCap {
+    AdminCap {
+        id: object::new(ctx)
+    }
+}
+
+/// テスト専用: init関数を直接呼び出し可能にする
+///
+/// ## 用途
+/// - test_scenario での init() のシミュレーション
+///
+/// ## パラメータ
+/// - `ctx`: トランザクションコンテキスト
+#[test_only]
+public fun init_for_testing(ctx: &mut tx_context::TxContext) {
+    init(ctx);
+}
