@@ -4,6 +4,7 @@ import type {
   MedicalHistory,
   LabResult,
   ImagingReport,
+  VitalSign,
 } from '@/types';
 
 export interface CreateMedicationPayload {
@@ -73,7 +74,20 @@ export interface FetchImagingReportsResponse {
 
 export interface CreateConsentTokenPayload {
   walletAddress: string;
-  categories?: ('medications' | 'allergies' | 'histories' | 'labs' | 'imaging')[]; // 表示するカテゴリー
+  categories?: ('medications' | 'allergies' | 'histories' | 'labs' | 'imaging' | 'vitals')[]; // 表示するカテゴリー
+}
+
+export interface CreateVitalSignPayload {
+  walletAddress: string;
+  vitalSign: Omit<VitalSign, 'id' | 'suiObjectId' | 'walrusBlobId'>;
+}
+
+export interface CreateVitalSignResponse {
+  vitalSign: VitalSign;
+}
+
+export interface FetchVitalSignsResponse {
+  vitalSigns: VitalSign[];
 }
 
 export interface CreateConsentTokenResponse {
@@ -288,5 +302,42 @@ export const apiClient = {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete imaging report');
+  },
+
+  // VitalSign API methods
+  async fetchVitalSigns(walletAddress: string): Promise<FetchVitalSignsResponse> {
+    const res = await fetch(`/api/vitals?wallet=${walletAddress}`);
+    if (!res.ok) throw new Error('Failed to fetch vital signs');
+    return res.json();
+  },
+
+  async createVitalSign(payload: CreateVitalSignPayload): Promise<CreateVitalSignResponse> {
+    const res = await fetch('/api/vitals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Failed to create vital sign');
+    return res.json();
+  },
+
+  async updateVitalSign(
+    id: string,
+    updates: Partial<VitalSign>
+  ): Promise<CreateVitalSignResponse> {
+    const res = await fetch(`/api/vitals/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (!res.ok) throw new Error('Failed to update vital sign');
+    return res.json();
+  },
+
+  async deleteVitalSign(id: string): Promise<void> {
+    const res = await fetch(`/api/vitals/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete vital sign');
   },
 };

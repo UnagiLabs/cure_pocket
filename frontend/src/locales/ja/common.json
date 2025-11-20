@@ -68,7 +68,8 @@
     "night": "夜",
     "asNeeded": "頓服",
     "clinic": "クリニック",
-    "warning": "注意"
+    "warning": "注意",
+    "noMedications": "服用中の薬は登録されていません"
   },
   "card": {
     "title": "緊急カード",
@@ -184,7 +185,23 @@
     "testedBy": "検査機関",
     "category": "カテゴリー",
     "notes": "メモ",
-    "noResults": "検査値は登録されていません"
+    "noResults": "検査値は登録されていません",
+    "allCategories": "すべて",
+    "selectTest": "検査項目を選択してください",
+    "valuePlaceholder": "値を入力してください",
+    "validation": {
+      "required": "検査項目と値を入力してください"
+    },
+    "categories": {
+      "CBC": "血算",
+      "electrolyte": "電解質",
+      "renal": "腎機能",
+      "glucose": "糖代謝",
+      "liver": "肝機能",
+      "inflammation": "炎症",
+      "endocrine": "内分泌",
+      "urine": "尿定性"
+    }
   },
   "imaging": {
     "title": "画像レポート",
@@ -212,7 +229,8 @@
       "allergies": "アレルギー",
       "histories": "重要な病歴",
       "labs": "最新の検査値",
-      "imaging": "最新の画像"
+      "imaging": "最新の画像",
+      "vitals": "バイタルデータ"
     },
     "recentUpdates": "最近の更新",
     "addData": "データを追加"
@@ -222,7 +240,38 @@
     "allergy": "アレルギー",
     "history": "病歴",
     "lab": "検査値",
-    "imaging": "画像レポート"
+    "imaging": "画像レポート",
+    "vital": "バイタルデータ"
+  },
+  "vitals": {
+    "title": "バイタルデータ",
+    "add": "バイタルデータを追加",
+    "type": "タイプ",
+    "bloodPressure": "血圧",
+    "heartRate": "心拍数",
+    "bloodGlucose": "血糖値",
+    "temperature": "体温",
+    "weight": "体重",
+    "systolic": "最高血圧",
+    "diastolic": "最低血圧",
+    "value": "値",
+    "unit": "単位",
+    "recordedAt": "記録日時",
+    "notes": "メモ",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "mgdL": "mg/dL",
+    "celsius": "°C",
+    "kg": "kg",
+    "noData": "バイタルデータがありません",
+    "viewGraph": "グラフを表示",
+    "viewList": "リストを表示",
+    "period": {
+      "week": "1週間",
+      "month": "1ヶ月",
+      "3months": "3ヶ月",
+      "year": "1年"
+    }
   },
   "profile": {
     "name": "名前"

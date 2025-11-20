@@ -2,7 +2,7 @@
 
 import { useApp } from '@/contexts/AppContext';
 import { useTranslations, useLocale } from 'next-intl';
-import { Package, AlertTriangle, FileText, FlaskConical, Scan } from 'lucide-react';
+import { Package, AlertTriangle, FileText, FlaskConical, Scan, Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTheme } from '@/lib/themes';
 
@@ -23,7 +23,7 @@ export default function AddDataPage() {
       icon: Package,
       title: t('dataTypes.medication'),
       description: t('add.manualDescription'),
-      route: `/${locale}/app/add/medication`,
+      route: `/${locale}/app/medications?mode=add`,
       color: theme.colors.primary,
     },
     {
@@ -31,7 +31,7 @@ export default function AddDataPage() {
       icon: AlertTriangle,
       title: t('dataTypes.allergy'),
       description: t('allergies.add'),
-      route: `/${locale}/app/add/allergy`,
+      route: `/${locale}/app/allergies?mode=add`,
       color: '#EF4444',
     },
     {
@@ -39,7 +39,7 @@ export default function AddDataPage() {
       icon: FileText,
       title: t('dataTypes.history'),
       description: t('histories.add'),
-      route: `/${locale}/app/add/history`,
+      route: `/${locale}/app/histories?mode=add`,
       color: '#8B5CF6',
     },
     {
@@ -47,7 +47,7 @@ export default function AddDataPage() {
       icon: FlaskConical,
       title: t('dataTypes.lab'),
       description: t('labs.add'),
-      route: `/${locale}/app/add/lab`,
+      route: `/${locale}/app/labs?mode=add`,
       color: '#10B981',
     },
     {
@@ -55,8 +55,16 @@ export default function AddDataPage() {
       icon: Scan,
       title: t('dataTypes.imaging'),
       description: t('imaging.add'),
-      route: `/${locale}/app/add/imaging`,
+      route: `/${locale}/app/imaging?mode=add`,
       color: '#3B82F6',
+    },
+    {
+      id: 'vital',
+      icon: Heart,
+      title: t('dataTypes.vital'),
+      description: t('vitals.add'),
+      route: `/${locale}/app/vitals?mode=add`,
+      color: '#EC4899',
     },
   ];
 

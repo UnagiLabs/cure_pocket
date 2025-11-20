@@ -113,6 +113,34 @@ export interface ImagingReport {
   walrusBlobId?: string; // Walrus blob ID
 }
 
+/**
+ * バイタルデータ
+ */
+export type VitalSignType =
+  | 'blood-pressure'
+  | 'heart-rate'
+  | 'blood-glucose'
+  | 'temperature'
+  | 'weight';
+
+export interface VitalSign {
+  id: string; // UUID
+  type: VitalSignType; // バイタルタイプ
+  recordedAt: string; // ISO date-time - 記録日時
+
+  // タイプ別の値
+  systolic?: number; // 最高血圧（血圧の場合）
+  diastolic?: number; // 最低血圧（血圧の場合）
+  value?: number; // 心拍数、血糖値、体温、体重など
+  unit: string; // 'mmHg', 'bpm', 'mg/dL', '°C', 'kg' など
+
+  notes?: string; // メモ（例：測定条件、体調など）
+
+  // Backend-linked metadata
+  suiObjectId?: string; // VitalSignEntry object ID
+  walrusBlobId?: string; // Walrus blob ID
+}
+
 export interface EmergencyCardSettings {
   showName: boolean;
   displayName?: string;
@@ -235,6 +263,7 @@ export interface AppState {
   medicalHistories: MedicalHistory[];
   labResults: LabResult[];
   imagingReports: ImagingReport[];
+  vitalSigns: VitalSign[];
   settings: UserSettings;
   profile: PatientProfile | null;
   isLoading: boolean;

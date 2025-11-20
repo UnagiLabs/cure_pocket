@@ -7,6 +7,7 @@ import type {
   MedicalHistory,
   LabResult,
   ImagingReport,
+  VitalSign,
   UserSettings,
   PatientProfile,
 } from '@/types';
@@ -35,6 +36,10 @@ interface AppContextType extends AppState {
   addImagingReport: (report: ImagingReport) => void;
   updateImagingReport: (id: string, updates: Partial<ImagingReport>) => void;
   deleteImagingReport: (id: string) => void;
+  setVitalSigns: (vitalSigns: VitalSign[]) => void;
+  addVitalSign: (vitalSign: VitalSign) => void;
+  updateVitalSign: (id: string, updates: Partial<VitalSign>) => void;
+  deleteVitalSign: (id: string) => void;
   updateSettings: (settings: Partial<UserSettings>) => void;
   setProfile: (profile: PatientProfile | null) => void;
   updateProfile: (updates: Partial<PatientProfile>) => void;
@@ -60,6 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [imagingReports, setImagingReports] = useState<ImagingReport[]>([]);
+  const [vitalSigns, setVitalSigns] = useState<VitalSign[]>([]);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,6 +171,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setImagingReports((prev) => prev.filter((report) => report.id !== id));
   };
 
+  // VitalSign CRUD operations
+  const addVitalSign = (vitalSign: VitalSign) => {
+    setVitalSigns((prev) => [...prev, vitalSign]);
+  };
+
+  const updateVitalSign = (id: string, updates: Partial<VitalSign>) => {
+    setVitalSigns((prev) =>
+      prev.map((vital) => (vital.id === id ? { ...vital, ...updates } : vital))
+    );
+  };
+
+  const deleteVitalSign = (id: string) => {
+    setVitalSigns((prev) => prev.filter((vital) => vital.id !== id));
+  };
+
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -216,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         medicalHistories,
         labResults,
         imagingReports,
+        vitalSigns,
         settings,
         profile,
         isLoading,
@@ -240,6 +262,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addImagingReport,
         updateImagingReport,
         deleteImagingReport,
+        setVitalSigns,
+        addVitalSign,
+        updateVitalSign,
+        deleteVitalSign,
         updateSettings,
         setProfile,
         updateProfile,

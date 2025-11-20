@@ -40,28 +40,55 @@ export default function LandingPage() {
             return;
         }
 
-        connectWallet(
-            {
-                wallet: availableWallet,
-            },
-            {
-                onSuccess: () => {
-                    // 接続成功後、アプリにリダイレクト
-                    router.push(`/${selectedLocale}/app`);
+        // 接続中の場合は処理をスキップ
+        if (isConnecting) {
+            return;
+        }
+
+        try {
+            connectWallet(
+                {
+                    wallet: availableWallet,
                 },
-                onError: (error) => {
-                    // ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
-                    const errorMessage = error?.message || String(error);
-                    if (errorMessage.includes('User rejected') || errorMessage.includes('rejected')) {
-                        // ユーザーが意図的に拒否した場合は、静かに処理する
-                        return;
-                    }
-                    // その他のエラーの場合のみ、エラーメッセージを表示
-                    console.error('Failed to connect wallet:', error);
-                    alert(t('wallet.connectionFailed'));
+                {
+                    onSuccess: () => {
+                        // 接続成功後、アプリにリダイレクト
+                        router.push(`/${selectedLocale}/app`);
+                    },
+                    onError: (error) => {
+                        // エラーメッセージを取得
+                        const errorMessage = error?.message || String(error) || '';
+                        const errorString = errorMessage.toLowerCase();
+                        
+                        // ユーザーがリクエストを拒否した場合や、キャンセルした場合は静かに処理
+                        if (
+                            errorString.includes('user rejected') ||
+                            errorString.includes('rejected') ||
+                            errorString.includes('cancel') ||
+                            errorString.includes('denied') ||
+                            errorMessage === '' ||
+                            errorMessage === '{}'
+                        ) {
+                            // ユーザーが意図的に拒否/キャンセルした場合は、エラーログを出力しない
+                            return;
+                        }
+                        
+                        // その他のエラーの場合のみ、エラーメッセージを表示
+                        // ただし、ウォレット拡張機能の内部エラーは無視
+                        if (!errorString.includes('dapp.connect') && !errorString.includes('query')) {
+                            console.error('Failed to connect wallet:', error);
+                            alert(t('wallet.connectionFailed'));
+                        }
+                    },
                 },
-            },
-        );
+            );
+        } catch (error) {
+            // 予期しないエラーをキャッチ
+            const errorMessage = String(error || '').toLowerCase();
+            if (!errorMessage.includes('dapp.connect') && !errorMessage.includes('query')) {
+                console.error('Unexpected error during wallet connection:', error);
+            }
+        }
     };
 
   const handleLanguageChange = (newLocale: Locale) => {

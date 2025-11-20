@@ -68,7 +68,8 @@
     "night": "夜间",
     "asNeeded": "按需",
     "clinic": "诊所",
-    "warning": "警告"
+    "warning": "警告",
+    "noMedications": "未注册活动药物"
   },
   "card": {
     "title": "紧急卡",
@@ -184,7 +185,23 @@
     "testedBy": "检验机构",
     "category": "类别",
     "notes": "备注",
-    "noResults": "未注册检验结果"
+    "noResults": "未注册检验结果",
+    "allCategories": "全部",
+    "selectTest": "请选择检验项目",
+    "valuePlaceholder": "请输入值",
+    "validation": {
+      "required": "请输入检验名称和值"
+    },
+    "categories": {
+      "CBC": "血常规",
+      "electrolyte": "电解质",
+      "renal": "肾功能",
+      "glucose": "糖代谢",
+      "liver": "肝功能",
+      "inflammation": "炎症",
+      "endocrine": "内分泌",
+      "urine": "尿定性"
+    }
   },
   "imaging": {
     "title": "影像报告",
@@ -212,7 +229,8 @@
       "allergies": "过敏",
       "histories": "重要病史",
       "labs": "最新检验结果",
-      "imaging": "最新影像"
+      "imaging": "最新影像",
+      "vitals": "生命体征"
     },
     "recentUpdates": "最近更新",
     "addData": "添加数据"
@@ -222,7 +240,38 @@
     "allergy": "过敏",
     "history": "病史",
     "lab": "检验结果",
-    "imaging": "影像报告"
+    "imaging": "影像报告",
+    "vital": "生命体征"
+  },
+  "vitals": {
+    "title": "生命体征",
+    "add": "添加生命体征",
+    "type": "类型",
+    "bloodPressure": "血压",
+    "heartRate": "心率",
+    "bloodGlucose": "血糖",
+    "temperature": "体温",
+    "weight": "体重",
+    "systolic": "收缩压",
+    "diastolic": "舒张压",
+    "value": "值",
+    "unit": "单位",
+    "recordedAt": "记录时间",
+    "notes": "备注",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "mgdL": "mg/dL",
+    "celsius": "°C",
+    "kg": "kg",
+    "noData": "没有生命体征数据",
+    "viewGraph": "查看图表",
+    "viewList": "查看列表",
+    "period": {
+      "week": "1周",
+      "month": "1个月",
+      "3months": "3个月",
+      "year": "1年"
+    }
   },
   "profile": {
     "name": "姓名"

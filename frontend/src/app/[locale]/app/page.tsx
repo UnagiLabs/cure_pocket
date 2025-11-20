@@ -11,6 +11,7 @@ import {
   Scan,
   Plus,
   AlertCircle,
+  Heart,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTheme } from '@/lib/themes';
@@ -31,6 +32,7 @@ export default function HomePage() {
     medicalHistories,
     labResults,
     imagingReports,
+    vitalSigns,
     settings,
     profile,
     setMedications,
@@ -90,7 +92,7 @@ export default function HomePage() {
   const recentUpdates = useMemo(() => {
     const updates: Array<{
       id: string;
-      type: 'medication' | 'allergy' | 'history' | 'lab' | 'imaging';
+      type: 'medication' | 'allergy' | 'history' | 'lab' | 'imaging' | 'vital';
       title: string;
       date: string;
       icon: typeof Package;
@@ -146,8 +148,37 @@ export default function HomePage() {
       });
     });
 
+    // vital.typeから翻訳キーへのマッピング（型安全）
+    const vitalTypeToTranslationKey: Record<string, string> = {
+      'blood-pressure': 'bloodPressure',
+      'heart-rate': 'heartRate',
+      'blood-glucose': 'bloodGlucose',
+      'temperature': 'temperature',
+      'weight': 'weight',
+    };
+
+    vitalSigns.forEach((vital) => {
+      let title: string;
+      
+      if (vital.type === 'blood-pressure') {
+        title = `${t('vitals.bloodPressure')}: ${vital.systolic}/${vital.diastolic} ${vital.unit}`;
+      } else {
+        // マッピングから翻訳キーを取得
+        const translationKey = vitalTypeToTranslationKey[vital.type] || vital.type;
+        title = `${t(`vitals.${translationKey}`)}: ${vital.value} ${vital.unit}`;
+      }
+      
+      updates.push({
+        id: vital.id,
+        type: 'vital',
+        title,
+        date: vital.recordedAt,
+        icon: Heart,
+      });
+    });
+
     return updates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
-  }, [medications, allergies, medicalHistories, labResults, imagingReports]);
+  }, [medications, allergies, medicalHistories, labResults, imagingReports, vitalSigns, t]);
 
   const summaryCards = [
     {
@@ -184,6 +215,14 @@ export default function HomePage() {
       title: t('dashboard.summary.imaging'),
       count: imagingReports.length,
       color: '#3B82F6',
+    },
+    {
+      id: 'vitals',
+      icon: Heart,
+      title: t('dashboard.summary.vitals'),
+      count: vitalSigns.length,
+      color: '#EC4899',
+      route: `/${locale}/app/vitals`,
     },
   ];
 
@@ -230,7 +269,7 @@ export default function HomePage() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 md:gap-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         {summaryCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -243,17 +282,18 @@ export default function HomePage() {
                   histories: `/${locale}/app/histories`,
                   labs: `/${locale}/app/labs`,
                   imaging: `/${locale}/app/imaging`,
+                  vitals: `/${locale}/app/vitals`,
                 };
                 router.push(paths[card.id] || `/${locale}/app`);
               }}
-              className="rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6"
+              className="rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6 md:min-h-[140px]"
               style={{ backgroundColor: theme.colors.surface }}
             >
-              <Icon className="mx-auto mb-2 h-8 w-8" style={{ color: card.color }} />
-              <span className="block text-xs font-medium" style={{ color: theme.colors.textSecondary }}>
+              <Icon className="mx-auto mb-2 h-8 w-8 md:h-10 md:w-10" style={{ color: card.color }} />
+              <span className="block text-xs font-medium md:text-sm" style={{ color: theme.colors.textSecondary }}>
                 {card.title}
               </span>
-              <div className="mt-1 text-2xl font-bold" style={{ color: theme.colors.text }}>
+              <div className="mt-1 text-2xl font-bold md:text-3xl" style={{ color: theme.colors.text }}>
                 {card.count}
               </div>
             </button>
