@@ -46,18 +46,6 @@ interface MedicalPassportObject {
 	country_code: string;
 }
 
-/**
- * Dynamic Field info for PassportRegistry
- */
-interface DynamicFieldInfo {
-	name: {
-		type: string;
-		value: string; // Wallet address
-	};
-	objectType: string;
-	objectId: string; // MedicalPassport object ID
-}
-
 // ==========================================
 // SuiClient Singleton
 // ==========================================
@@ -258,9 +246,10 @@ export async function getAllPassports(
 			limit,
 		});
 
-		return dynamicFields.data.map((field: DynamicFieldInfo) => [
-			field.name.value, // wallet address
-			field.objectId, // passport object ID
+		return dynamicFields.data.map((field) => [
+			// Dynamic field name value is the wallet address
+			(field.name as { value: string }).value,
+			field.objectId,
 		]);
 	} catch (error) {
 		if (error instanceof Error) {

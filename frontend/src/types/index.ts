@@ -304,7 +304,7 @@ export type {
 	HealthData,
 	ImagingStudy,
 	LabItem,
-	LabResult,
+	LabResult as LabResultHealthData,
 	LocalizedString,
 	Medication as MedicationHealthData,
 	MetaData,

@@ -117,7 +117,14 @@ export function usePassport(): PassportStatus {
 				}
 
 				// bool値をデコード
-				const has_passport = bcs.de("bool", return_values[0][1]);
+				const encoded = return_values[0][1];
+				const has_passport = bcs
+					.bool()
+					.fromBase64(
+						typeof encoded === "string"
+							? encoded
+							: Buffer.from(encoded).toString("base64"),
+					);
 
 				if (!has_passport) {
 					// パスポートを所持していない場合

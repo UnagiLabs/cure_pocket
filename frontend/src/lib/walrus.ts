@@ -123,7 +123,7 @@ export async function uploadToWalrus(
 		// Upload to Walrus
 		const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs`, {
 			method: "PUT",
-			body: data,
+			body: data as unknown as BodyInit,
 			headers: {
 				"Content-Type": "application/octet-stream",
 			},

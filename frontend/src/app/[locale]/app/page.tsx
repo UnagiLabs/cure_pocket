@@ -49,7 +49,7 @@ export default function HomePage() {
 	const passport_status = usePassport();
 	const {
 		mint,
-		is_pending: is_mint_pending,
+		isPending: is_mint_pending,
 		error: mint_error,
 	} = useMintPassport();
 

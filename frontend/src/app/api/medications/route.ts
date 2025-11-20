@@ -23,7 +23,7 @@ import {
 } from "@/lib/seal";
 import { getPassportByAddress, getSuiClient } from "@/lib/suiClient";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
-import type { Medication } from "@/types";
+import type { Medication } from "@/types/healthData";
 
 // ==========================================
 // Type Definitions

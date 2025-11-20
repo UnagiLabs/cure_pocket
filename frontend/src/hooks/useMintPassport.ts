@@ -83,7 +83,7 @@ export interface UseMintPassportReturn {
 	/**
 	 * トランザクション送信中かどうか
 	 */
-	is_pending: boolean;
+	isPending: boolean;
 	/**
 	 * エラー情報
 	 */
@@ -98,7 +98,7 @@ export interface UseMintPassportReturn {
 export function useMintPassport(): UseMintPassportReturn {
 	const {
 		mutate: sign_and_execute,
-		is_pending,
+		isPending,
 		error,
 	} = useSignAndExecuteTransaction();
 	const [mint_error, set_mint_error] = useState<Error | null>(null);
@@ -139,10 +139,6 @@ export function useMintPassport(): UseMintPassportReturn {
 			sign_and_execute(
 				{
 					transaction: tx,
-					options: {
-						showEffects: true,
-						showEvents: true,
-					},
 				},
 				{
 					onSuccess: () => {
@@ -170,7 +166,7 @@ export function useMintPassport(): UseMintPassportReturn {
 
 	return {
 		mint,
-		is_pending,
+		isPending,
 		error: mint_error || (error as Error | null),
 	};
 }
