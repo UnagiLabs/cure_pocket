@@ -95,12 +95,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 			{/* タイプ選択 */}
 			<div>
 				<label
+					htmlFor="field1-1"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.type")} *
 				</label>
 				<select
+					id="field1-1"
 					value={type}
 					onChange={(e) => {
 						const nextType = e.target.value as VitalSignType;
@@ -129,12 +131,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 				<div className="grid grid-cols-2 gap-4">
 					<div>
 						<label
+							htmlFor="field2-2"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
 							{t("vitals.systolic")} *
 						</label>
 						<input
+							id="field2-2"
 							type="number"
 							value={systolic}
 							onChange={(e) => setSystolic(e.target.value)}
@@ -149,12 +153,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 					</div>
 					<div>
 						<label
+							htmlFor="field3-3"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
 							{t("vitals.diastolic")} *
 						</label>
 						<input
+							id="field3-3"
 							type="number"
 							value={diastolic}
 							onChange={(e) => setDiastolic(e.target.value)}
@@ -171,12 +177,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 			) : (
 				<div>
 					<label
+						htmlFor="field4-4"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{getTypeLabel(type)} *
 					</label>
 					<input
+						id="field4-4"
 						type="number"
 						value={value}
 						onChange={(e) => setValue(e.target.value)}
@@ -194,12 +202,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 			{/* 測定日時 */}
 			<div>
 				<label
+					htmlFor="field5-5"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.recordedAt")} *
 				</label>
 				<input
+					id="field5-5"
 					type="datetime-local"
 					value={recordedAt}
 					onChange={(e) => setRecordedAt(e.target.value)}
@@ -215,12 +225,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 			{/* メモ */}
 			<div>
 				<label
+					htmlFor="field6-6"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.notes")}
 				</label>
 				<textarea
+					id="field6-6"
 					value={notes}
 					onChange={(e) => setNotes(e.target.value)}
 					className="w-full rounded-lg border p-3"

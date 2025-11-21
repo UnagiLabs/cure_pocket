@@ -140,6 +140,7 @@ export default function VitalsPage() {
 					{t("vitals.title")}
 				</h1>
 				<button
+					type="button"
 					onClick={openAdd}
 					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
 					style={{ backgroundColor: theme.colors.primary }}
@@ -154,6 +155,7 @@ export default function VitalsPage() {
 				{/* タイプ選択 */}
 				<div className="flex flex-wrap gap-2">
 					<button
+						type="button"
 						onClick={() => setSelectedType("all")}
 						className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
 							selectedType === "all" ? "text-white" : "border-2"
@@ -171,6 +173,7 @@ export default function VitalsPage() {
 					</button>
 					{vitalTypes.map((type) => (
 						<button
+							type="button"
 							key={type}
 							onClick={() => setSelectedType(type)}
 							className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
@@ -215,6 +218,7 @@ export default function VitalsPage() {
 						style={{ borderColor: `${theme.colors.textSecondary}40` }}
 					>
 						<button
+							type="button"
 							onClick={() => setViewMode("graph")}
 							className={`rounded-l-lg p-2 transition-colors ${
 								viewMode === "graph" ? "text-white" : ""
@@ -231,6 +235,7 @@ export default function VitalsPage() {
 							<BarChart3 className="h-4 w-4" />
 						</button>
 						<button
+							type="button"
 							onClick={() => setViewMode("list")}
 							className={`rounded-r-lg p-2 transition-colors ${
 								viewMode === "list" ? "text-white" : ""

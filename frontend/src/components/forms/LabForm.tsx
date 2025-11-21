@@ -100,12 +100,12 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 		<div className="space-y-4 md:max-w-2xl md:mx-auto">
 			{/* カテゴリ選択 */}
 			<div>
-				<label
+				<div
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.category")} *
-				</label>
+				</div>
 				<div className="flex flex-wrap gap-2">
 					<button
 						type="button"
@@ -140,8 +140,8 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 						] as LabTestCategory[]
 					).map((category) => (
 						<button
-							key={category}
 							type="button"
+							key={category}
 							onClick={() => {
 								setSelectedCategory(category);
 								setSelectedTestId("");
@@ -167,12 +167,14 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 検査項目選択 */}
 			<div>
 				<label
+					htmlFor="field1-1"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testName")} *
 				</label>
 				<select
+					id="field1-1"
 					value={selectedTestId}
 					onChange={(e) => handleTestSelect(e.target.value)}
 					className="w-full rounded-lg border p-3"
@@ -226,6 +228,7 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 値入力 */}
 			<div>
 				<label
+					htmlFor="lab-value"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
@@ -240,6 +243,7 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 					)}
 				</label>
 				<input
+					id="lab-value"
 					type="text"
 					value={value}
 					onChange={(e) => setValue(e.target.value)}
@@ -256,12 +260,14 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 検査日 */}
 			<div>
 				<label
+					htmlFor="field2-2"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testDate")} *
 				</label>
 				<input
+					id="field2-2"
 					type="date"
 					value={testDate}
 					onChange={(e) => setTestDate(e.target.value)}
@@ -277,12 +283,14 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 検査機関 */}
 			<div>
 				<label
+					htmlFor="field3-3"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testedBy")}
 				</label>
 				<input
+					id="field3-3"
 					type="text"
 					value={testedBy}
 					onChange={(e) => setTestedBy(e.target.value)}
@@ -299,12 +307,14 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* メモ */}
 			<div>
 				<label
+					htmlFor="field4-4"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.notes")}
 				</label>
 				<textarea
+					id="field4-4"
 					value={notes}
 					onChange={(e) => setNotes(e.target.value)}
 					className="w-full rounded-lg border p-3"

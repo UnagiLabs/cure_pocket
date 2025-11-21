@@ -59,6 +59,7 @@ export default function LabsPage() {
 					{t("labs.title")}
 				</h1>
 				<button
+					type="button"
 					onClick={openAdd}
 					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
 					style={{ backgroundColor: theme.colors.primary }}

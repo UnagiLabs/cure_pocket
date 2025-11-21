@@ -103,6 +103,7 @@ export default function AddVitalPage() {
 			{/* Header */}
 			<div className="mb-6 flex items-center md:mb-8">
 				<button
+					type="button"
 					onClick={() => router.push(`/${locale}/app/add`)}
 					className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
 				>
@@ -124,12 +125,14 @@ export default function AddVitalPage() {
 				{/* タイプ選択 */}
 				<div>
 					<label
+						htmlFor="field1-1"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("vitals.type")} *
 					</label>
 					<select
+						id="field1-1"
 						value={type}
 						onChange={(e) => setType(e.target.value as VitalSignType)}
 						className="w-full rounded-lg border p-3"
@@ -152,12 +155,14 @@ export default function AddVitalPage() {
 					<>
 						<div>
 							<label
+								htmlFor="field2-2"
 								className="mb-1 block text-sm font-medium"
 								style={{ color: theme.colors.text }}
 							>
 								{t("vitals.systolic")} (mmHg) *
 							</label>
 							<input
+								id="field2-2"
 								type="number"
 								value={systolic}
 								onChange={(e) => setSystolic(e.target.value)}
@@ -172,12 +177,14 @@ export default function AddVitalPage() {
 						</div>
 						<div>
 							<label
+								htmlFor="field3-3"
 								className="mb-1 block text-sm font-medium"
 								style={{ color: theme.colors.text }}
 							>
 								{t("vitals.diastolic")} (mmHg) *
 							</label>
 							<input
+								id="field3-3"
 								type="number"
 								value={diastolic}
 								onChange={(e) => setDiastolic(e.target.value)}
@@ -197,12 +204,14 @@ export default function AddVitalPage() {
 				{type !== "blood-pressure" && (
 					<div>
 						<label
+							htmlFor="field4-4"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
 							{t("vitals.value")} ({getUnit(type)}) *
 						</label>
 						<input
+							id="field4-4"
 							type="number"
 							step={type === "temperature" ? "0.1" : "1"}
 							value={value}
@@ -229,12 +238,14 @@ export default function AddVitalPage() {
 				{/* 記録日時 */}
 				<div>
 					<label
+						htmlFor="field5-5"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("vitals.recordedAt")} *
 					</label>
 					<input
+						id="field5-5"
 						type="datetime-local"
 						value={recordedAt}
 						onChange={(e) => setRecordedAt(e.target.value)}
@@ -250,12 +261,14 @@ export default function AddVitalPage() {
 				{/* メモ */}
 				<div>
 					<label
+						htmlFor="field6-6"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("vitals.notes")}
 					</label>
 					<textarea
+						id="field6-6"
 						value={notes}
 						onChange={(e) => setNotes(e.target.value)}
 						rows={3}
@@ -272,6 +285,7 @@ export default function AddVitalPage() {
 				{/* 保存ボタン */}
 				<div className="flex gap-3 pt-4">
 					<button
+						type="button"
 						onClick={() => router.push(`/${locale}/app/add`)}
 						className="flex-1 rounded-lg border-2 p-3 font-medium transition-colors"
 						style={{
@@ -282,6 +296,7 @@ export default function AddVitalPage() {
 						{t("actions.cancel")}
 					</button>
 					<button
+						type="button"
 						onClick={handleSave}
 						className="flex-1 rounded-lg p-3 font-medium text-white transition-colors"
 						style={{ backgroundColor: theme.colors.primary }}

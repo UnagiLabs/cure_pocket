@@ -63,12 +63,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 		<div className="space-y-4 md:max-w-2xl md:mx-auto">
 			<div>
 				<label
+					htmlFor="field1-1"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.drugName")} *
 				</label>
 				<input
+					id="field1-1"
 					type="text"
 					value={formData.name}
 					onChange={(e) => handleInputChange("name", e.target.value)}
@@ -84,12 +86,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 			<div>
 				<label
+					htmlFor="field2-2"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.genericName")}
 				</label>
 				<input
+					id="field2-2"
 					type="text"
 					value={formData.genericName}
 					onChange={(e) => handleInputChange("genericName", e.target.value)}
@@ -106,12 +110,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div>
 					<label
+						htmlFor="field3-3"
 						className="mb-1 block text-sm font-medium md:text-base"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.strength")}
 					</label>
 					<input
+						id="field3-3"
 						type="text"
 						value={formData.strength}
 						onChange={(e) => handleInputChange("strength", e.target.value)}
@@ -127,12 +133,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 				<div>
 					<label
+						htmlFor="field4-4"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.form")}
 					</label>
 					<select
+						id="field4-4"
 						value={formData.form}
 						onChange={(e) =>
 							handleInputChange("form", e.target.value as MedicationFormType)
@@ -155,12 +163,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
+						htmlFor="field5-5"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.dose")}
 					</label>
 					<input
+						id="field5-5"
 						type="text"
 						value={formData.dose}
 						onChange={(e) => handleInputChange("dose", e.target.value)}
@@ -176,12 +186,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 				<div>
 					<label
+						htmlFor="field6-6"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.frequency")}
 					</label>
 					<input
+						id="field6-6"
 						type="text"
 						value={formData.frequency}
 						onChange={(e) => handleInputChange("frequency", e.target.value)}
@@ -199,12 +211,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
+						htmlFor="field7-7"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.startDate")}
 					</label>
 					<input
+						id="field7-7"
 						type="date"
 						value={formData.startDate}
 						onChange={(e) => handleInputChange("startDate", e.target.value)}
@@ -219,12 +233,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 				<div>
 					<label
+						htmlFor="field8-8"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.endDate")}
 					</label>
 					<input
+						id="field8-8"
 						type="date"
 						value={formData.endDate}
 						onChange={(e) => handleInputChange("endDate", e.target.value)}
@@ -240,12 +256,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 			<div>
 				<label
+					htmlFor="field9-9"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("medications.clinic")}
 				</label>
 				<input
+					id="field9-9"
 					type="text"
 					value={formData.clinic}
 					onChange={(e) => handleInputChange("clinic", e.target.value)}
@@ -261,12 +279,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 			<div>
 				<label
+					htmlFor="field10-10"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.reason")}
 				</label>
 				<textarea
+					id="field10-10"
 					value={formData.reason}
 					onChange={(e) => handleInputChange("reason", e.target.value)}
 					className="w-full rounded-lg border p-3"
@@ -282,12 +302,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 			<div>
 				<label
+					htmlFor="field11-11"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("medications.warning")}
 				</label>
 				<input
+					id="field11-11"
 					type="text"
 					value={formData.warning}
 					onChange={(e) => handleInputChange("warning", e.target.value)}

@@ -53,12 +53,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 		<div className="space-y-4">
 			<div>
 				<label
+					htmlFor="field1-1"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.substance")} *
 				</label>
 				<input
+					id="field1-1"
 					type="text"
 					value={formData.substance}
 					onChange={(e) => handleInputChange("substance", e.target.value)}
@@ -74,12 +76,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
+					htmlFor="field2-2"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.severity")} *
 				</label>
 				<select
+					id="field2-2"
 					value={formData.severity}
 					onChange={(e) =>
 						handleInputChange("severity", e.target.value as AllergySeverity)
@@ -102,12 +106,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
+					htmlFor="field3-3"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.symptoms")}
 				</label>
 				<textarea
+					id="field3-3"
 					value={formData.symptoms}
 					onChange={(e) => handleInputChange("symptoms", e.target.value)}
 					className="w-full rounded-lg border p-3"
@@ -123,12 +129,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
+					htmlFor="field4-4"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.onsetDate")}
 				</label>
 				<input
+					id="field4-4"
 					type="date"
 					value={formData.onsetDate}
 					onChange={(e) => handleInputChange("onsetDate", e.target.value)}
@@ -143,12 +151,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
+					htmlFor="field5-5"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.diagnosedBy")}
 				</label>
 				<input
+					id="field5-5"
 					type="text"
 					value={formData.diagnosedBy}
 					onChange={(e) => handleInputChange("diagnosedBy", e.target.value)}
@@ -164,12 +174,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
+					htmlFor="field6-6"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.notes")}
 				</label>
 				<textarea
+					id="field6-6"
 					value={formData.notes}
 					onChange={(e) => handleInputChange("notes", e.target.value)}
 					className="w-full rounded-lg border p-3"

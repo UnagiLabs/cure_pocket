@@ -51,12 +51,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 		<div className="space-y-4">
 			<div>
 				<label
+					htmlFor="field1-1"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("imaging.type")} *
 				</label>
 				<select
+					id="field1-1"
 					value={formData.type}
 					onChange={(e) =>
 						handleInputChange("type", e.target.value as ImagingType)
@@ -79,12 +81,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
+						htmlFor="field2-2"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("imaging.bodyPart")}
 					</label>
 					<input
+						id="field2-2"
 						type="text"
 						value={formData.bodyPart}
 						onChange={(e) => handleInputChange("bodyPart", e.target.value)}
@@ -100,12 +104,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 
 				<div>
 					<label
+						htmlFor="field3-3"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("imaging.examDate")} *
 					</label>
 					<input
+						id="field3-3"
 						type="date"
 						value={formData.examDate}
 						onChange={(e) => handleInputChange("examDate", e.target.value)}
@@ -121,12 +127,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 
 			<div>
 				<label
+					htmlFor="field4-4"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("imaging.performedBy")}
 				</label>
 				<input
+					id="field4-4"
 					type="text"
 					value={formData.performedBy}
 					onChange={(e) => handleInputChange("performedBy", e.target.value)}
@@ -142,12 +150,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 
 			<div>
 				<label
+					htmlFor="field5-5"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("imaging.summary")} *
 				</label>
 				<textarea
+					id="field5-5"
 					value={formData.summary}
 					onChange={(e) => handleInputChange("summary", e.target.value)}
 					className="w-full rounded-lg border p-3"
@@ -163,12 +173,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 
 			<div>
 				<label
+					htmlFor="field6-6"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("imaging.findings")}
 				</label>
 				<textarea
+					id="field6-6"
 					value={formData.findings}
 					onChange={(e) => handleInputChange("findings", e.target.value)}
 					className="w-full rounded-lg border p-3"
@@ -184,12 +196,14 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 
 			<div>
 				<label
+					htmlFor="field7-7"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("imaging.impression")}
 				</label>
 				<textarea
+					id="field7-7"
 					value={formData.impression}
 					onChange={(e) => handleInputChange("impression", e.target.value)}
 					className="w-full rounded-lg border p-3"
