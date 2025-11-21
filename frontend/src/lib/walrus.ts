@@ -180,7 +180,7 @@ export async function downloadFromWalrusByBlobId(
 ): Promise<Uint8Array> {
 	try {
 		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`,
 			{
 				method: "GET",
 			},
@@ -249,7 +249,7 @@ export async function downloadFromWalrusByObjectId(
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
 		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`,
 			{
 				method: "HEAD",
 			},
@@ -295,7 +295,7 @@ export async function getBlobMetadata(blobId: string): Promise<{
 }> {
 	try {
 		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
+			`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`,
 			{
 				method: "HEAD",
 			},
