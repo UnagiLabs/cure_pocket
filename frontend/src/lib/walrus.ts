@@ -21,7 +21,7 @@ import type { WalrusBlobReference } from "@/types/healthData";
  * Walrus Publisher endpoint (for uploads)
  */
 const WALRUS_PUBLISHER =
-	process.env.NEXT_PUBLIC_WALRUS_RPC_URL ||
+	process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_URL ||
 	"https://walrus-testnet-publisher.mystenlabs.com";
 
 /**
