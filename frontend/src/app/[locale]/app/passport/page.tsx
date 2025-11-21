@@ -54,8 +54,7 @@ export default function PassportPage() {
 		// 既にパスポートがあり、blob/sealが揃い、プロフィールもロード済みならホームへ
 		const passport = passport_status.passport;
 		const hasData =
-			passport &&
-			passport.walrusBlobId &&
+			passport?.walrusBlobId &&
 			passport.walrusBlobId !== "init_blob" &&
 			passport.walrusBlobId.length > 10 &&
 			!!passport.sealId;
