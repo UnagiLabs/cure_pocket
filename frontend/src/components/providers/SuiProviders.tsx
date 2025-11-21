@@ -20,6 +20,15 @@ const { networkConfig } = createNetworkConfig({
 	mainnet: { url: getFullnodeUrl("mainnet") },
 });
 
+// NEXT_PUBLIC_SUI_NETWORK でデフォルト接続先を切り替える（未設定時はtestnet）。
+const defaultNetwork = (() => {
+	const env = process.env.NEXT_PUBLIC_SUI_NETWORK?.toLowerCase();
+	if (env && env in networkConfig) {
+		return env as keyof typeof networkConfig;
+	}
+	return "testnet" as const;
+})();
+
 interface SuiProvidersProps {
 	children: React.ReactNode;
 }
@@ -40,7 +49,7 @@ export function SuiProviders({ children }: SuiProvidersProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
+			<SuiClientProvider networks={networkConfig} defaultNetwork={defaultNetwork}>
 				<WalletProvider autoConnect>{children}</WalletProvider>
 			</SuiClientProvider>
 		</QueryClientProvider>

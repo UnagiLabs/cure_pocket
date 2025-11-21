@@ -102,7 +102,8 @@ export function usePassport(): PassportStatus {
 				// devInspectTransactionBlockでdry-run実行
 				const result = await client.devInspectTransactionBlock({
 					sender: account.address,
-					transactionBlock: await tx.build({ client }),
+					// Transactionをそのまま渡してクライアント側で正しくシリアライズさせる
+					transactionBlock: tx,
 				});
 
 				// エラーがある場合は処理を中断
