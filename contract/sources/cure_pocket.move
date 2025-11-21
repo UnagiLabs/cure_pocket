@@ -4,6 +4,7 @@
 module cure_pocket::cure_pocket;
 
 use cure_pocket::medical_passport;
+use sui::display;
 use sui::package;
 
 // ============================================================
@@ -59,7 +60,8 @@ fun init(witness: CURE_POCKET, ctx: &mut tx_context::TxContext) {
     medical_passport::create_and_share_passport_registry(ctx);
 
     // Passport Display を生成し、バージョンをインクリメントして共有
-    let display = medical_passport::create_passport_display(&publisher, ctx);
+    let mut display = medical_passport::create_passport_display(&publisher, ctx);
+    display::update_version(&mut display);
     sui::transfer::public_share_object(display);
 
     // Publisher をデプロイヤーに返却（将来の更新用）

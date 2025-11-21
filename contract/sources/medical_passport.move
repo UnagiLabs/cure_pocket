@@ -74,7 +74,7 @@ const DISPLAY_DESCRIPTION_BYTES: vector<u8> =
 
 /// Display image URL (固定)
 const DISPLAY_IMAGE_URL_BYTES: vector<u8> =
-    b"https://github.com/UnagiLabs/cure_pocket/blob/main/frontend/src/app/icon.png?raw=true";
+    b"https://raw.githubusercontent.com/UnagiLabs/cure_pocket/main/frontend/src/app/icon.png";
 
 /// パスポート移行イベント
 ///
