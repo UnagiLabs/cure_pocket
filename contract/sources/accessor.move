@@ -12,7 +12,7 @@
 /// - Sealアクセス制御関数
 /// - ConsentToken作成・検証関数
 /// - 将来的な検索・照会機能の追加余地
-module cure_pocket::medical_passport_accessor;
+module cure_pocket::accessor;
 use std::string::{Self as string, String};
 use sui::bcs;
 use sui::clock::Clock;

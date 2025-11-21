@@ -95,7 +95,7 @@ export function usePassport(): PassportStatus & { refresh: () => void } {
 				// has_passport関数を呼び出すTransactionを構築
 				const tx = new Transaction();
 				tx.moveCall({
-					target: `${package_id}::medical_passport_accessor::has_passport`,
+					target: `${package_id}::accessor::has_passport`,
 					arguments: [
 						tx.object(registry_id), // PassportRegistry
 						tx.pure.address(account.address), // owner address

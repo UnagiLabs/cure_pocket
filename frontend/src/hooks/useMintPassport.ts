@@ -137,7 +137,7 @@ export function useMintPassport(
 				// Transactionを構築
 				const tx = new Transaction();
 				tx.moveCall({
-					target: `${package_id}::medical_passport_accessor::mint_medical_passport`,
+					target: `${package_id}::accessor::mint_medical_passport`,
 					arguments: [
 						tx.object(registry_id), // PassportRegistry (shared object)
 						tx.pure.string(walrus_blob_id), // walrus_blob_id

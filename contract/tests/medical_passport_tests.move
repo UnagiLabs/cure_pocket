@@ -16,7 +16,7 @@ module cure_pocket::medical_passport_tests {
 
     use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
     use cure_pocket::admin;
-    use cure_pocket::medical_passport_accessor;
+    use cure_pocket::accessor;
     use cure_pocket::cure_pocket::{Self, AdminCap};
     use cure_pocket::test_utils;
 
@@ -78,15 +78,15 @@ module cure_pocket::medical_passport_tests {
 
             // フィールド値を検証
             assert!(
-                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-blob-12345"),
+                accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-blob-12345"),
                 0
             );
             assert!(
-                medical_passport_accessor::get_seal_id(&passport) == &string::utf8(b"seal-key-abcde"),
+                accessor::get_seal_id(&passport) == &string::utf8(b"seal-key-abcde"),
                 1
             );
             assert!(
-                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                accessor::get_country_code(&passport) == &string::utf8(b"JP"),
                 2
             );
 
@@ -246,7 +246,7 @@ module cure_pocket::medical_passport_tests {
 
             // フィールド値を検証
             assert!(
-                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-blob-12345"),
+                accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-blob-12345"),
                 0
             );
 
@@ -307,7 +307,7 @@ module cure_pocket::medical_passport_tests {
 
             // 正常にパスポートを保持していることを確認
             assert!(
-                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                accessor::get_country_code(&passport) == &string::utf8(b"JP"),
                 0
             );
 
@@ -338,7 +338,7 @@ module cure_pocket::medical_passport_tests {
             );
 
             // 全フィールドを一括取得
-            let (walrus_id, seal_id, country_code) = medical_passport_accessor::get_all_fields(&passport);
+            let (walrus_id, seal_id, country_code) = accessor::get_all_fields(&passport);
 
             // 各フィールドが正しいことを検証
             assert!(walrus_id == &string::utf8(b"walrus-blob-12345"), 0);
@@ -455,7 +455,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-blob-user1"),
                 string::utf8(b"seal-key-user1"),
@@ -478,7 +478,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-blob-user2"),
                 string::utf8(b"seal-key-user2"),
@@ -570,7 +570,7 @@ module cure_pocket::medical_passport_tests {
         ts::next_tx(&mut scenario, user);
         {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
-            assert!(!medical_passport_accessor::has_passport(&registry, user), 0);
+            assert!(!accessor::has_passport(&registry, user), 0);
             ts::return_shared(registry);
         };
 
@@ -579,7 +579,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-test"),
                 string::utf8(b"seal-test"),
@@ -594,7 +594,7 @@ module cure_pocket::medical_passport_tests {
         ts::next_tx(&mut scenario, user);
         {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
-            assert!(medical_passport_accessor::has_passport(&registry, user), 1);
+            assert!(accessor::has_passport(&registry, user), 1);
             ts::return_shared(registry);
         };
 
@@ -629,7 +629,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-original"),
                 string::utf8(b"seal-original"),
@@ -671,15 +671,15 @@ module cure_pocket::medical_passport_tests {
 
             // データが継承されていることを確認
             assert!(
-                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-original"),
+                accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-original"),
                 0
             );
             assert!(
-                medical_passport_accessor::get_seal_id(&passport) == &string::utf8(b"seal-original"),
+                accessor::get_seal_id(&passport) == &string::utf8(b"seal-original"),
                 1
             );
             assert!(
-                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                accessor::get_country_code(&passport) == &string::utf8(b"JP"),
                 2
             );
 
@@ -717,7 +717,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-user1"),
                 string::utf8(b"seal-user1"),
@@ -733,7 +733,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-user2"),
                 string::utf8(b"seal-user2"),
@@ -792,7 +792,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-first"),
                 string::utf8(b"seal-first"),
@@ -831,7 +831,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-second"),
                 string::utf8(b"seal-second"),
@@ -847,7 +847,7 @@ module cure_pocket::medical_passport_tests {
         {
             let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             assert!(
-                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-second"),
+                accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-second"),
                 0
             );
             ts::return_to_sender(&scenario, passport);
@@ -862,7 +862,7 @@ module cure_pocket::medical_passport_tests {
     /// - user1 から user2 に移行後
     /// - user2 が再度mintを試みる → E_ALREADY_HAS_PASSPORT でabort
     #[test]
-    #[expected_failure(abort_code = 4, location = medical_passport_accessor)]
+    #[expected_failure(abort_code = 4, location = accessor)]
     fun test_migration_target_cannot_remint() {
         let user1 = @0xA11;
         let user2 = @0xA22;
@@ -878,7 +878,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-original"),
                 string::utf8(b"seal-original"),
@@ -917,7 +917,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-new"),
                 string::utf8(b"seal-new"),
@@ -954,7 +954,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-chain"),
                 string::utf8(b"seal-chain"),
@@ -1019,15 +1019,15 @@ module cure_pocket::medical_passport_tests {
 
             // データが全て継承されていることを確認
             assert!(
-                medical_passport_accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-chain"),
+                accessor::get_walrus_blob_id(&passport) == &string::utf8(b"walrus-chain"),
                 0
             );
             assert!(
-                medical_passport_accessor::get_seal_id(&passport) == &string::utf8(b"seal-chain"),
+                accessor::get_seal_id(&passport) == &string::utf8(b"seal-chain"),
                 1
             );
             assert!(
-                medical_passport_accessor::get_country_code(&passport) == &string::utf8(b"JP"),
+                accessor::get_country_code(&passport) == &string::utf8(b"JP"),
                 2
             );
 
@@ -1067,7 +1067,7 @@ module cure_pocket::medical_passport_tests {
         ts::next_tx(&mut scenario, user1);
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-mig"),
                 string::utf8(b"seal-mig"),
@@ -1121,7 +1121,7 @@ module cure_pocket::medical_passport_tests {
         ts::next_tx(&mut scenario, user1);
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-old"),
                 string::utf8(b"seal-old"),
@@ -1225,7 +1225,7 @@ module cure_pocket::medical_passport_tests {
         {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 string::utf8(b"walrus-test"),
                 string::utf8(b"seal-test"),

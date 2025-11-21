@@ -58,7 +58,7 @@ graph TB
     subgraph "Sui Blockchain"
         CP[cure_pocket<br/>パッケージルート]
         MP[medical_passport<br/>コアロジック]
-        ACC[medical_passport_accessor<br/>公開API]
+        ACC[accessor<br/>公開API]
         ADM[admin<br/>管理者API]
         SEAL_ACC[seal_accessor<br/>Sealアクセス制御]
     end
@@ -98,7 +98,7 @@ graph TB
 |-----------|---------|------|---------------|
 | **cure_pocket** | `cure_pocket.move` | パッケージ初期化、AdminCap管理 | パッケージルート |
 | **medical_passport** | `medical_passport.move` | コアロジック、データ構造定義 | 内部実装（`public(package)`） |
-| **medical_passport_accessor** | `accessor.move` | 公開API（getter、mint、Sealアクセス制御） | 外部インターフェース（`public`、`entry`） |
+| **accessor** | `accessor.move` | 公開API（getter、mint、Sealアクセス制御） | 外部インターフェース（`public`、`entry`） |
 | **admin** | `admin.move` | 管理者専用操作（管理mint、移行） | 管理者API（`public`） |
 | **seal_accessor** | `seal_accessor.move` | Sealアクセス制御ロジック | 内部実装（`public(package)`） |
 
@@ -617,7 +617,7 @@ entry fun mint_medical_passport(
 **使用例（PTB）**:
 ```typescript
 tx.moveCall({
-  target: `${PACKAGE_ID}::medical_passport_accessor::mint_medical_passport`,
+  target: `${PACKAGE_ID}::accessor::mint_medical_passport`,
   arguments: [
     tx.object(PASSPORT_REGISTRY_ID),
     tx.pure.string("walrus_blob_abc123"),
@@ -732,7 +732,7 @@ entry fun seal_approve_patient_only(
 // Sealキーサーバーが復号リクエストを受け取った際に実行
 const result = await suiClient.dryRunTransactionBlock({
   transactionBlock: tx.moveCall({
-    target: `${PACKAGE_ID}::medical_passport_accessor::seal_approve_patient_only`,
+    target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
     arguments: [
       tx.object(passportId),
       tx.object(PASSPORT_REGISTRY_ID),

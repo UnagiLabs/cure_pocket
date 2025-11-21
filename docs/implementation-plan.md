@@ -645,7 +645,7 @@ export function useUpdatePassportData(options?: UseUpdatePassportDataOptions) {
 
       // 1. update_walrus_blob_id 呼び出し
       tx.moveCall({
-        target: `${process.env.NEXT_PUBLIC_PACKAGE_ID}::medical_passport_accessor::update_walrus_blob_id`,
+        target: `${process.env.NEXT_PUBLIC_PACKAGE_ID}::accessor::update_walrus_blob_id`,
         arguments: [
           tx.object(process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID!),
           tx.object(passportObjectId),
@@ -656,7 +656,7 @@ export function useUpdatePassportData(options?: UseUpdatePassportDataOptions) {
 
       // 2. update_seal_id 呼び出し
       tx.moveCall({
-        target: `${process.env.NEXT_PUBLIC_PACKAGE_ID}::medical_passport_accessor::update_seal_id`,
+        target: `${process.env.NEXT_PUBLIC_PACKAGE_ID}::accessor::update_seal_id`,
         arguments: [
           tx.object(process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID!),
           tx.object(passportObjectId),
