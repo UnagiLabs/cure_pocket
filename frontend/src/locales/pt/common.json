@@ -1,246 +1,295 @@
 {
-	"appName": "CurePocket",
-	"tagline": "Seu passaporte de saúde global",
-	"actions": {
-		"connectWallet": "Connect Wallet",
-		"addMedication": "Adicionar medicamento",
-		"save": "Salvar",
-		"cancel": "Cancelar",
-		"edit": "Editar",
-		"delete": "Excluir",
-		"generateNew": "Gerar novo link",
-		"scanQR": "Escanear código QR",
-		"scanBarcode": "Escanear código de barras",
-		"manualEntry": "Entrada manual"
-	},
-	"tabs": {
-		"home": "Início",
-		"add": "Adicionar",
-		"card": "Cartão",
-		"settings": "Configurações",
-		"medications": "Medicamentos",
-		"emergency": "Emergência"
-	},
-	"home": {
-		"greeting": "Olá",
-		"title": "Seu bolso hoje",
-		"activeCount": "{{count}} medicamentos ativos",
-		"activeMedications": "Medicamentos ativos",
-		"lastUpdated": "Última atualização: {{time}}",
-		"addWithQR": "Adicionar medicamento com código QR",
-		"history": "Histórico",
-		"share": "Compartilhar",
-		"emergencyCard": "Cartão de emergência",
-		"guestGreeting": "Olá, Convidado",
-		"greetingWithName": "Olá, {{name}}",
-		"profileSetupBanner": {
-			"title": "Configure seu perfil",
-			"description": "Registre suas informações básicas para receber serviços de saúde mais seguros e precisos.",
-			"button": "Configurar perfil"
-		}
-	},
-	"add": {
-		"title": "Adicionar medicamento",
-		"subtitle": "Escolha como adicionar",
-		"qrScan": "Escanear código QR",
-		"qrDescription": "Escanear código QR da receita",
-		"barcodeScan": "Escanear código de barras",
-		"barcodeDescription": "Escanear da embalagem do medicamento",
-		"manual": "Entrada manual",
-		"manualDescription": "Inserir informações do medicamento manualmente",
-		"hint": "Dica",
-		"hintText": "Você pode facilmente registrar a partir de códigos QR de receitas ou códigos de barras de medicamentos",
-		"drugName": "Nome do medicamento",
-		"genericName": "Nome genérico (opcional)",
-		"strength": "Dosagem",
-		"form": "Forma",
-		"dose": "Dose",
-		"frequency": "Frequência",
-		"startDate": "Data de início",
-		"endDate": "Data de término (opcional)",
-		"reason": "Motivo"
-	},
-	"medications": {
-		"title": "Seus medicamentos",
-		"morning": "Manhã",
-		"afternoon": "Tarde",
-		"evening": "Noite",
-		"night": "Madrugada",
-		"asNeeded": "Conforme necessário",
-		"clinic": "Clínica",
-		"warning": "Aviso"
-	},
-	"card": {
-		"title": "Cartão de emergência",
-		"subtitle": "Informações médicas de emergência",
-		"description": "Compartilhe suas informações de medicamentos com profissionais de saúde em emergências",
-		"generateQR": "Gerar código QR",
-		"validFor": "Válido por: {{duration}}",
-		"downloadPDF": "Baixar PDF",
-		"printCard": "Imprimir cartão",
-		"currentMedications": "Medicamentos atuais",
-		"scanToView": "Escanear para visualizar",
-		"englishVersion": "Versão em inglês disponível"
-	},
-	"settings": {
-		"title": "Configurações",
-		"theme": "Tema do caderno",
-		"language": "Idioma",
-		"analyticsOptIn": "Compartilhar dados anonimizados para pesquisa",
-		"analyticsDescription": "Seus registros pessoais são sempre criptografados. Apenas estatísticas agregadas e anonimizadas podem ser usadas quando você optar por participar.",
-		"emergencyCard": "Configurações do cartão de emergência",
-		"showName": "Mostrar nome no cartão",
-		"displayName": "Nome de exibição",
-		"ageBand": "Faixa etária",
-		"country": "País",
-		"allergies": "Alergias",
-		"profile": "Perfil",
-		"dataExport": "Exportar dados",
-		"walletConnected": "Carteira conectada",
-		"walrusStorage": "Armazenamento Walrus",
-		"encrypted": "Criptografado",
-		"lastSync": "Última sincronização: {{time}}"
-	},
-	"wallet": {
-		"connect": "Conectar carteira",
-		"disconnect": "Desconectar",
-		"connecting": "Conectando...",
-		"connected": "Conectado",
-		"address": "Endereço",
-		"notInstalled": "Sui Wallet não está instalado.\nPor favor, instale em https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
-		"connectionFailed": "Falha ao conectar carteira. Por favor, tente novamente."
-	},
-	"themes": {
-		"classic-blue": "Azul clássico",
-		"mint-clinic": "Clínica menta",
-		"sakura-notebook": "Caderno sakura",
-		"midnight-travel": "Viagem à meia-noite"
-	},
-	"languages": {
-		"en": "English",
-		"ja": "日本語",
-		"zh": "中文",
-		"fr": "Français",
-		"pt": "Português"
-	},
-	"forms": {
-		"tablet": "Comprimido",
-		"capsule": "Cápsula",
-		"liquid": "Líquido",
-		"other": "Outro"
-	},
-	"status": {
-		"active": "Ativo",
-		"stopped": "Parado"
-	},
-	"allergies": {
-		"title": "Alergias",
-		"add": "Adicionar alergia",
-		"substance": "Alérgeno",
-		"severity": "Gravidade",
-		"symptoms": "Sintomas",
-		"onsetDate": "Data de início",
-		"diagnosedBy": "Diagnosticado por",
-		"notes": "Notas",
-		"severities": {
-			"mild": "Leve",
-			"moderate": "Moderada",
-			"severe": "Grave",
-			"life-threatening": "Com risco de vida"
-		},
-		"noAllergies": "Nenhuma alergia registrada"
-	},
-	"histories": {
-		"title": "Histórico médico",
-		"add": "Adicionar histórico médico",
-		"type": "Tipo",
-		"diagnosis": "Diagnóstico / Nome da cirurgia",
-		"diagnosisDate": "Data do diagnóstico / cirurgia",
-		"diagnosedBy": "Diagnosticado por",
-		"description": "Descrição",
-		"status": "Status",
-		"notes": "Notas",
-		"types": {
-			"condition": "Condição",
-			"surgery": "Cirurgia",
-			"procedure": "Procedimento",
-			"other": "Outro"
-		},
-		"statuses": {
-			"active": "Ativo",
-			"resolved": "Resolvido",
-			"chronic": "Crônico"
-		},
-		"noHistories": "Nenhum histórico médico registrado"
-	},
-	"labs": {
-		"title": "Resultados de laboratório",
-		"add": "Adicionar resultado de laboratório",
-		"testName": "Nome do teste",
-		"value": "Valor",
-		"unit": "Unidade",
-		"referenceRange": "Faixa de referência",
-		"testDate": "Data do teste",
-		"testedBy": "Instalação de teste",
-		"category": "Categoria",
-		"notes": "Notas",
-		"noResults": "Nenhum resultado de laboratório registrado"
-	},
-	"imaging": {
-		"title": "Relatórios de imagem",
-		"add": "Adicionar relatório de imagem",
-		"type": "Tipo de imagem",
-		"bodyPart": "Parte do corpo",
-		"examDate": "Data do exame",
-		"performedBy": "Realizado por",
-		"summary": "Resumo / Achados",
-		"findings": "Detalhes dos achados",
-		"impression": "Impressão",
-		"types": {
-			"xray": "Raio-X",
-			"ct": "CT",
-			"mri": "Ressonância magnética",
-			"ultrasound": "Ultrassom",
-			"other": "Outro"
-		},
-		"noReports": "Nenhum relatório de imagem registrado"
-	},
-	"dashboard": {
-		"title": "Painel",
-		"summary": {
-			"medications": "Medicamentos ativos",
-			"allergies": "Alergias",
-			"histories": "Histórico importante",
-			"labs": "Últimos resultados de laboratório",
-			"imaging": "Última imagem"
-		},
-		"recentUpdates": "Atualizações recentes",
-		"addData": "Adicionar dados"
-	},
-	"dataTypes": {
-		"medication": "Medicamento",
-		"allergy": "Alergia",
-		"history": "Histórico",
-		"lab": "Resultado de laboratório",
-		"imaging": "Relatório de imagem"
-	},
-	"profile": {
-		"name": "Nome"
-	},
-	"landing": {
-		"features": {
-			"privacy": {
-				"title": "Privacidade em primeiro lugar",
-				"description": "Seus dados de saúde são criptografados e armazenados no Walrus"
-			},
-			"global": {
-				"title": "Acesso global",
-				"description": "Acesse seu passaporte de saúde em qualquer lugar, a qualquer momento"
-			},
-			"blockchain": {
-				"title": "Alimentado por blockchain",
-				"description": "Construído na blockchain Sui para segurança e transparência"
-			}
-		}
-	}
+  "appName": "CurePocket",
+  "tagline": "Seu passaporte de saúde global",
+  "actions": {
+    "connectWallet": "Connect Wallet",
+    "addMedication": "Adicionar medicamento",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "generateNew": "Gerar novo link",
+    "scanQR": "Escanear código QR",
+    "scanBarcode": "Escanear código de barras",
+    "manualEntry": "Entrada manual"
+  },
+  "tabs": {
+    "home": "Início",
+    "add": "Adicionar",
+    "card": "Cartão",
+    "settings": "Configurações",
+    "medications": "Medicamentos",
+    "emergency": "Emergência"
+  },
+  "home": {
+    "greeting": "Olá",
+    "title": "Seu bolso hoje",
+    "activeCount": "{{count}} medicamentos ativos",
+    "activeMedications": "Medicamentos ativos",
+    "lastUpdated": "Última atualização: {{time}}",
+    "addWithQR": "Adicionar medicamento com código QR",
+    "history": "Histórico",
+    "share": "Compartilhar",
+    "emergencyCard": "Cartão de emergência",
+    "guestGreeting": "Olá, Convidado",
+    "greetingWithName": "Olá, {{name}}",
+    "profileSetupBanner": {
+      "title": "Configure seu perfil",
+      "description": "Registre suas informações básicas para receber serviços de saúde mais seguros e precisos.",
+      "button": "Configurar perfil"
+    }
+  },
+  "add": {
+    "title": "Adicionar medicamento",
+    "subtitle": "Escolha como adicionar",
+    "qrScan": "Escanear código QR",
+    "qrDescription": "Escanear código QR da receita",
+    "barcodeScan": "Escanear código de barras",
+    "barcodeDescription": "Escanear da embalagem do medicamento",
+    "manual": "Entrada manual",
+    "manualDescription": "Inserir informações do medicamento manualmente",
+    "hint": "Dica",
+    "hintText": "Você pode facilmente registrar a partir de códigos QR de receitas ou códigos de barras de medicamentos",
+    "drugName": "Nome do medicamento",
+    "genericName": "Nome genérico (opcional)",
+    "strength": "Dosagem",
+    "form": "Forma",
+    "dose": "Dose",
+    "frequency": "Frequência",
+    "startDate": "Data de início",
+    "endDate": "Data de término (opcional)",
+    "reason": "Motivo"
+  },
+  "medications": {
+    "title": "Seus medicamentos",
+    "morning": "Manhã",
+    "afternoon": "Tarde",
+    "evening": "Noite",
+    "night": "Madrugada",
+    "asNeeded": "Conforme necessário",
+    "clinic": "Clínica",
+    "warning": "Aviso",
+    "noMedications": "Nenhum medicamento ativo registrado"
+  },
+  "card": {
+    "title": "Cartão de emergência",
+    "subtitle": "Informações médicas de emergência",
+    "description": "Compartilhe suas informações de medicamentos com profissionais de saúde em emergências",
+    "generateQR": "Gerar código QR",
+    "validFor": "Válido por: {{duration}}",
+    "downloadPDF": "Baixar PDF",
+    "printCard": "Imprimir cartão",
+    "currentMedications": "Medicamentos atuais",
+    "scanToView": "Escanear para visualizar",
+    "englishVersion": "Versão em inglês disponível"
+  },
+  "settings": {
+    "title": "Configurações",
+    "theme": "Tema do caderno",
+    "language": "Idioma",
+    "analyticsOptIn": "Compartilhar dados anonimizados para pesquisa",
+    "analyticsDescription": "Seus registros pessoais são sempre criptografados. Apenas estatísticas agregadas e anonimizadas podem ser usadas quando você optar por participar.",
+    "emergencyCard": "Configurações do cartão de emergência",
+    "showName": "Mostrar nome no cartão",
+    "displayName": "Nome de exibição",
+    "ageBand": "Faixa etária",
+    "country": "País",
+    "allergies": "Alergias",
+    "profile": "Perfil",
+    "dataExport": "Exportar dados",
+    "walletConnected": "Carteira conectada",
+    "walrusStorage": "Armazenamento Walrus",
+    "encrypted": "Criptografado",
+    "lastSync": "Última sincronização: {{time}}"
+  },
+  "wallet": {
+    "connect": "Conectar carteira",
+    "disconnect": "Desconectar",
+    "connecting": "Conectando...",
+    "connected": "Conectado",
+    "address": "Endereço",
+    "notInstalled": "Sui Wallet não está instalado.\nPor favor, instale em https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
+    "connectionFailed": "Falha ao conectar carteira. Por favor, tente novamente."
+  },
+  "themes": {
+    "classic-blue": "Azul clássico",
+    "mint-clinic": "Clínica menta",
+    "sakura-notebook": "Caderno sakura",
+    "midnight-travel": "Viagem à meia-noite"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "Comprimido",
+    "capsule": "Cápsula",
+    "liquid": "Líquido",
+    "other": "Outro"
+  },
+  "status": {
+    "active": "Ativo",
+    "stopped": "Parado"
+  },
+  "allergies": {
+    "title": "Alergias",
+    "add": "Adicionar alergia",
+    "substance": "Alérgeno",
+    "severity": "Gravidade",
+    "symptoms": "Sintomas",
+    "onsetDate": "Data de início",
+    "diagnosedBy": "Diagnosticado por",
+    "notes": "Notas",
+    "severities": {
+      "mild": "Leve",
+      "moderate": "Moderada",
+      "severe": "Grave",
+      "life-threatening": "Com risco de vida"
+    },
+    "noAllergies": "Nenhuma alergia registrada"
+  },
+  "histories": {
+    "title": "Histórico médico",
+    "add": "Adicionar histórico médico",
+    "type": "Tipo",
+    "diagnosis": "Diagnóstico / Nome da cirurgia",
+    "diagnosisDate": "Data do diagnóstico / cirurgia",
+    "diagnosedBy": "Diagnosticado por",
+    "description": "Descrição",
+    "status": "Status",
+    "notes": "Notas",
+    "types": {
+      "condition": "Condição",
+      "surgery": "Cirurgia",
+      "procedure": "Procedimento",
+      "other": "Outro"
+    },
+    "statuses": {
+      "active": "Ativo",
+      "resolved": "Resolvido",
+      "chronic": "Crônico"
+    },
+    "noHistories": "Nenhum histórico médico registrado"
+  },
+  "labs": {
+    "title": "Resultados de laboratório",
+    "add": "Adicionar resultado de laboratório",
+    "testName": "Nome do teste",
+    "value": "Valor",
+    "unit": "Unidade",
+    "referenceRange": "Faixa de referência",
+    "testDate": "Data do teste",
+    "testedBy": "Instalação de teste",
+    "category": "Categoria",
+    "notes": "Notas",
+    "noResults": "Nenhum resultado de laboratório registrado",
+    "allCategories": "Todos",
+    "selectTest": "Por favor, selecione um teste",
+    "valuePlaceholder": "Digite o valor",
+    "validation": {
+      "required": "Por favor, insira o nome do teste e o valor"
+    },
+    "categories": {
+      "CBC": "Hemograma",
+      "electrolyte": "Eletrólitos",
+      "renal": "Função renal",
+      "glucose": "Metabolismo da glicose",
+      "liver": "Função hepática",
+      "inflammation": "Inflamação",
+      "endocrine": "Endócrino",
+      "urine": "Urina qualitativa"
+    }
+  },
+  "imaging": {
+    "title": "Relatórios de imagem",
+    "add": "Adicionar relatório de imagem",
+    "type": "Tipo de imagem",
+    "bodyPart": "Parte do corpo",
+    "examDate": "Data do exame",
+    "performedBy": "Realizado por",
+    "summary": "Resumo / Achados",
+    "findings": "Detalhes dos achados",
+    "impression": "Impressão",
+    "types": {
+      "xray": "Raio-X",
+      "ct": "CT",
+      "mri": "Ressonância magnética",
+      "ultrasound": "Ultrassom",
+      "other": "Outro"
+    },
+    "noReports": "Nenhum relatório de imagem registrado"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "summary": {
+      "medications": "Medicamentos ativos",
+      "allergies": "Alergias",
+      "histories": "Histórico importante",
+      "labs": "Últimos resultados de laboratório",
+      "imaging": "Última imagem",
+      "vitals": "Sinais vitais"
+    },
+    "recentUpdates": "Atualizações recentes",
+    "addData": "Adicionar dados"
+  },
+  "dataTypes": {
+    "medication": "Medicamento",
+    "allergy": "Alergia",
+    "history": "Histórico",
+    "lab": "Resultado de laboratório",
+    "imaging": "Relatório de imagem",
+    "vital": "Sinal vital"
+  },
+  "profile": {
+    "name": "Nome"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "Privacidade em primeiro lugar",
+        "description": "Seus dados de saúde são criptografados e armazenados no Walrus"
+      },
+      "global": {
+        "title": "Acesso global",
+        "description": "Acesse seu passaporte de saúde em qualquer lugar, a qualquer momento"
+      },
+      "blockchain": {
+        "title": "Alimentado por blockchain",
+        "description": "Construído na blockchain Sui para segurança e transparência"
+      }
+    }
+  },
+  "vitals": {
+    "title": "Sinais vitais",
+    "add": "Adicionar sinal vital",
+    "type": "Tipo",
+    "bloodPressure": "Pressão arterial",
+    "heartRate": "Frequência cardíaca",
+    "bloodGlucose": "Glicemia",
+    "temperature": "Temperatura",
+    "weight": "Peso",
+    "systolic": "Sistólica",
+    "diastolic": "Diastólica",
+    "value": "Valor",
+    "unit": "Unidade",
+    "recordedAt": "Registrado em",
+    "notes": "Notas",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "mgdL": "mg/dL",
+    "celsius": "°C",
+    "kg": "kg",
+    "noData": "Sem dados de sinais vitais",
+    "viewGraph": "Ver gráfico",
+    "viewList": "Ver lista",
+    "period": {
+      "week": "1 semana",
+      "month": "1 mês",
+      "3months": "3 meses",
+      "year": "1 ano"
+    }
+  }
 }

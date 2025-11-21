@@ -1,246 +1,295 @@
 {
-	"appName": "CurePocket",
-	"tagline": "あなたのグローバルヘルスパスポート",
-	"actions": {
-		"connectWallet": "Connect Wallet",
-		"addMedication": "お薬を追加",
-		"save": "保存",
-		"cancel": "キャンセル",
-		"edit": "編集",
-		"delete": "削除",
-		"generateNew": "新しいリンクを生成",
-		"scanQR": "QRコードスキャン",
-		"scanBarcode": "バーコードスキャン",
-		"manualEntry": "手動入力"
-	},
-	"tabs": {
-		"home": "ホーム",
-		"add": "追加",
-		"card": "カード",
-		"settings": "設定",
-		"medications": "お薬",
-		"emergency": "緊急"
-	},
-	"home": {
-		"greeting": "こんにちは",
-		"title": "今日のポケット",
-		"activeCount": "{{count}}種類の薬",
-		"activeMedications": "服用中の薬",
-		"lastUpdated": "最終更新: {{time}}",
-		"addWithQR": "QRコードで薬を追加",
-		"history": "履歴",
-		"share": "共有",
-		"emergencyCard": "緊急カード",
-		"guestGreeting": "こんにちは、ゲスト",
-		"greetingWithName": "こんにちは、{{name}}さん",
-		"profileSetupBanner": {
-			"title": "プロフィールを設定しましょう",
-			"description": "基本情報を登録すると、より安全で正確なヘルスケアサービスを受けられます。",
-			"button": "プロフィールを設定する"
-		}
-	},
-	"add": {
-		"title": "薬を追加",
-		"subtitle": "追加方法を選択してください",
-		"qrScan": "QRコードスキャン",
-		"qrDescription": "処方箋のQRコードを読み取り",
-		"barcodeScan": "バーコードスキャン",
-		"barcodeDescription": "薬のパッケージから読み取り",
-		"manual": "手動入力",
-		"manualDescription": "薬の情報を直接入力",
-		"hint": "ヒント",
-		"hintText": "処方箋のQRコードや薬のバーコードから簡単に登録できます",
-		"drugName": "薬名",
-		"genericName": "一般名（任意）",
-		"strength": "強度",
-		"form": "剤形",
-		"dose": "用量",
-		"frequency": "頻度",
-		"startDate": "開始日",
-		"endDate": "終了日（任意）",
-		"reason": "理由"
-	},
-	"medications": {
-		"title": "服用中のお薬",
-		"morning": "朝",
-		"afternoon": "昼",
-		"evening": "夕",
-		"night": "夜",
-		"asNeeded": "頓服",
-		"clinic": "クリニック",
-		"warning": "注意"
-	},
-	"card": {
-		"title": "緊急カード",
-		"subtitle": "緊急時お薬情報",
-		"description": "緊急時に医療従事者とお薬情報を共有",
-		"generateQR": "QRコード生成",
-		"validFor": "有効期限: {{duration}}",
-		"downloadPDF": "PDFダウンロード",
-		"printCard": "印刷用カード生成",
-		"currentMedications": "服用薬一覧",
-		"scanToView": "スキャンすると",
-		"englishVersion": "英語版も表示"
-	},
-	"settings": {
-		"title": "設定",
-		"theme": "テーマ",
-		"language": "言語",
-		"analyticsOptIn": "研究への匿名データ提供",
-		"analyticsDescription": "個人記録は常に暗号化されています。オプトイン時のみ、集計された匿名統計が使用されます。",
-		"emergencyCard": "緊急カード設定",
-		"showName": "カードに名前を表示",
-		"displayName": "表示名",
-		"ageBand": "年齢層",
-		"country": "国",
-		"allergies": "アレルギー",
-		"profile": "プロフィール設定",
-		"dataExport": "データエクスポート",
-		"walletConnected": "ウォレット接続中",
-		"walrusStorage": "Walrus保存状態",
-		"encrypted": "暗号化済み",
-		"lastSync": "最終同期: {{time}}"
-	},
-	"wallet": {
-		"connect": "ウォレット接続",
-		"disconnect": "切断",
-		"connecting": "接続中...",
-		"connected": "接続済み",
-		"address": "アドレス",
-		"notInstalled": "Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。",
-		"connectionFailed": "ウォレット接続に失敗しました。もう一度お試しください。"
-	},
-	"themes": {
-		"classic-blue": "クラシックブルー",
-		"mint-clinic": "ミントクリニック",
-		"sakura-notebook": "桜ノート",
-		"midnight-travel": "ミッドナイトトラベル"
-	},
-	"languages": {
-		"en": "English",
-		"ja": "日本語",
-		"zh": "中文",
-		"fr": "Français",
-		"pt": "Português"
-	},
-	"forms": {
-		"tablet": "錠剤",
-		"capsule": "カプセル",
-		"liquid": "液剤",
-		"other": "その他"
-	},
-	"status": {
-		"active": "服用中",
-		"stopped": "中止"
-	},
-	"allergies": {
-		"title": "アレルギー",
-		"add": "アレルギーを追加",
-		"substance": "アレルギー物質",
-		"severity": "重症度",
-		"symptoms": "症状",
-		"onsetDate": "発症日",
-		"diagnosedBy": "診断した医療機関",
-		"notes": "メモ",
-		"severities": {
-			"mild": "軽度",
-			"moderate": "中等度",
-			"severe": "重度",
-			"life-threatening": "生命に関わる"
-		},
-		"noAllergies": "アレルギーは登録されていません"
-	},
-	"histories": {
-		"title": "病歴",
-		"add": "病歴を追加",
-		"type": "タイプ",
-		"diagnosis": "診断名・手術名",
-		"diagnosisDate": "診断日・手術日",
-		"diagnosedBy": "診断した医療機関",
-		"description": "詳細説明",
-		"status": "状態",
-		"notes": "メモ",
-		"types": {
-			"condition": "基礎疾患",
-			"surgery": "手術歴",
-			"procedure": "処置歴",
-			"other": "その他"
-		},
-		"statuses": {
-			"active": "進行中",
-			"resolved": "治癒",
-			"chronic": "慢性"
-		},
-		"noHistories": "病歴は登録されていません"
-	},
-	"labs": {
-		"title": "検査値",
-		"add": "検査値を追加",
-		"testName": "検査名",
-		"value": "検査値",
-		"unit": "単位",
-		"referenceRange": "基準範囲",
-		"testDate": "検査日",
-		"testedBy": "検査機関",
-		"category": "カテゴリー",
-		"notes": "メモ",
-		"noResults": "検査値は登録されていません"
-	},
-	"imaging": {
-		"title": "画像レポート",
-		"add": "画像レポートを追加",
-		"type": "画像タイプ",
-		"bodyPart": "検査部位",
-		"examDate": "検査実施日",
-		"performedBy": "実施機関",
-		"summary": "要約・所見",
-		"findings": "所見の詳細",
-		"impression": "診断的所見",
-		"types": {
-			"xray": "レントゲン",
-			"ct": "CT",
-			"mri": "MRI",
-			"ultrasound": "超音波",
-			"other": "その他"
-		},
-		"noReports": "画像レポートは登録されていません"
-	},
-	"dashboard": {
-		"title": "ダッシュボード",
-		"summary": {
-			"medications": "服用中の薬",
-			"allergies": "アレルギー",
-			"histories": "重要な病歴",
-			"labs": "最新の検査値",
-			"imaging": "最新の画像"
-		},
-		"recentUpdates": "最近の更新",
-		"addData": "データを追加"
-	},
-	"dataTypes": {
-		"medication": "薬",
-		"allergy": "アレルギー",
-		"history": "病歴",
-		"lab": "検査値",
-		"imaging": "画像レポート"
-	},
-	"profile": {
-		"name": "名前"
-	},
-	"landing": {
-		"features": {
-			"privacy": {
-				"title": "プライバシー重視",
-				"description": "あなたのヘルスデータは暗号化され、Walrusに保存されます"
-			},
-			"global": {
-				"title": "グローバルアクセス",
-				"description": "いつでも、どこでもヘルスパスポートにアクセスできます"
-			},
-			"blockchain": {
-				"title": "ブロックチェーン対応",
-				"description": "セキュリティと透明性のためにSuiブロックチェーン上に構築されています"
-			}
-		}
-	}
+  "appName": "CurePocket",
+  "tagline": "あなたのグローバルヘルスパスポート",
+  "actions": {
+    "connectWallet": "Connect Wallet",
+    "addMedication": "お薬を追加",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "delete": "削除",
+    "generateNew": "新しいリンクを生成",
+    "scanQR": "QRコードスキャン",
+    "scanBarcode": "バーコードスキャン",
+    "manualEntry": "手動入力"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "add": "追加",
+    "card": "カード",
+    "settings": "設定",
+    "medications": "お薬",
+    "emergency": "緊急"
+  },
+  "home": {
+    "greeting": "こんにちは",
+    "title": "今日のポケット",
+    "activeCount": "{{count}}種類の薬",
+    "activeMedications": "服用中の薬",
+    "lastUpdated": "最終更新: {{time}}",
+    "addWithQR": "QRコードで薬を追加",
+    "history": "履歴",
+    "share": "共有",
+    "emergencyCard": "緊急カード",
+    "guestGreeting": "こんにちは、ゲスト",
+    "greetingWithName": "こんにちは、{{name}}さん",
+    "profileSetupBanner": {
+      "title": "プロフィールを設定しましょう",
+      "description": "基本情報を登録すると、より安全で正確なヘルスケアサービスを受けられます。",
+      "button": "プロフィールを設定する"
+    }
+  },
+  "add": {
+    "title": "薬を追加",
+    "subtitle": "追加方法を選択してください",
+    "qrScan": "QRコードスキャン",
+    "qrDescription": "処方箋のQRコードを読み取り",
+    "barcodeScan": "バーコードスキャン",
+    "barcodeDescription": "薬のパッケージから読み取り",
+    "manual": "手動入力",
+    "manualDescription": "薬の情報を直接入力",
+    "hint": "ヒント",
+    "hintText": "処方箋のQRコードや薬のバーコードから簡単に登録できます",
+    "drugName": "薬名",
+    "genericName": "一般名（任意）",
+    "strength": "強度",
+    "form": "剤形",
+    "dose": "用量",
+    "frequency": "頻度",
+    "startDate": "開始日",
+    "endDate": "終了日（任意）",
+    "reason": "理由"
+  },
+  "medications": {
+    "title": "服用中のお薬",
+    "morning": "朝",
+    "afternoon": "昼",
+    "evening": "夕",
+    "night": "夜",
+    "asNeeded": "頓服",
+    "clinic": "クリニック",
+    "warning": "注意",
+    "noMedications": "服用中の薬は登録されていません"
+  },
+  "card": {
+    "title": "緊急カード",
+    "subtitle": "緊急時お薬情報",
+    "description": "緊急時に医療従事者とお薬情報を共有",
+    "generateQR": "QRコード生成",
+    "validFor": "有効期限: {{duration}}",
+    "downloadPDF": "PDFダウンロード",
+    "printCard": "印刷用カード生成",
+    "currentMedications": "服用薬一覧",
+    "scanToView": "スキャンすると",
+    "englishVersion": "英語版も表示"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "language": "言語",
+    "analyticsOptIn": "研究への匿名データ提供",
+    "analyticsDescription": "個人記録は常に暗号化されています。オプトイン時のみ、集計された匿名統計が使用されます。",
+    "emergencyCard": "緊急カード設定",
+    "showName": "カードに名前を表示",
+    "displayName": "表示名",
+    "ageBand": "年齢層",
+    "country": "国",
+    "allergies": "アレルギー",
+    "profile": "プロフィール設定",
+    "dataExport": "データエクスポート",
+    "walletConnected": "ウォレット接続中",
+    "walrusStorage": "Walrus保存状態",
+    "encrypted": "暗号化済み",
+    "lastSync": "最終同期: {{time}}"
+  },
+  "wallet": {
+    "connect": "ウォレット接続",
+    "disconnect": "切断",
+    "connecting": "接続中...",
+    "connected": "接続済み",
+    "address": "アドレス",
+    "notInstalled": "Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。",
+    "connectionFailed": "ウォレット接続に失敗しました。もう一度お試しください。"
+  },
+  "themes": {
+    "classic-blue": "クラシックブルー",
+    "mint-clinic": "ミントクリニック",
+    "sakura-notebook": "桜ノート",
+    "midnight-travel": "ミッドナイトトラベル"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "fr": "Français",
+    "pt": "Português"
+  },
+  "forms": {
+    "tablet": "錠剤",
+    "capsule": "カプセル",
+    "liquid": "液剤",
+    "other": "その他"
+  },
+  "status": {
+    "active": "服用中",
+    "stopped": "中止"
+  },
+  "allergies": {
+    "title": "アレルギー",
+    "add": "アレルギーを追加",
+    "substance": "アレルギー物質",
+    "severity": "重症度",
+    "symptoms": "症状",
+    "onsetDate": "発症日",
+    "diagnosedBy": "診断した医療機関",
+    "notes": "メモ",
+    "severities": {
+      "mild": "軽度",
+      "moderate": "中等度",
+      "severe": "重度",
+      "life-threatening": "生命に関わる"
+    },
+    "noAllergies": "アレルギーは登録されていません"
+  },
+  "histories": {
+    "title": "病歴",
+    "add": "病歴を追加",
+    "type": "タイプ",
+    "diagnosis": "診断名・手術名",
+    "diagnosisDate": "診断日・手術日",
+    "diagnosedBy": "診断した医療機関",
+    "description": "詳細説明",
+    "status": "状態",
+    "notes": "メモ",
+    "types": {
+      "condition": "基礎疾患",
+      "surgery": "手術歴",
+      "procedure": "処置歴",
+      "other": "その他"
+    },
+    "statuses": {
+      "active": "進行中",
+      "resolved": "治癒",
+      "chronic": "慢性"
+    },
+    "noHistories": "病歴は登録されていません"
+  },
+  "labs": {
+    "title": "検査値",
+    "add": "検査値を追加",
+    "testName": "検査名",
+    "value": "検査値",
+    "unit": "単位",
+    "referenceRange": "基準範囲",
+    "testDate": "検査日",
+    "testedBy": "検査機関",
+    "category": "カテゴリー",
+    "notes": "メモ",
+    "noResults": "検査値は登録されていません",
+    "allCategories": "すべて",
+    "selectTest": "検査項目を選択してください",
+    "valuePlaceholder": "値を入力してください",
+    "validation": {
+      "required": "検査項目と値を入力してください"
+    },
+    "categories": {
+      "CBC": "血算",
+      "electrolyte": "電解質",
+      "renal": "腎機能",
+      "glucose": "糖代謝",
+      "liver": "肝機能",
+      "inflammation": "炎症",
+      "endocrine": "内分泌",
+      "urine": "尿定性"
+    }
+  },
+  "imaging": {
+    "title": "画像レポート",
+    "add": "画像レポートを追加",
+    "type": "画像タイプ",
+    "bodyPart": "検査部位",
+    "examDate": "検査実施日",
+    "performedBy": "実施機関",
+    "summary": "要約・所見",
+    "findings": "所見の詳細",
+    "impression": "診断的所見",
+    "types": {
+      "xray": "レントゲン",
+      "ct": "CT",
+      "mri": "MRI",
+      "ultrasound": "超音波",
+      "other": "その他"
+    },
+    "noReports": "画像レポートは登録されていません"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "summary": {
+      "medications": "服用中の薬",
+      "allergies": "アレルギー",
+      "histories": "重要な病歴",
+      "labs": "最新の検査値",
+      "imaging": "最新の画像",
+      "vitals": "バイタルデータ"
+    },
+    "recentUpdates": "最近の更新",
+    "addData": "データを追加"
+  },
+  "dataTypes": {
+    "medication": "薬",
+    "allergy": "アレルギー",
+    "history": "病歴",
+    "lab": "検査値",
+    "imaging": "画像レポート",
+    "vital": "バイタルデータ"
+  },
+  "profile": {
+    "name": "名前"
+  },
+  "landing": {
+    "features": {
+      "privacy": {
+        "title": "プライバシー重視",
+        "description": "あなたのヘルスデータは暗号化され、Walrusに保存されます"
+      },
+      "global": {
+        "title": "グローバルアクセス",
+        "description": "いつでも、どこでもヘルスパスポートにアクセスできます"
+      },
+      "blockchain": {
+        "title": "ブロックチェーン対応",
+        "description": "セキュリティと透明性のためにSuiブロックチェーン上に構築されています"
+      }
+    }
+  },
+  "vitals": {
+    "title": "バイタルデータ",
+    "add": "バイタルデータを追加",
+    "type": "タイプ",
+    "bloodPressure": "血圧",
+    "heartRate": "心拍数",
+    "bloodGlucose": "血糖値",
+    "temperature": "体温",
+    "weight": "体重",
+    "systolic": "最高血圧",
+    "diastolic": "最低血圧",
+    "value": "値",
+    "unit": "単位",
+    "recordedAt": "記録日時",
+    "notes": "メモ",
+    "mmHg": "mmHg",
+    "bpm": "bpm",
+    "mgdL": "mg/dL",
+    "celsius": "°C",
+    "kg": "kg",
+    "noData": "バイタルデータがありません",
+    "viewGraph": "グラフを表示",
+    "viewList": "リストを表示",
+    "period": {
+      "week": "1週間",
+      "month": "1ヶ月",
+      "3months": "3ヶ月",
+      "year": "1年"
+    }
+  }
 }
