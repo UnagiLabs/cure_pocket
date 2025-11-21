@@ -65,7 +65,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -132,7 +132,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -208,7 +208,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -280,7 +280,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -367,7 +367,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport_a,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -454,7 +454,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport_b,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -519,7 +519,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -575,21 +575,21 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // 1回目の呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
             );
 
             // 2回目の呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
             );
 
             // 3回目の呼び出し（abortしないことを確認）
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -642,7 +642,7 @@ module cure_pocket::seal_accessor_tests {
             let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)

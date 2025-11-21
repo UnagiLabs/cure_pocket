@@ -316,29 +316,19 @@ export async function buildPatientAccessPTB(params: {
  * @returns Transaction bytes for Seal verification
  */
 export async function buildConsentAccessPTB(params: {
-	passportObjectId: string;
-	registryObjectId: string;
 	consentTokenObjectId: string;
 	suiClient: SuiClient;
 	sealId: string;
 }): Promise<Uint8Array> {
-	const {
-		passportObjectId,
-		registryObjectId,
-		consentTokenObjectId,
-		suiClient,
-		sealId,
-	} = params;
+	const { consentTokenObjectId, suiClient, sealId } = params;
 
 	const tx = new Transaction();
 
-	// Call seal_approve_consent(id, passport, registry, consent_token, clock)
+	// Call seal_approve_consent(id, consent_token, clock)
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
 		arguments: [
 			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
-			tx.object(passportObjectId),
-			tx.object(registryObjectId),
 			tx.object(consentTokenObjectId),
 			tx.object("0x6"), // Clock object
 		],

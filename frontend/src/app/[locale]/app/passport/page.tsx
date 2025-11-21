@@ -17,7 +17,7 @@ export default function PassportPage() {
 	const _t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings, walletAddress } = useApp();
+	const { settings, walletAddress, profile } = useApp();
 	const theme = getTheme(settings.theme);
 
 	// パスポート状態を取得
@@ -51,14 +51,32 @@ export default function PassportPage() {
 
 	// パスポート発行成功後、プロフィール登録画面へ遷移
 	useEffect(() => {
-		if (is_mint_success || passport_status.has_passport) {
-			// 3秒後にプロフィール画面へ遷移
-			const timer = setTimeout(() => {
-				router.push(`/${locale}/app/profile`);
-			}, 3000);
-			return () => clearTimeout(timer);
+		// 既にパスポートがあり、blob/sealが揃い、プロフィールもロード済みならホームへ
+		const passport = passport_status.passport;
+		const hasData =
+			passport &&
+			passport.walrusBlobId &&
+			passport.walrusBlobId !== "init_blob" &&
+			passport.walrusBlobId.length > 10 &&
+			!!passport.sealId;
+
+		if (passport_status.has_passport && hasData && profile) {
+			router.replace(`/${locale}/app`);
+			return;
 		}
-	}, [is_mint_success, passport_status.has_passport, router, locale]);
+
+		// パスポートありだがデータ未登録（または新規mint完了）の場合はプロフィール入力へ
+		if (is_mint_success || (passport_status.has_passport && !hasData)) {
+			router.replace(`/${locale}/app/profile`);
+		}
+	}, [
+		is_mint_success,
+		passport_status.has_passport,
+		passport_status.passport,
+		profile,
+		router,
+		locale,
+	]);
 
 	if (!walletAddress) {
 		return null; // リダイレクト中

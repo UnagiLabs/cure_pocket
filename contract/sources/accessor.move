@@ -182,10 +182,13 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool {
 /// ## Aborts
 /// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
 entry fun seal_approve_patient_only(
+    id: vector<u8>,
     passport: &MedicalPassport,
     registry: &PassportRegistry,
     ctx: &tx_context::TxContext
 ) {
+    // `id` is the Seal identity (seal_id); not used on-chain but required by Seal key servers
+    let _ = id;
     seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
 }
 
