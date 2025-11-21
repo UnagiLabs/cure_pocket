@@ -54,7 +54,8 @@ export function SuiProviders({ children }: SuiProvidersProps) {
 				networks={networkConfig}
 				defaultNetwork={defaultNetwork}
 			>
-				<WalletProvider autoConnect>
+				{/* autoConnectを無効化して、ユーザーが明示的にコネクトを開始するまで待つ */}
+				<WalletProvider autoConnect={false}>
 					{children}
 					<Toaster position="top-right" />
 				</WalletProvider>
