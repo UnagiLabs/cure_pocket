@@ -68,7 +68,8 @@
 		"night": "Night",
 		"asNeeded": "As Needed",
 		"clinic": "Clinic",
-		"warning": "Warning"
+		"warning": "Warning",
+		"noMedications": "No active medications registered"
 	},
 	"card": {
 		"title": "Emergency Card",
@@ -184,7 +185,23 @@
 		"testedBy": "Test Facility",
 		"category": "Category",
 		"notes": "Notes",
-		"noResults": "No lab results registered"
+		"noResults": "No lab results registered",
+		"allCategories": "All",
+		"selectTest": "Please select a test",
+		"valuePlaceholder": "Enter value",
+		"validation": {
+			"required": "Please enter test name and value"
+		},
+		"categories": {
+			"CBC": "CBC",
+			"electrolyte": "Electrolyte",
+			"renal": "Renal Function",
+			"glucose": "Glucose Metabolism",
+			"liver": "Liver Function",
+			"inflammation": "Inflammation",
+			"endocrine": "Endocrine",
+			"urine": "Urine Qualitative"
+		}
 	},
 	"imaging": {
 		"title": "Imaging Reports",
@@ -212,7 +229,8 @@
 			"allergies": "Allergies",
 			"histories": "Important History",
 			"labs": "Latest Lab Results",
-			"imaging": "Latest Imaging"
+			"imaging": "Latest Imaging",
+			"vitals": "Vital Signs"
 		},
 		"recentUpdates": "Recent Updates",
 		"addData": "Add Data"
@@ -222,7 +240,8 @@
 		"allergy": "Allergy",
 		"history": "History",
 		"lab": "Lab Result",
-		"imaging": "Imaging Report"
+		"imaging": "Imaging Report",
+		"vital": "Vital Sign"
 	},
 	"profile": {
 		"name": "Name"
@@ -241,6 +260,36 @@
 				"title": "Blockchain Powered",
 				"description": "Built on Sui blockchain for security and transparency"
 			}
+		}
+	},
+	"vitals": {
+		"title": "Vital Signs",
+		"add": "Add Vital Sign",
+		"type": "Type",
+		"bloodPressure": "Blood Pressure",
+		"heartRate": "Heart Rate",
+		"bloodGlucose": "Blood Glucose",
+		"temperature": "Temperature",
+		"weight": "Weight",
+		"systolic": "Systolic",
+		"diastolic": "Diastolic",
+		"value": "Value",
+		"unit": "Unit",
+		"recordedAt": "Recorded At",
+		"notes": "Notes",
+		"mmHg": "mmHg",
+		"bpm": "bpm",
+		"mgdL": "mg/dL",
+		"celsius": "°C",
+		"kg": "kg",
+		"noData": "No vital signs data",
+		"viewGraph": "View Graph",
+		"viewList": "View List",
+		"period": {
+			"week": "1 Week",
+			"month": "1 Month",
+			"3months": "3 Months",
+			"year": "1 Year"
 		}
 	}
 }

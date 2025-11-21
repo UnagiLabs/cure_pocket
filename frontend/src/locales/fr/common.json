@@ -68,7 +68,8 @@
 		"night": "Nuit",
 		"asNeeded": "Si nécessaire",
 		"clinic": "Clinique",
-		"warning": "Avertissement"
+		"warning": "Avertissement",
+		"noMedications": "Aucun médicament actif enregistré"
 	},
 	"card": {
 		"title": "Carte d'urgence",
@@ -184,7 +185,23 @@
 		"testedBy": "Installation de test",
 		"category": "Catégorie",
 		"notes": "Notes",
-		"noResults": "Aucun résultat de laboratoire enregistré"
+		"noResults": "Aucun résultat de laboratoire enregistré",
+		"allCategories": "Tous",
+		"selectTest": "Veuillez sélectionner un test",
+		"valuePlaceholder": "Entrez la valeur",
+		"validation": {
+			"required": "Veuillez entrer le nom du test et la valeur"
+		},
+		"categories": {
+			"CBC": "NFS",
+			"electrolyte": "Électrolytes",
+			"renal": "Fonction rénale",
+			"glucose": "Métabolisme du glucose",
+			"liver": "Fonction hépatique",
+			"inflammation": "Inflammation",
+			"endocrine": "Endocrinien",
+			"urine": "Urine qualitative"
+		}
 	},
 	"imaging": {
 		"title": "Rapports d'imagerie",
@@ -212,7 +229,8 @@
 			"allergies": "Allergies",
 			"histories": "Antécédents importants",
 			"labs": "Derniers résultats de laboratoire",
-			"imaging": "Dernière imagerie"
+			"imaging": "Dernière imagerie",
+			"vitals": "Signes vitaux"
 		},
 		"recentUpdates": "Mises à jour récentes",
 		"addData": "Ajouter des données"
@@ -222,7 +240,8 @@
 		"allergy": "Allergie",
 		"history": "Antécédents",
 		"lab": "Résultat de laboratoire",
-		"imaging": "Rapport d'imagerie"
+		"imaging": "Rapport d'imagerie",
+		"vital": "Signe vital"
 	},
 	"profile": {
 		"name": "Nom"
@@ -241,6 +260,36 @@
 				"title": "Alimenté par la blockchain",
 				"description": "Construit sur la blockchain Sui pour la sécurité et la transparence"
 			}
+		}
+	},
+	"vitals": {
+		"title": "Signes vitaux",
+		"add": "Ajouter un signe vital",
+		"type": "Type",
+		"bloodPressure": "Pression artérielle",
+		"heartRate": "Fréquence cardiaque",
+		"bloodGlucose": "Glycémie",
+		"temperature": "Température",
+		"weight": "Poids",
+		"systolic": "Systolique",
+		"diastolic": "Diastolique",
+		"value": "Valeur",
+		"unit": "Unité",
+		"recordedAt": "Enregistré à",
+		"notes": "Notes",
+		"mmHg": "mmHg",
+		"bpm": "bpm",
+		"mgdL": "mg/dL",
+		"celsius": "°C",
+		"kg": "kg",
+		"noData": "Aucune donnée de signes vitaux",
+		"viewGraph": "Voir le graphique",
+		"viewList": "Voir la liste",
+		"period": {
+			"week": "1 semaine",
+			"month": "1 mois",
+			"3months": "3 mois",
+			"year": "1 an"
 		}
 	}
 }
