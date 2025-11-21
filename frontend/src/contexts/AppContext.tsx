@@ -1,286 +1,281 @@
-'use client';
+"use client";
 
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 import type {
-  AppState,
-  Medication,
-  Allergy,
-  MedicalHistory,
-  LabResult,
-  ImagingReport,
-  VitalSign,
-  UserSettings,
-  PatientProfile,
-} from '@/types';
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { useCurrentAccount } from '@mysten/dapp-kit';
+	Allergy,
+	AppState,
+	ImagingReport,
+	LabResult,
+	MedicalHistory,
+	Medication,
+	PatientProfile,
+	UserSettings,
+} from "@/types";
 
 interface AppContextType extends AppState {
-  setWalletAddress: (address: string | null) => void;
-  setMedications: (medications: Medication[]) => void;
-  addMedication: (medication: Medication) => void;
-  updateMedication: (id: string, updates: Partial<Medication>) => void;
-  deleteMedication: (id: string) => void;
-  setAllergies: (allergies: Allergy[]) => void;
-  addAllergy: (allergy: Allergy) => void;
-  updateAllergy: (id: string, updates: Partial<Allergy>) => void;
-  deleteAllergy: (id: string) => void;
-  setMedicalHistories: (histories: MedicalHistory[]) => void;
-  addMedicalHistory: (history: MedicalHistory) => void;
-  updateMedicalHistory: (id: string, updates: Partial<MedicalHistory>) => void;
-  deleteMedicalHistory: (id: string) => void;
-  setLabResults: (results: LabResult[]) => void;
-  addLabResult: (result: LabResult) => void;
-  updateLabResult: (id: string, updates: Partial<LabResult>) => void;
-  deleteLabResult: (id: string) => void;
-  setImagingReports: (reports: ImagingReport[]) => void;
-  addImagingReport: (report: ImagingReport) => void;
-  updateImagingReport: (id: string, updates: Partial<ImagingReport>) => void;
-  deleteImagingReport: (id: string) => void;
-  setVitalSigns: (vitalSigns: VitalSign[]) => void;
-  addVitalSign: (vitalSign: VitalSign) => void;
-  updateVitalSign: (id: string, updates: Partial<VitalSign>) => void;
-  deleteVitalSign: (id: string) => void;
-  updateSettings: (settings: Partial<UserSettings>) => void;
-  setProfile: (profile: PatientProfile | null) => void;
-  updateProfile: (updates: Partial<PatientProfile>) => void;
-  setLoading: (loading: boolean) => void;
+	setWalletAddress: (address: string | null) => void;
+	setMedications: (medications: Medication[]) => void;
+	addMedication: (medication: Medication) => void;
+	updateMedication: (id: string, updates: Partial<Medication>) => void;
+	deleteMedication: (id: string) => void;
+	setAllergies: (allergies: Allergy[]) => void;
+	addAllergy: (allergy: Allergy) => void;
+	updateAllergy: (id: string, updates: Partial<Allergy>) => void;
+	deleteAllergy: (id: string) => void;
+	setMedicalHistories: (histories: MedicalHistory[]) => void;
+	addMedicalHistory: (history: MedicalHistory) => void;
+	updateMedicalHistory: (id: string, updates: Partial<MedicalHistory>) => void;
+	deleteMedicalHistory: (id: string) => void;
+	setLabResults: (results: LabResult[]) => void;
+	addLabResult: (result: LabResult) => void;
+	updateLabResult: (id: string, updates: Partial<LabResult>) => void;
+	deleteLabResult: (id: string) => void;
+	setImagingReports: (reports: ImagingReport[]) => void;
+	addImagingReport: (report: ImagingReport) => void;
+	updateImagingReport: (id: string, updates: Partial<ImagingReport>) => void;
+	deleteImagingReport: (id: string) => void;
+	updateSettings: (settings: Partial<UserSettings>) => void;
+	setProfile: (profile: PatientProfile | null) => void;
+	updateProfile: (updates: Partial<PatientProfile>) => void;
+	setLoading: (loading: boolean) => void;
 }
 
 const defaultSettings: UserSettings = {
-  theme: 'classic-blue',
-  locale: 'en',
-  analyticsOptIn: false,
-  emergencyCard: {
-    showName: false,
-  },
+	theme: "classic-blue",
+	locale: "en",
+	analyticsOptIn: false,
+	emergencyCard: {
+		showName: false,
+	},
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Mysten dApp Kitから現在のアカウント情報を取得
-  const currentAccount = useCurrentAccount();
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [allergies, setAllergies] = useState<Allergy[]>([]);
-  const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>([]);
-  const [labResults, setLabResults] = useState<LabResult[]>([]);
-  const [imagingReports, setImagingReports] = useState<ImagingReport[]>([]);
-  const [vitalSigns, setVitalSigns] = useState<VitalSign[]>([]);
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [profile, setProfile] = useState<PatientProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+	// Mysten dApp Kitから現在のアカウント情報を取得
+	const currentAccount = useCurrentAccount();
+	const [medications, setMedications] = useState<Medication[]>([]);
+	const [allergies, setAllergies] = useState<Allergy[]>([]);
+	const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>(
+		[],
+	);
+	const [labResults, setLabResults] = useState<LabResult[]>([]);
+	const [imagingReports, setImagingReports] = useState<ImagingReport[]>([]);
+	const [settings, setSettings] = useState<UserSettings>(defaultSettings);
+	const [profile, setProfile] = useState<PatientProfile | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
 
-  // ウォレットアドレスはdApp Kitから取得
-  const walletAddress = currentAccount?.address || null;
+	// ウォレットアドレスはdApp Kitから取得
+	const walletAddress = currentAccount?.address || null;
 
-  // Restore settings from localStorage on mount
-  useEffect(() => {
-    // Restore settings from localStorage
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      try {
-        setSettings(JSON.parse(savedSettings));
-      } catch (e) {
-        console.error('Failed to parse saved settings', e);
-      }
-    }
-  }, []);
+	// Restore settings from localStorage on mount
+	useEffect(() => {
+		// Restore settings from localStorage
+		const savedSettings = localStorage.getItem("userSettings");
+		if (savedSettings) {
+			try {
+				setSettings(JSON.parse(savedSettings));
+			} catch (e) {
+				console.error("Failed to parse saved settings", e);
+			}
+		}
+	}, []);
 
-  // Save settings to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('userSettings', JSON.stringify(settings));
-  }, [settings]);
+	// Save settings to localStorage whenever they change
+	useEffect(() => {
+		localStorage.setItem("userSettings", JSON.stringify(settings));
+	}, [settings]);
 
-  // setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）
-  const setWalletAddress = (_address: string | null) => {
-    // dApp Kitが自動的に管理するため、何もしない
-    console.warn('setWalletAddress is deprecated. Wallet address is managed by dApp Kit.');
-  };
+	// setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）
+	const setWalletAddress = (_address: string | null) => {
+		// dApp Kitが自動的に管理するため、何もしない
+		console.warn(
+			"setWalletAddress is deprecated. Wallet address is managed by dApp Kit.",
+		);
+	};
 
-  const addMedication = (medication: Medication) => {
-    setMedications((prev) => [...prev, medication]);
-  };
+	const addMedication = (medication: Medication) => {
+		setMedications((prev) => [...prev, medication]);
+	};
 
-  const updateMedication = (id: string, updates: Partial<Medication>) => {
-    setMedications((prev) =>
-      prev.map((med) => (med.id === id ? { ...med, ...updates } : med))
-    );
-  };
+	const updateMedication = (id: string, updates: Partial<Medication>) => {
+		setMedications((prev) =>
+			prev.map((med) => (med.id === id ? { ...med, ...updates } : med)),
+		);
+	};
 
-  const deleteMedication = (id: string) => {
-    setMedications((prev) => prev.filter((med) => med.id !== id));
-  };
+	const deleteMedication = (id: string) => {
+		setMedications((prev) => prev.filter((med) => med.id !== id));
+	};
 
-  // Allergy CRUD operations
-  const addAllergy = (allergy: Allergy) => {
-    setAllergies((prev) => [...prev, allergy]);
-  };
+	// Allergy CRUD operations
+	const addAllergy = (allergy: Allergy) => {
+		setAllergies((prev) => [...prev, allergy]);
+	};
 
-  const updateAllergy = (id: string, updates: Partial<Allergy>) => {
-    setAllergies((prev) =>
-      prev.map((allergy) => (allergy.id === id ? { ...allergy, ...updates } : allergy))
-    );
-  };
+	const updateAllergy = (id: string, updates: Partial<Allergy>) => {
+		setAllergies((prev) =>
+			prev.map((allergy) =>
+				allergy.id === id ? { ...allergy, ...updates } : allergy,
+			),
+		);
+	};
 
-  const deleteAllergy = (id: string) => {
-    setAllergies((prev) => prev.filter((allergy) => allergy.id !== id));
-  };
+	const deleteAllergy = (id: string) => {
+		setAllergies((prev) => prev.filter((allergy) => allergy.id !== id));
+	};
 
-  // MedicalHistory CRUD operations
-  const addMedicalHistory = (history: MedicalHistory) => {
-    setMedicalHistories((prev) => [...prev, history]);
-  };
+	// MedicalHistory CRUD operations
+	const addMedicalHistory = (history: MedicalHistory) => {
+		setMedicalHistories((prev) => [...prev, history]);
+	};
 
-  const updateMedicalHistory = (id: string, updates: Partial<MedicalHistory>) => {
-    setMedicalHistories((prev) =>
-      prev.map((history) => (history.id === id ? { ...history, ...updates } : history))
-    );
-  };
+	const updateMedicalHistory = (
+		id: string,
+		updates: Partial<MedicalHistory>,
+	) => {
+		setMedicalHistories((prev) =>
+			prev.map((history) =>
+				history.id === id ? { ...history, ...updates } : history,
+			),
+		);
+	};
 
-  const deleteMedicalHistory = (id: string) => {
-    setMedicalHistories((prev) => prev.filter((history) => history.id !== id));
-  };
+	const deleteMedicalHistory = (id: string) => {
+		setMedicalHistories((prev) => prev.filter((history) => history.id !== id));
+	};
 
-  // LabResult CRUD operations
-  const addLabResult = (result: LabResult) => {
-    setLabResults((prev) => [...prev, result]);
-  };
+	// LabResult CRUD operations
+	const addLabResult = (result: LabResult) => {
+		setLabResults((prev) => [...prev, result]);
+	};
 
-  const updateLabResult = (id: string, updates: Partial<LabResult>) => {
-    setLabResults((prev) =>
-      prev.map((result) => (result.id === id ? { ...result, ...updates } : result))
-    );
-  };
+	const updateLabResult = (id: string, updates: Partial<LabResult>) => {
+		setLabResults((prev) =>
+			prev.map((result) =>
+				result.id === id ? { ...result, ...updates } : result,
+			),
+		);
+	};
 
-  const deleteLabResult = (id: string) => {
-    setLabResults((prev) => prev.filter((result) => result.id !== id));
-  };
+	const deleteLabResult = (id: string) => {
+		setLabResults((prev) => prev.filter((result) => result.id !== id));
+	};
 
-  // ImagingReport CRUD operations
-  const addImagingReport = (report: ImagingReport) => {
-    setImagingReports((prev) => [...prev, report]);
-  };
+	// ImagingReport CRUD operations
+	const addImagingReport = (report: ImagingReport) => {
+		setImagingReports((prev) => [...prev, report]);
+	};
 
-  const updateImagingReport = (id: string, updates: Partial<ImagingReport>) => {
-    setImagingReports((prev) =>
-      prev.map((report) => (report.id === id ? { ...report, ...updates } : report))
-    );
-  };
+	const updateImagingReport = (id: string, updates: Partial<ImagingReport>) => {
+		setImagingReports((prev) =>
+			prev.map((report) =>
+				report.id === id ? { ...report, ...updates } : report,
+			),
+		);
+	};
 
-  const deleteImagingReport = (id: string) => {
-    setImagingReports((prev) => prev.filter((report) => report.id !== id));
-  };
+	const deleteImagingReport = (id: string) => {
+		setImagingReports((prev) => prev.filter((report) => report.id !== id));
+	};
 
-  // VitalSign CRUD operations
-  const addVitalSign = (vitalSign: VitalSign) => {
-    setVitalSigns((prev) => [...prev, vitalSign]);
-  };
+	const updateSettings = (newSettings: Partial<UserSettings>) => {
+		setSettings((prev) => ({ ...prev, ...newSettings }));
+	};
 
-  const updateVitalSign = (id: string, updates: Partial<VitalSign>) => {
-    setVitalSigns((prev) =>
-      prev.map((vital) => (vital.id === id ? { ...vital, ...updates } : vital))
-    );
-  };
+	const updateProfile = (updates: Partial<PatientProfile>) => {
+		setProfile((prev) => {
+			if (!prev) {
+				// 初期プロフィールを作成
+				const defaultProfile: PatientProfile = {
+					ageBand: null,
+					gender: "unknown",
+					country: null,
+					preferredLanguage: null,
+					smokingStatus: "unknown",
+					alcoholUse: "unknown",
+					exercise: "unknown",
+					drugAllergies: [],
+					foodAllergies: [],
+					hasAnaphylaxisHistory: null,
+					chronicConditions: [],
+					surgeries: [],
+					dataSharing: {
+						preference: "deny",
+						shareMedication: false,
+						shareLabs: false,
+						shareConditions: false,
+						shareSurgeries: false,
+						shareLifestyle: false,
+						rewardsEnabled: false,
+					},
+					...updates,
+				};
+				return defaultProfile;
+			}
+			return { ...prev, ...updates };
+		});
+	};
 
-  const deleteVitalSign = (id: string) => {
-    setVitalSigns((prev) => prev.filter((vital) => vital.id !== id));
-  };
+	const setLoading = (loading: boolean) => {
+		setIsLoading(loading);
+	};
 
-  const updateSettings = (newSettings: Partial<UserSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
-
-  const updateProfile = (updates: Partial<PatientProfile>) => {
-    setProfile((prev) => {
-      if (!prev) {
-        // 初期プロフィールを作成
-        const defaultProfile: PatientProfile = {
-          ageBand: null,
-          gender: 'unknown',
-          country: null,
-          preferredLanguage: null,
-          smokingStatus: 'unknown',
-          alcoholUse: 'unknown',
-          exercise: 'unknown',
-          drugAllergies: [],
-          foodAllergies: [],
-          hasAnaphylaxisHistory: null,
-          chronicConditions: [],
-          surgeries: [],
-          dataSharing: {
-            preference: 'deny',
-            shareMedication: false,
-            shareLabs: false,
-            shareConditions: false,
-            shareSurgeries: false,
-            shareLifestyle: false,
-            rewardsEnabled: false,
-          },
-          ...updates,
-        };
-        return defaultProfile;
-      }
-      return { ...prev, ...updates };
-    });
-  };
-
-  const setLoading = (loading: boolean) => {
-    setIsLoading(loading);
-  };
-
-  return (
-    <AppContext.Provider
-      value={{
-        walletAddress,
-        medications,
-        allergies,
-        medicalHistories,
-        labResults,
-        imagingReports,
-        vitalSigns,
-        settings,
-        profile,
-        isLoading,
-        setWalletAddress,
-        setMedications,
-        addMedication,
-        updateMedication,
-        deleteMedication,
-        setAllergies,
-        addAllergy,
-        updateAllergy,
-        deleteAllergy,
-        setMedicalHistories,
-        addMedicalHistory,
-        updateMedicalHistory,
-        deleteMedicalHistory,
-        setLabResults,
-        addLabResult,
-        updateLabResult,
-        deleteLabResult,
-        setImagingReports,
-        addImagingReport,
-        updateImagingReport,
-        deleteImagingReport,
-        setVitalSigns,
-        addVitalSign,
-        updateVitalSign,
-        deleteVitalSign,
-        updateSettings,
-        setProfile,
-        updateProfile,
-        setLoading,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
-  );
+	return (
+		<AppContext.Provider
+			value={{
+				walletAddress,
+				medications,
+				allergies,
+				medicalHistories,
+				labResults,
+				imagingReports,
+				settings,
+				profile,
+				isLoading,
+				setWalletAddress,
+				setMedications,
+				addMedication,
+				updateMedication,
+				deleteMedication,
+				setAllergies,
+				addAllergy,
+				updateAllergy,
+				deleteAllergy,
+				setMedicalHistories,
+				addMedicalHistory,
+				updateMedicalHistory,
+				deleteMedicalHistory,
+				setLabResults,
+				addLabResult,
+				updateLabResult,
+				deleteLabResult,
+				setImagingReports,
+				addImagingReport,
+				updateImagingReport,
+				deleteImagingReport,
+				updateSettings,
+				setProfile,
+				updateProfile,
+				setLoading,
+			}}
+		>
+			{children}
+		</AppContext.Provider>
+	);
 }
 
 export function useApp() {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
+	const context = useContext(AppContext);
+	if (context === undefined) {
+		throw new Error("useApp must be used within an AppProvider");
+	}
+	return context;
 }

@@ -1,296 +1,246 @@
 {
-  "appName": "CurePocket",
-  "tagline": "您的全球健康护照",
-  "actions": {
-    "connectWallet": "Connect Wallet",
-    "addMedication": "添加药物",
-    "save": "保存",
-    "cancel": "取消",
-    "edit": "编辑",
-    "delete": "删除",
-    "generateNew": "生成新链接",
-    "scanQR": "扫描二维码",
-    "scanBarcode": "扫描条形码",
-    "manualEntry": "手动输入"
-  },
-  "tabs": {
-    "home": "主页",
-    "add": "添加",
-    "card": "卡片",
-    "settings": "设置",
-    "medications": "药物",
-    "emergency": "紧急"
-  },
-  "home": {
-    "greeting": "你好",
-    "title": "今日药袋",
-    "activeCount": "{{count}}种活动药物",
-    "activeMedications": "当前用药",
-    "lastUpdated": "最后更新：{{time}}",
-    "addWithQR": "通过二维码添加药物",
-    "history": "历史",
-    "share": "分享",
-    "emergencyCard": "紧急卡",
-    "guestGreeting": "你好，访客",
-    "greetingWithName": "你好，{{name}}",
-    "profileSetupBanner": {
-      "title": "设置您的个人资料",
-      "description": "注册您的基本信息，以获得更安全、更准确的医疗服务。",
-      "button": "设置个人资料"
-    }
-  },
-  "add": {
-    "title": "添加药物",
-    "subtitle": "选择添加方式",
-    "qrScan": "二维码扫描",
-    "qrDescription": "扫描处方二维码",
-    "barcodeScan": "条形码扫描",
-    "barcodeDescription": "从药品包装扫描",
-    "manual": "手动输入",
-    "manualDescription": "手动输入药物信息",
-    "hint": "提示",
-    "hintText": "您可以轻松地从处方二维码或药品条形码注册",
-    "drugName": "药品名称",
-    "genericName": "通用名（可选）",
-    "strength": "剂量强度",
-    "form": "剂型",
-    "dose": "用量",
-    "frequency": "频率",
-    "startDate": "开始日期",
-    "endDate": "结束日期（可选）",
-    "reason": "原因"
-  },
-  "medications": {
-    "title": "您的药物",
-    "morning": "早晨",
-    "afternoon": "下午",
-    "evening": "傍晚",
-    "night": "夜间",
-    "asNeeded": "按需",
-    "clinic": "诊所",
-    "warning": "警告",
-    "noMedications": "未注册活动药物"
-  },
-  "card": {
-    "title": "紧急卡",
-    "subtitle": "紧急医疗信息",
-    "description": "在紧急情况下与医疗提供者分享您的药物信息",
-    "generateQR": "生成二维码",
-    "validFor": "有效期：{{duration}}",
-    "downloadPDF": "下载PDF",
-    "printCard": "打印卡片",
-    "currentMedications": "当前用药",
-    "scanToView": "扫描查看",
-    "englishVersion": "提供英文版本"
-  },
-  "settings": {
-    "title": "设置",
-    "theme": "笔记本主题",
-    "language": "语言",
-    "analyticsOptIn": "为研究共享匿名数据",
-    "analyticsDescription": "您的个人记录始终加密。只有在您选择加入时，才可能使用汇总的匿名统计信息。",
-    "emergencyCard": "紧急卡设置",
-    "showName": "在卡片上显示姓名",
-    "displayName": "显示名称",
-    "ageBand": "年龄段",
-    "country": "国家",
-    "allergies": "过敏史",
-    "profile": "个人资料",
-    "dataExport": "数据导出",
-    "walletConnected": "已连接钱包",
-    "walrusStorage": "Walrus存储",
-    "encrypted": "已加密",
-    "lastSync": "最后同步：{{time}}"
-  },
-  "wallet": {
-    "connect": "连接钱包",
-    "disconnect": "断开连接",
-    "connecting": "连接中...",
-    "connected": "已连接",
-    "address": "地址",
-    "notInstalled": "未安装Sui Wallet。\n请从 https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil 安装。",
-    "connectionFailed": "钱包连接失败。请重试。"
-  },
-  "themes": {
-    "classic-blue": "经典蓝",
-    "mint-clinic": "薄荷诊所",
-    "sakura-notebook": "樱花笔记",
-    "midnight-travel": "午夜旅行",
-    "soft-warm-gradient": "柔和暖色渐变"
-  },
-  "languages": {
-    "en": "English",
-    "ja": "日本語",
-    "zh": "中文",
-    "fr": "Français",
-    "pt": "Português"
-  },
-  "forms": {
-    "tablet": "片剂",
-    "capsule": "胶囊",
-    "liquid": "液体",
-    "other": "其他"
-  },
-  "status": {
-    "active": "活动",
-    "stopped": "已停止"
-  },
-  "allergies": {
-    "title": "过敏",
-    "add": "添加过敏",
-    "substance": "过敏原",
-    "severity": "严重程度",
-    "symptoms": "症状",
-    "onsetDate": "发病日期",
-    "diagnosedBy": "诊断机构",
-    "notes": "备注",
-    "severities": {
-      "mild": "轻度",
-      "moderate": "中度",
-      "severe": "重度",
-      "life-threatening": "危及生命"
-    },
-    "noAllergies": "未注册过敏"
-  },
-  "histories": {
-    "title": "病史",
-    "add": "添加病史",
-    "type": "类型",
-    "diagnosis": "诊断/手术名称",
-    "diagnosisDate": "诊断/手术日期",
-    "diagnosedBy": "诊断机构",
-    "description": "描述",
-    "status": "状态",
-    "notes": "备注",
-    "types": {
-      "condition": "疾病",
-      "surgery": "手术",
-      "procedure": "程序",
-      "other": "其他"
-    },
-    "statuses": {
-      "active": "进行中",
-      "resolved": "已解决",
-      "chronic": "慢性"
-    },
-    "noHistories": "未注册病史"
-  },
-  "labs": {
-    "title": "检验结果",
-    "add": "添加检验结果",
-    "testName": "检验名称",
-    "value": "检验值",
-    "unit": "单位",
-    "referenceRange": "参考范围",
-    "testDate": "检验日期",
-    "testedBy": "检验机构",
-    "category": "类别",
-    "notes": "备注",
-    "noResults": "未注册检验结果",
-    "allCategories": "全部",
-    "selectTest": "请选择检验项目",
-    "valuePlaceholder": "请输入值",
-    "validation": {
-      "required": "请输入检验名称和值"
-    },
-    "categories": {
-      "CBC": "血常规",
-      "electrolyte": "电解质",
-      "renal": "肾功能",
-      "glucose": "糖代谢",
-      "liver": "肝功能",
-      "inflammation": "炎症",
-      "endocrine": "内分泌",
-      "urine": "尿定性"
-    }
-  },
-  "imaging": {
-    "title": "影像报告",
-    "add": "添加影像报告",
-    "type": "影像类型",
-    "bodyPart": "检查部位",
-    "examDate": "检查日期",
-    "performedBy": "检查机构",
-    "summary": "摘要/发现",
-    "findings": "发现详情",
-    "impression": "印象",
-    "types": {
-      "xray": "X光",
-      "ct": "CT",
-      "mri": "MRI",
-      "ultrasound": "超声",
-      "other": "其他"
-    },
-    "noReports": "未注册影像报告"
-  },
-  "dashboard": {
-    "title": "仪表板",
-    "summary": {
-      "medications": "当前用药",
-      "allergies": "过敏",
-      "histories": "重要病史",
-      "labs": "最新检验结果",
-      "imaging": "最新影像",
-      "vitals": "生命体征"
-    },
-    "recentUpdates": "最近更新",
-    "addData": "添加数据"
-  },
-  "dataTypes": {
-    "medication": "药物",
-    "allergy": "过敏",
-    "history": "病史",
-    "lab": "检验结果",
-    "imaging": "影像报告",
-    "vital": "生命体征"
-  },
-  "vitals": {
-    "title": "生命体征",
-    "add": "添加生命体征",
-    "type": "类型",
-    "bloodPressure": "血压",
-    "heartRate": "心率",
-    "bloodGlucose": "血糖",
-    "temperature": "体温",
-    "weight": "体重",
-    "systolic": "收缩压",
-    "diastolic": "舒张压",
-    "value": "值",
-    "unit": "单位",
-    "recordedAt": "记录时间",
-    "notes": "备注",
-    "mmHg": "mmHg",
-    "bpm": "bpm",
-    "mgdL": "mg/dL",
-    "celsius": "°C",
-    "kg": "kg",
-    "noData": "没有生命体征数据",
-    "viewGraph": "查看图表",
-    "viewList": "查看列表",
-    "period": {
-      "week": "1周",
-      "month": "1个月",
-      "3months": "3个月",
-      "year": "1年"
-    }
-  },
-  "profile": {
-    "name": "姓名"
-  },
-  "landing": {
-    "features": {
-      "privacy": {
-        "title": "隐私优先",
-        "description": "您的健康数据经过加密并存储在Walrus上"
-      },
-      "global": {
-        "title": "全球访问",
-        "description": "随时随地访问您的健康护照"
-      },
-      "blockchain": {
-        "title": "区块链驱动",
-        "description": "基于Sui区块链构建，确保安全性和透明度"
-      }
-    }
-  }
+	"appName": "CurePocket",
+	"tagline": "您的全球健康护照",
+	"actions": {
+		"connectWallet": "Connect Wallet",
+		"addMedication": "添加药物",
+		"save": "保存",
+		"cancel": "取消",
+		"edit": "编辑",
+		"delete": "删除",
+		"generateNew": "生成新链接",
+		"scanQR": "扫描二维码",
+		"scanBarcode": "扫描条形码",
+		"manualEntry": "手动输入"
+	},
+	"tabs": {
+		"home": "主页",
+		"add": "添加",
+		"card": "卡片",
+		"settings": "设置",
+		"medications": "药物",
+		"emergency": "紧急"
+	},
+	"home": {
+		"greeting": "你好",
+		"title": "今日药袋",
+		"activeCount": "{{count}}种活动药物",
+		"activeMedications": "当前用药",
+		"lastUpdated": "最后更新：{{time}}",
+		"addWithQR": "通过二维码添加药物",
+		"history": "历史",
+		"share": "分享",
+		"emergencyCard": "紧急卡",
+		"guestGreeting": "你好，访客",
+		"greetingWithName": "你好，{{name}}",
+		"profileSetupBanner": {
+			"title": "设置您的个人资料",
+			"description": "注册您的基本信息，以获得更安全、更准确的医疗服务。",
+			"button": "设置个人资料"
+		}
+	},
+	"add": {
+		"title": "添加药物",
+		"subtitle": "选择添加方式",
+		"qrScan": "二维码扫描",
+		"qrDescription": "扫描处方二维码",
+		"barcodeScan": "条形码扫描",
+		"barcodeDescription": "从药品包装扫描",
+		"manual": "手动输入",
+		"manualDescription": "手动输入药物信息",
+		"hint": "提示",
+		"hintText": "您可以轻松地从处方二维码或药品条形码注册",
+		"drugName": "药品名称",
+		"genericName": "通用名（可选）",
+		"strength": "剂量强度",
+		"form": "剂型",
+		"dose": "用量",
+		"frequency": "频率",
+		"startDate": "开始日期",
+		"endDate": "结束日期（可选）",
+		"reason": "原因"
+	},
+	"medications": {
+		"title": "您的药物",
+		"morning": "早晨",
+		"afternoon": "下午",
+		"evening": "傍晚",
+		"night": "夜间",
+		"asNeeded": "按需",
+		"clinic": "诊所",
+		"warning": "警告"
+	},
+	"card": {
+		"title": "紧急卡",
+		"subtitle": "紧急医疗信息",
+		"description": "在紧急情况下与医疗提供者分享您的药物信息",
+		"generateQR": "生成二维码",
+		"validFor": "有效期：{{duration}}",
+		"downloadPDF": "下载PDF",
+		"printCard": "打印卡片",
+		"currentMedications": "当前用药",
+		"scanToView": "扫描查看",
+		"englishVersion": "提供英文版本"
+	},
+	"settings": {
+		"title": "设置",
+		"theme": "笔记本主题",
+		"language": "语言",
+		"analyticsOptIn": "为研究共享匿名数据",
+		"analyticsDescription": "您的个人记录始终加密。只有在您选择加入时，才可能使用汇总的匿名统计信息。",
+		"emergencyCard": "紧急卡设置",
+		"showName": "在卡片上显示姓名",
+		"displayName": "显示名称",
+		"ageBand": "年龄段",
+		"country": "国家",
+		"allergies": "过敏史",
+		"profile": "个人资料",
+		"dataExport": "数据导出",
+		"walletConnected": "已连接钱包",
+		"walrusStorage": "Walrus存储",
+		"encrypted": "已加密",
+		"lastSync": "最后同步：{{time}}"
+	},
+	"wallet": {
+		"connect": "连接钱包",
+		"disconnect": "断开连接",
+		"connecting": "连接中...",
+		"connected": "已连接",
+		"address": "地址",
+		"notInstalled": "未安装Sui Wallet。\n请从 https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil 安装。",
+		"connectionFailed": "钱包连接失败。请重试。"
+	},
+	"themes": {
+		"classic-blue": "经典蓝",
+		"mint-clinic": "薄荷诊所",
+		"sakura-notebook": "樱花笔记",
+		"midnight-travel": "午夜旅行"
+	},
+	"languages": {
+		"en": "English",
+		"ja": "日本語",
+		"zh": "中文",
+		"fr": "Français",
+		"pt": "Português"
+	},
+	"forms": {
+		"tablet": "片剂",
+		"capsule": "胶囊",
+		"liquid": "液体",
+		"other": "其他"
+	},
+	"status": {
+		"active": "活动",
+		"stopped": "已停止"
+	},
+	"allergies": {
+		"title": "过敏",
+		"add": "添加过敏",
+		"substance": "过敏原",
+		"severity": "严重程度",
+		"symptoms": "症状",
+		"onsetDate": "发病日期",
+		"diagnosedBy": "诊断机构",
+		"notes": "备注",
+		"severities": {
+			"mild": "轻度",
+			"moderate": "中度",
+			"severe": "重度",
+			"life-threatening": "危及生命"
+		},
+		"noAllergies": "未注册过敏"
+	},
+	"histories": {
+		"title": "病史",
+		"add": "添加病史",
+		"type": "类型",
+		"diagnosis": "诊断/手术名称",
+		"diagnosisDate": "诊断/手术日期",
+		"diagnosedBy": "诊断机构",
+		"description": "描述",
+		"status": "状态",
+		"notes": "备注",
+		"types": {
+			"condition": "疾病",
+			"surgery": "手术",
+			"procedure": "程序",
+			"other": "其他"
+		},
+		"statuses": {
+			"active": "进行中",
+			"resolved": "已解决",
+			"chronic": "慢性"
+		},
+		"noHistories": "未注册病史"
+	},
+	"labs": {
+		"title": "检验结果",
+		"add": "添加检验结果",
+		"testName": "检验名称",
+		"value": "检验值",
+		"unit": "单位",
+		"referenceRange": "参考范围",
+		"testDate": "检验日期",
+		"testedBy": "检验机构",
+		"category": "类别",
+		"notes": "备注",
+		"noResults": "未注册检验结果"
+	},
+	"imaging": {
+		"title": "影像报告",
+		"add": "添加影像报告",
+		"type": "影像类型",
+		"bodyPart": "检查部位",
+		"examDate": "检查日期",
+		"performedBy": "检查机构",
+		"summary": "摘要/发现",
+		"findings": "发现详情",
+		"impression": "印象",
+		"types": {
+			"xray": "X光",
+			"ct": "CT",
+			"mri": "MRI",
+			"ultrasound": "超声",
+			"other": "其他"
+		},
+		"noReports": "未注册影像报告"
+	},
+	"dashboard": {
+		"title": "仪表板",
+		"summary": {
+			"medications": "当前用药",
+			"allergies": "过敏",
+			"histories": "重要病史",
+			"labs": "最新检验结果",
+			"imaging": "最新影像"
+		},
+		"recentUpdates": "最近更新",
+		"addData": "添加数据"
+	},
+	"dataTypes": {
+		"medication": "药物",
+		"allergy": "过敏",
+		"history": "病史",
+		"lab": "检验结果",
+		"imaging": "影像报告"
+	},
+	"profile": {
+		"name": "姓名"
+	},
+	"landing": {
+		"features": {
+			"privacy": {
+				"title": "隐私优先",
+				"description": "您的健康数据经过加密并存储在Walrus上"
+			},
+			"global": {
+				"title": "全球访问",
+				"description": "随时随地访问您的健康护照"
+			},
+			"blockchain": {
+				"title": "区块链驱动",
+				"description": "基于Sui区块链构建，确保安全性和透明度"
+			}
+		}
+	}
 }

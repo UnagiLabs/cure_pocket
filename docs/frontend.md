@@ -262,6 +262,13 @@ export const apiClient = {
   * 医療者ビュー用 URL（例：`/doctor/view?token=...`）を返す
     → フロントはこれを QR にエンコードするだけでOK
 
+* `/api/analytics/submit`:
+
+  * Payloadは2つのトップレベルで分離して送信すること
+    * `stats_payload`: Anonymous Stats JSON（docs/data_schema.md §6）
+    * `reward_claim`: `{ walletAddress, signature }`（SBT所有証明など）
+  * バックエンドは受信時に`stats_payload`と`reward_claim`を即座に分離し、別DBテーブルへ保存し、相互の参照を保持しないこと。
+
 ※ フロントからは「Sui / Walrus / Seal を使っている」ことが分かるように、
 `Medication` に `suiObjectId` / `walrusBlobId` を保持する。
 
@@ -402,6 +409,7 @@ MVPではローカル状態だけでもよい。
 * 説明テキスト：
 
   * `t('settings.analyticsDescription')`
+  * Opt-in時は「端末内で匿名化・集計（Stats JSON生成）」のみ実行し、PHIをサーバーへ送らない。送信するのは匿名化済み統計データと報酬請求情報（分離送信）のみ。
 
 ---
 
@@ -460,4 +468,20 @@ export const walletService: WalletService = {
 * i18n キーは型安全でなくても良いが、可能ならヘルパーで補完
 * UIはSSR/CSRどちらでもよいが、ウォレット接続やブラウザAPI利用部分は `"use client"` コンポーネントで実装する
 
+---
 
+## 11. Analytics Logic (New Section)
+
+### 11.1 generateAnonymousStats 要件
+
+クライアントサイドで以下の順序で処理する関数を用意する:
+
+1. Walrusから暗号化データを取得し、Seal経由の許可された鍵で端末内復号。
+2. 18識別子を含む再同定リスクのあるフィールドを除去し、匿名化ルール（年齢バンド/国コード/ATC上位/ICD上位/LOINC+フラグのみ）でサマリ抽出。
+3. 抽出結果をStats JSON（docs/data_schema.md §6）として構築。
+4. `/api/analytics/submit` に送信するが、`stats_payload` と `reward_claim` を分離してpostする。
+
+### 11.2 実装メモ
+
+- ブラウザ内メモリで完結させ、ローカルストレージに生データを残さない。
+- 送信キューがある場合も、生データではなくStats JSONのみをバッファする。
