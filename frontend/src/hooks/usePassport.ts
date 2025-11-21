@@ -70,6 +70,7 @@ export function usePassport(): PassportStatus & { refresh: () => void } {
 	});
 	const [refresh_trigger, set_refresh_trigger] = useState(0);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: refresh_trigger で手動リフレッシュを行うため依存に含める
 	useEffect(() => {
 		/**
 		 * パスポート状態を取得する非同期関数
@@ -119,15 +120,18 @@ export function usePassport(): PassportStatus & { refresh: () => void } {
 					throw new Error("No return values from has_passport");
 				}
 
-				// bool値をデコード
-				const encoded = return_values[0][1];
-				const has_passport = bcs
-					.bool()
-					.fromBase64(
-						typeof encoded === "string"
-							? encoded
-							: Buffer.from(encoded).toString("base64"),
-					);
+				// bool値をデコード（returnValues は [bytes, typeTag] のタプル）
+				const encoded = return_values[0][0]; // 0番目にBCSバイト配列が入る
+				let has_passport: boolean;
+				if (encoded instanceof Uint8Array) {
+					has_passport = bcs.bool().parse(encoded);
+				} else if (Array.isArray(encoded)) {
+					has_passport = bcs.bool().parse(Uint8Array.from(encoded));
+				} else if (typeof encoded === "string") {
+					has_passport = bcs.bool().fromBase64(encoded);
+				} else {
+					throw new Error("Unsupported return value type from has_passport");
+				}
 
 				if (!has_passport) {
 					// パスポートを所持していない場合
