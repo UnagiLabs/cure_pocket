@@ -49,7 +49,10 @@ export function SuiProviders({ children }: SuiProvidersProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<SuiClientProvider networks={networkConfig} defaultNetwork={defaultNetwork}>
+			<SuiClientProvider
+				networks={networkConfig}
+				defaultNetwork={defaultNetwork}
+			>
 				<WalletProvider autoConnect>{children}</WalletProvider>
 			</SuiClientProvider>
 		</QueryClientProvider>
