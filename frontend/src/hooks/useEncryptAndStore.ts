@@ -26,10 +26,10 @@
 "use client";
 
 import { useSuiClient } from "@mysten/dapp-kit";
-import { useState, useCallback } from "react";
-import type { HealthData } from "@/types/healthData";
+import { useCallback, useState } from "react";
 import { createSealClient, encryptHealthData } from "@/lib/seal";
 import { uploadToWalrus } from "@/lib/walrus";
+import type { HealthData } from "@/types/healthData";
 
 /**
  * Encryption and storage progress stages
@@ -136,7 +136,9 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				setProgress("error");
 
 				const errorMessage =
-					err instanceof Error ? err.message : "Failed to encrypt and store data";
+					err instanceof Error
+						? err.message
+						: "Failed to encrypt and store data";
 				setError(errorMessage);
 
 				throw new Error(errorMessage);
@@ -155,7 +157,8 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 
 	return {
 		encryptAndStore,
-		isEncrypting: progress !== "idle" && progress !== "completed" && progress !== "error",
+		isEncrypting:
+			progress !== "idle" && progress !== "completed" && progress !== "error",
 		progress,
 		error,
 		reset,

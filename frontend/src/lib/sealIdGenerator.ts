@@ -24,21 +24,21 @@
  * ```
  */
 export async function generateSealId(address: string): Promise<string> {
-	const input = address + "medical_passport";
+	const input = `${address}medical_passport`;
 
 	// Use Web Crypto API (browser) or Node.js crypto (server)
-	if (typeof window !== "undefined" && window.crypto?.subtle) {
+	if (typeof window !== "undefined" && globalThis.crypto?.subtle) {
 		// Browser environment
 		const encoder = new TextEncoder();
 		const data = encoder.encode(input);
-		const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+		const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
 		const hashArray = Array.from(new Uint8Array(hashBuffer));
 		return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 	}
 
 	// Node.js environment
-	const crypto = await import("crypto");
-	const hash = crypto.createHash("sha256");
+	const nodeCrypto = await import("node:crypto");
+	const hash = nodeCrypto.createHash("sha256");
 	hash.update(input);
 	return hash.digest("hex");
 }

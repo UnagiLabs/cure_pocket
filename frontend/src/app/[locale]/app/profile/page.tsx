@@ -1,14 +1,20 @@
 "use client";
 
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Check, ChevronDown, ChevronUp, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
+import { usePassport } from "@/hooks/usePassport";
+import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
 import {
 	chronicConditionCategories,
 	criticalConditions,
 } from "@/lib/chronicConditions";
+import { profileToHealthData } from "@/lib/profileConverter";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
 import type {
 	AlcoholUse,
@@ -27,10 +33,33 @@ export default function ProfilePage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings, profile, updateProfile } = useApp();
+	const currentAccount = useCurrentAccount();
+	const {
+		settings,
+		profile,
+		updateProfile,
+		medications,
+		allergies,
+		medicalHistories,
+		labResults,
+		imagingReports,
+	} = useApp();
 	const theme = getTheme(settings.theme);
+	const { passport, has_passport } = usePassport();
+	const {
+		encryptAndStore,
+		isEncrypting,
+		progress,
+		error: _encryptError,
+	} = useEncryptAndStore();
+	const {
+		updatePassportData,
+		isUpdating,
+		error: _updateError,
+	} = useUpdatePassportData();
 	const [isSaving, setIsSaving] = useState(false);
 	const [showSuccess, setShowSuccess] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
 	const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
 		new Set(["cardiovascular", "metabolic"]),
 	);
@@ -133,7 +162,22 @@ export default function ProfilePage() {
 
 	const handleSave = async () => {
 		setIsSaving(true);
+		setSaveError(null);
+
 		try {
+			// 1. Validate: Wallet connected
+			if (!currentAccount?.address) {
+				throw new Error("ウォレットが接続されていません");
+			}
+
+			// 2. Validate: Passport exists
+			if (!has_passport || !passport) {
+				throw new Error(
+					"パスポートが発行されていません。先にパスポートを発行してください。",
+				);
+			}
+
+			// 3. Build profile to save
 			const profileToSave: PatientProfile = {
 				ageBand: formData.ageBand || null,
 				gender: formData.gender || "unknown",
@@ -163,8 +207,50 @@ export default function ProfilePage() {
 				updatedAt: new Date().toISOString(),
 			};
 
+			console.log("[ProfileSave] Step 1: Converting to HealthData...");
+
+			// 4. Convert to HealthData
+			const healthData = profileToHealthData(
+				profileToSave,
+				medications,
+				allergies,
+				medicalHistories,
+				labResults,
+				imagingReports,
+				locale,
+			);
+
+			console.log("[ProfileSave] Step 2: Generating seal_id...");
+
+			// 5. Generate seal_id
+			const sealId = await generateSealId(currentAccount.address);
+			console.log(
+				`[ProfileSave] Generated seal_id: ${sealId.substring(0, 16)}...`,
+			);
+
+			console.log("[ProfileSave] Step 3: Encrypting and uploading...");
+
+			// 6. Encrypt and upload to Walrus
+			const { blobId } = await encryptAndStore(healthData, sealId);
+			console.log(`[ProfileSave] Upload complete, blobId: ${blobId}`);
+
+			console.log("[ProfileSave] Step 4: Updating passport on-chain...");
+
+			// 7. Update passport on-chain
+			await updatePassportData({
+				passportId: passport.id,
+				blobId,
+				sealId,
+			});
+			console.log("[ProfileSave] Passport updated successfully");
+
+			// 8. Save locally
 			updateProfile(profileToSave);
+
+			// 9. Show success
 			setShowSuccess(true);
+			console.log("[ProfileSave] Save complete!");
+
 			// 新規登録の場合（profileが未設定の場合）はホーム画面へ遷移
 			if (!profile) {
 				setTimeout(() => {
@@ -174,7 +260,12 @@ export default function ProfilePage() {
 				setTimeout(() => setShowSuccess(false), 3000);
 			}
 		} catch (error) {
-			console.error("Failed to save profile:", error);
+			console.error("[ProfileSave] Failed to save profile:", error);
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "プロフィールの保存に失敗しました";
+			setSaveError(errorMessage);
 		} finally {
 			setIsSaving(false);
 		}
@@ -775,6 +866,7 @@ export default function ProfilePage() {
 				className="fixed bottom-20 left-0 right-0 p-4 md:static md:bottom-auto md:left-auto md:right-auto md:mt-8"
 				style={{ backgroundColor: theme.colors.background }}
 			>
+				{/* Success Message */}
 				{showSuccess && (
 					<div
 						className="mb-3 flex items-center justify-center rounded-lg p-3 md:p-4"
@@ -784,15 +876,70 @@ export default function ProfilePage() {
 						<span className="md:text-lg">保存しました</span>
 					</div>
 				)}
+
+				{/* Error Message */}
+				{saveError && (
+					<div
+						className="mb-3 rounded-lg p-3 md:p-4"
+						style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}
+					>
+						<div className="flex items-start">
+							<span className="text-sm md:text-base">{saveError}</span>
+						</div>
+					</div>
+				)}
+
+				{/* Progress Display */}
+				{(isEncrypting || isUpdating) && (
+					<div
+						className="mb-3 rounded-lg p-3 md:p-4"
+						style={{ backgroundColor: `${theme.colors.primary}10` }}
+					>
+						<div className="flex items-center">
+							<div
+								className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-t-transparent"
+								style={{ borderColor: theme.colors.primary }}
+							/>
+							<span
+								className="text-sm md:text-base"
+								style={{ color: theme.colors.text }}
+							>
+								{progress === "encrypting" && "データを暗号化中..."}
+								{progress === "uploading" && "Walrusにアップロード中..."}
+								{isUpdating && "パスポートを更新中..."}
+							</span>
+						</div>
+					</div>
+				)}
+
+				{/* Passport Warning */}
+				{!has_passport && currentAccount?.address && (
+					<div
+						className="mb-3 rounded-lg p-3 md:p-4"
+						style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
+					>
+						<p className="text-sm md:text-base">
+							⚠️
+							パスポートが発行されていません。保存する前にパスポートを発行してください。
+						</p>
+					</div>
+				)}
+
 				<button
 					type="button"
 					onClick={handleSave}
-					disabled={isSaving || !formData.ageBand}
+					disabled={
+						isSaving ||
+						isEncrypting ||
+						isUpdating ||
+						!formData.ageBand ||
+						!has_passport
+					}
 					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 disabled:opacity-50 md:max-w-md md:mx-auto md:p-5 md:text-lg"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
 					<Save className="mr-2 h-5 w-5" />
-					{isSaving ? "保存中..." : "保存"}
+					{isSaving || isEncrypting || isUpdating ? "保存中..." : "保存"}
 				</button>
 			</div>
 		</div>

@@ -30,10 +30,14 @@
  */
 "use client";
 
-import { useCurrentAccount, useSignPersonalMessage, useSuiClient } from "@mysten/dapp-kit";
-import { SessionKey } from "@mysten/seal";
 import { fromHex } from "@mysten/bcs";
-import { useState, useCallback, useEffect, useRef } from "react";
+import {
+	useCurrentAccount,
+	useSignPersonalMessage,
+	useSuiClient,
+} from "@mysten/dapp-kit";
+import { SessionKey } from "@mysten/seal";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * SessionKey TTL in minutes (default: 10 minutes)
@@ -201,7 +205,9 @@ export function useSessionKeyManager(
 				isValid: false,
 				isLoading: false,
 				error:
-					error instanceof Error ? error.message : "Failed to generate session key",
+					error instanceof Error
+						? error.message
+						: "Failed to generate session key",
 			}));
 		}
 	}, [currentAccount, suiClient, signPersonalMessage, ttlMin]);

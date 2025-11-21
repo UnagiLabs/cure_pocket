@@ -31,14 +31,14 @@
 
 import { useSuiClient } from "@mysten/dapp-kit";
 import type { SessionKey } from "@mysten/seal";
-import { useState, useCallback } from "react";
-import type { HealthData } from "@/types/healthData";
+import { useCallback, useState } from "react";
 import {
+	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
-	buildPatientAccessPTB,
 } from "@/lib/seal";
 import { downloadFromWalrusByBlobId } from "@/lib/walrus";
+import type { HealthData } from "@/types/healthData";
 
 /**
  * Decryption progress stages

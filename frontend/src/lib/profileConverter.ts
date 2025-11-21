@@ -5,25 +5,25 @@
  * This module bridges between the UI form data and the standardized HealthData schema.
  */
 
+import { v4 as uuidv4 } from "uuid";
 import type {
-	PatientProfile,
-	Medication,
 	Allergy,
-	MedicalHistory,
-	LabResult,
 	ImagingReport,
+	LabResult,
+	MedicalHistory,
+	Medication,
+	PatientProfile,
 } from "@/types";
 import type {
-	HealthData,
-	UserProfile,
-	Allergy as HealthDataAllergy,
 	Condition,
-	Medication as HealthDataMedication,
+	HealthData,
+	Allergy as HealthDataAllergy,
 	LabResult as HealthDataLabResult,
+	Medication as HealthDataMedication,
 	ImagingStudy,
 	LocalizedString,
+	UserProfile,
 } from "@/types/healthData";
-import { v4 as uuidv4 } from "uuid";
 
 /**
  * Convert AgeBand to approximate birth year
@@ -111,13 +111,10 @@ function convertUserProfile(profile: PatientProfile): UserProfile {
  * Create localized string with English and local language support
  *
  * @param text - Text in current language
- * @param locale - Current locale (default: "en")
+ * @param _locale - Current locale (default: "en")
  * @returns LocalizedString object
  */
-function createLocalizedString(
-	text: string,
-	locale = "en",
-): LocalizedString {
+function createLocalizedString(text: string, _locale = "en"): LocalizedString {
 	return {
 		en: text, // For emergency card display
 		local: text, // For daily use (could be enhanced with actual translation)
@@ -128,12 +125,12 @@ function createLocalizedString(
  * Convert PatientProfile allergies to HealthData Allergy format
  *
  * @param profile - Patient profile with drug allergies
- * @param locale - Current locale for localization
+ * @param _locale - Current locale for localization
  * @returns Array of HealthData Allergy objects
  */
 function convertAllergies(
 	profile: PatientProfile,
-	locale = "en",
+	_locale = "en",
 ): HealthDataAllergy[] {
 	const allergies: HealthDataAllergy[] = [];
 
@@ -307,7 +304,8 @@ function convertImagingStudies(
 		modality: mapImagingTypeToModality(report.type),
 		body_site: createLocalizedString(report.bodyPart || "Unknown", locale),
 		summary: createLocalizedString(report.summary, locale),
-		abnormal_flag: report.impression?.toLowerCase().includes("abnormal") || false,
+		abnormal_flag:
+			report.impression?.toLowerCase().includes("abnormal") || false,
 		dicom_blob_id: undefined,
 	}));
 }
@@ -362,7 +360,7 @@ function mapImagingTypeToModality(
 export function profileToHealthData(
 	profile: PatientProfile,
 	medications: Medication[],
-	allergies: Allergy[], // UI format (not used currently, using profile allergies instead)
+	_allergies: Allergy[], // UI format (not used currently, using profile allergies instead)
 	medicalHistories: MedicalHistory[],
 	labResults: LabResult[],
 	imagingReports: ImagingReport[],
