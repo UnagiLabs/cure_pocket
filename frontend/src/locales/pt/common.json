@@ -111,6 +111,19 @@
 		"notInstalled": "Sui Wallet não está instalado.\nPor favor, instale em https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
 		"connectionFailed": "Falha ao conectar carteira. Por favor, tente novamente."
 	},
+	"passport": {
+		"mintSuccessTitle": "Passaporte emitido com sucesso",
+		"mintSuccessDescription": "Seu passaporte médico foi emitido com sucesso.",
+		"checkTransaction": "Ver transação →",
+		"statusChecking": "Verificando o status do passaporte...",
+		"statusError": "Erro ao verificar o passaporte",
+		"noPassportTitle": "Emita seu passaporte",
+		"noPassportDescription": "Emita seu passaporte médico para gerenciar seus dados de saúde com segurança.",
+		"minting": "Emitindo...",
+		"mintButton": "Emitir passaporte",
+		"hasPassportTitle": "Passaporte disponível",
+		"hasPassportDescription": "Seu passaporte médico está emitido e ativo."
+	},
 	"themes": {
 		"classic-blue": "Azul clássico",
 		"mint-clinic": "Clínica menta",

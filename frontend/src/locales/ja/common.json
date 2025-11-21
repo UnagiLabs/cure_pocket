@@ -111,6 +111,19 @@
 		"notInstalled": "Sui Walletがインストールされていません。\nhttps://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil からインストールしてください。",
 		"connectionFailed": "ウォレット接続に失敗しました。もう一度お試しください。"
 	},
+	"passport": {
+		"mintSuccessTitle": "パスポート発行成功",
+		"mintSuccessDescription": "メディカルパスポートが正常に発行されました。",
+		"checkTransaction": "トランザクションを確認 →",
+		"statusChecking": "パスポート状態を確認中...",
+		"statusError": "パスポート確認エラー",
+		"noPassportTitle": "パスポートを発行してください",
+		"noPassportDescription": "メディカルパスポートを発行すると、医療データを安全に管理できます。",
+		"minting": "発行中...",
+		"mintButton": "パスポートを発行する",
+		"hasPassportTitle": "パスポートを所持しています",
+		"hasPassportDescription": "メディカルパスポートが正常に発行されています。"
+	},
 	"themes": {
 		"classic-blue": "クラシックブルー",
 		"mint-clinic": "ミントクリニック",

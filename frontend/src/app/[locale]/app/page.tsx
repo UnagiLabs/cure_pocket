@@ -324,7 +324,7 @@ export default function HomePage() {
 								style={{ color: "#10B981" }}
 							/>
 							<h3 className="font-bold" style={{ color: "#059669" }}>
-								パスポート発行成功
+								{t("passport.mintSuccessTitle")}
 							</h3>
 						</div>
 						<button
@@ -337,7 +337,7 @@ export default function HomePage() {
 						</button>
 					</div>
 					<p className="mb-2 text-sm" style={{ color: "#047857" }}>
-						メディカルパスポートが正常に発行されました。
+						{t("passport.mintSuccessDescription")}
 					</p>
 					<a
 						href={get_explorer_tx_url(mint_success_digest)}
@@ -346,7 +346,7 @@ export default function HomePage() {
 						className="text-xs underline"
 						style={{ color: "#059669" }}
 					>
-						トランザクションを確認 →
+						{t("passport.checkTransaction")}
 					</a>
 				</div>
 			)}
@@ -369,7 +369,7 @@ export default function HomePage() {
 							className="text-sm"
 							style={{ color: theme.colors.textSecondary }}
 						>
-							パスポート状態を確認中...
+							{t("passport.statusChecking")}
 						</span>
 					</div>
 				</div>
@@ -387,7 +387,7 @@ export default function HomePage() {
 							style={{ color: "#EF4444" }}
 						/>
 						<h3 className="font-bold" style={{ color: "#DC2626" }}>
-							パスポート確認エラー
+							{t("passport.statusError")}
 						</h3>
 					</div>
 					<p className="text-sm" style={{ color: "#991B1B" }}>
@@ -408,14 +408,14 @@ export default function HomePage() {
 							style={{ color: theme.colors.primary }}
 						/>
 						<h3 className="font-bold" style={{ color: theme.colors.text }}>
-							パスポートを発行してください
+							{t("passport.noPassportTitle")}
 						</h3>
 					</div>
 					<p
 						className="mb-3 text-sm"
 						style={{ color: theme.colors.textSecondary }}
 					>
-						メディカルパスポートを発行すると、医療データを安全に管理できます。
+						{t("passport.noPassportDescription")}
 					</p>
 					{mint_error && (
 						<div
@@ -435,10 +435,10 @@ export default function HomePage() {
 						{is_mint_pending ? (
 							<span className="flex items-center justify-center">
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								発行中...
+								{t("passport.minting")}
 							</span>
 						) : (
-							"パスポートを発行する"
+							t("passport.mintButton")
 						)}
 					</button>
 				</div>
@@ -456,11 +456,11 @@ export default function HomePage() {
 							style={{ color: "#10B981" }}
 						/>
 						<h3 className="font-bold" style={{ color: "#059669" }}>
-							パスポートを所持しています
+							{t("passport.hasPassportTitle")}
 						</h3>
 					</div>
 					<p className="text-sm" style={{ color: "#047857" }}>
-						メディカルパスポートが正常に発行されています。
+						{t("passport.hasPassportDescription")}
 					</p>
 				</div>
 			)}

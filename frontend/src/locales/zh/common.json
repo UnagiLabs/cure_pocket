@@ -111,6 +111,19 @@
 		"notInstalled": "未安装Sui Wallet。\n请从 https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil 安装。",
 		"connectionFailed": "钱包连接失败。请重试。"
 	},
+	"passport": {
+		"mintSuccessTitle": "护照发行成功",
+		"mintSuccessDescription": "您的医疗护照已成功发行。",
+		"checkTransaction": "查看交易 →",
+		"statusChecking": "正在检查护照状态...",
+		"statusError": "护照状态检查出错",
+		"noPassportTitle": "请先发行护照",
+		"noPassportDescription": "发行医疗护照后即可安全管理您的健康数据。",
+		"minting": "发行中...",
+		"mintButton": "发行护照",
+		"hasPassportTitle": "已持有护照",
+		"hasPassportDescription": "医疗护照已发行并可用。"
+	},
 	"themes": {
 		"classic-blue": "经典蓝",
 		"mint-clinic": "薄荷诊所",
