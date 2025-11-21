@@ -111,6 +111,19 @@
 		"notInstalled": "Sui Wallet is not installed.\nPlease install it from https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil",
 		"connectionFailed": "Failed to connect wallet. Please try again."
 	},
+	"passport": {
+		"mintSuccessTitle": "Passport minted successfully",
+		"mintSuccessDescription": "Your medical passport has been issued successfully.",
+		"checkTransaction": "View transaction →",
+		"statusChecking": "Checking passport status...",
+		"statusError": "Passport status error",
+		"noPassportTitle": "Please issue your passport",
+		"noPassportDescription": "Mint your medical passport to manage your health data securely.",
+		"minting": "Minting...",
+		"mintButton": "Mint passport",
+		"hasPassportTitle": "Passport is ready",
+		"hasPassportDescription": "Your medical passport is issued and active."
+	},
 	"themes": {
 		"classic-blue": "Classic Blue",
 		"mint-clinic": "Mint Clinic",
