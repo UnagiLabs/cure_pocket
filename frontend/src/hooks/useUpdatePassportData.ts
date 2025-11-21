@@ -92,7 +92,8 @@ export interface UseUpdatePassportDataReturn {
  */
 export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	const suiClient = useSuiClient();
-	const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+	const { mutateAsync: signAndExecuteTransaction } =
+		useSignAndExecuteTransaction();
 
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -112,116 +113,82 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				);
 			}
 
-			return new Promise<void>((resolve, reject) => {
-				try {
-					setIsUpdating(true);
-					setError(null);
-					setDigest(null);
+			setIsUpdating(true);
+			setError(null);
+			setDigest(null);
 
-					const packageId = getPackageId();
-					const effectiveRegistryId = registryId || getRegistryId();
+			try {
+				const packageId = getPackageId();
+				const effectiveRegistryId = registryId || getRegistryId();
 
-					console.log("[UpdatePassport] Preparing transaction...");
-					console.log(`  Passport ID: ${passportId}`);
-					console.log(`  Registry ID: ${effectiveRegistryId}`);
-					if (blobId) console.log(`  New Blob ID: ${blobId}`);
-					if (sealId) console.log(`  New Seal ID: ${sealId}`);
+				console.log("[UpdatePassport] Preparing transaction...");
+				console.log(`  Passport ID: ${passportId}`);
+				console.log(`  Registry ID: ${effectiveRegistryId}`);
+				if (blobId) console.log(`  New Blob ID: ${blobId}`);
+				if (sealId) console.log(`  New Seal ID: ${sealId}`);
 
-					// Build transaction
-					const tx = new Transaction();
+				// Build transaction
+				const tx = new Transaction();
 
-					// Update walrus_blob_id if provided
-					if (blobId) {
-						tx.moveCall({
-							target: `${packageId}::accessor::update_walrus_blob_id`,
-							arguments: [
-								tx.object(effectiveRegistryId), // registry
-								tx.object(passportId), // passport
-								tx.pure.string(blobId), // new_blob_id
-								tx.object(CLOCK_OBJECT_ID), // clock
-							],
-						});
-					}
-
-					// Update seal_id if provided
-					if (sealId) {
-						tx.moveCall({
-							target: `${packageId}::accessor::update_seal_id`,
-							arguments: [
-								tx.object(effectiveRegistryId), // registry
-								tx.object(passportId), // passport
-								tx.pure.string(sealId), // new_seal_id
-								tx.object(CLOCK_OBJECT_ID), // clock
-							],
-						});
-					}
-
-					console.log("[UpdatePassport] Executing transaction...");
-
-					// Execute transaction
-					signAndExecute(
-						{
-							transaction: tx,
-						},
-						{
-							onSuccess: async (result) => {
-								const txDigest = result.digest;
-								console.log(
-									`[UpdatePassport] Transaction successful: ${txDigest}`,
-								);
-
-								try {
-									// Wait for transaction to be finalized
-									await suiClient.waitForTransaction({
-										digest: txDigest,
-										options: {
-											showEffects: true,
-										},
-									});
-
-									console.log("[UpdatePassport] Transaction finalized");
-
-									setDigest(txDigest);
-									setIsUpdating(false);
-									resolve();
-								} catch (waitError) {
-									console.error("[UpdatePassport] Wait failed:", waitError);
-									const errorMessage =
-										waitError instanceof Error
-											? waitError.message
-											: "Failed to wait for transaction";
-									setError(errorMessage);
-									setIsUpdating(false);
-									reject(new Error(errorMessage));
-								}
-							},
-							onError: (err) => {
-								console.error("[UpdatePassport] Update failed:", err);
-
-								const errorMessage =
-									err instanceof Error
-										? err.message
-										: "Failed to update passport data";
-								setError(errorMessage);
-								setIsUpdating(false);
-								reject(new Error(errorMessage));
-							},
-						},
-					);
-				} catch (err) {
-					console.error("[UpdatePassport] Preparation failed:", err);
-
-					const errorMessage =
-						err instanceof Error
-							? err.message
-							: "Failed to prepare transaction";
-					setError(errorMessage);
-					setIsUpdating(false);
-					reject(new Error(errorMessage));
+				// Update walrus_blob_id if provided
+				if (blobId) {
+					tx.moveCall({
+						target: `${packageId}::accessor::update_walrus_blob_id`,
+						arguments: [
+							tx.object(effectiveRegistryId), // registry
+							tx.object(passportId), // passport
+							tx.pure.string(blobId), // new_blob_id
+							tx.object(CLOCK_OBJECT_ID), // clock
+						],
+					});
 				}
-			});
+
+				// Update seal_id if provided
+				if (sealId) {
+					tx.moveCall({
+						target: `${packageId}::accessor::update_seal_id`,
+						arguments: [
+							tx.object(effectiveRegistryId), // registry
+							tx.object(passportId), // passport
+							tx.pure.string(sealId), // new_seal_id
+							tx.object(CLOCK_OBJECT_ID), // clock
+						],
+					});
+				}
+
+				console.log("[UpdatePassport] Executing transaction...");
+
+				// ✅ Execute transaction with mutateAsync
+				const result = await signAndExecuteTransaction({
+					transaction: tx,
+				});
+
+				const txDigest = result.digest;
+				console.log(`[UpdatePassport] Transaction successful: ${txDigest}`);
+
+				// Wait for transaction to be finalized
+				await suiClient.waitForTransaction({
+					digest: txDigest,
+					options: {
+						showEffects: true,
+					},
+				});
+
+				console.log("[UpdatePassport] Transaction finalized");
+
+				setDigest(txDigest);
+				setIsUpdating(false);
+			} catch (err) {
+				console.error("[UpdatePassport] Update failed:", err);
+
+				const errorMessage =
+					err instanceof Error ? err.message : "Failed to update passport data";
+				setError(errorMessage);
+				setIsUpdating(false);
+				throw new Error(errorMessage);
+			}
 		},
-		[signAndExecute, suiClient],
+		[signAndExecuteTransaction, suiClient],
 	);
 
 	return {

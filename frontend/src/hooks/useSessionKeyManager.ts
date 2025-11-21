@@ -30,7 +30,6 @@
  */
 "use client";
 
-import { fromHex } from "@mysten/bcs";
 import {
 	useCurrentAccount,
 	useSignPersonalMessage,
@@ -178,8 +177,8 @@ export function useSessionKeyManager(
 			});
 
 			// Step 4: Set signature to complete SessionKey initialization
-			const signatureBytes = fromHex(signatureResult.signature);
-			newSessionKey.setPersonalMessageSignature(signatureBytes);
+			// ✅ Pass signature directly (no conversion needed)
+			newSessionKey.setPersonalMessageSignature(signatureResult.signature);
 
 			// Calculate expiration time
 			const expiresAt = Date.now() + ttlMin * 60 * 1000;
