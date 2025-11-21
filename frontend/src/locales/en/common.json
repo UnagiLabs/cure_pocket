@@ -247,18 +247,46 @@
 		"name": "Name"
 	},
 	"landing": {
+		"about": {
+			"title": "What is CurePocket",
+			"description": "CurePocket is a next-generation healthcare platform that securely stores your medical information and makes it easy to share anywhere in the world. Simply connect your wallet and register your information to get started.",
+			"features": [
+				"💾 Self-Managed Data - You fully control your medical information using Walrus, Seal, and Sui",
+				"🔒 Security First - Encrypted data provides thorough privacy protection",
+				"📱 Easy Sharing - Safely share only necessary information with healthcare providers via QR code",
+				"🔬 Contribute to Medicine - Optionally provide anonymized data and earn rewards"
+			]
+		},
+		"howToStart": {
+			"title": "How to Get Started",
+			"step1": "1. Connect Your Wallet",
+			"step2": "2. Register Your Information",
+			"step3": "3. Securely Manage Your Health Data"
+		},
 		"features": {
 			"privacy": {
 				"title": "Privacy-First",
 				"description": "Your health data is encrypted and stored on Walrus"
 			},
+			"dataOwnership": {
+				"title": "You Own Your Data",
+				"description": "Using Walrus, Seal, and Sui, you securely control your medical information. Share with healthcare providers easily with just a QR code."
+			},
 			"global": {
 				"title": "Global Access",
 				"description": "Access your health passport anywhere, anytime"
 			},
+			"easyShare": {
+				"title": "Easy Information Sharing",
+				"description": "Share your information with healthcare providers easily with just a QR code. Share safely on your own terms."
+			},
 			"blockchain": {
 				"title": "Blockchain Powered",
 				"description": "Built on Sui blockchain for security and transparency"
+			},
+			"dataContribution": {
+				"title": "Contribute to Medical Advancement",
+				"description": "Optionally contribute your anonymized medical data for research. You'll receive a portion of the revenue generated from the data. Participation is entirely optional."
 			}
 		}
 	},
