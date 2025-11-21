@@ -54,8 +54,13 @@ export function SuiProviders({ children }: SuiProvidersProps) {
 				networks={networkConfig}
 				defaultNetwork={defaultNetwork}
 			>
-				{/* autoConnectを無効化して、ユーザーが明示的にコネクトを開始するまで待つ */}
-				<WalletProvider autoConnect={false}>
+				{/* autoConnectを無効化し、Slush未インストール時のブラウザログインにアプリ名を表示 */}
+				<WalletProvider
+					autoConnect={false}
+					slushWallet={{
+						name: process.env.NEXT_PUBLIC_APP_NAME || "CurePocket",
+					}}
+				>
 					{children}
 					<Toaster position="top-right" />
 				</WalletProvider>
