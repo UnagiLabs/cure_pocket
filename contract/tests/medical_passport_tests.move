@@ -1189,7 +1189,7 @@ module cure_pocket::medical_passport_tests {
             let fields = display::fields(&display_obj);
 
             let image_key = string::utf8(b"image_url");
-            let expected = string::utf8(b"https://github.com/UnagiLabs/cure_pocket/blob/main/frontend/src/app/icon.png?raw=true");
+            let expected = string::utf8(b"https://raw.githubusercontent.com/UnagiLabs/cure_pocket/main/frontend/src/app/icon.png");
 
             assert!(*vec_map::get(fields, &image_key) == expected, 0);
 
