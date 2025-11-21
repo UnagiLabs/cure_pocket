@@ -25,7 +25,7 @@ import type {
  */
 export default function ProfilePage() {
 	const t = useTranslations();
-	const _router = useRouter();
+	const router = useRouter();
 	const locale = useLocale();
 	const { settings, profile, updateProfile } = useApp();
 	const theme = getTheme(settings.theme);
@@ -165,7 +165,14 @@ export default function ProfilePage() {
 
 			updateProfile(profileToSave);
 			setShowSuccess(true);
-			setTimeout(() => setShowSuccess(false), 3000);
+			// 新規登録の場合（profileが未設定の場合）はホーム画面へ遷移
+			if (!profile) {
+				setTimeout(() => {
+					router.push(`/${locale}/app`);
+				}, 2000);
+			} else {
+				setTimeout(() => setShowSuccess(false), 3000);
+			}
 		} catch (error) {
 			console.error("Failed to save profile:", error);
 		} finally {

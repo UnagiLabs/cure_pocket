@@ -51,7 +51,7 @@ export default function LandingPage() {
 			{
 				onSuccess: () => {
 					// 接続成功後、アプリにリダイレクト
-					router.push(`/${selectedLocale}/app`);
+					router.push(`/${selectedLocale}/app/passport`);
 				},
 				onError: (error) => {
 					// ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
