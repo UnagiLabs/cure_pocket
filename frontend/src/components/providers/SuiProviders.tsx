@@ -8,6 +8,7 @@ import {
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { Toaster } from "sonner";
 
 /**
  * Sui dApp Kit プロバイダーコンポーネント
@@ -53,7 +54,10 @@ export function SuiProviders({ children }: SuiProvidersProps) {
 				networks={networkConfig}
 				defaultNetwork={defaultNetwork}
 			>
-				<WalletProvider autoConnect>{children}</WalletProvider>
+				<WalletProvider autoConnect>
+					{children}
+					<Toaster position="top-right" />
+				</WalletProvider>
 			</SuiClientProvider>
 		</QueryClientProvider>
 	);
