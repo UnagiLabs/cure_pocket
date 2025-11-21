@@ -15,6 +15,7 @@ import {
 	Settings,
 	Wallet,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -108,7 +109,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 				style={{ backgroundColor: theme.colors.primary }}
 			>
 				<div className="flex items-center flex-shrink-0">
-					<span className="mr-2 text-2xl md:text-3xl">🏥</span>
+					<Image
+						src="/icon.png"
+						alt="CurePocket Logo"
+						width={32}
+						height={32}
+						className="mr-2 rounded-lg md:w-10 md:h-10"
+					/>
 					<span className="text-xl font-bold text-white md:text-2xl">
 						{t("appName")}
 					</span>

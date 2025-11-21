@@ -260,6 +260,22 @@
 		"name": "Nome"
 	},
 	"landing": {
+		"about": {
+			"title": "O que é o CurePocket",
+			"description": "CurePocket é uma plataforma de saúde de nova geração que armazena com segurança suas informações médicas e facilita o compartilhamento em qualquer lugar do mundo. Basta conectar sua carteira e registrar suas informações para começar.",
+			"features": [
+				"💾 Dados autogerenciados - Você controla totalmente suas informações médicas usando Walrus, Seal e Sui",
+				"🔒 Segurança em primeiro lugar - Dados criptografados fornecem proteção completa de privacidade",
+				"📱 Compartilhamento fácil - Compartilhe com segurança apenas as informações necessárias com profissionais de saúde via código QR",
+				"🔬 Contribuir para a medicina - Forneça opcionalmente dados anonimizados e ganhe recompensas"
+			]
+		},
+		"howToStart": {
+			"title": "Como começar",
+			"step1": "1. Conecte sua carteira",
+			"step2": "2. Registre suas informações",
+			"step3": "3. Gerencie seus dados de saúde com segurança"
+		},
 		"features": {
 			"privacy": {
 				"title": "Privacidade em primeiro lugar",

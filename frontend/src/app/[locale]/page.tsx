@@ -6,6 +6,7 @@ import {
 	useWallets,
 } from "@mysten/dapp-kit";
 import { Globe, Wallet } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -50,7 +51,7 @@ export default function LandingPage() {
 			{
 				onSuccess: () => {
 					// 接続成功後、アプリにリダイレクト
-					router.push(`/${selectedLocale}/app`);
+					router.push(`/${selectedLocale}/app/passport`);
 				},
 				onError: (error) => {
 					// ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
@@ -82,7 +83,13 @@ export default function LandingPage() {
 				{/* Logo and Title */}
 				<div className="mb-8 text-center">
 					<div className="mb-4 flex items-center justify-center">
-						<span className="text-6xl">🏥</span>
+						<Image
+							src="/icon.png"
+							alt="CurePocket Logo"
+							width={80}
+							height={80}
+							className="rounded-2xl"
+						/>
 					</div>
 					<h1 className="mb-2 text-4xl font-bold text-gray-900">
 						{t("appName")}
@@ -90,42 +97,32 @@ export default function LandingPage() {
 					<p className="text-lg text-gray-600">{t("tagline")}</p>
 				</div>
 
-				{/* Features */}
-				<div className="mb-8 w-full space-y-4">
-					<div className="rounded-2xl bg-white p-6 shadow-sm">
-						<div className="mb-2 flex items-center">
-							<span className="mr-3 text-2xl">🔒</span>
-							<h3 className="font-semibold text-gray-900">
-								{t("landing.features.privacy.title")}
-							</h3>
-						</div>
-						<p className="text-sm text-gray-600">
-							{t("landing.features.privacy.description")}
-						</p>
+				{/* About Section */}
+				<div className="mb-6 w-full rounded-2xl bg-white p-6 shadow-sm">
+					<h2 className="mb-3 text-xl font-bold text-gray-900">
+						{t("landing.about.title")}
+					</h2>
+					<p className="mb-4 text-sm leading-relaxed text-gray-700">
+						{t("landing.about.description")}
+					</p>
+					<div className="space-y-2">
+						{(t.raw("landing.about.features") as string[]).map((feature) => (
+							<p key={feature} className="text-sm text-gray-600">
+								{feature}
+							</p>
+						))}
 					</div>
+				</div>
 
-					<div className="rounded-2xl bg-white p-6 shadow-sm">
-						<div className="mb-2 flex items-center">
-							<span className="mr-3 text-2xl">🌍</span>
-							<h3 className="font-semibold text-gray-900">
-								{t("landing.features.global.title")}
-							</h3>
-						</div>
-						<p className="text-sm text-gray-600">
-							{t("landing.features.global.description")}
-						</p>
-					</div>
-
-					<div className="rounded-2xl bg-white p-6 shadow-sm">
-						<div className="mb-2 flex items-center">
-							<span className="mr-3 text-2xl">⛓️</span>
-							<h3 className="font-semibold text-gray-900">
-								{t("landing.features.blockchain.title")}
-							</h3>
-						</div>
-						<p className="text-sm text-gray-600">
-							{t("landing.features.blockchain.description")}
-						</p>
+				{/* How to Start Section */}
+				<div className="mb-6 w-full rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm">
+					<h2 className="mb-4 text-xl font-bold text-gray-900">
+						{t("landing.howToStart.title")}
+					</h2>
+					<div className="space-y-2 text-sm text-gray-700">
+						<p className="font-medium">{t("landing.howToStart.step1")}</p>
+						<p className="font-medium">{t("landing.howToStart.step2")}</p>
+						<p className="font-medium">{t("landing.howToStart.step3")}</p>
 					</div>
 				</div>
 

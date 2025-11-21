@@ -86,6 +86,10 @@ export interface UseMintPassportReturn {
 	 */
 	isPending: boolean;
 	/**
+	 * トランザクション成功したかどうか
+	 */
+	isSuccess: boolean;
+	/**
 	 * エラー情報
 	 */
 	error: Error | null;
@@ -106,6 +110,7 @@ export function useMintPassport(
 		error,
 	} = useSignAndExecuteTransaction();
 	const [mint_error, set_mint_error] = useState<Error | null>(null);
+	const [is_success, set_is_success] = useState(false);
 
 	/**
 	 * パスポートを発行する関数
@@ -150,6 +155,7 @@ export function useMintPassport(
 						onSuccess: (result) => {
 							// 成功時の処理
 							set_mint_error(null);
+							set_is_success(true);
 							const digest = result.digest;
 							// コールバック実行
 							onMintSuccess?.(digest);
@@ -183,6 +189,7 @@ export function useMintPassport(
 	return {
 		mint,
 		isPending,
+		isSuccess: is_success,
 		error: mint_error || (error as Error | null),
 	};
 }

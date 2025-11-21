@@ -4,38 +4,19 @@ import {
 	Activity,
 	AlertCircle,
 	AlertTriangle,
-	CheckCircle,
 	FileText,
 	FlaskConical,
-	Loader2,
 	Package,
 	Plus,
 	Scan,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
-import { useMintPassport } from "@/hooks/useMintPassport";
-import { usePassport } from "@/hooks/usePassport";
 import { getTheme } from "@/lib/themes";
 import type { Medication } from "@/types";
-
-/**
- * Suiネットワークタイプを取得
- */
-function get_sui_network(): string {
-	return process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet";
-}
-
-/**
- * トランザクションエクスプローラーURLを生成
- */
-function get_explorer_tx_url(digest: string): string {
-	const network = get_sui_network();
-	return `https://suiscan.xyz/${network}/tx/${digest}`;
-}
 
 /**
  * ホーム画面（ダッシュボード）
@@ -61,38 +42,6 @@ export default function HomePage() {
 
 	// ユーザー名をプロフィールから取得、未設定時はGuest表示
 	const displayName = profile?.name || null;
-
-	// パスポート状態を取得
-	const passport_status = usePassport();
-	// トランザクション成功状態
-	const [mint_success_digest, set_mint_success_digest] = useState<
-		string | null
-	>(null);
-
-	// パスポート発行フック（成功時のコールバック付き）
-	const {
-		mint,
-		isPending: is_mint_pending,
-		error: mint_error,
-	} = useMintPassport((digest) => {
-		// mint成功時の処理
-		set_mint_success_digest(digest);
-		// パスポート状態を再取得
-		passport_status.refresh();
-	});
-
-	/**
-	 * パスポートを発行するハンドラー
-	 */
-	async function handle_mint_passport() {
-		try {
-			// MVP段階ではモック値を使用
-			await mint("init_blob", "init_seal");
-		} catch (error) {
-			// エラーはuseMintPassportで処理される
-			console.error("パスポート発行エラー:", error);
-		}
-	}
 
 	useEffect(() => {
 		// Load demo medications if empty
@@ -272,198 +221,6 @@ export default function HomePage() {
 						: t("home.guestGreeting")}
 				</h1>
 			</div>
-
-			{/* Profile Setup Banner */}
-			{!profile && (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: `${theme.colors.primary}10`,
-						borderColor: theme.colors.primary,
-					}}
-				>
-					<div className="mb-2 flex items-center">
-						<AlertCircle
-							className="mr-2 h-5 w-5"
-							style={{ color: theme.colors.primary }}
-						/>
-						<h3 className="font-bold" style={{ color: theme.colors.text }}>
-							{t("home.profileSetupBanner.title")}
-						</h3>
-					</div>
-					<p
-						className="mb-3 text-sm"
-						style={{ color: theme.colors.textSecondary }}
-					>
-						{t("home.profileSetupBanner.description")}
-					</p>
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/profile`)}
-						className="w-full rounded-lg p-2 text-sm font-medium text-white"
-						style={{ backgroundColor: theme.colors.primary }}
-					>
-						{t("home.profileSetupBanner.button")}
-					</button>
-				</div>
-			)}
-
-			{/* Mint Success Banner */}
-			{mint_success_digest && (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: "#D1FAE5",
-						borderColor: "#10B981",
-					}}
-				>
-					<div className="mb-2 flex items-center justify-between">
-						<div className="flex items-center">
-							<CheckCircle
-								className="mr-2 h-5 w-5"
-								style={{ color: "#10B981" }}
-							/>
-							<h3 className="font-bold" style={{ color: "#059669" }}>
-								{t("passport.mintSuccessTitle")}
-							</h3>
-						</div>
-						<button
-							type="button"
-							onClick={() => set_mint_success_digest(null)}
-							className="text-sm"
-							style={{ color: "#059669" }}
-						>
-							✕
-						</button>
-					</div>
-					<p className="mb-2 text-sm" style={{ color: "#047857" }}>
-						{t("passport.mintSuccessDescription")}
-					</p>
-					<a
-						href={get_explorer_tx_url(mint_success_digest)}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-xs underline"
-						style={{ color: "#059669" }}
-					>
-						{t("passport.checkTransaction")}
-					</a>
-				</div>
-			)}
-
-			{/* Passport Status Banner */}
-			{passport_status.loading ? (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: theme.colors.surface,
-						borderColor: theme.colors.primary,
-					}}
-				>
-					<div className="flex items-center justify-center">
-						<Loader2
-							className="mr-2 h-5 w-5 animate-spin"
-							style={{ color: theme.colors.primary }}
-						/>
-						<span
-							className="text-sm"
-							style={{ color: theme.colors.textSecondary }}
-						>
-							{t("passport.statusChecking")}
-						</span>
-					</div>
-				</div>
-			) : passport_status.error ? (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: "#FEE2E2",
-						borderColor: "#EF4444",
-					}}
-				>
-					<div className="mb-2 flex items-center">
-						<AlertCircle
-							className="mr-2 h-5 w-5"
-							style={{ color: "#EF4444" }}
-						/>
-						<h3 className="font-bold" style={{ color: "#DC2626" }}>
-							{t("passport.statusError")}
-						</h3>
-					</div>
-					<p className="text-sm" style={{ color: "#991B1B" }}>
-						{passport_status.error}
-					</p>
-				</div>
-			) : !passport_status.has_passport ? (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: `${theme.colors.primary}10`,
-						borderColor: theme.colors.primary,
-					}}
-				>
-					<div className="mb-2 flex items-center">
-						<AlertCircle
-							className="mr-2 h-5 w-5"
-							style={{ color: theme.colors.primary }}
-						/>
-						<h3 className="font-bold" style={{ color: theme.colors.text }}>
-							{t("passport.noPassportTitle")}
-						</h3>
-					</div>
-					<p
-						className="mb-3 text-sm"
-						style={{ color: theme.colors.textSecondary }}
-					>
-						{t("passport.noPassportDescription")}
-					</p>
-					{mint_error && (
-						<div
-							className="mb-3 rounded-lg p-2 text-sm"
-							style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}
-						>
-							{mint_error.message}
-						</div>
-					)}
-					<button
-						type="button"
-						onClick={handle_mint_passport}
-						disabled={is_mint_pending}
-						className="w-full rounded-lg p-2 text-sm font-medium text-white disabled:opacity-50"
-						style={{ backgroundColor: theme.colors.primary }}
-					>
-						{is_mint_pending ? (
-							<span className="flex items-center justify-center">
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								{t("passport.minting")}
-							</span>
-						) : (
-							t("passport.mintButton")
-						)}
-					</button>
-				</div>
-			) : (
-				<div
-					className="mb-6 rounded-xl border-2 p-4"
-					style={{
-						backgroundColor: "#D1FAE5",
-						borderColor: "#10B981",
-					}}
-				>
-					<div className="mb-2 flex items-center">
-						<CheckCircle
-							className="mr-2 h-5 w-5"
-							style={{ color: "#10B981" }}
-						/>
-						<h3 className="font-bold" style={{ color: "#059669" }}>
-							{t("passport.hasPassportTitle")}
-						</h3>
-					</div>
-					<p className="text-sm" style={{ color: "#047857" }}>
-						{t("passport.hasPassportDescription")}
-					</p>
-				</div>
-			)}
 
 			{/* Summary Cards Grid */}
 			<div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 md:gap-4">
