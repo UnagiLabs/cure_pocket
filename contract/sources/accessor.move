@@ -242,6 +242,58 @@ entry fun update_walrus_blob_id(
     medical_passport::update_walrus_blob_id_internal(passport, new_blob_id, clock);
 }
 
+/// Seal IDを更新するエントリー関数
+///
+/// ## 概要
+/// MedicalPassportの`seal_id`フィールドを更新するエントリー関数。
+/// プロフィール保存時に新しいseal_idを設定する際に使用される。
+///
+/// ## 権限
+/// - パスポートの所有者のみが更新可能
+/// - トランザクション送信者がパスポートの所有者と一致する必要がある
+///
+/// ## 制約
+/// - `new_seal_id`が空文字列でないことを確認
+/// - パスポートの所有者のみが更新可能（PassportRegistryで所有権を確認）
+///
+/// ## 動作
+/// 1. `new_seal_id`が空文字列でないことをバリデーション
+/// 2. トランザクション送信者を取得
+/// 3. パスポートIDを取得
+/// 4. PassportRegistryで送信者がパスポートの所有者であることを確認
+/// 5. `medical_passport::update_seal_id_internal()`を呼び出して更新
+///
+/// ## パラメータ
+/// - `registry`: PassportRegistryへの参照（所有権確認用）
+/// - `passport`: 更新対象のMedicalPassportへの可変参照
+/// - `new_seal_id`: 新しいSeal ID（空文字列不可）
+/// - `clock`: 現在時刻取得用のClock参照
+/// - `ctx`: トランザクションコンテキスト（送信者取得用）
+///
+/// ## 副作用
+/// - `passport.seal_id`が`new_seal_id`に更新される
+/// - `PassportSealUpdatedEvent`イベントが発行される
+///
+/// ## Aborts
+/// - `E_EMPTY_SEAL_ID`: `new_seal_id`が空文字列
+/// - `E_NO_ACCESS`: トランザクション送信者がパスポートの所有者ではない
+entry fun update_seal_id(
+    registry: &PassportRegistry,
+    passport: &mut MedicalPassport,
+    new_seal_id: String,
+    clock: &Clock,
+    ctx: &tx_context::TxContext
+) {
+    // バリデーション: new_seal_idが空文字列でないことを確認
+    assert!(!string::is_empty(&new_seal_id), medical_passport::e_empty_seal_id());
+
+    // アクセス制御: 送信者がパスポートの所有者であることを確認
+    medical_passport::assert_passport_owner(registry, object::id(passport), tx_context::sender(ctx), seal_accessor::e_no_access());
+
+    // 内部関数を呼び出して更新
+    medical_passport::update_seal_id_internal(passport, new_seal_id, clock);
+}
+
 /// ConsentTokenを作成して共有オブジェクトとして公開
 ///
 /// ## 概要
