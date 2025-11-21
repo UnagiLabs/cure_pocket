@@ -8,7 +8,6 @@ module cure_pocket::seal_accessor_tests {
 
     use cure_pocket::medical_passport::{Self as medical_passport, MedicalPassport, PassportRegistry};
     use cure_pocket::medical_passport_accessor;
-    use cure_pocket::seal_accessor;
     use cure_pocket::cure_pocket::Self;
 
     // テスト用定数

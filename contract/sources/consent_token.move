@@ -70,6 +70,21 @@ public struct SealAuthPayload has drop {
     requested_scope: String,
 }
 
+/// テスト専用: ConsentToken を破棄
+#[test_only]
+public fun destroy_consent_token_for_tests(token: ConsentToken) {
+    let ConsentToken {
+        id,
+        passport_id: _,
+        grantor: _,
+        secret_hash: _,
+        scopes: _,
+        expiration_ms: _,
+        is_active: _,
+    } = token;
+    object::delete(id);
+}
+
 // ============================================================
 // エラーコード
 // ============================================================

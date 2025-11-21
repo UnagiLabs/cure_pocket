@@ -8,7 +8,7 @@ module cure_pocket::consent_token_tests {
     use sui::bcs;
     use std::string::{Self, String};
     use std::hash;
-    use sui::test_utils;
+    use cure_pocket::test_utils;
 
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::consent_token::{Self, ConsentToken};
@@ -479,7 +479,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token_mut = token;
             consent_token::revoke_consent_internal(&mut token_mut, USER2);
-            test_utils::destroy(token_mut);
+            test_utils::destroy_consent_token(token_mut);
         };
 
         ts::end(scenario);
