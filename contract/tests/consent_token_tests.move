@@ -10,7 +10,7 @@ module cure_pocket::consent_token_tests {
     use std::hash;
     use cure_pocket::test_utils;
 
-    use cure_pocket::medical_passport_accessor;
+    use cure_pocket::accessor;
     use cure_pocket::consent_token::{Self, ConsentToken};
     use cure_pocket::cure_pocket::Self;
 
@@ -297,7 +297,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -361,7 +361,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -374,7 +374,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -392,7 +392,7 @@ module cure_pocket::consent_token_tests {
     /// - user2が無効化しようとする
     /// - `E_NON_GRANTOR_REVOKE`でabortすることを確認
     #[test]
-    #[expected_failure(abort_code = 210, location = medical_passport_accessor)]
+    #[expected_failure(abort_code = 210, location = accessor)]
     fun test_revoke_consent_token_non_grantor() {
         let mut scenario = ts::begin(USER1);
 
@@ -429,7 +429,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -545,7 +545,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -604,7 +604,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -629,7 +629,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -704,7 +704,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -774,7 +774,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -847,7 +847,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -906,7 +906,7 @@ module cure_pocket::consent_token_tests {
         {
             let mut token = ts::take_shared<ConsentToken>(&scenario);
 
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token,
                 ts::ctx(&mut scenario)
             );
@@ -931,7 +931,7 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -993,7 +993,7 @@ module cure_pocket::consent_token_tests {
         ts::next_tx(&mut scenario, USER1);
         {
             let mut token1 = ts::take_shared<ConsentToken>(&scenario);
-            medical_passport_accessor::revoke_consent_token(
+            accessor::revoke_consent_token(
                 &mut token1,
                 ts::ctx(&mut scenario)
             );
@@ -1261,7 +1261,7 @@ module cure_pocket::consent_token_tests {
             vector::append(&mut bcs_bytes, scope_bytes);
 
             // 現在の実装ではスコープ検証がないため、abortしない
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock
@@ -1330,7 +1330,7 @@ module cure_pocket::consent_token_tests {
             vector::append(&mut bcs_bytes, scope_bytes);
 
             // abortしないことを確認
-            medical_passport_accessor::seal_approve_consent(
+            accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
                 &clock

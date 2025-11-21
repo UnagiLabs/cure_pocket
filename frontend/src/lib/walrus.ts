@@ -21,7 +21,7 @@ import type { WalrusBlobReference } from "@/types/healthData";
  * Walrus Publisher endpoint (for uploads)
  */
 const WALRUS_PUBLISHER =
-	process.env.NEXT_PUBLIC_WALRUS_RPC_URL ||
+	process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_URL ||
 	"https://walrus-testnet-publisher.mystenlabs.com";
 
 /**
@@ -179,12 +179,9 @@ export async function downloadFromWalrusByBlobId(
 	blobId: string,
 ): Promise<Uint8Array> {
 	try {
-		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-			{
-				method: "GET",
-			},
-		);
+		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
+			method: "GET",
+		});
 
 		if (!response.ok) {
 			if (response.status === 404) {
@@ -248,12 +245,9 @@ export async function downloadFromWalrusByObjectId(
  */
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
-		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-			{
-				method: "HEAD",
-			},
-		);
+		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
+			method: "HEAD",
+		});
 		return response.ok;
 	} catch {
 		return false;
@@ -294,12 +288,9 @@ export async function getBlobMetadata(blobId: string): Promise<{
 	certified: boolean;
 }> {
 	try {
-		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-blob-id/${blobId}`,
-			{
-				method: "HEAD",
-			},
-		);
+		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
+			method: "HEAD",
+		});
 
 		if (!response.ok) {
 			throw new Error(`Blob not found: ${blobId}`);

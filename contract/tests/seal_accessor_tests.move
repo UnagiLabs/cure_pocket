@@ -7,7 +7,7 @@ module cure_pocket::seal_accessor_tests {
     use std::string::{Self, String};
 
     use cure_pocket::medical_passport::{Self as medical_passport, MedicalPassport, PassportRegistry};
-    use cure_pocket::medical_passport_accessor;
+    use cure_pocket::accessor;
     use cure_pocket::cure_pocket::Self;
 
     // テスト用定数
@@ -47,7 +47,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -65,7 +65,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -107,7 +107,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -132,7 +132,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -171,7 +171,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -190,7 +190,7 @@ module cure_pocket::seal_accessor_tests {
             let seal2 = string::utf8(b"seal-key-fghij");
             let country2 = string::utf8(b"US");
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus2,
                 seal2,
@@ -208,7 +208,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -243,7 +243,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -262,7 +262,7 @@ module cure_pocket::seal_accessor_tests {
             let seal2 = string::utf8(b"seal-key-fghij");
             let country2 = string::utf8(b"US");
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus2,
                 seal2,
@@ -280,7 +280,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -316,7 +316,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -342,7 +342,7 @@ module cure_pocket::seal_accessor_tests {
             let seal2 = string::utf8(b"seal-key-fghij");
             let country2 = string::utf8(b"US");
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus2,
                 seal2,
@@ -367,7 +367,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport_a,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -403,7 +403,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -429,7 +429,7 @@ module cure_pocket::seal_accessor_tests {
             let seal2 = string::utf8(b"seal-key-fghij");
             let country2 = string::utf8(b"US");
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus2,
                 seal2,
@@ -454,7 +454,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport_b,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -494,7 +494,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -519,7 +519,7 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // seal_approve_patient_onlyを呼び出し（E_NO_ACCESSでabortするはず）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -557,7 +557,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -575,21 +575,21 @@ module cure_pocket::seal_accessor_tests {
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
             // 1回目の呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
             );
 
             // 2回目の呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
             );
 
             // 3回目の呼び出し（abortしないことを確認）
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)
@@ -623,7 +623,7 @@ module cure_pocket::seal_accessor_tests {
             let mut registry = ts::take_shared<PassportRegistry>(&scenario);
             let (walrus, seal, country) = create_test_passport_data();
 
-            medical_passport_accessor::mint_medical_passport(
+            accessor::mint_medical_passport(
                 &mut registry,
                 walrus,
                 seal,
@@ -642,7 +642,7 @@ module cure_pocket::seal_accessor_tests {
             let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let registry = ts::take_shared<PassportRegistry>(&scenario);
 
-            medical_passport_accessor::seal_approve_patient_only(
+            accessor::seal_approve_patient_only(b"", 
                 &passport,
                 &registry,
                 ts::ctx(&mut scenario)

@@ -70,10 +70,12 @@
 - Public assets in `frontend/public`
 
 ## Build, Test, and Development Commands
-- `npm install` or `bun install` inside `frontend/` to populate `node_modules` (the project ships a `bun.lock`).
-- `npm run dev` (from `frontend/`) starts Next.js locally on `localhost:3000`
-- `npm run build` and `npm run start` build and serve the production bundle
-- `npm run lint` / `npm run format` run Biome for static analysis and formatting in the frontend codebase
+- **Package manager: Always use `bun` for all package management operations** (the project ships a `bun.lock`).
+- `bun install` inside `frontend/` to populate `node_modules`
+- `bun run dev` (from `frontend/`) starts Next.js locally on `localhost:3000`
+- `bun run build` and `bun run start` build and serve the production bundle
+- `bun run lint` / `bun run format` run Biome for static analysis and formatting in the frontend codebase
+- **After editing any frontend code, always run `bun check` locally and ensure there are no errors or warnings.** Do this continuously during development, not just before PRs.
 
 ## Coding Style & Naming Conventions
 - Frontend TypeScript follows Next.js defaults: 2-space indentation, `camelCase` identifiers, React components capitalized, hooks prefixed with `use`.

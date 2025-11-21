@@ -27,16 +27,29 @@ import type { HealthData } from "@/types/healthData";
  * Seal KeyServer ObjectIds from environment
  * Comma-separated list of key server object IDs
  */
-const SEAL_KEY_SERVERS =
+export const SEAL_KEY_SERVERS =
 	process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
 		.map((id) => id.trim())
 		.filter(Boolean) || [];
 
 /**
- * Default threshold (t-of-n)
- * Requires 2 out of n key servers to decrypt
+ * Calculate appropriate threshold based on number of key servers
+ * - 1 server: threshold = 1 (single point of failure, but functional)
+ * - 2+ servers: threshold = 2 (recommended for redundancy and security)
+ *
+ * @param keyServerCount - Number of key servers configured
+ * @returns Appropriate threshold value (1 or 2)
+ *
+ * @example
+ * ```typescript
+ * calculateThreshold(1) // Returns 1
+ * calculateThreshold(2) // Returns 2
+ * calculateThreshold(5) // Returns 2
+ * ```
  */
-const DEFAULT_THRESHOLD = 2;
+export function calculateThreshold(keyServerCount: number): number {
+	return Math.min(2, Math.max(1, keyServerCount));
+}
 
 /**
  * SessionKey TTL in minutes (default: 10 minutes)
@@ -94,6 +107,9 @@ function resolveKeyServers(
  * @returns Initialized SealClient instance
  * @throws Error if KeyServer configuration is invalid
  */
+// Cache SealClient to avoid re-creating (reduces key fetch / auth prompts)
+let cachedSealClient: { key: string; client: SealClient } | null = null;
+
 export function createSealClient(suiClient: SuiClient): SealClient {
 	// Get key server object IDs
 	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
@@ -104,6 +120,14 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 		);
 	}
 
+	const serverKey = `${SUI_NETWORK}:${VERIFY_KEY_SERVERS}:${serverObjectIds.join(
+		",",
+	)}`;
+
+	if (cachedSealClient && cachedSealClient.key === serverKey) {
+		return cachedSealClient.client;
+	}
+
 	// Create server configs with equal weights
 	const serverConfigs = serverObjectIds.map((objectId) => ({
 		objectId,
@@ -111,11 +135,14 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 	}));
 
 	// Initialize SealClient
-	return new SealClient({
+	const client = new SealClient({
 		suiClient,
 		serverConfigs,
 		verifyKeyServers: VERIFY_KEY_SERVERS,
 	});
+
+	cachedSealClient = { key: serverKey, client };
+	return client;
 }
 
 /**
@@ -188,12 +215,11 @@ export async function encryptHealthData(params: {
 	sealId: string; // hex string (without package prefix)
 	threshold?: number;
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
-	const {
-		healthData,
-		sealClient,
-		sealId,
-		threshold = DEFAULT_THRESHOLD,
-	} = params;
+	const { healthData, sealClient, sealId, threshold } = params;
+
+	// If threshold not provided, calculate based on key server count
+	const effectiveThreshold =
+		threshold ?? calculateThreshold(SEAL_KEY_SERVERS.length);
 
 	// Serialize to JSON
 	const json = JSON.stringify(healthData);
@@ -201,7 +227,7 @@ export async function encryptHealthData(params: {
 
 	// Encrypt with Seal
 	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
-		threshold,
+		threshold: effectiveThreshold,
 		packageId: PACKAGE_ID,
 		id: sealId,
 		data,
@@ -304,29 +330,19 @@ export async function buildPatientAccessPTB(params: {
  * @returns Transaction bytes for Seal verification
  */
 export async function buildConsentAccessPTB(params: {
-	passportObjectId: string;
-	registryObjectId: string;
 	consentTokenObjectId: string;
 	suiClient: SuiClient;
 	sealId: string;
 }): Promise<Uint8Array> {
-	const {
-		passportObjectId,
-		registryObjectId,
-		consentTokenObjectId,
-		suiClient,
-		sealId,
-	} = params;
+	const { consentTokenObjectId, suiClient, sealId } = params;
 
 	const tx = new Transaction();
 
-	// Call seal_approve_consent(id, passport, registry, consent_token, clock)
+	// Call seal_approve_consent(id, consent_token, clock)
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
 		arguments: [
 			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
-			tx.object(passportObjectId),
-			tx.object(registryObjectId),
 			tx.object(consentTokenObjectId),
 			tx.object("0x6"), // Clock object
 		],

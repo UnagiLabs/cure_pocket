@@ -116,6 +116,25 @@ public struct PassportUpdatedEvent has copy, drop {
     timestamp_ms: u64,
 }
 
+/// Seal ID更新イベント
+///
+/// ## 用途
+/// - Seal ID更新の記録
+/// - 監査証跡として使用
+/// - オフチェーンでの更新履歴追跡
+///
+/// ## フィールド
+/// - `passport_id`: 更新されたパスポートのID
+/// - `old_seal_id`: 更新前のSeal ID
+/// - `new_seal_id`: 更新後のSeal ID
+/// - `timestamp_ms`: 更新実行時刻（ミリ秒）
+public struct PassportSealUpdatedEvent has copy, drop {
+    passport_id: object::ID,
+    old_seal_id: String,
+    new_seal_id: String,
+    timestamp_ms: u64,
+}
+
 // ============================================================
 // エラーコード
 // ============================================================
@@ -182,6 +201,18 @@ public(package) fun e_migration_target_has_passport(): u64 {
 /// - エラーコード `E_EMPTY_WALRUS_BLOB_ID` の値
 public(package) fun e_empty_walrus_blob_id(): u64 {
     E_EMPTY_WALRUS_BLOB_ID
+}
+
+/// E_EMPTY_SEAL_ID エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+/// - Move 2024 では const を public にできないため、ゲッター経由でアクセス
+///
+/// ## 返り値
+/// - エラーコード `E_EMPTY_SEAL_ID` の値
+public(package) fun e_empty_seal_id(): u64 {
+    E_EMPTY_SEAL_ID
 }
 
 /// E_REGISTRY_ALREADY_REGISTERED エラーコードを取得
@@ -581,6 +612,60 @@ public(package) fun update_walrus_blob_id_internal(
         passport_id,
         old_blob_id,
         new_blob_id,
+        timestamp_ms,
+    };
+    sui::event::emit(updated_event);
+}
+
+/// Seal IDを更新する内部関数
+///
+/// ## 概要
+/// MedicalPassportの`seal_id`フィールドを更新し、
+/// 更新イベントを発行するパッケージ内部関数。
+/// プロフィール保存時に新しいseal_idを設定する際に使用される。
+///
+/// ## 用途
+/// - プロフィールデータ保存時に生成された新しいSeal IDをパスポートに反映
+/// - データ更新の監査証跡としてイベントを発行
+///
+/// ## パラメータ
+/// - `passport`: 更新対象のMedicalPassportへの可変参照
+/// - `new_seal_id`: 新しいSeal ID（空文字列不可）
+/// - `clock`: 現在時刻取得用のClock参照
+///
+/// ## 副作用
+/// - `passport.seal_id`が`new_seal_id`に更新される
+/// - `PassportSealUpdatedEvent`イベントが発行される
+///
+/// ## 注意
+/// - この関数はパッケージスコープ（`public(package)`）のため、
+///   外部から直接呼び出し不可
+/// - エントリー関数からのみ呼び出されることを想定
+public(package) fun update_seal_id_internal(
+    passport: &mut MedicalPassport,
+    new_seal_id: String,
+    clock: &Clock
+) {
+    // セーフガード（二重バリデーション）
+    assert!(!string::is_empty(&new_seal_id), E_EMPTY_SEAL_ID);
+
+    // 現在のseal_idを保存（イベント発行時に使用）
+    let old_seal_id = passport.seal_id;
+
+    // seal_idを更新
+    passport.seal_id = new_seal_id;
+
+    // 現在時刻を取得
+    let timestamp_ms = sui::clock::timestamp_ms(clock);
+
+    // パスポートIDを取得
+    let passport_id = object::id(passport);
+
+    // 更新イベントを発行
+    let updated_event = PassportSealUpdatedEvent {
+        passport_id,
+        old_seal_id,
+        new_seal_id,
         timestamp_ms,
     };
     sui::event::emit(updated_event);
