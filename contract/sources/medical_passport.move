@@ -14,7 +14,9 @@ module cure_pocket::medical_passport;
 
 use std::string::{Self, String};
 use sui::clock::Clock;
+use sui::display;
 use sui::dynamic_field as df;
+use sui::package::Publisher;
 
 // ============================================================
 // 型定義
@@ -58,6 +60,21 @@ public struct MedicalPassport has key {
 public struct PassportRegistry has key {
     id: object::UID,
 }
+
+// ============================================================
+// Display 用定数
+// ============================================================
+
+/// Display name (固定)
+const DISPLAY_NAME_BYTES: vector<u8> = b"Cure Pocket Medical Passport";
+
+/// Display description (固定)
+const DISPLAY_DESCRIPTION_BYTES: vector<u8> =
+    b"Soulbound medical passport for Cure Pocket";
+
+/// Display image URL (固定)
+const DISPLAY_IMAGE_URL_BYTES: vector<u8> =
+    b"https://github.com/UnagiLabs/cure_pocket/blob/main/frontend/src/app/icon.png?raw=true";
 
 /// パスポート移行イベント
 ///
@@ -180,6 +197,39 @@ public(package) fun e_registry_not_found(): u64 {
 /// E_NOT_OWNER_FOR_MIGRATION エラーコードを取得
 public(package) fun e_not_owner_for_migration(): u64 {
     E_NOT_OWNER_FOR_MIGRATION
+}
+
+// ============================================================
+// Display 生成・更新
+// ============================================================
+
+/// MedicalPassport 用の Display を生成し、標準フィールドを設定して返す
+///
+/// ## フィールド
+/// - `name`: `"Cure Pocket Medical Passport"`
+/// - `description`: `"Soulbound medical passport for Cure Pocket"`
+/// - `image_url`: GitHub 上のアイコン固定URL
+///
+/// ## 注意
+/// - Publisher からのみ呼び出し可能（display::new_with_fields が検証）
+public(package) fun create_passport_display(
+    publisher: &Publisher,
+    ctx: &mut tx_context::TxContext
+): display::Display<MedicalPassport> {
+    display::new_with_fields<MedicalPassport>(
+        publisher,
+        vector[
+            string::utf8(b"name"),
+            string::utf8(b"description"),
+            string::utf8(b"image_url"),
+        ],
+        vector[
+            string::utf8(DISPLAY_NAME_BYTES),
+            string::utf8(DISPLAY_DESCRIPTION_BYTES),
+            string::utf8(DISPLAY_IMAGE_URL_BYTES),
+        ],
+        ctx
+    )
 }
 
 // ============================================================
@@ -560,4 +610,18 @@ public fun create_passport_registry(ctx: &mut tx_context::TxContext): PassportRe
     PassportRegistry {
         id: object::new(ctx),
     }
+}
+
+/// テスト専用: MedicalPassport を破棄
+#[test_only]
+public fun destroy_passport_for_tests(passport: MedicalPassport) {
+    let MedicalPassport { id, walrus_blob_id: _, seal_id: _, country_code: _ } = passport;
+    object::delete(id);
+}
+
+/// テスト専用: PassportRegistry を破棄
+#[test_only]
+public fun destroy_registry_for_tests(registry: PassportRegistry) {
+    let PassportRegistry { id } = registry;
+    object::delete(id);
 }
