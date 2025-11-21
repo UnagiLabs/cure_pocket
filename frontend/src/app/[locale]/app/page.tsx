@@ -14,13 +14,28 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
 import { useMintPassport } from "@/hooks/useMintPassport";
 import { usePassport } from "@/hooks/usePassport";
 import { getTheme } from "@/lib/themes";
 import type { Medication } from "@/types";
+
+/**
+ * Suiネットワークタイプを取得
+ */
+function get_sui_network(): string {
+	return process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet";
+}
+
+/**
+ * トランザクションエクスプローラーURLを生成
+ */
+function get_explorer_tx_url(digest: string): string {
+	const network = get_sui_network();
+	return `https://suiscan.xyz/${network}/tx/${digest}`;
+}
 
 /**
  * ホーム画面（ダッシュボード）
@@ -49,11 +64,22 @@ export default function HomePage() {
 
 	// パスポート状態を取得
 	const passport_status = usePassport();
+	// トランザクション成功状態
+	const [mint_success_digest, set_mint_success_digest] = useState<
+		string | null
+	>(null);
+
+	// パスポート発行フック（成功時のコールバック付き）
 	const {
 		mint,
 		isPending: is_mint_pending,
 		error: mint_error,
-	} = useMintPassport();
+	} = useMintPassport((digest) => {
+		// mint成功時の処理
+		set_mint_success_digest(digest);
+		// パスポート状態を再取得
+		passport_status.refresh();
+	});
 
 	/**
 	 * パスポートを発行するハンドラー
@@ -279,6 +305,49 @@ export default function HomePage() {
 					>
 						{t("home.profileSetupBanner.button")}
 					</button>
+				</div>
+			)}
+
+			{/* Mint Success Banner */}
+			{mint_success_digest && (
+				<div
+					className="mb-6 rounded-xl border-2 p-4"
+					style={{
+						backgroundColor: "#D1FAE5",
+						borderColor: "#10B981",
+					}}
+				>
+					<div className="mb-2 flex items-center justify-between">
+						<div className="flex items-center">
+							<CheckCircle
+								className="mr-2 h-5 w-5"
+								style={{ color: "#10B981" }}
+							/>
+							<h3 className="font-bold" style={{ color: "#059669" }}>
+								パスポート発行成功
+							</h3>
+						</div>
+						<button
+							type="button"
+							onClick={() => set_mint_success_digest(null)}
+							className="text-sm"
+							style={{ color: "#059669" }}
+						>
+							✕
+						</button>
+					</div>
+					<p className="mb-2 text-sm" style={{ color: "#047857" }}>
+						メディカルパスポートが正常に発行されました。
+					</p>
+					<a
+						href={get_explorer_tx_url(mint_success_digest)}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-xs underline"
+						style={{ color: "#059669" }}
+					>
+						トランザクションを確認 →
+					</a>
 				</div>
 			)}
 
