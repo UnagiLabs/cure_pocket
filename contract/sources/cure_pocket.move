@@ -4,6 +4,8 @@
 module cure_pocket::cure_pocket;
 
 use cure_pocket::medical_passport;
+use sui::display;
+use sui::package;
 
 // ============================================================
 // 管理者権限構造体
@@ -22,6 +24,12 @@ public struct AdminCap has key, store {
     id: object::UID
 }
 
+/// One-Time Witness
+///
+/// パッケージデプロイ時に1度だけ供給される Witness。
+/// Publisher の発行に使用し、以降は不要。
+public struct CURE_POCKET has drop {}
+
 // ============================================================
 // 初期化
 // ============================================================
@@ -37,7 +45,11 @@ public struct AdminCap has key, store {
 ///
 /// ## パラメータ
 /// - `ctx`: トランザクションコンテキスト
-fun init(ctx: &mut tx_context::TxContext) {
+#[allow(lint(share_owned))] // Display をこの init 内で生成しそのまま共有するため安全
+fun init(witness: CURE_POCKET, ctx: &mut tx_context::TxContext) {
+    // Publisher を取得（Display 生成に使用）
+    let publisher = package::claim(witness, ctx);
+
     // AdminCap を生成してデプロイヤーに転送
     let admin = AdminCap {
         id: object::new(ctx)
@@ -46,6 +58,14 @@ fun init(ctx: &mut tx_context::TxContext) {
 
     // PassportRegistry を生成して共有オブジェクトとして公開
     medical_passport::create_and_share_passport_registry(ctx);
+
+    // Passport Display を生成し、バージョンをインクリメントして共有
+    let mut display = medical_passport::create_passport_display(&publisher, ctx);
+    display::update_version(&mut display);
+    sui::transfer::public_share_object(display);
+
+    // Publisher をデプロイヤーに返却（将来の更新用）
+    sui::transfer::public_transfer(publisher, tx_context::sender(ctx));
 }
 
 // ============================================================
@@ -83,5 +103,17 @@ public fun test_init_for_tests(ctx: &mut tx_context::TxContext): AdminCap {
 /// - `ctx`: トランザクションコンテキスト
 #[test_only]
 public fun init_for_testing(ctx: &mut tx_context::TxContext) {
-    init(ctx);
+    init(create_cure_pocket_witness_for_tests(), ctx);
+}
+
+#[test_only]
+fun create_cure_pocket_witness_for_tests(): CURE_POCKET {
+    CURE_POCKET {}
+}
+
+/// テスト専用: AdminCap を破棄
+#[test_only]
+public fun destroy_admin_for_tests(admin: AdminCap) {
+    let AdminCap { id } = admin;
+    sui::object::delete(id);
 }

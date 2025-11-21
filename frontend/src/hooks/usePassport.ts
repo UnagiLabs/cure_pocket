@@ -22,7 +22,8 @@
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { bcs } from "@mysten/sui/bcs";
 import { Transaction } from "@mysten/sui/transactions";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getPassportByAddress } from "@/lib/suiClient";
 import type { PassportStatus } from "@/types";
 
 /**
@@ -56,9 +57,9 @@ function get_registry_id(): string {
 /**
  * パスポートの保有状態と情報を取得するカスタムフック
  *
- * @returns パスポートの状態（保有状態、パスポート情報、ローディング状態、エラー）
+ * @returns パスポートの状態（保有状態、パスポート情報、ローディング状態、エラー）と再取得関数
  */
-export function usePassport(): PassportStatus {
+export function usePassport(): PassportStatus & { refresh: () => void } {
 	const client = useSuiClient();
 	const account = useCurrentAccount();
 	const [status, set_status] = useState<PassportStatus>({
@@ -67,7 +68,9 @@ export function usePassport(): PassportStatus {
 		loading: true,
 		error: null,
 	});
+	const [refresh_trigger, set_refresh_trigger] = useState(0);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: refresh_trigger で手動リフレッシュを行うため依存に含める
 	useEffect(() => {
 		/**
 		 * パスポート状態を取得する非同期関数
@@ -117,15 +120,18 @@ export function usePassport(): PassportStatus {
 					throw new Error("No return values from has_passport");
 				}
 
-				// bool値をデコード
-				const encoded = return_values[0][1];
-				const has_passport = bcs
-					.bool()
-					.fromBase64(
-						typeof encoded === "string"
-							? encoded
-							: Buffer.from(encoded).toString("base64"),
-					);
+				// bool値をデコード（returnValues は [bytes, typeTag] のタプル）
+				const encoded = return_values[0][0]; // 0番目にBCSバイト配列が入る
+				let has_passport: boolean;
+				if (encoded instanceof Uint8Array) {
+					has_passport = bcs.bool().parse(encoded);
+				} else if (Array.isArray(encoded)) {
+					has_passport = bcs.bool().parse(Uint8Array.from(encoded));
+				} else if (typeof encoded === "string") {
+					has_passport = bcs.bool().fromBase64(encoded);
+				} else {
+					throw new Error("Unsupported return value type from has_passport");
+				}
 
 				if (!has_passport) {
 					// パスポートを所持していない場合
@@ -138,22 +144,36 @@ export function usePassport(): PassportStatus {
 					return;
 				}
 
-				// パスポートを所持している場合、パスポートIDを取得してget_all_fieldsを呼び出す
-				// まず、PassportRegistryからパスポートIDを取得する必要がある
-				// ただし、get_all_fieldsはパスポートオブジェクトが必要なので、
-				// オブジェクトを取得する必要がある
-				// ここでは、まずパスポートオブジェクトを取得する方法を実装する必要がある
-				// しかし、PassportRegistryからパスポートIDを取得する関数がpublicでないため、
-				// 別のアプローチが必要
+				// パスポートを所持している場合、パスポート情報を取得
+				try {
+					const passport_data = await getPassportByAddress(account.address);
 
-				// 暫定的に、パスポートが存在することを示すのみ
-				// Phase 2でパスポート情報の取得を実装する
-				set_status({
-					has_passport: true,
-					passport: null, // 暫定的にnull
-					loading: false,
-					error: null,
-				});
+					if (!passport_data) {
+						// パスポート情報が取得できない場合
+						throw new Error(
+							"パスポートは存在しますが、情報の取得に失敗しました",
+						);
+					}
+
+					set_status({
+						has_passport: true,
+						passport: passport_data,
+						loading: false,
+						error: null,
+					});
+				} catch (passport_error) {
+					// パスポート情報取得エラー
+					const passport_error_message =
+						passport_error instanceof Error
+							? passport_error.message
+							: "パスポート情報の取得に失敗しました";
+					set_status({
+						has_passport: true,
+						passport: null,
+						loading: false,
+						error: passport_error_message,
+					});
+				}
 			} catch (error) {
 				// エラーハンドリング
 				const error_message =
@@ -170,7 +190,14 @@ export function usePassport(): PassportStatus {
 		}
 
 		fetch_passport_status();
-	}, [client, account]);
+	}, [client, account, refresh_trigger]);
 
-	return status;
+	/**
+	 * パスポート状態を再取得する関数
+	 */
+	const refresh = useCallback(() => {
+		set_refresh_trigger((prev) => prev + 1);
+	}, []);
+
+	return { ...status, refresh };
 }

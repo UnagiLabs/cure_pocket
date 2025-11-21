@@ -73,13 +73,14 @@ export interface UseMintPassportReturn {
 	 * @param walrus_blob_id - Walrus blob ID（MVP段階ではモック値）
 	 * @param seal_id - Seal ID（MVP段階ではモック値）
 	 * @param country_code - 国コード（省略時はデフォルト値を使用）
+	 * @returns トランザクションダイジェスト
 	 * @throws トランザクション送信失敗時
 	 */
 	mint: (
 		walrus_blob_id: string,
 		seal_id: string,
 		country_code?: string,
-	) => Promise<void>;
+	) => Promise<string | undefined>;
 	/**
 	 * トランザクション送信中かどうか
 	 */
@@ -97,9 +98,12 @@ export interface UseMintPassportReturn {
 /**
  * パスポートを発行するカスタムフック
  *
+ * @param onMintSuccess - パスポート発行成功時のコールバック関数（トランザクションダイジェストを受け取る）
  * @returns パスポート発行関数、ローディング状態、エラー情報
  */
-export function useMintPassport(): UseMintPassportReturn {
+export function useMintPassport(
+	onMintSuccess?: (digest: string) => void,
+): UseMintPassportReturn {
 	const {
 		mutate: sign_and_execute,
 		isPending,
@@ -114,60 +118,72 @@ export function useMintPassport(): UseMintPassportReturn {
 	 * @param walrus_blob_id - Walrus blob ID
 	 * @param seal_id - Seal ID
 	 * @param country_code - 国コード（省略時はデフォルト値を使用）
+	 * @returns トランザクションダイジェスト
 	 */
 	async function mint(
 		walrus_blob_id: string,
 		seal_id: string,
 		country_code?: string,
-	): Promise<void> {
-		try {
-			// 環境変数の確認
-			const package_id = get_package_id();
-			const registry_id = get_registry_id();
+	): Promise<string | undefined> {
+		return new Promise((resolve, reject) => {
+			try {
+				// 環境変数の確認
+				const package_id = get_package_id();
+				const registry_id = get_registry_id();
 
-			// 国コードが指定されていない場合はデフォルト値を使用
-			const final_country_code = country_code || get_default_country_code();
+				// 国コードが指定されていない場合はデフォルト値を使用
+				const final_country_code = country_code || get_default_country_code();
 
-			// Transactionを構築
-			const tx = new Transaction();
-			tx.moveCall({
-				target: `${package_id}::medical_passport_accessor::mint_medical_passport`,
-				arguments: [
-					tx.object(registry_id), // PassportRegistry (shared object)
-					tx.pure.string(walrus_blob_id), // walrus_blob_id
-					tx.pure.string(seal_id), // seal_id
-					tx.pure.string(final_country_code), // country_code
-				],
-			});
+				// Transactionを構築
+				const tx = new Transaction();
+				tx.moveCall({
+					target: `${package_id}::medical_passport_accessor::mint_medical_passport`,
+					arguments: [
+						tx.object(registry_id), // PassportRegistry (shared object)
+						tx.pure.string(walrus_blob_id), // walrus_blob_id
+						tx.pure.string(seal_id), // seal_id
+						tx.pure.string(final_country_code), // country_code
+					],
+				});
 
-			// トランザクションを送信
-			sign_and_execute(
-				{
-					transaction: tx,
-				},
-				{
-					onSuccess: () => {
-						// 成功時の処理
-						set_mint_error(null);
-						set_is_success(true);
+				// トランザクションを送信
+				sign_and_execute(
+					{
+						transaction: tx,
 					},
-					onError: (error) => {
-						// エラー時の処理
-						const error_message =
-							error instanceof Error
-								? error.message
-								: "パスポート発行に失敗しました";
-						set_mint_error(new Error(error_message));
+					{
+						onSuccess: (result) => {
+							// 成功時の処理
+							set_mint_error(null);
+							set_is_success(true);
+							const digest = result.digest;
+							// コールバック実行
+							onMintSuccess?.(digest);
+							resolve(digest);
+						},
+						onError: (error) => {
+							// エラー時の処理
+							const error_message =
+								error instanceof Error
+									? error.message
+									: "パスポート発行に失敗しました";
+							const mint_error_obj = new Error(error_message);
+							set_mint_error(mint_error_obj);
+							reject(mint_error_obj);
+						},
 					},
-				},
-			);
-		} catch (error) {
-			// エラーハンドリング
-			const error_message =
-				error instanceof Error ? error.message : "パスポート発行に失敗しました";
-			set_mint_error(new Error(error_message));
-			throw error;
-		}
+				);
+			} catch (error) {
+				// エラーハンドリング
+				const error_message =
+					error instanceof Error
+						? error.message
+						: "パスポート発行に失敗しました";
+				const mint_error_obj = new Error(error_message);
+				set_mint_error(mint_error_obj);
+				reject(mint_error_obj);
+			}
+		});
 	}
 
 	return {

@@ -9,14 +9,16 @@
 #[test_only]
 module cure_pocket::medical_passport_tests {
     use sui::test_scenario::{Self as ts};
-    use sui::test_utils;
     use sui::clock;
+    use sui::display;
+    use sui::vec_map;
     use std::string::{Self, String};
 
     use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
     use cure_pocket::admin;
     use cure_pocket::medical_passport_accessor;
     use cure_pocket::cure_pocket::{Self, AdminCap};
+    use cure_pocket::test_utils;
 
     // テスト用定数
     const ADMIN: address = @0xAD;
@@ -49,7 +51,7 @@ module cure_pocket::medical_passport_tests {
 
             // AdminCapが正しく作成されたことを確認（型が存在することで保証）
             // ドロップして所有権を解放
-            test_utils::destroy(admin);
+            test_utils::destroy_admin(admin);
         };
         ts::end(scenario);
     }
@@ -88,7 +90,7 @@ module cure_pocket::medical_passport_tests {
                 2
             );
 
-            test_utils::destroy(passport);
+            test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
     }
@@ -118,8 +120,8 @@ module cure_pocket::medical_passport_tests {
                 ctx
             );
 
-            test_utils::destroy(admin);
-            test_utils::destroy(registry);
+            test_utils::destroy_admin(admin);
+            test_utils::destroy_registry(registry);
         };
         ts::end(scenario);
     }
@@ -146,7 +148,7 @@ module cure_pocket::medical_passport_tests {
                 ctx
             );
 
-            test_utils::destroy(passport);
+            test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
     }
@@ -169,7 +171,7 @@ module cure_pocket::medical_passport_tests {
                 ctx
             );
 
-            test_utils::destroy(passport);
+            test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
     }
@@ -192,7 +194,7 @@ module cure_pocket::medical_passport_tests {
                 ctx
             );
 
-            test_utils::destroy(passport);
+            test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
     }
@@ -343,7 +345,7 @@ module cure_pocket::medical_passport_tests {
             assert!(seal_id == &string::utf8(b"seal-key-abcde"), 1);
             assert!(country_code == &string::utf8(b"JP"), 2);
 
-            test_utils::destroy(passport);
+            test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
     }
@@ -1145,7 +1147,7 @@ module cure_pocket::medical_passport_tests {
         };
 
         // 片付け
-        test_utils::destroy(passport);
+        test_utils::destroy_passport(passport);
         ts::end(scenario);
     }
 
@@ -1161,8 +1163,39 @@ module cure_pocket::medical_passport_tests {
             let ctx = ts::ctx(&mut scenario);
             let mut registry = medical_passport::create_passport_registry(ctx);
             medical_passport::unregister_passport_by_owner(&mut registry, @0xBEEF);
-            test_utils::destroy(registry);
+            test_utils::destroy_registry(registry);
         };
+        ts::end(scenario);
+    }
+
+    /// Test 24: Display が初期化され、image_url が固定URLになる
+    ///
+    /// 仕様:
+    /// - init_for_testing() 実行後に Display<MedicalPassport> が共有オブジェクトとして存在
+    /// - image_url フィールドが指定した GitHub アイコンに設定されている
+    #[test]
+    fun test_display_initialized_with_fixed_image() {
+        let mut scenario = ts::begin(ADMIN);
+
+        // init 実行（Display を生成・共有）
+        {
+            cure_pocket::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        // Display を取得して検証
+        ts::next_tx(&mut scenario, ADMIN);
+        {
+            let display_obj = ts::take_shared<display::Display<MedicalPassport>>(&scenario);
+            let fields = display::fields(&display_obj);
+
+            let image_key = string::utf8(b"image_url");
+            let expected = string::utf8(b"https://raw.githubusercontent.com/UnagiLabs/cure_pocket/main/frontend/src/app/icon.png");
+
+            assert!(*vec_map::get(fields, &image_key) == expected, 0);
+
+            ts::return_shared(display_obj);
+        };
+
         ts::end(scenario);
     }
 

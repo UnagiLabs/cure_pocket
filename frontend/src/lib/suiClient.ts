@@ -167,8 +167,20 @@ export async function getPassportIdByAddress(
 			return null;
 		}
 
-		// The dynamic field value is the MedicalPassport object ID
-		return response.data.objectId;
+		// Dynamic Fieldのcontentからvalueフィールドを取得
+		// PassportRegistryのDynamic Fieldは address -> object::ID のマッピング
+		const content = response.data.content;
+		if (!content || content.dataType !== "moveObject") {
+			throw new Error("Invalid dynamic field structure");
+		}
+
+		// valueフィールドがパスポートのobject IDを格納している
+		const fields = content.fields as { name: unknown; value: string };
+		if (!fields.value) {
+			throw new Error("Dynamic field value not found");
+		}
+
+		return fields.value;
 	} catch (error) {
 		// If error is "Dynamic field not found", return null
 		if (
