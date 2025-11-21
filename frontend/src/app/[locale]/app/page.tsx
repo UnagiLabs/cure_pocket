@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Activity,
 	AlertCircle,
 	AlertTriangle,
 	CheckCircle,
@@ -35,6 +36,7 @@ export default function HomePage() {
 		medicalHistories,
 		labResults,
 		imagingReports,
+		vitalSigns,
 		settings,
 		profile,
 		setMedications,
@@ -215,6 +217,13 @@ export default function HomePage() {
 			title: t("dashboard.summary.imaging"),
 			count: imagingReports.length,
 			color: "#3B82F6",
+		},
+		{
+			id: "vitals",
+			icon: Activity,
+			title: t("dashboard.summary.vitals"),
+			count: vitalSigns.length,
+			color: "#F59E0B",
 		},
 	];
 
@@ -402,6 +411,7 @@ export default function HomePage() {
 									histories: `/${locale}/app/histories`,
 									labs: `/${locale}/app/labs`,
 									imaging: `/${locale}/app/imaging`,
+									vitals: `/${locale}/app/vitals`,
 								};
 								router.push(paths[card.id] || `/${locale}/app`);
 							}}
