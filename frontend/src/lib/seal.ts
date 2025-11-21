@@ -107,6 +107,9 @@ function resolveKeyServers(
  * @returns Initialized SealClient instance
  * @throws Error if KeyServer configuration is invalid
  */
+// Cache SealClient to avoid re-creating (reduces key fetch / auth prompts)
+let cachedSealClient: { key: string; client: SealClient } | null = null;
+
 export function createSealClient(suiClient: SuiClient): SealClient {
 	// Get key server object IDs
 	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
@@ -117,6 +120,14 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 		);
 	}
 
+	const serverKey = `${SUI_NETWORK}:${VERIFY_KEY_SERVERS}:${serverObjectIds.join(
+		",",
+	)}`;
+
+	if (cachedSealClient && cachedSealClient.key === serverKey) {
+		return cachedSealClient.client;
+	}
+
 	// Create server configs with equal weights
 	const serverConfigs = serverObjectIds.map((objectId) => ({
 		objectId,
@@ -124,11 +135,14 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 	}));
 
 	// Initialize SealClient
-	return new SealClient({
+	const client = new SealClient({
 		suiClient,
 		serverConfigs,
 		verifyKeyServers: VERIFY_KEY_SERVERS,
 	});
+
+	cachedSealClient = { key: serverKey, client };
+	return client;
 }
 
 /**

@@ -35,13 +35,18 @@ import {
 	useSignPersonalMessage,
 	useSuiClient,
 } from "@mysten/dapp-kit";
-import { SessionKey } from "@mysten/seal";
+import { ExpiredSessionKeyError, SessionKey } from "@mysten/seal";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * SessionKey TTL in minutes (default: 10 minutes)
+ * SessionKey TTL in minutes (default: env or 30 minutes, max 30 enforced by SDK)
  */
-const DEFAULT_SESSION_TTL_MIN = 10;
+const DEFAULT_SESSION_TTL_MIN = Math.min(
+	30,
+	Math.max(1, Number(process.env.NEXT_PUBLIC_SESSION_TTL_MIN || 30)),
+);
+
+const SESSION_KEY_STORAGE = "curepocket_session_key_v1";
 
 /**
  * Auto-renewal trigger threshold in minutes (renew when 2 minutes remaining)
@@ -178,7 +183,9 @@ export function useSessionKeyManager(
 
 			// Step 4: Set signature to complete SessionKey initialization
 			// ✅ Pass signature directly (no conversion needed)
-			newSessionKey.setPersonalMessageSignature(signatureResult.signature);
+			await newSessionKey.setPersonalMessageSignature(
+				signatureResult.signature,
+			);
 
 			// Calculate expiration time
 			const expiresAt = Date.now() + ttlMin * 60 * 1000;
@@ -191,6 +198,19 @@ export function useSessionKeyManager(
 				isLoading: false,
 				error: null,
 			});
+
+			// Persist session key for reuse (avoid repeated signature prompts until expiry)
+			const exported = newSessionKey.export();
+			const persistable = {
+				address: exported.address,
+				packageId: exported.packageId,
+				mvrName: exported.mvrName,
+				creationTimeMs: exported.creationTimeMs,
+				ttlMin: exported.ttlMin,
+				personalMessageSignature: exported.personalMessageSignature,
+				sessionKey: exported.sessionKey,
+			};
+			localStorage.setItem(SESSION_KEY_STORAGE, JSON.stringify(persistable));
 
 			console.log(
 				`[SessionKey] Generated successfully, expires at ${new Date(expiresAt).toISOString()}`,
@@ -210,6 +230,50 @@ export function useSessionKeyManager(
 			}));
 		}
 	}, [currentAccount, suiClient, signPersonalMessage, ttlMin]);
+
+	/**
+	 * Attempt to restore a persisted SessionKey to avoid re-signing on every page load.
+	 */
+	useEffect(() => {
+		if (!currentAccount) return;
+
+		const stored = localStorage.getItem(SESSION_KEY_STORAGE);
+		if (!stored) return;
+
+		try {
+			const parsed = JSON.parse(stored);
+			if (
+				parsed.address !== currentAccount.address ||
+				parsed.packageId !== PACKAGE_ID
+			) {
+				// Different user or package; ignore
+				return;
+			}
+
+			// Stored session key must include a personal message signature; otherwise discard
+			if (!parsed.personalMessageSignature) {
+				localStorage.removeItem(SESSION_KEY_STORAGE);
+				return;
+			}
+
+			const restored = SessionKey.import(parsed, suiClient);
+			const expiresAt = parsed.creationTimeMs + parsed.ttlMin * 60 * 1000;
+
+			setState({
+				sessionKey: restored,
+				expiresAt,
+				isValid: !restored.isExpired(),
+				isLoading: false,
+				error: null,
+			});
+		} catch (e) {
+			// Cleanup corrupted/expired cache
+			if (e instanceof ExpiredSessionKeyError) {
+				localStorage.removeItem(SESSION_KEY_STORAGE);
+			}
+			console.warn("[SessionKey] Restore failed, will regenerate", e);
+		}
+	}, [currentAccount, suiClient]);
 
 	/**
 	 * Schedule auto-renewal before expiration
