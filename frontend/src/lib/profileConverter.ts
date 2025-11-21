@@ -330,6 +330,130 @@ function mapImagingTypeToModality(
 }
 
 /**
+ * Convert birth year to age band
+ *
+ * @param birthYear - Birth year
+ * @returns Age band string (e.g., "30s", "40s")
+ */
+function birthYearToAgeBand(
+	birthYear: number,
+): "10s" | "20s" | "30s" | "40s" | "50s" | "60s" | "70s" | "80plus" | null {
+	const currentYear = new Date().getFullYear();
+	const age = currentYear - birthYear;
+
+	if (age < 10) return null;
+	if (age < 20) return "10s";
+	if (age < 30) return "20s";
+	if (age < 40) return "30s";
+	if (age < 50) return "40s";
+	if (age < 60) return "50s";
+	if (age < 70) return "60s";
+	if (age < 80) return "70s";
+	return "80plus";
+}
+
+/**
+ * Convert HealthData back to PatientProfile format
+ *
+ * This function performs the reverse conversion from the encrypted HealthData
+ * format back to the UI's PatientProfile format.
+ *
+ * @param healthData - HealthData object from decryption
+ * @returns PatientProfile for UI
+ *
+ * @example
+ * ```typescript
+ * const profile = healthDataToPatientProfile(decryptedHealthData);
+ * ```
+ */
+export function healthDataToPatientProfile(
+	healthData: HealthData,
+): PatientProfile {
+	const { profile: userProfile, allergies, conditions } = healthData;
+
+	// Convert birth year to age band
+	const ageBand = birthYearToAgeBand(userProfile.birth_year);
+
+	// Convert gender
+	const gender =
+		userProfile.gender === "other"
+			? "unknown"
+			: (userProfile.gender as "male" | "female" | "unknown");
+
+	// Extract biometrics
+	const heightCm = userProfile.biometrics?.height_cm ?? undefined;
+	const weightKg = userProfile.biometrics?.weight_kg ?? undefined;
+	const bloodType = userProfile.blood_type;
+
+	// Separate drug and food allergies
+	const drugAllergies = allergies
+		.filter((allergy) => allergy.substance.code_type === "rxnorm")
+		.map((allergy) => ({
+			name: allergy.substance.name,
+			severity: allergy.severity as "mild" | "moderate" | "severe",
+		}));
+
+	const foodAllergies = allergies
+		.filter((allergy) => allergy.substance.code_type === "food")
+		.map((allergy) => allergy.substance.name);
+
+	// Check for anaphylaxis history based on severity
+	const hasAnaphylaxisHistory = allergies.some(
+		(allergy) => allergy.severity === "severe",
+	);
+
+	// Extract active chronic conditions
+	const chronicConditions = conditions
+		.filter((condition) => condition.status === "active")
+		.map((condition) => ({
+			code: condition.codes.icd10 || "",
+			label: condition.name.en,
+		}));
+
+	// Extract surgeries from medical histories
+	// Note: Surgeries are not directly stored in HealthData conditions,
+	// they would need to be tracked separately or extracted from procedures
+	const surgeries: PatientProfile["surgeries"] = [];
+
+	// Map HealthData blood_type to PatientProfile bloodType
+	// Both use "A", "B", "O", "AB", "unknown" format (no Rh factor)
+	const mappedBloodType: PatientProfile["bloodType"] =
+		bloodType && ["A", "B", "O", "AB"].includes(bloodType)
+			? (bloodType as "A" | "B" | "O" | "AB")
+			: "unknown";
+
+	// Build PatientProfile
+	const profile: PatientProfile = {
+		ageBand,
+		gender,
+		country: userProfile.country || null,
+		preferredLanguage: null, // Not stored in HealthData
+		heightCm,
+		weightKg,
+		bloodType: mappedBloodType,
+		smokingStatus: "unknown", // Not stored in HealthData
+		alcoholUse: "unknown", // Not stored in HealthData
+		exercise: "unknown", // Not stored in HealthData
+		drugAllergies,
+		foodAllergies,
+		hasAnaphylaxisHistory,
+		chronicConditions,
+		surgeries,
+		dataSharing: {
+			preference: "deny", // Default to most restrictive
+			shareMedication: false,
+			shareLabs: false,
+			shareConditions: false,
+			shareSurgeries: false,
+			shareLifestyle: false,
+			rewardsEnabled: false,
+		},
+	};
+
+	return profile;
+}
+
+/**
  * Convert app data to HealthData format for encryption and storage
  *
  * This is the main conversion function that combines all patient data

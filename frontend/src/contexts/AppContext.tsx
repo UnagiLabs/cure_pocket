@@ -8,6 +8,10 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
+import { usePassport } from "@/hooks/usePassport";
+import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import { healthDataToPatientProfile } from "@/lib/profileConverter";
 import type {
 	Allergy,
 	AppState,
@@ -78,6 +82,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const [profile, setProfile] = useState<PatientProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
+	// Passport and decryption hooks
+	const { passport, has_passport, loading: passportLoading } = usePassport();
+	const {
+		sessionKey,
+		generateSessionKey,
+		isValid: sessionKeyValid,
+	} = useSessionKeyManager();
+	const { decryptAndFetch } = useDecryptAndFetch();
+
 	// ウォレットアドレスはdApp Kitから取得
 	const walletAddress = currentAccount?.address || null;
 
@@ -98,6 +111,102 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		localStorage.setItem("userSettings", JSON.stringify(settings));
 	}, [settings]);
+
+	// Initialize profile data from encrypted storage
+	useEffect(() => {
+		/**
+		 * Load and decrypt profile data from Walrus storage
+		 */
+		async function initializeProfileData() {
+			// Skip if no wallet connected
+			if (!currentAccount?.address) {
+				return;
+			}
+
+			// Skip if still loading passport
+			if (passportLoading) {
+				return;
+			}
+
+			// Skip if no passport
+			if (!has_passport || !passport) {
+				console.log("[AppContext] No passport found, skipping data load");
+				return;
+			}
+
+			// Skip if no walrus_blob_id or seal_id
+			// Also skip if blob_id is a placeholder or invalid format
+			const isValidBlobId =
+				passport.walrusBlobId &&
+				passport.walrusBlobId !== "init_blob" &&
+				passport.walrusBlobId.length > 10; // Real Walrus blob IDs are long hashes
+
+			if (!isValidBlobId || !passport.sealId) {
+				console.log(
+					"[AppContext] Passport has invalid or placeholder blob_id, skipping data load",
+				);
+				return;
+			}
+
+			// Skip if profile already loaded
+			if (profile !== null) {
+				return;
+			}
+
+			setIsLoading(true);
+
+			try {
+				console.log("[AppContext] Initializing profile data from passport...");
+
+				// Step 1: Ensure SessionKey is valid
+				console.log("[AppContext] Checking SessionKey...");
+				if (!sessionKey || !sessionKeyValid) {
+					console.log("[AppContext] Generating new SessionKey...");
+					await generateSessionKey();
+					return; // useEffect will re-run after sessionKey is created
+				}
+
+				// Step 2: Fetch and decrypt data
+				console.log("[AppContext] Fetching and decrypting data...");
+				const healthData = await decryptAndFetch({
+					blobId: passport.walrusBlobId,
+					sealId: passport.sealId,
+					sessionKey,
+					passportId: passport.id,
+				});
+
+				// Step 3: Convert to PatientProfile
+				console.log("[AppContext] Converting to PatientProfile...");
+				const decryptedProfile = healthDataToPatientProfile(healthData);
+
+				// Step 4: Update state
+				setProfile(decryptedProfile);
+
+				// TODO: Also extract and set medications, conditions, etc. from healthData
+				// This would require additional converter functions
+
+				console.log("[AppContext] Profile data initialized successfully");
+			} catch (error) {
+				console.error("[AppContext] Failed to initialize profile data:", error);
+				// Don't block the app on decryption failure
+				// User can still use the app and save new data
+			} finally {
+				setIsLoading(false);
+			}
+		}
+
+		initializeProfileData();
+	}, [
+		currentAccount,
+		passport,
+		has_passport,
+		passportLoading,
+		profile,
+		sessionKey,
+		sessionKeyValid,
+		generateSessionKey,
+		decryptAndFetch,
+	]);
 
 	// setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）
 	const setWalletAddress = (_address: string | null) => {

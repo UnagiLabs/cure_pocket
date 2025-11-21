@@ -27,16 +27,29 @@ import type { HealthData } from "@/types/healthData";
  * Seal KeyServer ObjectIds from environment
  * Comma-separated list of key server object IDs
  */
-const SEAL_KEY_SERVERS =
+export const SEAL_KEY_SERVERS =
 	process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
 		.map((id) => id.trim())
 		.filter(Boolean) || [];
 
 /**
- * Default threshold (t-of-n)
- * Requires 2 out of n key servers to decrypt
+ * Calculate appropriate threshold based on number of key servers
+ * - 1 server: threshold = 1 (single point of failure, but functional)
+ * - 2+ servers: threshold = 2 (recommended for redundancy and security)
+ *
+ * @param keyServerCount - Number of key servers configured
+ * @returns Appropriate threshold value (1 or 2)
+ *
+ * @example
+ * ```typescript
+ * calculateThreshold(1) // Returns 1
+ * calculateThreshold(2) // Returns 2
+ * calculateThreshold(5) // Returns 2
+ * ```
  */
-const DEFAULT_THRESHOLD = 2;
+export function calculateThreshold(keyServerCount: number): number {
+	return Math.min(2, Math.max(1, keyServerCount));
+}
 
 /**
  * SessionKey TTL in minutes (default: 10 minutes)
@@ -188,12 +201,11 @@ export async function encryptHealthData(params: {
 	sealId: string; // hex string (without package prefix)
 	threshold?: number;
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
-	const {
-		healthData,
-		sealClient,
-		sealId,
-		threshold = DEFAULT_THRESHOLD,
-	} = params;
+	const { healthData, sealClient, sealId, threshold } = params;
+
+	// If threshold not provided, calculate based on key server count
+	const effectiveThreshold =
+		threshold ?? calculateThreshold(SEAL_KEY_SERVERS.length);
 
 	// Serialize to JSON
 	const json = JSON.stringify(healthData);
@@ -201,7 +213,7 @@ export async function encryptHealthData(params: {
 
 	// Encrypt with Seal
 	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
-		threshold,
+		threshold: effectiveThreshold,
 		packageId: PACKAGE_ID,
 		id: sealId,
 		data,

@@ -27,7 +27,12 @@
 
 import { useSuiClient } from "@mysten/dapp-kit";
 import { useCallback, useState } from "react";
-import { createSealClient, encryptHealthData } from "@/lib/seal";
+import {
+	calculateThreshold,
+	createSealClient,
+	encryptHealthData,
+	SEAL_KEY_SERVERS,
+} from "@/lib/seal";
 import { uploadToWalrus } from "@/lib/walrus";
 import type { HealthData } from "@/types/healthData";
 
@@ -99,21 +104,26 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				// Step 1: Create Seal client
 				const sealClient = createSealClient(suiClient);
 
-				console.log("[EncryptAndStore] Encrypting HealthData with Seal...");
+				// Step 2: Calculate threshold based on number of key servers
+				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
-				// Step 2: Encrypt HealthData
+				console.log(
+					`[EncryptAndStore] Encrypting HealthData with Seal (threshold: ${threshold}, servers: ${SEAL_KEY_SERVERS.length})...`,
+				);
+
+				// Step 3: Encrypt HealthData
 				const { encryptedObject, backupKey } = await encryptHealthData({
 					healthData,
 					sealClient,
 					sealId,
-					threshold: 2, // 2-of-n threshold for decentralized key management
+					threshold,
 				});
 
 				console.log(
 					`[EncryptAndStore] Encryption complete, size: ${encryptedObject.length} bytes`,
 				);
 
-				// Step 3: Upload to Walrus
+				// Step 4: Upload to Walrus
 				setProgress("uploading");
 				console.log("[EncryptAndStore] Uploading to Walrus...");
 
@@ -123,7 +133,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					`[EncryptAndStore] Upload complete, blobId: ${walrusRef.blobId}`,
 				);
 
-				// Step 4: Return result
+				// Step 5: Return result
 				setProgress("completed");
 
 				return {
