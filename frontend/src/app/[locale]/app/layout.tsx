@@ -1,24 +1,12 @@
 "use client";
 
-import {
-	useConnectWallet,
-	useCurrentAccount,
-	useDisconnectWallet,
-	useWallets,
-} from "@mysten/dapp-kit";
-import {
-	CreditCard,
-	Home,
-	LogOut,
-	Menu,
-	Plus,
-	Settings,
-	Wallet,
-} from "lucide-react";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { CreditCard, Home, Menu, Plus, Settings } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { WalletButton } from "@/components/wallet/WalletButton";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
@@ -34,12 +22,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 	const [activeTab, setActiveTab] = useState("home");
 	const [showMenu, setShowMenu] = useState(false);
 	const theme = getTheme(settings.theme);
-
-	// Mysten dApp Kitのフック
-	const { mutate: connectWallet, isPending: isConnecting } = useConnectWallet();
-	const { mutate: disconnectWallet } = useDisconnectWallet();
 	const currentAccount = useCurrentAccount();
-	const wallets = useWallets();
 
 	// ウォレット接続状態（dApp Kitから取得）
 	const isWalletConnected = currentAccount !== null;
@@ -54,45 +37,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
 	const navigateTo = (path: string, tab: string) => {
 		setActiveTab(tab);
 		router.push(`/${locale}${path}`);
-	};
-
-	const handleConnectWallet = () => {
-		const availableWallet = wallets[0];
-
-		if (!availableWallet) {
-			alert(t("wallet.notInstalled"));
-			return;
-		}
-
-		connectWallet(
-			{
-				wallet: availableWallet,
-			},
-			{
-				onSuccess: () => {
-					// 接続成功
-				},
-				onError: (error) => {
-					// ユーザーがリクエストを拒否した場合は、エラーメッセージを表示しない
-					const errorMessage = error?.message || String(error);
-					if (
-						errorMessage.includes("User rejected") ||
-						errorMessage.includes("rejected")
-					) {
-						// ユーザーが意図的に拒否した場合は、静かに処理する
-						return;
-					}
-					// その他のエラーの場合のみ、エラーメッセージを表示
-					console.error("Failed to connect wallet:", error);
-					alert(t("wallet.connectionFailed"));
-				},
-			},
-		);
-	};
-
-	const handleDisconnectWallet = () => {
-		disconnectWallet();
-		router.push(`/${locale}`);
 	};
 
 	return (
@@ -162,42 +106,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 					{/* Wallet Connect/Disconnect Button (Desktop) */}
 					<div className="hidden md:flex md:items-center md:gap-2 md:ml-2 md:flex-shrink-0">
-						{isWalletConnected ? (
-							<div className="flex items-center gap-2">
-								<span className="rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white whitespace-nowrap">
-									{currentAccount?.address.slice(0, 6)}...
-									{currentAccount?.address.slice(-4)}
-								</span>
-								<button
-									type="button"
-									onClick={handleDisconnectWallet}
-									className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 whitespace-nowrap"
-									title="ウォレットを切断"
-								>
-									<LogOut className="h-3 w-3" />
-									<span className="hidden lg:inline">
-										{t("wallet.disconnect")}
-									</span>
-								</button>
-							</div>
-						) : (
-							<button
-								type="button"
-								onClick={handleConnectWallet}
-								disabled={isConnecting}
-								className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50 whitespace-nowrap"
-							>
-								<Wallet className="h-3 w-3" />
-								<span className="hidden lg:inline">
-									{isConnecting
-										? t("wallet.connecting")
-										: t("actions.connectWallet")}
-								</span>
-								<span className="lg:hidden">
-									{isConnecting ? t("wallet.connecting") : t("wallet.connect")}
-								</span>
-							</button>
-						)}
+						<WalletButton size="medium" variant="desktop" />
 					</div>
 
 					{/* Mobile Menu Button */}
@@ -337,52 +246,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 								<div className="font-medium">{t("settings.language")}</div>
 							</button>
 							<div
-								className="border-t pt-3"
+								className="border-t pt-3 flex justify-center"
 								style={{ borderColor: `${theme.colors.textSecondary}20` }}
 							>
-								{isWalletConnected ? (
-									<div className="space-y-2">
-										<div
-											className="px-3 text-sm"
-											style={{ color: theme.colors.textSecondary }}
-										>
-											<div>{t("settings.walletConnected")}</div>
-											<div className="mt-1 text-xs font-mono">
-												{currentAccount?.address.slice(0, 8)}...
-												{currentAccount?.address.slice(-6)}
-											</div>
-										</div>
-										<button
-											type="button"
-											onClick={handleDisconnectWallet}
-											className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors"
-											style={{
-												borderColor: `${theme.colors.textSecondary}40`,
-												color: theme.colors.text,
-											}}
-										>
-											<LogOut className="h-4 w-4" />
-											{t("wallet.disconnect")}
-										</button>
-									</div>
-								) : (
-									<button
-										type="button"
-										onClick={handleConnectWallet}
-										disabled={isConnecting}
-										className="flex w-full items-center justify-center gap-2 rounded-lg border-2 p-2 text-sm font-medium transition-colors disabled:opacity-50"
-										style={{
-											borderColor: theme.colors.primary,
-											backgroundColor: `${theme.colors.primary}10`,
-											color: theme.colors.primary,
-										}}
-									>
-										<Wallet className="h-4 w-4" />
-										{isConnecting
-											? t("wallet.connecting")
-											: t("actions.connectWallet")}
-									</button>
-								)}
+								<WalletButton size="large" variant="mobile" />
 							</div>
 						</div>
 					</div>
