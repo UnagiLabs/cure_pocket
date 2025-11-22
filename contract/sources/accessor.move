@@ -39,9 +39,9 @@ use cure_pocket::consent_token::{Self, ConsentToken};
 ///
 /// ## パラメータ
 /// - `registry`: PassportRegistry の可変参照（共有オブジェクト）
-/// - `walrus_blob_id`: Walrus上の医療データblob ID
 /// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
 /// - `country_code`: 発行国コード
+/// - `analytics_opt_in`: 匿名統計データ提供可否
 /// - `ctx`: トランザクションコンテキスト
 ///
 /// ## 結果
@@ -49,14 +49,13 @@ use cure_pocket::consent_token::{Self, ConsentToken};
 ///
 /// ## Aborts
 /// - `E_ALREADY_HAS_PASSPORT`: 既にパスポートを所持している
-/// - `E_EMPTY_WALRUS_BLOB_ID`: walrus_blob_idが空文字列
 /// - `E_EMPTY_SEAL_ID`: seal_idが空文字列
 /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列
 entry fun mint_medical_passport(
     registry: &mut PassportRegistry,
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 ) {
     let sender = tx_context::sender(ctx);
@@ -66,9 +65,9 @@ entry fun mint_medical_passport(
 
     // パスポートを生成
     let passport = medical_passport::create_passport_internal(
-        walrus_blob_id,
         seal_id,
         country_code,
+        analytics_opt_in,
         ctx
     );
 
@@ -80,21 +79,6 @@ entry fun mint_medical_passport(
 
     // Registry にパスポートIDを登録
     medical_passport::register_passport_with_id(registry, passport_id, sender);
-}
-
-/// Walrus blob IDを取得
-///
-/// ## 用途
-/// - パスポートに紐づく医療データの識別子を取得
-/// - Walrusストレージからデータを取得する際に使用
-///
-/// ## パラメータ
-/// - `passport`: MedicalPassportへの参照
-///
-/// ## 返り値
-/// - Walrus blob IDへの参照
-public fun get_walrus_blob_id(passport: &MedicalPassport): &String {
-    medical_passport::get_walrus_blob_id(passport)
 }
 
 /// Seal IDを取得
@@ -137,9 +121,14 @@ public fun get_country_code(passport: &MedicalPassport): &String {
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (walrus_blob_id, seal_id, country_code)
-public fun get_all_fields(passport: &MedicalPassport): (&String, &String, &String) {
+/// - タプル: (seal_id, country_code, analytics_opt_in)
+public fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool) {
     medical_passport::get_all_fields(passport)
+}
+
+/// 統計データ提供への同意を取得
+public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
+    medical_passport::get_analytics_opt_in(passport)
 }
 
 /// 指定アドレスが既にパスポートを所持しているか確認
@@ -182,120 +171,13 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool {
 /// ## Aborts
 /// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
 entry fun seal_approve_patient_only(
-    id: vector<u8>,
     passport: &MedicalPassport,
     registry: &PassportRegistry,
     ctx: &tx_context::TxContext
 ) {
-    // `id` is the Seal identity (seal_id); not used on-chain but required by Seal key servers
-    let _ = id;
     seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
 }
 
-/// Walrus Blob IDを更新するエントリー関数
-///
-/// ## 概要
-/// MedicalPassportの`walrus_blob_id`フィールドを更新するエントリー関数。
-/// Walrusではデータ更新時にBlob IDが変わるため、
-/// パスポート内のIDを書き換える必要がある。
-///
-/// ## 権限
-/// - パスポートの所有者のみが更新可能
-/// - トランザクション送信者がパスポートの所有者と一致する必要がある
-///
-/// ## 制約
-/// - `new_blob_id`が空文字列でないことを確認
-/// - パスポートの所有者のみが更新可能（PassportRegistryで所有権を確認）
-///
-/// ## 動作
-/// 1. `new_blob_id`が空文字列でないことをバリデーション
-/// 2. トランザクション送信者を取得
-/// 3. パスポートIDを取得
-/// 4. PassportRegistryで送信者がパスポートの所有者であることを確認
-/// 5. `medical_passport::update_walrus_blob_id_internal()`を呼び出して更新
-///
-/// ## パラメータ
-/// - `registry`: PassportRegistryへの参照（所有権確認用）
-/// - `passport`: 更新対象のMedicalPassportへの可変参照
-/// - `new_blob_id`: 新しいWalrus Blob ID（空文字列不可）
-/// - `clock`: 現在時刻取得用のClock参照
-/// - `ctx`: トランザクションコンテキスト（送信者取得用）
-///
-/// ## 副作用
-/// - `passport.walrus_blob_id`が`new_blob_id`に更新される
-/// - `PassportUpdatedEvent`イベントが発行される
-///
-/// ## Aborts
-/// - `E_EMPTY_WALRUS_BLOB_ID`: `new_blob_id`が空文字列
-/// - `E_NO_ACCESS`: トランザクション送信者がパスポートの所有者ではない
-entry fun update_walrus_blob_id(
-    registry: &PassportRegistry,
-    passport: &mut MedicalPassport,
-    new_blob_id: String,
-    clock: &Clock,
-    ctx: &tx_context::TxContext
-) {
-    // バリデーション: new_blob_idが空文字列でないことを確認
-    assert!(!string::is_empty(&new_blob_id), medical_passport::e_empty_walrus_blob_id());
-
-    // アクセス制御: 送信者がパスポートの所有者であることを確認
-    medical_passport::assert_passport_owner(registry, object::id(passport), tx_context::sender(ctx), seal_accessor::e_no_access());
-
-    // 内部関数を呼び出して更新
-    medical_passport::update_walrus_blob_id_internal(passport, new_blob_id, clock);
-}
-
-/// Seal IDを更新するエントリー関数
-///
-/// ## 概要
-/// MedicalPassportの`seal_id`フィールドを更新するエントリー関数。
-/// プロフィール保存時に新しいseal_idを設定する際に使用される。
-///
-/// ## 権限
-/// - パスポートの所有者のみが更新可能
-/// - トランザクション送信者がパスポートの所有者と一致する必要がある
-///
-/// ## 制約
-/// - `new_seal_id`が空文字列でないことを確認
-/// - パスポートの所有者のみが更新可能（PassportRegistryで所有権を確認）
-///
-/// ## 動作
-/// 1. `new_seal_id`が空文字列でないことをバリデーション
-/// 2. トランザクション送信者を取得
-/// 3. パスポートIDを取得
-/// 4. PassportRegistryで送信者がパスポートの所有者であることを確認
-/// 5. `medical_passport::update_seal_id_internal()`を呼び出して更新
-///
-/// ## パラメータ
-/// - `registry`: PassportRegistryへの参照（所有権確認用）
-/// - `passport`: 更新対象のMedicalPassportへの可変参照
-/// - `new_seal_id`: 新しいSeal ID（空文字列不可）
-/// - `clock`: 現在時刻取得用のClock参照
-/// - `ctx`: トランザクションコンテキスト（送信者取得用）
-///
-/// ## 副作用
-/// - `passport.seal_id`が`new_seal_id`に更新される
-/// - `PassportSealUpdatedEvent`イベントが発行される
-///
-/// ## Aborts
-/// - `E_EMPTY_SEAL_ID`: `new_seal_id`が空文字列
-/// - `E_NO_ACCESS`: トランザクション送信者がパスポートの所有者ではない
-entry fun update_seal_id(
-    registry: &PassportRegistry,
-    passport: &mut MedicalPassport,
-    new_seal_id: String,
-    clock: &Clock,
-    ctx: &tx_context::TxContext
-) {
-    // バリデーション: new_seal_idが空文字列でないことを確認
-    assert!(!string::is_empty(&new_seal_id), medical_passport::e_empty_seal_id());
-
-    // アクセス制御: 送信者がパスポートの所有者であることを確認
-    medical_passport::assert_passport_owner(registry, object::id(passport), tx_context::sender(ctx), seal_accessor::e_no_access());
-
-    // 内部関数を呼び出して更新
-    medical_passport::update_seal_id_internal(passport, new_seal_id, clock);
-}
 
 /// ConsentTokenを作成して共有オブジェクトとして公開
 ///

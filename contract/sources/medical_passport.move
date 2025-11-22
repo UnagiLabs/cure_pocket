@@ -13,7 +13,6 @@
 module cure_pocket::medical_passport;
 
 use std::string::{Self, String};
-use sui::clock::Clock;
 use sui::display;
 use sui::dynamic_field as df;
 use sui::package::Publisher;
@@ -31,14 +30,14 @@ use sui::package::Publisher;
 ///
 /// ## フィールド
 /// - `id`: Sui オブジェクトID
-/// - `walrus_blob_id`: Walrus上の医療データ識別子
 /// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
 /// - `country_code`: 発行国コード（ISO 3166-1 alpha-2想定）
+/// - `analytics_opt_in`: 匿名統計データ提供への同意フラグ
 public struct MedicalPassport has key {
     id: object::UID,
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
 }
 
 /// パスポートレジストリ - 1ウォレット1枚制約を実現
@@ -87,51 +86,17 @@ const DISPLAY_IMAGE_URL_BYTES: vector<u8> =
 /// - `old_owner`: 移行元アドレス
 /// - `new_owner`: 移行先アドレス
 /// - `passport_id`: 移行されたパスポートのID（burnされる前のID）
-/// - `walrus_blob_id`: 医療データ識別子
+/// - `seal_id`: 継承されるSeal ID
+/// - `country_code`: 継承される国コード
+/// - `analytics_opt_in`: 継承される統計データ提供可否
 /// - `timestamp_ms`: 移行実行時刻（ミリ秒）
 public struct PassportMigrationEvent has copy, drop {
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    walrus_blob_id: String,
-    timestamp_ms: u64,
-}
-
-/// パスポート更新イベント
-///
-/// ## 用途
-/// - Walrus Blob ID更新の記録
-/// - 監査証跡として使用
-/// - オフチェーンでの更新履歴追跡
-///
-/// ## フィールド
-/// - `passport_id`: 更新されたパスポートのID
-/// - `old_blob_id`: 更新前のWalrus Blob ID
-/// - `new_blob_id`: 更新後のWalrus Blob ID
-/// - `timestamp_ms`: 更新実行時刻（ミリ秒）
-public struct PassportUpdatedEvent has copy, drop {
-    passport_id: object::ID,
-    old_blob_id: String,
-    new_blob_id: String,
-    timestamp_ms: u64,
-}
-
-/// Seal ID更新イベント
-///
-/// ## 用途
-/// - Seal ID更新の記録
-/// - 監査証跡として使用
-/// - オフチェーンでの更新履歴追跡
-///
-/// ## フィールド
-/// - `passport_id`: 更新されたパスポートのID
-/// - `old_seal_id`: 更新前のSeal ID
-/// - `new_seal_id`: 更新後のSeal ID
-/// - `timestamp_ms`: 更新実行時刻（ミリ秒）
-public struct PassportSealUpdatedEvent has copy, drop {
-    passport_id: object::ID,
-    old_seal_id: String,
-    new_seal_id: String,
+    seal_id: String,
+    country_code: String,
+    analytics_opt_in: bool,
     timestamp_ms: u64,
 }
 
@@ -139,20 +104,17 @@ public struct PassportSealUpdatedEvent has copy, drop {
 // エラーコード
 // ============================================================
 
-/// Walrus blob IDが空文字列
-const E_EMPTY_WALRUS_BLOB_ID: u64 = 1;
-
 /// Seal IDが空文字列
-const E_EMPTY_SEAL_ID: u64 = 2;
+const E_EMPTY_SEAL_ID: u64 = 1;
 
 /// 国コードが空文字列
-const E_EMPTY_COUNTRY_CODE: u64 = 3;
+const E_EMPTY_COUNTRY_CODE: u64 = 2;
 
 /// 既にパスポートを所持している
-const E_ALREADY_HAS_PASSPORT: u64 = 4;
+const E_ALREADY_HAS_PASSPORT: u64 = 3;
 
 /// 移行先アドレスが既にパスポートを所持している
-const E_MIGRATION_TARGET_HAS_PASSPORT: u64 = 5;
+const E_MIGRATION_TARGET_HAS_PASSPORT: u64 = 4;
 
 /// Registryに既に登録済み
 const E_REGISTRY_ALREADY_REGISTERED: u64 = 6;
@@ -189,18 +151,6 @@ public(package) fun e_already_has_passport(): u64 {
 /// - エラーコード `E_MIGRATION_TARGET_HAS_PASSPORT` の値
 public(package) fun e_migration_target_has_passport(): u64 {
     E_MIGRATION_TARGET_HAS_PASSPORT
-}
-
-/// E_EMPTY_WALRUS_BLOB_ID エラーコードを取得
-///
-/// ## 用途
-/// - assert! で使用するエラーコードを取得
-/// - Move 2024 では const を public にできないため、ゲッター経由でアクセス
-///
-/// ## 返り値
-/// - エラーコード `E_EMPTY_WALRUS_BLOB_ID` の値
-public(package) fun e_empty_walrus_blob_id(): u64 {
-    E_EMPTY_WALRUS_BLOB_ID
 }
 
 /// E_EMPTY_SEAL_ID エラーコードを取得
@@ -275,38 +225,36 @@ public(package) fun create_passport_display(
 /// - MedicalPassport は `has key` のため、このモジュール内でのみ作成可能
 ///
 /// ## バリデーション
-/// - すべてのフィールドが空文字列でないことを確認
+/// - `seal_id` と `country_code` が空文字列でないことを確認
 ///
 /// ## パラメータ
-/// - `walrus_blob_id`: Walrus blob ID（空文字列不可）
 /// - `seal_id`: Seal鍵ID（空文字列不可）
 /// - `country_code`: 国コード（空文字列不可）
+/// - `analytics_opt_in`: 匿名統計データ提供可否
 /// - `ctx`: トランザクションコンテキスト
 ///
 /// ## 返り値
 /// - `MedicalPassport`: 新しく生成されたパスポートオブジェクト
 ///
 /// ## Aborts
-/// - `E_EMPTY_WALRUS_BLOB_ID`: walrus_blob_idが空文字列
 /// - `E_EMPTY_SEAL_ID`: seal_idが空文字列
 /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列
 public(package) fun create_passport_internal(
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 ): MedicalPassport {
     // バリデーション: 空文字列チェック
-    assert!(!string::is_empty(&walrus_blob_id), E_EMPTY_WALRUS_BLOB_ID);
     assert!(!string::is_empty(&seal_id), E_EMPTY_SEAL_ID);
     assert!(!string::is_empty(&country_code), E_EMPTY_COUNTRY_CODE);
 
     // パスポートオブジェクトの生成
     MedicalPassport {
         id: object::new(ctx),
-        walrus_blob_id,
         seal_id,
         country_code,
+        analytics_opt_in,
     }
 }
 
@@ -332,17 +280,6 @@ public(package) fun transfer_to(passport: MedicalPassport, recipient: address) {
 // 内部公開関数: フィールドアクセス
 // ============================================================
 
-/// Walrus blob IDを取得
-///
-/// ## パラメータ
-/// - `passport`: MedicalPassportへの参照
-///
-/// ## 返り値
-/// - Walrus blob IDへの参照
-public(package) fun get_walrus_blob_id(passport: &MedicalPassport): &String {
-    &passport.walrus_blob_id
-}
-
 /// Seal IDを取得
 ///
 /// ## パラメータ
@@ -365,15 +302,26 @@ public(package) fun get_country_code(passport: &MedicalPassport): &String {
     &passport.country_code
 }
 
+/// 統計データ提供可否フラグを取得
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportへの参照
+///
+/// ## 返り値
+/// - `analytics_opt_in` の値
+public(package) fun get_analytics_opt_in(passport: &MedicalPassport): bool {
+    passport.analytics_opt_in
+}
+
 /// パスポートの全情報を一括取得
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (walrus_blob_id, seal_id, country_code)
-public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &String, &String) {
-    (&passport.walrus_blob_id, &passport.seal_id, &passport.country_code)
+/// - タプル: (seal_id, country_code, analytics_opt_in)
+public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool) {
+    (&passport.seal_id, &passport.country_code, passport.analytics_opt_in)
 }
 
 // ============================================================
@@ -507,12 +455,12 @@ public(package) fun assert_passport_owner(
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (walrus_blob_id, seal_id, country_code) の値のコピー
-public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, String) {
+/// - タプル: (seal_id, country_code, analytics_opt_in) の値のコピー
+public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, bool) {
     (
-        passport.walrus_blob_id,
         passport.seal_id,
-        passport.country_code
+        passport.country_code,
+        passport.analytics_opt_in,
     )
 }
 
@@ -529,7 +477,7 @@ public(package) fun get_passport_data(passport: &MedicalPassport): (String, Stri
 /// ## パラメータ
 /// - `passport`: 削除するMedicalPassport（所有権を受け取る）
 public(package) fun burn_passport(passport: MedicalPassport) {
-    let MedicalPassport { id, walrus_blob_id: _, seal_id: _, country_code: _ } = passport;
+    let MedicalPassport { id, seal_id: _, country_code: _, analytics_opt_in: _ } = passport;
     object::delete(id);
 }
 
@@ -543,132 +491,29 @@ public(package) fun burn_passport(passport: MedicalPassport) {
 /// - `old_owner`: 移行元アドレス
 /// - `new_owner`: 移行先アドレス
 /// - `passport_id`: 移行されたパスポートのID
-/// - `walrus_blob_id`: 医療データ識別子
+/// - `seal_id`: Seal ID
+/// - `country_code`: 国コード
+/// - `analytics_opt_in`: 統計データ提供可否
 /// - `timestamp_ms`: 移行実行時刻（ミリ秒）
 public(package) fun emit_migration_event(
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    walrus_blob_id: String,
+    seal_id: String,
+    country_code: String,
+    analytics_opt_in: bool,
     timestamp_ms: u64
 ) {
     let migration_event = PassportMigrationEvent {
         old_owner,
         new_owner,
         passport_id,
-        walrus_blob_id,
+        seal_id,
+        country_code,
+        analytics_opt_in,
         timestamp_ms,
     };
     sui::event::emit(migration_event);
-}
-
-/// Walrus Blob IDを更新する内部関数
-///
-/// ## 概要
-/// MedicalPassportの`walrus_blob_id`フィールドを更新し、
-/// 更新イベントを発行するパッケージ内部関数。
-/// Walrusではデータ更新時にBlob IDが変わるため、
-/// パスポート内のIDを書き換える必要がある。
-///
-/// ## 用途
-/// - Walrus上の医療データが更新された際に、新しいBlob IDをパスポートに反映
-/// - データ更新の監査証跡としてイベントを発行
-///
-/// ## パラメータ
-/// - `passport`: 更新対象のMedicalPassportへの可変参照
-/// - `new_blob_id`: 新しいWalrus Blob ID（空文字列不可）
-/// - `clock`: 現在時刻取得用のClock参照
-///
-/// ## 副作用
-/// - `passport.walrus_blob_id`が`new_blob_id`に更新される
-/// - `PassportUpdatedEvent`イベントが発行される
-///
-/// ## 注意
-/// - この関数はパッケージスコープ（`public(package)`）のため、
-///   外部から直接呼び出し不可
-/// - エントリー関数からのみ呼び出されることを想定
-public(package) fun update_walrus_blob_id_internal(
-    passport: &mut MedicalPassport,
-    new_blob_id: String,
-    clock: &Clock
-) {
-    // セーフガード（二重バリデーション）
-    assert!(!string::is_empty(&new_blob_id), E_EMPTY_WALRUS_BLOB_ID);
-
-    // 現在のwalrus_blob_idを保存（イベント発行時に使用）
-    let old_blob_id = passport.walrus_blob_id;
-
-    // walrus_blob_idを更新
-    passport.walrus_blob_id = new_blob_id;
-
-    // 現在時刻を取得
-    let timestamp_ms = sui::clock::timestamp_ms(clock);
-
-    // パスポートIDを取得
-    let passport_id = object::id(passport);
-
-    // 更新イベントを発行
-    let updated_event = PassportUpdatedEvent {
-        passport_id,
-        old_blob_id,
-        new_blob_id,
-        timestamp_ms,
-    };
-    sui::event::emit(updated_event);
-}
-
-/// Seal IDを更新する内部関数
-///
-/// ## 概要
-/// MedicalPassportの`seal_id`フィールドを更新し、
-/// 更新イベントを発行するパッケージ内部関数。
-/// プロフィール保存時に新しいseal_idを設定する際に使用される。
-///
-/// ## 用途
-/// - プロフィールデータ保存時に生成された新しいSeal IDをパスポートに反映
-/// - データ更新の監査証跡としてイベントを発行
-///
-/// ## パラメータ
-/// - `passport`: 更新対象のMedicalPassportへの可変参照
-/// - `new_seal_id`: 新しいSeal ID（空文字列不可）
-/// - `clock`: 現在時刻取得用のClock参照
-///
-/// ## 副作用
-/// - `passport.seal_id`が`new_seal_id`に更新される
-/// - `PassportSealUpdatedEvent`イベントが発行される
-///
-/// ## 注意
-/// - この関数はパッケージスコープ（`public(package)`）のため、
-///   外部から直接呼び出し不可
-/// - エントリー関数からのみ呼び出されることを想定
-public(package) fun update_seal_id_internal(
-    passport: &mut MedicalPassport,
-    new_seal_id: String,
-    clock: &Clock
-) {
-    // セーフガード（二重バリデーション）
-    assert!(!string::is_empty(&new_seal_id), E_EMPTY_SEAL_ID);
-
-    // 現在のseal_idを保存（イベント発行時に使用）
-    let old_seal_id = passport.seal_id;
-
-    // seal_idを更新
-    passport.seal_id = new_seal_id;
-
-    // 現在時刻を取得
-    let timestamp_ms = sui::clock::timestamp_ms(clock);
-
-    // パスポートIDを取得
-    let passport_id = object::id(passport);
-
-    // 更新イベントを発行
-    let updated_event = PassportSealUpdatedEvent {
-        passport_id,
-        old_seal_id,
-        new_seal_id,
-        timestamp_ms,
-    };
-    sui::event::emit(updated_event);
 }
 
 // ============================================================
@@ -700,7 +545,7 @@ public fun create_passport_registry(ctx: &mut tx_context::TxContext): PassportRe
 /// テスト専用: MedicalPassport を破棄
 #[test_only]
 public fun destroy_passport_for_tests(passport: MedicalPassport) {
-    let MedicalPassport { id, walrus_blob_id: _, seal_id: _, country_code: _ } = passport;
+    let MedicalPassport { id, seal_id: _, country_code: _, analytics_opt_in: _ } = passport;
     object::delete(id);
 }
 
