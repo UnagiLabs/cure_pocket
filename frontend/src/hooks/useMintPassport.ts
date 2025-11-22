@@ -8,8 +8,9 @@
  * ## 主な仕様
  * - `useSignAndExecuteTransaction`を使用してトランザクションを送信
  * - `mint_medical_passport`エントリー関数を呼び出すPTBを構築
- * - MVP段階では、`walrus_blob_id`と`seal_id`はモック値を使用
+ * - MVP段階では、`seal_id`はモック値を使用
  * - 国コードはブラウザのロケールまたはユーザー設定から取得（デフォルト: "JP"）
+ * - 統計データ提供同意フラグ（`analytics_opt_in`）を指定可能（デフォルト: false）
  *
  * ## 制限事項
  * - ウォレットが接続されていない場合はエラーを返す
@@ -70,16 +71,16 @@ export interface UseMintPassportReturn {
 	/**
 	 * パスポートを発行する関数
 	 *
-	 * @param walrus_blob_id - Walrus blob ID（MVP段階ではモック値）
 	 * @param seal_id - Seal ID（MVP段階ではモック値）
 	 * @param country_code - 国コード（省略時はデフォルト値を使用）
+	 * @param analytics_opt_in - 統計データ提供同意フラグ（省略時はfalse）
 	 * @returns トランザクションダイジェスト
 	 * @throws トランザクション送信失敗時
 	 */
 	mint: (
-		walrus_blob_id: string,
 		seal_id: string,
 		country_code?: string,
+		analytics_opt_in?: boolean,
 	) => Promise<string | undefined>;
 	/**
 	 * トランザクション送信中かどうか
@@ -115,15 +116,15 @@ export function useMintPassport(
 	/**
 	 * パスポートを発行する関数
 	 *
-	 * @param walrus_blob_id - Walrus blob ID
 	 * @param seal_id - Seal ID
 	 * @param country_code - 国コード（省略時はデフォルト値を使用）
+	 * @param analytics_opt_in - 統計データ提供同意フラグ（省略時はfalse）
 	 * @returns トランザクションダイジェスト
 	 */
 	async function mint(
-		walrus_blob_id: string,
 		seal_id: string,
 		country_code?: string,
+		analytics_opt_in?: boolean,
 	): Promise<string | undefined> {
 		return new Promise((resolve, reject) => {
 			try {
@@ -133,6 +134,8 @@ export function useMintPassport(
 
 				// 国コードが指定されていない場合はデフォルト値を使用
 				const final_country_code = country_code || get_default_country_code();
+				// analytics_opt_inが指定されていない場合はfalseを使用
+				const final_analytics_opt_in = analytics_opt_in ?? false;
 
 				// Transactionを構築
 				const tx = new Transaction();
@@ -140,9 +143,9 @@ export function useMintPassport(
 					target: `${package_id}::accessor::mint_medical_passport`,
 					arguments: [
 						tx.object(registry_id), // PassportRegistry (shared object)
-						tx.pure.string(walrus_blob_id), // walrus_blob_id
 						tx.pure.string(seal_id), // seal_id
 						tx.pure.string(final_country_code), // country_code
+						tx.pure.bool(final_analytics_opt_in), // analytics_opt_in
 					],
 				});
 

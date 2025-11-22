@@ -8,10 +8,8 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { healthDataToPatientProfile } from "@/lib/profileConverter";
 import type {
 	Allergy,
 	AppState,
@@ -82,14 +80,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const [profile, setProfile] = useState<PatientProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Passport and decryption hooks
+	// Passport and session key hooks
 	const { passport, has_passport, loading: passportLoading } = usePassport();
 	const {
 		sessionKey,
 		generateSessionKey,
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
-	const { decryptAndFetch } = useDecryptAndFetch();
 
 	// ウォレットアドレスはdApp Kitから取得
 	const walletAddress = currentAccount?.address || null;
@@ -134,17 +131,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				return;
 			}
 
-			// Skip if no walrus_blob_id or seal_id
-			// Also skip if blob_id is a placeholder or invalid format
-			const isValidBlobId =
-				passport.walrusBlobId &&
-				passport.walrusBlobId !== "init_blob" &&
-				passport.walrusBlobId.length > 10; // Real Walrus blob IDs are long hashes
-
-			if (!isValidBlobId || !passport.sealId) {
-				console.log(
-					"[AppContext] Passport has invalid or placeholder blob_id, skipping data load",
-				);
+			// TODO: Dynamic Fields対応
+			// 現在はseal_idの存在のみチェック
+			// 将来的にはDynamic Fieldsから各data_typeのblob_idsを取得する必要がある
+			if (!passport.sealId) {
+				console.log("[AppContext] Passport has no seal_id, skipping data load");
 				return;
 			}
 
@@ -166,26 +157,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					return; // useEffect will re-run after sessionKey is created
 				}
 
-				// Step 2: Fetch and decrypt data
-				console.log("[AppContext] Fetching and decrypting data...");
-				const healthData = await decryptAndFetch({
-					blobId: passport.walrusBlobId,
-					sealId: passport.sealId,
-					sessionKey,
-					passportId: passport.id,
-				});
+				// TODO: Dynamic Fields対応 - 各data_typeごとにblob_idsを取得して復号化
+				// 現在の実装は一時的に無効化しています
+				// 実装手順:
+				// 1. contract::accessor::get_data_entry(passport, data_type)を呼び出してblob_idsを取得
+				// 2. 各data_typeごとにdecryptAndFetchを呼び出し
+				// 3. 復号化されたデータを適切な状態にセット
+				console.log(
+					"[AppContext] Dynamic Fields対応が必要です。一時的にデータ取得をスキップします。",
+				);
 
-				// Step 3: Convert to PatientProfile
-				console.log("[AppContext] Converting to PatientProfile...");
-				const decryptedProfile = healthDataToPatientProfile(healthData);
-
-				// Step 4: Update state
-				setProfile(decryptedProfile);
-
-				// TODO: Also extract and set medications, conditions, etc. from healthData
-				// This would require additional converter functions
-
-				console.log("[AppContext] Profile data initialized successfully");
+				// 以下は旧実装（walrusBlobIdベース）のため、コメントアウト
+				// const healthData = await decryptAndFetch({
+				// 	blobId: passport.walrusBlobId, // ← このフィールドは削除されました
+				// 	sealId: passport.sealId,
+				// 	sessionKey,
+				// 	passportId: passport.id,
+				// });
+				// const decryptedProfile = healthDataToPatientProfile(healthData);
+				// setProfile(decryptedProfile);
 			} catch (error) {
 				console.error("[AppContext] Failed to initialize profile data:", error);
 				// Don't block the app on decryption failure
@@ -205,7 +195,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		decryptAndFetch,
 	]);
 
 	// setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）

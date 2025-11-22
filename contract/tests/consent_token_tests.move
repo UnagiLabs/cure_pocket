@@ -13,6 +13,7 @@ module cure_pocket::consent_token_tests {
     use cure_pocket::accessor;
     use cure_pocket::consent_token::{Self, ConsentToken};
     use cure_pocket::cure_pocket::Self;
+    use cure_pocket::medical_passport::{Self, MedicalPassport};
 
     // テスト用定数
     const USER1: address = @0xA1;
@@ -37,6 +38,14 @@ module cure_pocket::consent_token_tests {
         vector::push_back(&mut scopes, string::utf8(b"medication"));
         vector::push_back(&mut scopes, string::utf8(b"lab_results"));
         scopes
+    }
+
+    // テストヘルパー: テスト用MedicalPassportを作成
+    fun create_test_passport(ctx: &mut sui::tx_context::TxContext): MedicalPassport {
+        let seal_id = string::utf8(b"test-seal-id");
+        let country_code = string::utf8(b"JP");
+        let analytics_opt_in = true;
+        medical_passport::create_passport_internal(seal_id, country_code, analytics_opt_in, ctx)
     }
 
     // ============================================================
@@ -504,12 +513,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -531,6 +543,7 @@ module cure_pocket::consent_token_tests {
         // 検証（正しいsecretとpassport_id）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -548,8 +561,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -575,12 +592,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -615,6 +635,7 @@ module cure_pocket::consent_token_tests {
         // 検証しようとする（abort）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -632,8 +653,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -653,7 +678,7 @@ module cure_pocket::consent_token_tests {
     /// - 異なるpassport_idで検証しようとする
     /// - `E_INVALID_PASSPORT_ID`でabortすることを確認
     #[test]
-    #[expected_failure(abort_code = 203, location = consent_token)]
+    #[expected_failure(abort_code = 203, location = accessor)]
     fun test_verify_consent_token_invalid_passport_id() {
         let mut scenario = ts::begin(USER1);
 
@@ -662,12 +687,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -689,6 +717,7 @@ module cure_pocket::consent_token_tests {
         // 異なるpassport_idで検証しようとする（abort）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -707,8 +736,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -733,12 +766,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -760,6 +796,7 @@ module cure_pocket::consent_token_tests {
         // 異なるsecretで検証しようとする（abort）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let wrong_secret = vector[99u8, 98u8, 97u8]; // 異なるsecret
@@ -777,8 +814,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -806,12 +847,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -833,6 +877,7 @@ module cure_pocket::consent_token_tests {
         // 検証
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -850,8 +895,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -877,12 +926,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成
+        // User1がMedicalPassportとConsentTokenを作成
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes();
             let duration_ms = 86400000u64;
@@ -917,6 +969,7 @@ module cure_pocket::consent_token_tests {
         // 検証しようとする（abort）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -934,8 +987,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -1217,12 +1274,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成（スコープ: ["medication"]のみ）
+        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medication"]のみ）
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let mut scopes = vector::empty<String>();
             vector::push_back(&mut scopes, string::utf8(b"medication")); // medicationのみ
@@ -1243,9 +1303,9 @@ module cure_pocket::consent_token_tests {
         };
 
         // スコープ外アクセス（lab_results）を試みる
-        // 現在の実装ではスコープ検証がないため、abortしない（Passしてしまう）
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -1260,12 +1320,15 @@ module cure_pocket::consent_token_tests {
             let scope_bytes = bcs::to_bytes(&requested_scope);
             vector::append(&mut bcs_bytes, scope_bytes);
 
-            // 現在の実装ではスコープ検証がないため、abortしない
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);
@@ -1289,12 +1352,15 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がConsentTokenを作成（スコープ: ["medication", "lab_results"]）
+        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medication", "lab_results"]）
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            passport_id = object::id_from_address(PASSPORT_ID);
+            let passport = create_test_passport(ts::ctx(&mut scenario));
+            passport_id = sui::object::id(&passport);
+            medical_passport::transfer_to(passport, USER1);
+
             let secret_hash = create_test_secret_hash();
             let scopes = create_test_scopes(); // ["medication", "lab_results"]
             let duration_ms = 86400000u64;
@@ -1316,6 +1382,7 @@ module cure_pocket::consent_token_tests {
         // スコープ内アクセス（medication）を試みる
         ts::next_tx(&mut scenario, USER1);
         {
+            let passport = ts::take_from_sender<MedicalPassport>(&scenario);
             let token = ts::take_shared<ConsentToken>(&scenario);
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
@@ -1333,8 +1400,12 @@ module cure_pocket::consent_token_tests {
             accessor::seal_approve_consent(
                 bcs_bytes,
                 &token,
+                &passport,
+                requested_scope,
                 &clock
             );
+
+            ts::return_to_sender(&scenario, passport);
 
             ts::return_shared(token);
             clock::destroy_for_testing(clock);

@@ -310,9 +310,9 @@ export interface ThemeConfig {
  */
 export interface MedicalPassport {
 	id: string; // Sui Object ID
-	walrusBlobId: string;
 	sealId: string;
 	countryCode: string;
+	analyticsOptIn: boolean; // 統計データ提供同意フラグ
 }
 
 export interface PassportStatus {

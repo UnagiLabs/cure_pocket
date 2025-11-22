@@ -41,9 +41,9 @@ const PASSPORT_REGISTRY_ID = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
  */
 interface MedicalPassportObject {
 	id: string; // Sui object ID
-	walrus_blob_id: string;
 	seal_id: string;
 	country_code: string;
+	analytics_opt_in: boolean;
 }
 
 // ==========================================
@@ -114,9 +114,9 @@ export async function getMedicalPassport(
 
 		return {
 			id: response.data.objectId,
-			walrusBlobId: fields.walrus_blob_id,
 			sealId: fields.seal_id,
 			countryCode: fields.country_code,
+			analyticsOptIn: fields.analytics_opt_in,
 		};
 	} catch (error) {
 		if (error instanceof Error) {
@@ -272,23 +272,102 @@ export async function getAllPassports(
 }
 
 /**
- * Get transaction block for updating walrus_blob_id
+ * Build transaction for updating data entry in Dynamic Fields
  *
- * This creates a transaction that calls update_walrus_blob_id on the contract.
+ * This creates a transaction that calls add_data_entry or replace_data_entry on the contract.
  * The transaction must be signed and executed by the passport owner.
  *
  * @param params - Update parameters
  * @returns Transaction block ready for signing
  */
-export function buildUpdateBlobIdTransaction(params: {
+/**
+ * Get blob IDs for a specific data type from MedicalPassport Dynamic Fields
+ *
+ * This queries the Dynamic Field associated with a specific data type
+ * (e.g., "medications", "basic_profile") and returns the array of blob IDs.
+ *
+ * Flow:
+ * 1. Query Dynamic Field with data type as key (String type)
+ * 2. Extract blob_ids array from field value (vector<String>)
+ * 3. Return blob IDs for Walrus download
+ *
+ * @param passportObjectId - MedicalPassport Sui object ID
+ * @param dataType - Data type key (e.g., "medications", "basic_profile")
+ * @returns Array of blob IDs, or empty array if data type not found
+ * @throws Error if query fails (except for "not found" which returns empty array)
+ *
+ * @example
+ * ```typescript
+ * const blobIds = await getDataEntryBlobIds(passportId, "medications");
+ * for (const blobId of blobIds) {
+ *   const encryptedData = await downloadFromWalrusByBlobId(blobId);
+ *   // ... decrypt and process
+ * }
+ * ```
+ */
+export async function getDataEntryBlobIds(
+	passportObjectId: string,
+	dataType: string,
+): Promise<string[]> {
+	const client = getSuiClient();
+
+	try {
+		// Query dynamic field with data type as key
+		// Dynamic Field key type is String
+		const dynamicFieldName = {
+			type: "0x1::string::String",
+			value: dataType,
+		};
+
+		const response = await client.getDynamicFieldObject({
+			parentId: passportObjectId,
+			name: dynamicFieldName,
+		});
+
+		if (!response.data) {
+			// Data type not found - this is normal for uninitialized fields
+			return [];
+		}
+
+		// Extract blob_ids from Dynamic Field value
+		const content = response.data.content;
+		if (!content || content.dataType !== "moveObject") {
+			throw new Error("Invalid dynamic field structure");
+		}
+
+		// Dynamic Field value is vector<String> (blob_ids array)
+		const fields = content.fields as { name: unknown; value: string[] };
+		if (!fields.value || !Array.isArray(fields.value)) {
+			throw new Error("Dynamic field value is not an array");
+		}
+
+		return fields.value;
+	} catch (error) {
+		// If error is "Dynamic field not found", return empty array
+		if (
+			error instanceof Error &&
+			error.message.includes("Dynamic field not found")
+		) {
+			return [];
+		}
+
+		if (error instanceof Error) {
+			throw new Error(`Failed to get data entry blob IDs: ${error.message}`);
+		}
+		throw new Error("Failed to get data entry blob IDs: Unknown error");
+	}
+}
+
+export function buildUpdateDataEntryTransaction(params: {
 	passportObjectId: string;
-	registryObjectId: string;
-	newBlobId: string;
+	dataType: string; // データ種別 (e.g., "basic_profile", "medications")
+	blobIds: string[]; // Blob IDの配列
+	replace?: boolean; // true: replace_data_entry, false: add_data_entry
 }): {
 	packageId: string;
 	module: string;
 	function: string;
-	arguments: string[];
+	arguments: (string | string[])[];
 } {
 	if (!PACKAGE_ID) {
 		throw new Error("NEXT_PUBLIC_PACKAGE_ID not configured");
@@ -297,12 +376,8 @@ export function buildUpdateBlobIdTransaction(params: {
 	return {
 		packageId: PACKAGE_ID,
 		module: "accessor",
-		function: "update_walrus_blob_id",
-		arguments: [
-			params.passportObjectId,
-			params.registryObjectId,
-			params.newBlobId,
-		],
+		function: params.replace ? "replace_data_entry" : "add_data_entry",
+		arguments: [params.passportObjectId, params.dataType, params.blobIds],
 	};
 }
 

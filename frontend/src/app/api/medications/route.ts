@@ -9,11 +9,11 @@
  * - Wallet address required in query parameter or request body
  *
  * Data Flow:
- * READ:  wallet → passport → walrus → decrypt → medications[]
- * WRITE: medications[] → encrypt → walrus → update passport
+ * READ:  wallet → passport → dynamic fields → blob_ids → walrus → decrypt → medications[]
+ * WRITE: medications[] → encrypt → walrus → blob_id (client updates on-chain)
  */
 
-import { type ExportedSessionKey, SessionKey } from "@mysten/seal";
+import type { SessionKey } from "@mysten/seal";
 import { type NextRequest, NextResponse } from "next/server";
 import {
 	buildPatientAccessPTB,
@@ -21,9 +21,21 @@ import {
 	decryptHealthData,
 	encryptHealthData,
 } from "@/lib/seal";
-import { getPassportByAddress, getSuiClient } from "@/lib/suiClient";
+import { parseSessionKeyFromHeader } from "@/lib/sessionKey";
+import {
+	getDataEntryBlobIds,
+	getMedicalPassport,
+	getPassportIdByAddress,
+	getSuiClient,
+} from "@/lib/suiClient";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
-import type { Medication } from "@/types/healthData";
+import type { HealthData, Medication } from "@/types/healthData";
+
+// ==========================================
+// Environment Configuration
+// ==========================================
+
+const PASSPORT_REGISTRY_ID = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
 
 // ==========================================
 // Type Definitions
@@ -34,8 +46,31 @@ import type { Medication } from "@/types/healthData";
  */
 interface ErrorResponse {
 	error: string;
-	message?: string;
 	code?: string;
+}
+
+/**
+ * GET response format
+ */
+interface GetMedicationsResponse {
+	medications: Medication[];
+	totalBlobs: number;
+}
+
+/**
+ * POST request format
+ */
+interface PostMedicationsRequest {
+	address: string;
+	medications: Medication[];
+}
+
+/**
+ * POST response format
+ */
+interface PostMedicationsResponse {
+	blobId: string;
+	message: string;
 }
 
 // ==========================================
@@ -43,66 +78,7 @@ interface ErrorResponse {
 // ==========================================
 
 /**
- * Parse SessionKey from request header
- *
- * Expected header format:
- * X-Session-Key: {"signature":"base64...", "expiresAt":1234567890}
- *
- * @param request - Next.js request object
- * @returns Parsed SessionKey with Uint8Array signature
- * @throws Error if header missing or invalid
- */
-function parseSessionKey(
-	request: NextRequest,
-	suiClient: ReturnType<typeof getSuiClient>,
-): SessionKey {
-	const headerValue = request.headers.get("X-Session-Key");
-
-	if (!headerValue) {
-		throw new Error("Missing X-Session-Key header");
-	}
-
-	try {
-		// Allow either raw JSON or base64-encoded JSON
-		let jsonString = headerValue;
-		try {
-			const decoded = Buffer.from(headerValue, "base64").toString("utf8");
-			if (decoded.trim().startsWith("{")) {
-				jsonString = decoded;
-			}
-		} catch {
-			// not base64, assume raw JSON
-		}
-
-		const exported = JSON.parse(jsonString) as ExportedSessionKey;
-		return SessionKey.import(exported, suiClient);
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(`Failed to parse SessionKey: ${error.message}`);
-		}
-		throw new Error("Failed to parse SessionKey");
-	}
-}
-
-/**
- * Validate SessionKey expiration
- *
- * @param sessionKey - SessionKey to validate
- * @throws Error if expired
- */
-function validateSessionKey(sessionKey: SessionKey): void {
-	if (sessionKey.isExpired()) {
-		throw new Error("SessionKey has expired");
-	}
-}
-
-/**
  * Create error response
- *
- * @param message - Error message
- * @param status - HTTP status code
- * @param code - Error code
- * @returns NextResponse with error
  */
 function errorResponse(
 	message: string,
@@ -131,19 +107,21 @@ function errorResponse(
  * 1. Parse SessionKey from header
  * 2. Get wallet address from query parameter
  * 3. Fetch MedicalPassport from blockchain
- * 4. Download encrypted data from Walrus
- * 5. Build PTB for access control
- * 6. Decrypt data with Seal
- * 7. Return medications array
+ * 4. Get blob_ids from Dynamic Fields ("medications")
+ * 5. Download each blob from Walrus
+ * 6. Build PTB for patient access
+ * 7. Decrypt each blob with Seal
+ * 8. Merge medications arrays from all blobs
+ * 9. Return medications array
  *
  * Headers:
- * - X-Session-Key: {"signature":"base64...", "expiresAt":1234567890}
+ * - X-Session-Key: base64(JSON) with signature and expiresAt
  *
  * Query Parameters:
  * - address: Wallet address (required)
  *
  * Response:
- * - 200: { medications: Medication[] }
+ * - 200: { medications: Medication[], totalBlobs: number }
  * - 400: Invalid request
  * - 401: Unauthorized (SessionKey invalid/expired)
  * - 404: Passport not found
@@ -151,79 +129,100 @@ function errorResponse(
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
 	try {
-		const suiClient = getSuiClient();
-		// 1. Parse and validate SessionKey
-		const sessionKey = parseSessionKey(request, suiClient);
-		validateSessionKey(sessionKey);
+		// 1. Parse SessionKey from header
+		const sessionKeyHeader = request.headers.get("X-Session-Key");
+		let sessionKey: SessionKey;
+		try {
+			sessionKey = parseSessionKeyFromHeader(sessionKeyHeader);
+		} catch (error) {
+			return errorResponse(
+				error instanceof Error ? error.message : "Invalid SessionKey",
+				401,
+				"INVALID_SESSION_KEY",
+			);
+		}
 
-		// 2. Get wallet address from query
+		// 2. Get wallet address from query parameter
 		const { searchParams } = new URL(request.url);
-		const walletAddress = searchParams.get("address");
+		const address = searchParams.get("address");
 
-		if (!walletAddress) {
+		if (!address) {
 			return errorResponse("Missing address parameter", 400, "MISSING_ADDRESS");
 		}
 
-		// 3. Fetch MedicalPassport
-		const passport = await getPassportByAddress(walletAddress);
+		// 3. Fetch MedicalPassport from blockchain
+		const suiClient = getSuiClient();
+		const passportId = await getPassportIdByAddress(address);
 
-		if (!passport) {
+		if (!passportId) {
 			return errorResponse(
-				`No MedicalPassport found for address ${walletAddress}`,
+				"MedicalPassport not found for this address",
 				404,
 				"PASSPORT_NOT_FOUND",
 			);
 		}
 
-		// 4. Download encrypted data from Walrus
-		const encryptedData = await downloadFromWalrusByBlobId(
-			passport.walrusBlobId,
-		);
+		const passport = await getMedicalPassport(passportId);
 
-		// 5. Build PTB for patient-only access
-		const registryId = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
+		// 4. Get blob_ids from Dynamic Fields
+		const blobIds = await getDataEntryBlobIds(passportId, "medications");
 
-		const accessPolicyTxBytes = await buildPatientAccessPTB({
-			passportObjectId: passport.id,
-			registryObjectId: registryId,
-			suiClient,
-			sealId: passport.sealId,
-		});
-
-		// 6. Decrypt with Seal
-		const sealClient = createSealClient(suiClient);
-
-		const healthData = await decryptHealthData({
-			encryptedData,
-			sealClient,
-			sessionKey,
-			txBytes: accessPolicyTxBytes,
-			sealId: passport.sealId,
-		});
-
-		// 7. Return medications
-		return NextResponse.json({
-			medications: healthData.medications,
-		});
-	} catch (error) {
-		console.error("GET /api/medications error:", error);
-
-		if (error instanceof Error) {
-			// Handle specific error types
-			if (error.message.includes("SessionKey")) {
-				return errorResponse(error.message, 401, "INVALID_SESSION_KEY");
-			}
-			if (error.message.includes("not found")) {
-				return errorResponse(error.message, 404, "NOT_FOUND");
-			}
-			if (error.message.includes("Missing")) {
-				return errorResponse(error.message, 400, "BAD_REQUEST");
-			}
-
-			return errorResponse(error.message, 500, "INTERNAL_ERROR");
+		if (blobIds.length === 0) {
+			// No medications data yet - return empty array
+			return NextResponse.json({
+				medications: [],
+				totalBlobs: 0,
+			});
 		}
 
-		return errorResponse("Internal server error", 500, "UNKNOWN_ERROR");
+		// 5-8. Download, decrypt, and merge medications from all blobs
+		const sealClient = createSealClient(suiClient);
+		const allMedications: Medication[] = [];
+
+		for (const blobId of blobIds) {
+			try {
+				// 5. Download encrypted data from Walrus
+				const encryptedData = await downloadFromWalrusByBlobId(blobId);
+
+				// 6. Build PTB for patient access
+				const txBytes = await buildPatientAccessPTB({
+					passportObjectId: passportId,
+					registryObjectId: PASSPORT_REGISTRY_ID,
+					suiClient,
+					sealId: passport.sealId,
+				});
+
+				// 7. Decrypt with Seal
+				const healthData = await decryptHealthData({
+					encryptedData,
+					sealClient,
+					sessionKey,
+					txBytes,
+					sealId: passport.sealId,
+				});
+
+				// 8. Merge medications
+				if (healthData.medications && Array.isArray(healthData.medications)) {
+					allMedications.push(...healthData.medications);
+				}
+			} catch (error) {
+				console.error(`Failed to process blob ${blobId}:`, error);
+				// Continue processing other blobs even if one fails
+			}
+		}
+
+		// 9. Return medications array
+		return NextResponse.json({
+			medications: allMedications,
+			totalBlobs: blobIds.length,
+		} satisfies GetMedicationsResponse);
+	} catch (error) {
+		console.error("GET /api/medications error:", error);
+		return errorResponse(
+			error instanceof Error ? error.message : "Internal server error",
+			500,
+			"INTERNAL_ERROR",
+		);
 	}
 }
 
@@ -238,19 +237,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  *
  * Flow:
  * 1. Parse SessionKey from header
- * 2. Get wallet address and medications from body
- * 3. Fetch existing MedicalPassport
- * 4. Download and decrypt existing HealthData
- * 5. Update medications array
- * 6. Encrypt updated HealthData
- * 7. Upload to Walrus
- * 8. Return new blob reference
+ * 2. Parse request body (address + medications)
+ * 3. Fetch MedicalPassport from blockchain
+ * 4. Construct HealthData object
+ * 5. Encrypt with Seal
+ * 6. Upload to Walrus
+ * 7. Return blob_id (client must update on-chain)
  *
- * Note: The client must call update_walrus_blob_id on-chain
- * to update the passport with the new blob ID.
+ * Note: This API only encrypts and uploads data.
+ * The client must call replace_data_entry on-chain to update the passport.
  *
  * Headers:
- * - X-Session-Key: {"signature":"base64...", "expiresAt":1234567890}
+ * - X-Session-Key: base64(JSON) with signature and expiresAt
  *
  * Request Body:
  * {
@@ -267,16 +265,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
-		const suiClient = getSuiClient();
-		// 1. Parse and validate SessionKey
-		const sessionKey = parseSessionKey(request, suiClient);
-		validateSessionKey(sessionKey);
+		// 1. Parse SessionKey from header (validation only, not used for encryption)
+		const sessionKeyHeader = request.headers.get("X-Session-Key");
+		try {
+			parseSessionKeyFromHeader(sessionKeyHeader);
+		} catch (error) {
+			return errorResponse(
+				error instanceof Error ? error.message : "Invalid SessionKey",
+				401,
+				"INVALID_SESSION_KEY",
+			);
+		}
 
 		// 2. Parse request body
-		const body = (await request.json()) as {
-			address: string;
-			medications: Medication[];
-		};
+		const body = (await request.json()) as PostMedicationsRequest;
 
 		if (!body.address) {
 			return errorResponse(
@@ -286,7 +288,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		if (!Array.isArray(body.medications)) {
+		if (!body.medications || !Array.isArray(body.medications)) {
 			return errorResponse(
 				"Invalid medications array",
 				400,
@@ -294,89 +296,62 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// 3. Fetch MedicalPassport
-		const passport = await getPassportByAddress(body.address);
+		// 3. Fetch MedicalPassport from blockchain
+		const suiClient = getSuiClient();
+		const passportId = await getPassportIdByAddress(body.address);
 
-		if (!passport) {
+		if (!passportId) {
 			return errorResponse(
-				`No MedicalPassport found for address ${body.address}`,
+				"MedicalPassport not found for this address",
 				404,
 				"PASSPORT_NOT_FOUND",
 			);
 		}
 
-		// 4. Download and decrypt existing HealthData
-		const encryptedData = await downloadFromWalrusByBlobId(
-			passport.walrusBlobId,
-		);
+		const passport = await getMedicalPassport(passportId);
 
-		const registryId = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
-
-		const accessPolicyTxBytes = await buildPatientAccessPTB({
-			passportObjectId: passport.id,
-			registryObjectId: registryId,
-			suiClient,
-			sealId: passport.sealId,
-		});
-
-		const sealClient = createSealClient(suiClient);
-
-		const healthData = await decryptHealthData({
-			encryptedData,
-			sealClient,
-			sessionKey,
-			txBytes: accessPolicyTxBytes,
-			sealId: passport.sealId,
-		});
-
-		// 5. Update medications
-		healthData.medications = body.medications;
-
-		// Update metadata
-		healthData.meta = {
-			schema_version: "1.0.0",
-			updated_at: Date.now(),
-			generator: "CurePocket_Web_v1",
+		// 4. Construct HealthData object
+		const healthData: HealthData = {
+			meta: {
+				schema_version: "1.0.0",
+				updated_at: Date.now(),
+				generator: "CurePocket_API_v1",
+			},
+			profile: {
+				birth_year: 0,
+				gender: "other",
+				country: passport.countryCode,
+			},
+			medications: body.medications,
+			conditions: [],
+			lab_results: [],
+			imaging: [],
+			allergies: [],
 		};
 
-		// 6. Encrypt updated HealthData
-		const { encryptedObject: encryptedPayload } = await encryptHealthData({
+		// 5. Encrypt with Seal
+		const sealClient = createSealClient(suiClient);
+		const { encryptedObject } = await encryptHealthData({
 			healthData,
 			sealClient,
 			sealId: passport.sealId,
-			threshold: 2,
 		});
 
-		// 7. Upload to Walrus
-		const blobReference = await uploadToWalrus(encryptedPayload);
+		// 6. Upload to Walrus
+		const blobRef = await uploadToWalrus(encryptedObject);
 
-		// 8. Return new blob reference
-		// Note: Client must call update_walrus_blob_id on-chain
+		// 7. Return blob_id
 		return NextResponse.json({
-			blobId: blobReference.blobId,
+			blobId: blobRef.blobId,
 			message:
-				"Data uploaded successfully. Call update_walrus_blob_id on-chain to update passport.",
-		});
+				"Data encrypted and uploaded. Call replace_data_entry on-chain to update passport.",
+		} satisfies PostMedicationsResponse);
 	} catch (error) {
 		console.error("POST /api/medications error:", error);
-
-		if (error instanceof Error) {
-			if (error.message.includes("SessionKey")) {
-				return errorResponse(error.message, 401, "INVALID_SESSION_KEY");
-			}
-			if (error.message.includes("not found")) {
-				return errorResponse(error.message, 404, "NOT_FOUND");
-			}
-			if (
-				error.message.includes("Missing") ||
-				error.message.includes("Invalid")
-			) {
-				return errorResponse(error.message, 400, "BAD_REQUEST");
-			}
-
-			return errorResponse(error.message, 500, "INTERNAL_ERROR");
-		}
-
-		return errorResponse("Internal server error", 500, "UNKNOWN_ERROR");
+		return errorResponse(
+			error instanceof Error ? error.message : "Internal server error",
+			500,
+			"INTERNAL_ERROR",
+		);
 	}
 }
