@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { DiseaseSelect } from "@/components/forms/DiseaseSelect";
 import { useApp } from "@/contexts/AppContext";
+import { useCheckDataEntryExists } from "@/hooks/useCheckDataEntryExists";
 import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
@@ -70,6 +71,7 @@ export default function ConditionsPage() {
 		isUpdating,
 		error: _updateError,
 	} = useUpdatePassportData();
+	const { checkExists } = useCheckDataEntryExists();
 
 	const [isSaving, setIsSaving] = useState(false);
 	const [showSuccess, setShowSuccess] = useState(false);
@@ -218,11 +220,14 @@ export default function ConditionsPage() {
 				"basic_profile",
 			);
 
+			// オンチェーンの状態を確認してreplaceフラグを決定
+			const dataEntryExists = await checkExists(passport.id, "basic_profile");
+
 			await updatePassportData({
 				passportId: passport.id,
 				dataType: "basic_profile",
 				blobIds: [blobId],
-				replace: !!profile,
+				replace: dataEntryExists,
 			});
 
 			updateProfile(profileToSave);
