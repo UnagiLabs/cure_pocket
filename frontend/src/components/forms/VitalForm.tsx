@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { VitalSign, VitalSignType } from "@/types";
@@ -12,19 +14,79 @@ type VitalFormProps = {
 	onCancel?: () => void;
 };
 
+// バリデーションスキーマ（条件付き検証付き）
+const vitalFormSchema = z
+	.object({
+		type: z.enum([
+			"blood-pressure",
+			"heart-rate",
+			"blood-glucose",
+			"temperature",
+			"weight",
+		]),
+		systolic: z
+			.string()
+			.regex(/^-?\d+(\.\d+)?$/, "数値を入力してください")
+			.optional()
+			.or(z.literal("")),
+		diastolic: z
+			.string()
+			.regex(/^-?\d+(\.\d+)?$/, "数値を入力してください")
+			.optional()
+			.or(z.literal("")),
+		value: z
+			.string()
+			.regex(/^-?\d+(\.\d+)?$/, "数値を入力してください")
+			.optional()
+			.or(z.literal("")),
+		recordedAt: z.string().min(1, "測定日時を選択してください"),
+		notes: z.string().optional(),
+	})
+	.refine(
+		(data) => {
+			if (data.type === "blood-pressure") {
+				return (
+					data.systolic &&
+					data.systolic !== "" &&
+					data.diastolic &&
+					data.diastolic !== ""
+				);
+			}
+			return data.value && data.value !== "";
+		},
+		{
+			message: "必要な値を入力してください",
+			path: ["value"],
+		},
+	);
+
+type VitalFormData = z.infer<typeof vitalFormSchema>;
+
 export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 	const t = useTranslations();
 	const { settings, addVitalSign } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [type, setType] = useState<VitalSignType>("blood-pressure");
-	const [systolic, setSystolic] = useState("");
-	const [diastolic, setDiastolic] = useState("");
-	const [value, setValue] = useState("");
-	const [recordedAt, setRecordedAt] = useState(
-		new Date().toISOString().slice(0, 16),
-	);
-	const [notes, setNotes] = useState("");
+	const {
+		register,
+		handleSubmit,
+		watch,
+		setValue,
+		formState: { errors, isSubmitting },
+	} = useForm<VitalFormData>({
+		resolver: zodResolver(vitalFormSchema),
+		mode: "onBlur",
+		defaultValues: {
+			type: "blood-pressure",
+			systolic: "",
+			diastolic: "",
+			value: "",
+			recordedAt: new Date().toISOString().slice(0, 16),
+			notes: "",
+		},
+	});
+
+	const type = watch("type");
 
 	const getUnit = (vitalType: VitalSignType): string => {
 		switch (vitalType) {
@@ -60,30 +122,20 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 		}
 	};
 
-	const handleSave = () => {
-		if (type === "blood-pressure") {
-			if (!systolic || !diastolic) {
-				alert(t("vitals.validation.bloodPressureRequired"));
-				return;
-			}
-		} else if (!value) {
-			alert(t("vitals.validation.valueRequired"));
-			return;
-		}
-
+	const onSubmit = (data: VitalFormData) => {
 		const vitalSign: VitalSign = {
 			id: uuidv4(),
-			type,
-			recordedAt: new Date(recordedAt).toISOString(),
-			unit: getUnit(type),
-			notes: notes || undefined,
+			type: data.type,
+			recordedAt: new Date(data.recordedAt).toISOString(),
+			unit: getUnit(data.type),
+			notes: data.notes || undefined,
 		};
 
-		if (type === "blood-pressure") {
-			vitalSign.systolic = Number.parseFloat(systolic);
-			vitalSign.diastolic = Number.parseFloat(diastolic);
+		if (data.type === "blood-pressure") {
+			vitalSign.systolic = Number.parseFloat(data.systolic || "0");
+			vitalSign.diastolic = Number.parseFloat(data.diastolic || "0");
 		} else {
-			vitalSign.value = Number.parseFloat(value);
+			vitalSign.value = Number.parseFloat(data.value || "0");
 		}
 
 		addVitalSign(vitalSign);
@@ -91,25 +143,28 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 	};
 
 	return (
-		<div className="space-y-4 md:max-w-2xl md:mx-auto">
+		<form
+			onSubmit={handleSubmit(onSubmit)}
+			className="space-y-4 md:max-w-2xl md:mx-auto"
+		>
 			{/* タイプ選択 */}
 			<div>
 				<label
-					htmlFor="field1-1"
+					htmlFor="type"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.type")} *
 				</label>
 				<select
-					id="field1-1"
-					value={type}
+					id="type"
+					{...register("type")}
 					onChange={(e) => {
 						const nextType = e.target.value as VitalSignType;
-						setType(nextType);
-						setSystolic("");
-						setDiastolic("");
-						setValue("");
+						setValue("type", nextType);
+						setValue("systolic", "");
+						setValue("diastolic", "");
+						setValue("value", "");
 					}}
 					className="w-full rounded-lg border p-3"
 					style={{
@@ -131,110 +186,131 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 				<div className="grid grid-cols-2 gap-4">
 					<div>
 						<label
-							htmlFor="field2-2"
+							htmlFor="systolic"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
 							{t("vitals.systolic")} *
 						</label>
 						<input
-							id="field2-2"
+							id="systolic"
 							type="number"
-							value={systolic}
-							onChange={(e) => setSystolic(e.target.value)}
+							{...register("systolic")}
 							className="w-full rounded-lg border p-3"
 							style={{
 								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
+								borderColor: errors.systolic
+									? "#ef4444"
+									: `${theme.colors.textSecondary}40`,
 								color: theme.colors.text,
 							}}
 							placeholder="120"
 						/>
+						{errors.systolic && (
+							<p className="mt-1 text-sm text-red-500">
+								{errors.systolic.message}
+							</p>
+						)}
 					</div>
 					<div>
 						<label
-							htmlFor="field3-3"
+							htmlFor="diastolic"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
 							{t("vitals.diastolic")} *
 						</label>
 						<input
-							id="field3-3"
+							id="diastolic"
 							type="number"
-							value={diastolic}
-							onChange={(e) => setDiastolic(e.target.value)}
+							{...register("diastolic")}
 							className="w-full rounded-lg border p-3"
 							style={{
 								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
+								borderColor: errors.diastolic
+									? "#ef4444"
+									: `${theme.colors.textSecondary}40`,
 								color: theme.colors.text,
 							}}
 							placeholder="80"
 						/>
+						{errors.diastolic && (
+							<p className="mt-1 text-sm text-red-500">
+								{errors.diastolic.message}
+							</p>
+						)}
 					</div>
 				</div>
 			) : (
 				<div>
 					<label
-						htmlFor="field4-4"
+						htmlFor="value"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{getTypeLabel(type)} *
 					</label>
 					<input
-						id="field4-4"
+						id="value"
 						type="number"
-						value={value}
-						onChange={(e) => setValue(e.target.value)}
+						{...register("value")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
+							borderColor: errors.value
+								? "#ef4444"
+								: `${theme.colors.textSecondary}40`,
 							color: theme.colors.text,
 						}}
 						placeholder="0"
 					/>
+					{errors.value && (
+						<p className="mt-1 text-sm text-red-500">{errors.value.message}</p>
+					)}
 				</div>
 			)}
 
 			{/* 測定日時 */}
 			<div>
 				<label
-					htmlFor="field5-5"
+					htmlFor="recordedAt"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.recordedAt")} *
 				</label>
 				<input
-					id="field5-5"
+					id="recordedAt"
 					type="datetime-local"
-					value={recordedAt}
-					onChange={(e) => setRecordedAt(e.target.value)}
+					{...register("recordedAt")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.recordedAt
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 				/>
+				{errors.recordedAt && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.recordedAt.message}
+					</p>
+				)}
 			</div>
 
 			{/* メモ */}
 			<div>
 				<label
-					htmlFor="field6-6"
+					htmlFor="notes"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("vitals.notes")}
 				</label>
 				<textarea
-					id="field6-6"
-					value={notes}
-					onChange={(e) => setNotes(e.target.value)}
+					id="notes"
+					{...register("notes")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
@@ -260,14 +336,14 @@ export function VitalForm({ onSaved, onCancel }: VitalFormProps) {
 					{t("actions.cancel")}
 				</button>
 				<button
-					type="button"
-					onClick={handleSave}
-					className="flex-1 rounded-lg p-3 font-medium text-white transition-colors"
+					type="submit"
+					disabled={isSubmitting}
+					className="flex-1 rounded-lg p-3 font-medium text-white transition-colors disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{t("actions.save")}
+					{isSubmitting ? t("actions.saving") : t("actions.save")}
 				</button>
 			</div>
-		</div>
+		</form>
 	);
 }

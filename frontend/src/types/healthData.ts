@@ -1,7 +1,7 @@
 /**
  * CurePocket Health Data Schema
  *
- * Based on data_schema.md v1.0.0
+ * Based on data_schema.md v2.0.0
  *
  * This file defines the complete type system for medical data stored in Walrus.
  * These types follow international standards (ATC, RxNorm, ICD-10, LOINC, DICOM)
@@ -14,6 +14,7 @@
 
 /**
  * Root structure for all health data stored in Walrus
+ * @deprecated Use data-type-specific interfaces instead (BasicProfileData, MedicationsData, etc.)
  */
 export interface HealthData {
 	meta: MetaData;
@@ -23,6 +24,102 @@ export interface HealthData {
 	lab_results: LabResult[];
 	imaging: ImagingStudy[];
 	allergies: Allergy[];
+}
+
+/**
+ * Data type identifier for different kinds of medical data
+ */
+export type DataType =
+	| "basic_profile"
+	| "medications"
+	| "conditions"
+	| "lab_results"
+	| "imaging_meta"
+	| "imaging_binary"
+	| "self_metrics";
+
+// ==========================================
+// Data Type-Specific Interfaces (v2.0.0)
+// ==========================================
+
+/**
+ * Basic profile data including demographics and allergies
+ */
+export interface BasicProfileData {
+	meta: MetaData;
+	profile: UserProfile;
+	allergies: Allergy[];
+}
+
+/**
+ * Medication data
+ */
+export interface MedicationsData {
+	meta: MetaData;
+	medications: Medication[];
+}
+
+/**
+ * Conditions/diseases data
+ */
+export interface ConditionsData {
+	meta: MetaData;
+	conditions: Condition[];
+}
+
+/**
+ * Laboratory results data
+ */
+export interface LabResultsData {
+	meta: MetaData;
+	lab_results: LabResult[];
+}
+
+/**
+ * Imaging study metadata
+ */
+export interface ImagingMetaData {
+	meta: MetaData;
+	imaging_meta: ImagingStudy[];
+}
+
+/**
+ * Imaging binary data (DICOM, ZIP, etc.)
+ */
+export interface ImagingBinaryData {
+	meta: MetaData;
+	imaging_binary: {
+		content_type: string; // e.g., "application/dicom", "application/zip"
+		data: ArrayBuffer;
+	};
+}
+
+/**
+ * Self-tracked metrics (vital signs, daily measurements)
+ */
+export interface SelfMetricsData {
+	meta: MetaData;
+	self_metrics: SelfMetric[];
+}
+
+/**
+ * Self-tracked metric entry
+ */
+export interface SelfMetric {
+	id: string; // UUID v4
+	metric_type:
+		| "blood_pressure"
+		| "heart_rate"
+		| "blood_glucose"
+		| "weight"
+		| "temperature"
+		| "other";
+	recorded_at: string; // ISO 8601 datetime
+	value?: number; // Single value (for heart rate, glucose, weight, temperature)
+	systolic?: number; // For blood pressure
+	diastolic?: number; // For blood pressure
+	unit: string; // e.g., "mmHg", "bpm", "mg/dL", "kg", "°C"
+	notes?: string;
 }
 
 /**

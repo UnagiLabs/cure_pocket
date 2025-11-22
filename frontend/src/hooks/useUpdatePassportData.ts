@@ -79,11 +79,29 @@ export interface UpdatePassportParams {
 }
 
 /**
+ * Parameters for batch update
+ */
+export interface UpdateMultiplePassportParams {
+	/** MedicalPassport object ID */
+	passportId: string;
+	/** Array of data entries to add/replace */
+	dataEntries: Array<{
+		dataType: DataType | string;
+		blobIds: string[];
+		replace: boolean;
+	}>;
+}
+
+/**
  * Hook return type
  */
 export interface UseUpdatePassportDataReturn {
 	/** Update passport Dynamic Fields (add or replace data entry) */
 	updatePassportData: (params: UpdatePassportParams) => Promise<void>;
+	/** Update multiple data types in a single transaction */
+	updateMultiplePassportData: (
+		params: UpdateMultiplePassportParams,
+	) => Promise<void>;
 	/** Whether update transaction is in progress */
 	isUpdating: boolean;
 	/** Error message if update failed */
@@ -180,8 +198,102 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 		[signAndExecuteTransaction, suiClient],
 	);
 
+	/**
+	 * Update multiple data types in a single transaction
+	 */
+	const updateMultiplePassportData = useCallback(
+		async (params: UpdateMultiplePassportParams) => {
+			const { passportId, dataEntries } = params;
+
+			// Validate: at least one data entry must be provided
+			if (!dataEntries || dataEntries.length === 0) {
+				throw new Error("At least one data entry must be provided");
+			}
+
+			// Validate: all data entries must have blob IDs
+			for (const entry of dataEntries) {
+				if (!entry.blobIds || entry.blobIds.length === 0) {
+					throw new Error(
+						`Data type "${entry.dataType}" must have at least one blob ID`,
+					);
+				}
+			}
+
+			setIsUpdating(true);
+			setError(null);
+			setDigest(null);
+
+			try {
+				const packageId = getPackageId();
+
+				console.log("[UpdateMultiplePassport] Preparing batch transaction...");
+				console.log(`  Passport ID: ${passportId}`);
+				console.log(`  Data Entries: ${dataEntries.length}`);
+				for (const entry of dataEntries) {
+					console.log(
+						`    - ${entry.dataType}: ${entry.blobIds.join(", ")} (${entry.replace ? "replace" : "add"})`,
+					);
+				}
+
+				// Build transaction with multiple move calls
+				const tx = new Transaction();
+
+				for (const entry of dataEntries) {
+					const functionName = entry.replace
+						? "replace_data_entry"
+						: "add_data_entry";
+					tx.moveCall({
+						target: `${packageId}::accessor::${functionName}`,
+						arguments: [
+							tx.object(passportId), // passport
+							tx.pure.string(entry.dataType), // data_type
+							tx.pure.vector("string", entry.blobIds), // blob_ids (vector<String>)
+						],
+					});
+				}
+
+				console.log("[UpdateMultiplePassport] Executing batch transaction...");
+
+				// Execute transaction
+				const result = await signAndExecuteTransaction({
+					transaction: tx,
+				});
+
+				const txDigest = result.digest;
+				console.log(
+					`[UpdateMultiplePassport] Batch transaction successful: ${txDigest}`,
+				);
+
+				// Wait for transaction to be finalized
+				await suiClient.waitForTransaction({
+					digest: txDigest,
+					options: {
+						showEffects: true,
+					},
+				});
+
+				console.log("[UpdateMultiplePassport] Batch transaction finalized");
+
+				setDigest(txDigest);
+				setIsUpdating(false);
+			} catch (err) {
+				console.error("[UpdateMultiplePassport] Batch update failed:", err);
+
+				const errorMessage =
+					err instanceof Error
+						? err.message
+						: "Failed to update multiple passport data";
+				setError(errorMessage);
+				setIsUpdating(false);
+				throw new Error(errorMessage);
+			}
+		},
+		[signAndExecuteTransaction, suiClient],
+	);
+
 	return {
 		updatePassportData,
+		updateMultiplePassportData,
 		isUpdating,
 		error,
 		digest,

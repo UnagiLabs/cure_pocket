@@ -75,6 +75,31 @@ const DISPLAY_DESCRIPTION_BYTES: vector<u8> =
 const DISPLAY_IMAGE_URL_BYTES: vector<u8> =
     b"https://raw.githubusercontent.com/UnagiLabs/cure_pocket/main/frontend/src/app/icon.png";
 
+// ============================================================
+// データ型定数 (data_schema.md v2.0.0 準拠)
+// ============================================================
+
+/// 基本プロフィール (JSON)
+const DATA_TYPE_BASIC_PROFILE: vector<u8> = b"basic_profile";
+
+/// 薬剤情報 (CSV/TSV)
+const DATA_TYPE_MEDICATIONS: vector<u8> = b"medications";
+
+/// 疾病情報 (JSON)
+const DATA_TYPE_CONDITIONS: vector<u8> = b"conditions";
+
+/// 検査値 (CSV)
+const DATA_TYPE_LAB_RESULTS: vector<u8> = b"lab_results";
+
+/// 画像メタデータ (JSON)
+const DATA_TYPE_IMAGING_META: vector<u8> = b"imaging_meta";
+
+/// 画像バイナリ (DICOM/ZIP)
+const DATA_TYPE_IMAGING_BINARY: vector<u8> = b"imaging_binary";
+
+/// セルフメトリクス (CSV)
+const DATA_TYPE_SELF_METRICS: vector<u8> = b"self_metrics";
+
 /// パスポート移行イベント
 ///
 /// ## 用途
@@ -136,6 +161,9 @@ const E_DATA_ENTRY_ALREADY_EXISTS: u64 = 11;
 
 /// 指定データ種が存在しない
 const E_DATA_ENTRY_NOT_FOUND: u64 = 12;
+
+/// 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
+const E_INVALID_DATA_TYPE: u64 = 13;
 
 // ============================================================
 // エラーコードゲッター
@@ -337,6 +365,35 @@ public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &Strin
 }
 
 // ============================================================
+// パッケージ内部関数: バリデーション
+// ============================================================
+
+/// データ型が有効かチェック (data_schema.md v2.0.0 準拠)
+///
+/// ## 用途
+/// - add_data_entry および replace_data_entry で使用
+/// - 定義された7種のデータ型以外はabort
+///
+/// ## パラメータ
+/// - `data_type`: チェックするデータ型文字列
+///
+/// ## 返り値
+/// - `true`: 有効なデータ型
+/// - `false`: 無効なデータ型
+fun is_valid_data_type(data_type: &String): bool {
+    let valid_types = vector[
+        string::utf8(DATA_TYPE_BASIC_PROFILE),
+        string::utf8(DATA_TYPE_MEDICATIONS),
+        string::utf8(DATA_TYPE_CONDITIONS),
+        string::utf8(DATA_TYPE_LAB_RESULTS),
+        string::utf8(DATA_TYPE_IMAGING_META),
+        string::utf8(DATA_TYPE_IMAGING_BINARY),
+        string::utf8(DATA_TYPE_SELF_METRICS),
+    ];
+    vector::contains(&valid_types, data_type)
+}
+
+// ============================================================
 // パッケージ内部関数: 動的フィールド (医療データ参照)
 // ============================================================
 
@@ -353,6 +410,7 @@ public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &Strin
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
+/// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
 public(package) fun add_data_entry(
@@ -361,6 +419,7 @@ public(package) fun add_data_entry(
     blob_ids: vector<String>
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
+    assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         !df::exists_<String>(&passport.id, data_type),
@@ -383,6 +442,7 @@ public(package) fun add_data_entry(
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
+/// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun replace_data_entry(
@@ -391,6 +451,7 @@ public(package) fun replace_data_entry(
     blob_ids: vector<String>
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
+    assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         df::exists_<String>(&passport.id, data_type),

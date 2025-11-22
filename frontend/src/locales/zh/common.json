@@ -476,5 +476,81 @@
 			"3months": "3个月",
 			"year": "1年"
 		}
+	},
+	"validation": {
+		"healthData": {
+			"required": "需要健康数据",
+			"meta": {
+				"required": "需要元数据",
+				"schemaVersion": "元数据中需要架构版本"
+			},
+			"dataType": {
+				"unknown": "未知数据类型：{{dataType}}"
+			},
+			"profile": {
+				"required": "需要用户资料（basic_profile）",
+				"country": {
+					"required": "需要国家代码",
+					"invalid": "国家代码格式无效（ISO 3166-1 alpha-2，例如：JP、US）"
+				},
+				"gender": {
+					"required": "需要性别"
+				},
+				"bloodType": {
+					"invalid": "血型无效：{{bloodType}}"
+				}
+			},
+			"medications": {
+				"array": "药物必须是数组",
+				"item": {
+					"id": "需要药物ID（索引 {{index}}）",
+					"name": "需要药物名称（索引 {{index}}）",
+					"codes": {
+						"atc": "ATC代码格式无效（索引 {{index}}）：{{code}}。预期格式：A10BA02",
+						"rxnorm": "RxNorm代码格式无效（索引 {{index}}）：{{code}}。预期：1-7位数字"
+					}
+				}
+			},
+			"conditions": {
+				"array": "状况必须是数组",
+				"item": {
+					"id": "需要状况ID（索引 {{index}}）",
+					"name": "需要状况名称（索引 {{index}}）",
+					"codes": {
+						"icd10": "ICD-10代码格式无效（索引 {{index}}）：{{code}}。预期格式：E11.9"
+					}
+				}
+			},
+			"labResults": {
+				"array": "实验室结果必须是数组",
+				"item": {
+					"id": "需要实验室结果ID（索引 {{index}}）",
+					"date": "需要实验室结果日期（索引 {{index}}）",
+					"items": {
+						"required": "实验室结果必须至少有一个测试项（索引 {{index}}）",
+						"codes": {
+							"loinc": "LOINC代码格式无效：{{code}}。预期格式：4548-4"
+						},
+						"value": {
+							"number": "实验室结果值必须是数字"
+						},
+						"unit": {
+							"required": "需要实验室结果单位"
+						}
+					}
+				}
+			},
+			"imaging": {
+				"array": "影像研究必须是数组",
+				"item": {
+					"id": "需要影像研究ID（索引 {{index}}）",
+					"date": "需要影像研究日期（索引 {{index}}）",
+					"modality": {
+						"required": "需要影像模式（索引 {{index}}）",
+						"invalid": "DICOM模式无效（索引 {{index}}）：{{modality}}。预期：CT、MR、US、XR、XA、OT"
+					}
+				}
+			}
+		}
 	}
 }

@@ -476,5 +476,81 @@
 			"3months": "3 meses",
 			"year": "1 ano"
 		}
+	},
+	"validation": {
+		"healthData": {
+			"required": "Dados de saúde são obrigatórios",
+			"meta": {
+				"required": "Metadados são obrigatórios",
+				"schemaVersion": "Versão do esquema é obrigatória nos metadados"
+			},
+			"dataType": {
+				"unknown": "Tipo de dados desconhecido: {{dataType}}"
+			},
+			"profile": {
+				"required": "Perfil do usuário é obrigatório (basic_profile)",
+				"country": {
+					"required": "Código do país é obrigatório",
+					"invalid": "Formato de código do país inválido (ISO 3166-1 alpha-2, ex: JP, US)"
+				},
+				"gender": {
+					"required": "Gênero é obrigatório"
+				},
+				"bloodType": {
+					"invalid": "Tipo sanguíneo inválido: {{bloodType}}"
+				}
+			},
+			"medications": {
+				"array": "Medicamentos devem ser um array",
+				"item": {
+					"id": "ID do medicamento é obrigatório (índice {{index}})",
+					"name": "Nome do medicamento é obrigatório (índice {{index}})",
+					"codes": {
+						"atc": "Formato de código ATC inválido (índice {{index}}): {{code}}. Formato esperado: A10BA02",
+						"rxnorm": "Formato de código RxNorm inválido (índice {{index}}): {{code}}. Esperado: 1-7 dígitos"
+					}
+				}
+			},
+			"conditions": {
+				"array": "Condições devem ser um array",
+				"item": {
+					"id": "ID da condição é obrigatório (índice {{index}})",
+					"name": "Nome da condição é obrigatório (índice {{index}})",
+					"codes": {
+						"icd10": "Formato de código ICD-10 inválido (índice {{index}}): {{code}}. Formato esperado: E11.9"
+					}
+				}
+			},
+			"labResults": {
+				"array": "Resultados de laboratório devem ser um array",
+				"item": {
+					"id": "ID do resultado de laboratório é obrigatório (índice {{index}})",
+					"date": "Data do resultado de laboratório é obrigatória (índice {{index}})",
+					"items": {
+						"required": "Resultado de laboratório deve ter pelo menos um item de teste (índice {{index}})",
+						"codes": {
+							"loinc": "Formato de código LOINC inválido: {{code}}. Formato esperado: 4548-4"
+						},
+						"value": {
+							"number": "Valor do resultado de laboratório deve ser um número"
+						},
+						"unit": {
+							"required": "Unidade do resultado de laboratório é obrigatória"
+						}
+					}
+				}
+			},
+			"imaging": {
+				"array": "Estudos de imagem devem ser um array",
+				"item": {
+					"id": "ID do estudo de imagem é obrigatório (índice {{index}})",
+					"date": "Data do estudo de imagem é obrigatória (índice {{index}})",
+					"modality": {
+						"required": "Modalidade de imagem é obrigatória (índice {{index}})",
+						"invalid": "Modalidade DICOM inválida (índice {{index}}): {{modality}}. Esperado: CT, MR, US, XR, XA, OT"
+					}
+				}
+			}
+		}
 	}
 }
