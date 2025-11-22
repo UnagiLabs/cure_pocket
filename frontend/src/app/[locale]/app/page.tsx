@@ -9,6 +9,12 @@ import {
 	Package,
 	Plus,
 	Scan,
+	Heart,
+	Thermometer,
+	Droplet,
+	QrCode,
+	Calendar,
+	ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -17,6 +23,9 @@ import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { Medication } from "@/types";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { Badge } from "@/components/ui/Badge";
 
 /**
  * ホーム画面（ダッシュボード）
@@ -202,143 +211,221 @@ export default function HomePage() {
 		},
 	];
 
+	// Get latest vital signs for display
+	const latestVitals = useMemo(() => {
+		const vitalsMap = new Map();
+		vitalSigns.forEach((vital) => {
+			const existing = vitalsMap.get(vital.type);
+			if (!existing || new Date(vital.recordedAt) > new Date(existing.recordedAt)) {
+				vitalsMap.set(vital.type, vital);
+			}
+		});
+		return vitalsMap;
+	}, [vitalSigns]);
+
+	const temperatureVital = latestVitals.get("temperature");
+	const bloodGlucoseVital = latestVitals.get("blood-glucose");
+
 	return (
-		<div className="p-4 md:p-6">
-			{/* Greeting */}
-			<div className="mb-6 md:mb-8">
-				<h2
-					className="mb-1 text-lg md:text-xl"
-					style={{ color: theme.colors.textSecondary }}
-				>
-					{t("home.greeting")}
-				</h2>
-				<h1
-					className="text-2xl font-bold md:text-3xl"
-					style={{ color: theme.colors.text }}
-				>
-					{displayName
-						? t("home.greetingWithName", { name: displayName })
-						: t("home.guestGreeting")}
-				</h1>
-			</div>
+		<div className="space-y-8 pb-24 px-6 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
+			{/* Quick Actions (Horizontal Scroll) */}
+			<section className="mt-2">
+				<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
+					<button
+						type="button"
+						onClick={() => router.push(`/${locale}/app/card`)}
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+					>
+						<div
+							className="w-10 h-10 rounded-full flex items-center justify-center"
+							style={{ backgroundColor: `${theme.colors.primary}20`, color: theme.colors.primary }}
+						>
+							<QrCode size={20} />
+						</div>
+						<span className="text-[10px] font-bold text-slate-500">共有</span>
+					</button>
+
+					<button
+						type="button"
+						onClick={() => router.push(`/${locale}/app/card`)}
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+					>
+						<div className="w-10 h-10 rounded-full bg-[#FF6B6B]/10 flex items-center justify-center text-[#FF6B6B]">
+							<Heart size={20} />
+						</div>
+						<span className="text-[10px] font-bold text-slate-500">緊急</span>
+					</button>
+
+					<button
+						type="button"
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+					>
+						<div className="w-10 h-10 rounded-full bg-[#F6E05E]/20 flex items-center justify-center text-[#D69E2E]">
+							<Calendar size={20} />
+						</div>
+						<span className="text-[10px] font-bold text-slate-500">予約</span>
+					</button>
+
+					<button
+						type="button"
+						onClick={() => router.push(`/${locale}/app/add`)}
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+					>
+						<div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+							<Plus size={20} />
+						</div>
+						<span className="text-[10px] font-bold text-slate-500">記録</span>
+					</button>
+				</div>
+			</section>
+
+			{/* Vitals Widgets */}
+			{(temperatureVital || bloodGlucoseVital) && (
+				<section>
+					<SectionTitle>今日のバイタル</SectionTitle>
+					<div className="grid grid-cols-2 gap-4">
+						{temperatureVital && (
+							<GlassCard className="flex flex-col gap-3">
+								<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+									<Thermometer size={14} className="text-[#FF6B6B]" /> 体温
+								</div>
+								<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									{temperatureVital.value}
+									<span className="text-sm font-normal ml-1 opacity-60">°C</span>
+								</div>
+								<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+									<div className="bg-[#FF6B6B] h-full rounded-full" style={{ width: `${((temperatureVital.value || 36) - 35) * 50}%` }}></div>
+								</div>
+							</GlassCard>
+						)}
+
+						{bloodGlucoseVital && (
+							<GlassCard className="flex flex-col gap-3">
+								<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+									<Droplet size={14} style={{ color: theme.colors.primary }} /> 血糖値
+								</div>
+								<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									{bloodGlucoseVital.value}
+									<span className="text-sm font-normal ml-1 opacity-60">mg/dL</span>
+								</div>
+								<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+									<div className="h-full rounded-full" style={{ backgroundColor: theme.colors.primary, width: `${Math.min((bloodGlucoseVital.value || 100) / 2, 100)}%` }}></div>
+								</div>
+							</GlassCard>
+						)}
+					</div>
+				</section>
+			)}
 
 			{/* Summary Cards Grid */}
-			<div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5 md:gap-4">
-				{summaryCards.map((card) => {
-					const Icon = card.icon;
-					return (
-						<button
-							type="button"
-							key={card.id}
-							onClick={() => {
-								const paths: Record<string, string> = {
-									medications: `/${locale}/app/medications`,
-									allergies: `/${locale}/app/allergies`,
-									histories: `/${locale}/app/histories`,
-									labs: `/${locale}/app/labs`,
-									imaging: `/${locale}/app/imaging`,
-									vitals: `/${locale}/app/vitals`,
-								};
-								router.push(paths[card.id] || `/${locale}/app`);
-							}}
-							className="rounded-xl p-4 shadow-sm transition-transform active:scale-95 md:p-6"
-							style={{ backgroundColor: theme.colors.surface }}
-						>
-							<Icon
-								className="mx-auto mb-2 h-8 w-8"
-								style={{ color: card.color }}
-							/>
-							<span
-								className="block text-xs font-medium"
-								style={{ color: theme.colors.textSecondary }}
+			<section>
+				<SectionTitle>健康データサマリー</SectionTitle>
+				<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+					{summaryCards.map((card) => {
+						const Icon = card.icon;
+						return (
+							<GlassCard
+								key={card.id}
+								onClick={() => {
+									const paths: Record<string, string> = {
+										medications: `/${locale}/app/medications`,
+										allergies: `/${locale}/app/allergies`,
+										histories: `/${locale}/app/histories`,
+										labs: `/${locale}/app/labs`,
+										imaging: `/${locale}/app/imaging`,
+										vitals: `/${locale}/app/vitals`,
+									};
+									router.push(paths[card.id] || `/${locale}/app`);
+								}}
+								className="flex flex-col gap-3 group"
 							>
-								{card.title}
-							</span>
-							<div
-								className="mt-1 text-2xl font-bold"
-								style={{ color: theme.colors.text }}
-							>
-								{card.count}
-							</div>
-						</button>
-					);
-				})}
-			</div>
+								<div className="flex items-center justify-between">
+									<div
+										className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+										style={{ backgroundColor: `${card.color}20`, color: card.color }}
+									>
+										<Icon size={20} />
+									</div>
+									<ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+								</div>
+								<div>
+									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+										{card.count}
+									</div>
+									<div className="text-xs font-bold text-slate-500 mt-1">
+										{card.title}
+									</div>
+								</div>
+							</GlassCard>
+						);
+					})}
+				</div>
+			</section>
 
-			{/* Quick Action Buttons */}
-			<div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-				<button
-					type="button"
-					onClick={() => router.push(`/${locale}/app/add`)}
-					className="flex w-full items-center justify-center rounded-xl p-4 shadow-md transition-transform active:scale-95 md:p-5"
-					style={{ backgroundColor: theme.colors.accent, color: "white" }}
-				>
-					<Plus className="mr-2 h-6 w-6" />
-					<span className="font-medium md:text-lg">
-						{t("dashboard.addData")}
-					</span>
-				</button>
-
-				<button
-					type="button"
-					onClick={() => router.push(`/${locale}/app/card`)}
-					className="flex w-full items-center justify-center rounded-xl border-2 p-4 shadow-sm transition-transform active:scale-95 md:p-5"
-					style={{
-						backgroundColor: theme.colors.surface,
-						borderColor: "#FCA5A5",
-						color: "#DC2626",
-					}}
-				>
-					<AlertCircle className="mr-2 h-6 w-6" />
-					<span className="font-medium md:text-lg">
-						{t("home.emergencyCard")}
-					</span>
-				</button>
-			</div>
-
-			{/* Recent Updates */}
+			{/* Recent Updates Timeline */}
 			{recentUpdates.length > 0 && (
-				<div className="mt-6 md:mt-8">
-					<h3
-						className="mb-3 font-bold md:text-lg"
-						style={{ color: theme.colors.text }}
-					>
-						{t("dashboard.recentUpdates")}
-					</h3>
-					<div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-						{recentUpdates.map((update) => {
+				<section>
+					<SectionTitle action onActionClick={() => router.push(`/${locale}/app/add`)}>
+						直近の記録
+					</SectionTitle>
+					<div className="relative pl-4 border-l-2 border-slate-100 ml-2 space-y-6">
+						{recentUpdates.map((update, index) => {
 							const Icon = update.icon;
 							return (
-								<div
-									key={update.id}
-									className="rounded-xl p-4 shadow-sm md:p-5"
-									style={{ backgroundColor: theme.colors.surface }}
-								>
-									<div className="mb-1 flex items-center">
-										<Icon
-											className="mr-2 h-5 w-5 md:h-6 md:w-6"
-											style={{ color: theme.colors.primary }}
-										/>
-										<span
-											className="font-bold md:text-base"
-											style={{ color: theme.colors.text }}
-										>
-											{update.title}
-										</span>
-									</div>
+								<div key={update.id} className="relative group cursor-pointer">
 									<div
-										className="text-xs md:text-sm"
-										style={{ color: theme.colors.textSecondary }}
-									>
-										{t(`dataTypes.${update.type}`)} •{" "}
-										{new Date(update.date).toLocaleDateString("ja-JP")}
+										className="absolute -left-[21px] top-1.5 w-3 h-3 bg-white border-2 rounded-full group-hover:scale-125 transition-transform"
+										style={{ borderColor: theme.colors.primary }}
+									></div>
+									<div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50 transition-all hover:translate-x-1">
+										<div className="flex justify-between items-start mb-1">
+											<span className="text-xs font-bold opacity-50 font-inter tracking-wide">
+												{new Date(update.date).toLocaleDateString("ja-JP")}
+											</span>
+											<Badge type={index === 0 ? "primary" : "default"}>
+												{t(`dataTypes.${update.type}`)}
+											</Badge>
+										</div>
+										<h3 className="font-bold mb-1" style={{ color: theme.colors.text }}>
+											{update.title}
+										</h3>
+										<p className="text-xs text-slate-500 flex items-center gap-1">
+											<span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>{" "}
+											{t(`dataTypes.${update.type}`)}
+										</p>
 									</div>
 								</div>
 							);
 						})}
 					</div>
-				</div>
+				</section>
 			)}
+
+			<style jsx global>{`
+				.scrollbar-hide::-webkit-scrollbar {
+					display: none;
+				}
+				.scrollbar-hide {
+					-ms-overflow-style: none;
+					scrollbar-width: none;
+				}
+				@keyframes fadeIn {
+					from {
+						opacity: 0;
+						transform: translateY(10px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
+				}
+				.animate-fade-in {
+					animation: fadeIn 0.4s ease-out forwards;
+				}
+				.font-inter {
+					font-family: 'Inter', sans-serif;
+				}
+			`}</style>
 		</div>
 	);
 }
