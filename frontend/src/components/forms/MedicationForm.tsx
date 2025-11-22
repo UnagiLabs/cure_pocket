@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { Medication, MedicationForm as MedicationFormType } from "@/types";
@@ -12,46 +14,67 @@ type MedicationFormProps = {
 	onCancel?: () => void;
 };
 
+// バリデーションスキーマ
+const medicationFormSchema = z.object({
+	name: z
+		.string()
+		.min(1, "薬剤名を入力してください")
+		.max(200, "200文字以内で入力してください"),
+	genericName: z.string().max(200, "200文字以内で入力してください").optional(),
+	strength: z.string().max(50, "50文字以内で入力してください").optional(),
+	form: z.enum(["tablet", "capsule", "liquid", "other"]),
+	dose: z.string().max(100, "100文字以内で入力してください").optional(),
+	frequency: z.string().max(100, "100文字以内で入力してください").optional(),
+	startDate: z.string().optional(),
+	endDate: z.string().optional(),
+	reason: z.string().max(500, "500文字以内で入力してください").optional(),
+	clinic: z.string().max(200, "200文字以内で入力してください").optional(),
+	warning: z.string().max(500, "500文字以内で入力してください").optional(),
+});
+
+type MedicationFormData = z.infer<typeof medicationFormSchema>;
+
 export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 	const t = useTranslations();
 	const { settings, addMedication } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [formData, setFormData] = useState({
-		name: "",
-		genericName: "",
-		strength: "",
-		form: "tablet" as MedicationFormType,
-		dose: "",
-		frequency: "",
-		startDate: "",
-		endDate: "",
-		reason: "",
-		clinic: "",
-		warning: "",
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<MedicationFormData>({
+		resolver: zodResolver(medicationFormSchema),
+		mode: "onBlur",
+		defaultValues: {
+			name: "",
+			genericName: "",
+			strength: "",
+			form: "tablet",
+			dose: "",
+			frequency: "",
+			startDate: "",
+			endDate: "",
+			reason: "",
+			clinic: "",
+			warning: "",
+		},
 	});
 
-	const handleInputChange = (
-		field: string,
-		value: string | MedicationFormType,
-	) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
-	};
-
-	const handleSave = () => {
+	const onSubmit = (data: MedicationFormData) => {
 		const medication: Medication = {
 			id: uuidv4(),
-			name: formData.name,
-			genericName: formData.genericName || undefined,
-			strength: formData.strength || undefined,
-			form: formData.form,
-			dose: formData.dose || undefined,
-			frequency: formData.frequency || undefined,
-			startDate: formData.startDate || undefined,
-			endDate: formData.endDate || undefined,
-			reason: formData.reason || undefined,
-			clinic: formData.clinic || undefined,
-			warning: formData.warning || undefined,
+			name: data.name,
+			genericName: data.genericName || undefined,
+			strength: data.strength || undefined,
+			form: data.form as MedicationFormType,
+			dose: data.dose || undefined,
+			frequency: data.frequency || undefined,
+			startDate: data.startDate || undefined,
+			endDate: data.endDate || undefined,
+			reason: data.reason || undefined,
+			clinic: data.clinic || undefined,
+			warning: data.warning || undefined,
 			status: "active",
 		};
 
@@ -60,91 +83,107 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 	};
 
 	return (
-		<div className="space-y-4 md:max-w-2xl md:mx-auto">
+		<form
+			onSubmit={handleSubmit(onSubmit)}
+			className="space-y-4 md:max-w-2xl md:mx-auto"
+		>
 			<div>
 				<label
-					htmlFor="field1-1"
+					htmlFor="name"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.drugName")} *
 				</label>
 				<input
-					id="field1-1"
+					id="name"
 					type="text"
-					value={formData.name}
-					onChange={(e) => handleInputChange("name", e.target.value)}
+					{...register("name")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.name
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("add.drugName")}
 				/>
+				{errors.name && (
+					<p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field2-2"
+					htmlFor="genericName"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.genericName")}
 				</label>
 				<input
-					id="field2-2"
+					id="genericName"
 					type="text"
-					value={formData.genericName}
-					onChange={(e) => handleInputChange("genericName", e.target.value)}
+					{...register("genericName")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.genericName
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("add.genericName")}
 				/>
+				{errors.genericName && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.genericName.message}
+					</p>
+				)}
 			</div>
 
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div>
 					<label
-						htmlFor="field3-3"
+						htmlFor="strength"
 						className="mb-1 block text-sm font-medium md:text-base"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.strength")}
 					</label>
 					<input
-						id="field3-3"
+						id="strength"
 						type="text"
-						value={formData.strength}
-						onChange={(e) => handleInputChange("strength", e.target.value)}
+						{...register("strength")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
+							borderColor: errors.strength
+								? "#ef4444"
+								: `${theme.colors.textSecondary}40`,
 							color: theme.colors.text,
 						}}
 						placeholder="5mg"
 					/>
+					{errors.strength && (
+						<p className="mt-1 text-sm text-red-500">
+							{errors.strength.message}
+						</p>
+					)}
 				</div>
 
 				<div>
 					<label
-						htmlFor="field4-4"
+						htmlFor="form"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.form")}
 					</label>
 					<select
-						id="field4-4"
-						value={formData.form}
-						onChange={(e) =>
-							handleInputChange("form", e.target.value as MedicationFormType)
-						}
+						id="form"
+						{...register("form")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -163,65 +202,74 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
-						htmlFor="field5-5"
+						htmlFor="dose"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.dose")}
 					</label>
 					<input
-						id="field5-5"
+						id="dose"
 						type="text"
-						value={formData.dose}
-						onChange={(e) => handleInputChange("dose", e.target.value)}
+						{...register("dose")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
+							borderColor: errors.dose
+								? "#ef4444"
+								: `${theme.colors.textSecondary}40`,
 							color: theme.colors.text,
 						}}
 						placeholder="1 tablet"
 					/>
+					{errors.dose && (
+						<p className="mt-1 text-sm text-red-500">{errors.dose.message}</p>
+					)}
 				</div>
 
 				<div>
 					<label
-						htmlFor="field6-6"
+						htmlFor="frequency"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.frequency")}
 					</label>
 					<input
-						id="field6-6"
+						id="frequency"
 						type="text"
-						value={formData.frequency}
-						onChange={(e) => handleInputChange("frequency", e.target.value)}
+						{...register("frequency")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
+							borderColor: errors.frequency
+								? "#ef4444"
+								: `${theme.colors.textSecondary}40`,
 							color: theme.colors.text,
 						}}
 						placeholder="1日2回"
 					/>
+					{errors.frequency && (
+						<p className="mt-1 text-sm text-red-500">
+							{errors.frequency.message}
+						</p>
+					)}
 				</div>
 			</div>
 
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
-						htmlFor="field7-7"
+						htmlFor="startDate"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.startDate")}
 					</label>
 					<input
-						id="field7-7"
+						id="startDate"
 						type="date"
-						value={formData.startDate}
-						onChange={(e) => handleInputChange("startDate", e.target.value)}
+						{...register("startDate")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -233,17 +281,16 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 				<div>
 					<label
-						htmlFor="field8-8"
+						htmlFor="endDate"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("add.endDate")}
 					</label>
 					<input
-						id="field8-8"
+						id="endDate"
 						type="date"
-						value={formData.endDate}
-						onChange={(e) => handleInputChange("endDate", e.target.value)}
+						{...register("endDate")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -256,71 +303,83 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 
 			<div>
 				<label
-					htmlFor="field9-9"
+					htmlFor="clinic"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("medications.clinic")}
 				</label>
 				<input
-					id="field9-9"
+					id="clinic"
 					type="text"
-					value={formData.clinic}
-					onChange={(e) => handleInputChange("clinic", e.target.value)}
+					{...register("clinic")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.clinic
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("medications.clinic")}
 				/>
+				{errors.clinic && (
+					<p className="mt-1 text-sm text-red-500">{errors.clinic.message}</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field10-10"
+					htmlFor="reason"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("add.reason")}
 				</label>
 				<textarea
-					id="field10-10"
-					value={formData.reason}
-					onChange={(e) => handleInputChange("reason", e.target.value)}
+					id="reason"
+					{...register("reason")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.reason
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("add.reason")}
 				/>
+				{errors.reason && (
+					<p className="mt-1 text-sm text-red-500">{errors.reason.message}</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field11-11"
+					htmlFor="warning"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("medications.warning")}
 				</label>
 				<input
-					id="field11-11"
+					id="warning"
 					type="text"
-					value={formData.warning}
-					onChange={(e) => handleInputChange("warning", e.target.value)}
+					{...register("warning")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.warning
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("medications.warning")}
 				/>
+				{errors.warning && (
+					<p className="mt-1 text-sm text-red-500">{errors.warning.message}</p>
+				)}
 			</div>
 
 			<div className="flex gap-3 md:max-w-md md:mx-auto">
@@ -336,15 +395,14 @@ export function MedicationForm({ onSaved, onCancel }: MedicationFormProps) {
 					{t("actions.cancel")}
 				</button>
 				<button
-					type="button"
-					onClick={handleSave}
-					disabled={!formData.name}
+					type="submit"
+					disabled={isSubmitting}
 					className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50 md:p-5 md:text-lg hover:shadow-lg"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{t("actions.save")}
+					{isSubmitting ? t("actions.saving") : t("actions.save")}
 				</button>
 			</div>
-		</div>
+		</form>
 	);
 }

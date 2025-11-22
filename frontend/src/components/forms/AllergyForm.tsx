@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { Allergy, AllergySeverity } from "@/types";
@@ -12,37 +14,53 @@ type AllergyFormProps = {
 	onCancel?: () => void;
 };
 
+// バリデーションスキーマ
+const allergyFormSchema = z.object({
+	substance: z
+		.string()
+		.min(1, "アレルギー物質を入力してください")
+		.max(500, "500文字以内で入力してください"),
+	severity: z.enum(["mild", "moderate", "severe", "life-threatening"]),
+	symptoms: z.string().max(1000, "1000文字以内で入力してください").optional(),
+	onsetDate: z.string().optional(),
+	diagnosedBy: z.string().max(200, "200文字以内で入力してください").optional(),
+	notes: z.string().max(1000, "1000文字以内で入力してください").optional(),
+});
+
+type AllergyFormData = z.infer<typeof allergyFormSchema>;
+
 export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 	const t = useTranslations();
 	const _locale = useLocale();
 	const { settings, addAllergy } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [formData, setFormData] = useState({
-		substance: "",
-		severity: "moderate" as AllergySeverity,
-		symptoms: "",
-		onsetDate: "",
-		diagnosedBy: "",
-		notes: "",
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<AllergyFormData>({
+		resolver: zodResolver(allergyFormSchema),
+		mode: "onBlur",
+		defaultValues: {
+			substance: "",
+			severity: "moderate",
+			symptoms: "",
+			onsetDate: "",
+			diagnosedBy: "",
+			notes: "",
+		},
 	});
 
-	const handleInputChange = (
-		field: string,
-		value: string | AllergySeverity,
-	) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
-	};
-
-	const handleSave = () => {
+	const onSubmit = (data: AllergyFormData) => {
 		const allergy: Allergy = {
 			id: uuidv4(),
-			substance: formData.substance,
-			severity: formData.severity,
-			symptoms: formData.symptoms || undefined,
-			onsetDate: formData.onsetDate || undefined,
-			diagnosedBy: formData.diagnosedBy || undefined,
-			notes: formData.notes || undefined,
+			substance: data.substance,
+			severity: data.severity as AllergySeverity,
+			symptoms: data.symptoms || undefined,
+			onsetDate: data.onsetDate || undefined,
+			diagnosedBy: data.diagnosedBy || undefined,
+			notes: data.notes || undefined,
 		};
 
 		addAllergy(allergy);
@@ -50,44 +68,47 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 	};
 
 	return (
-		<div className="space-y-4">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<div>
 				<label
-					htmlFor="field1-1"
+					htmlFor="substance"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.substance")} *
 				</label>
 				<input
-					id="field1-1"
+					id="substance"
 					type="text"
-					value={formData.substance}
-					onChange={(e) => handleInputChange("substance", e.target.value)}
+					{...register("substance")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.substance
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("allergies.substance")}
 				/>
+				{errors.substance && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.substance.message}
+					</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field2-2"
+					htmlFor="severity"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.severity")} *
 				</label>
 				<select
-					id="field2-2"
-					value={formData.severity}
-					onChange={(e) =>
-						handleInputChange("severity", e.target.value as AllergySeverity)
-					}
+					id="severity"
+					{...register("severity")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
@@ -106,40 +127,43 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
-					htmlFor="field3-3"
+					htmlFor="symptoms"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.symptoms")}
 				</label>
 				<textarea
-					id="field3-3"
-					value={formData.symptoms}
-					onChange={(e) => handleInputChange("symptoms", e.target.value)}
+					id="symptoms"
+					{...register("symptoms")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.symptoms
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("allergies.symptoms")}
 				/>
+				{errors.symptoms && (
+					<p className="mt-1 text-sm text-red-500">{errors.symptoms.message}</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field4-4"
+					htmlFor="onsetDate"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.onsetDate")}
 				</label>
 				<input
-					id="field4-4"
+					id="onsetDate"
 					type="date"
-					value={formData.onsetDate}
-					onChange={(e) => handleInputChange("onsetDate", e.target.value)}
+					{...register("onsetDate")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
@@ -151,48 +175,58 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 
 			<div>
 				<label
-					htmlFor="field5-5"
+					htmlFor="diagnosedBy"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.diagnosedBy")}
 				</label>
 				<input
-					id="field5-5"
+					id="diagnosedBy"
 					type="text"
-					value={formData.diagnosedBy}
-					onChange={(e) => handleInputChange("diagnosedBy", e.target.value)}
+					{...register("diagnosedBy")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.diagnosedBy
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("allergies.diagnosedBy")}
 				/>
+				{errors.diagnosedBy && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.diagnosedBy.message}
+					</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field6-6"
+					htmlFor="notes"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("allergies.notes")}
 				</label>
 				<textarea
-					id="field6-6"
-					value={formData.notes}
-					onChange={(e) => handleInputChange("notes", e.target.value)}
+					id="notes"
+					{...register("notes")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.notes
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("allergies.notes")}
 				/>
+				{errors.notes && (
+					<p className="mt-1 text-sm text-red-500">{errors.notes.message}</p>
+				)}
 			</div>
 
 			<div className="flex gap-3 md:max-w-md md:mx-auto">
@@ -208,15 +242,14 @@ export function AllergyForm({ onSaved, onCancel }: AllergyFormProps) {
 					{t("actions.cancel")}
 				</button>
 				<button
-					type="button"
-					onClick={handleSave}
-					disabled={!formData.substance}
+					type="submit"
+					disabled={isSubmitting}
 					className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{t("actions.save")}
+					{isSubmitting ? t("actions.saving") : t("actions.save")}
 				</button>
 			</div>
-		</div>
+		</form>
 	);
 }

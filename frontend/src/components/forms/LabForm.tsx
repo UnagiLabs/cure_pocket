@@ -1,8 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { useApp } from "@/contexts/AppContext";
 import {
 	getLabTestById,
@@ -18,22 +21,48 @@ type LabFormProps = {
 	onCancel?: () => void;
 };
 
+// バリデーションスキーマ
+const labFormSchema = z.object({
+	selectedCategory: z.string(),
+	selectedTestId: z.string().min(1, "検査項目を選択してください"),
+	value: z
+		.string()
+		.min(1, "値を入力してください")
+		.regex(/^-?\d+(\.\d+)?$/, "数値を入力してください"),
+	testDate: z.string().min(1, "検査日を選択してください"),
+	testedBy: z.string().optional(),
+	notes: z.string().optional(),
+});
+
+type LabFormData = z.infer<typeof labFormSchema>;
+
 export function LabForm({ onSaved, onCancel }: LabFormProps) {
 	const t = useTranslations();
 	const locale = useLocale();
 	const { settings, addLabResult } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [selectedCategory, setSelectedCategory] = useState<
-		LabTestCategory | "all"
-	>("all");
-	const [selectedTestId, setSelectedTestId] = useState<string>("");
-	const [value, setValue] = useState("");
-	const [testDate, setTestDate] = useState(
-		new Date().toISOString().split("T")[0],
-	);
-	const [testedBy, setTestedBy] = useState("");
-	const [notes, setNotes] = useState("");
+	const {
+		register,
+		handleSubmit,
+		watch,
+		setValue,
+		formState: { errors, isSubmitting },
+	} = useForm<LabFormData>({
+		resolver: zodResolver(labFormSchema),
+		mode: "onBlur",
+		defaultValues: {
+			selectedCategory: "all",
+			selectedTestId: "",
+			value: "",
+			testDate: new Date().toISOString().split("T")[0],
+			testedBy: "",
+			notes: "",
+		},
+	});
+
+	const selectedCategory = watch("selectedCategory");
+	const selectedTestId = watch("selectedTestId");
 
 	const testsByCategory = useMemo(() => getLabTestsByCategory(), []);
 
@@ -41,7 +70,7 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 		if (selectedCategory === "all") {
 			return labTestDefinitions;
 		}
-		return testsByCategory[selectedCategory];
+		return testsByCategory[selectedCategory as LabTestCategory];
 	}, [selectedCategory, testsByCategory]);
 
 	const selectedTest = useMemo(() => {
@@ -70,26 +99,24 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 	};
 
 	const handleTestSelect = (testId: string) => {
-		setSelectedTestId(testId);
-		setValue("");
+		setValue("selectedTestId", testId);
+		setValue("value", "");
 	};
 
-	const handleSave = () => {
-		if (!selectedTestId || !value || !selectedTest) {
-			alert(t("labs.validation.required"));
-			return;
-		}
+	const onSubmit = (data: LabFormData) => {
+		const test = getLabTestById(data.selectedTestId);
+		if (!test) return;
 
 		const result: LabResult = {
 			id: uuidv4(),
-			testName: getTestName(selectedTestId),
-			value: value,
-			unit: selectedTest.unit,
-			referenceRange: selectedTest.referenceRange,
-			testDate: testDate || new Date().toISOString().split("T")[0],
-			testedBy: testedBy || undefined,
-			category: getCategoryLabel(selectedTest.category),
-			notes: notes || undefined,
+			testName: getTestName(data.selectedTestId),
+			value: data.value,
+			unit: test.unit,
+			referenceRange: test.referenceRange,
+			testDate: data.testDate,
+			testedBy: data.testedBy || undefined,
+			category: getCategoryLabel(test.category),
+			notes: data.notes || undefined,
 		};
 
 		addLabResult(result);
@@ -97,7 +124,10 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 	};
 
 	return (
-		<div className="space-y-4 md:max-w-2xl md:mx-auto">
+		<form
+			onSubmit={handleSubmit(onSubmit)}
+			className="space-y-4 md:max-w-2xl md:mx-auto"
+		>
 			{/* カテゴリ選択 */}
 			<div>
 				<div
@@ -110,8 +140,8 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 					<button
 						type="button"
 						onClick={() => {
-							setSelectedCategory("all");
-							setSelectedTestId("");
+							setValue("selectedCategory", "all");
+							setValue("selectedTestId", "");
 						}}
 						className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
 							selectedCategory === "all" ? "text-white" : "border-2"
@@ -143,8 +173,8 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 							type="button"
 							key={category}
 							onClick={() => {
-								setSelectedCategory(category);
-								setSelectedTestId("");
+								setValue("selectedCategory", category);
+								setValue("selectedTestId", "");
 							}}
 							className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
 								selectedCategory === category ? "text-white" : "border-2"
@@ -167,20 +197,22 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 検査項目選択 */}
 			<div>
 				<label
-					htmlFor="field1-1"
+					htmlFor="selectedTestId"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testName")} *
 				</label>
 				<select
-					id="field1-1"
-					value={selectedTestId}
+					id="selectedTestId"
+					{...register("selectedTestId")}
 					onChange={(e) => handleTestSelect(e.target.value)}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.selectedTestId
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 				>
@@ -191,6 +223,11 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 						</option>
 					))}
 				</select>
+				{errors.selectedTestId && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.selectedTestId.message}
+					</p>
+				)}
 			</div>
 
 			{/* 選択された検査項目の情報表示 */}
@@ -228,7 +265,7 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* 値入力 */}
 			<div>
 				<label
-					htmlFor="lab-value"
+					htmlFor="value"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
@@ -243,57 +280,64 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 					)}
 				</label>
 				<input
-					id="lab-value"
+					id="value"
 					type="text"
-					value={value}
-					onChange={(e) => setValue(e.target.value)}
+					{...register("value")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.value
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("labs.valuePlaceholder")}
 				/>
+				{errors.value && (
+					<p className="mt-1 text-sm text-red-500">{errors.value.message}</p>
+				)}
 			</div>
 
 			{/* 検査日 */}
 			<div>
 				<label
-					htmlFor="field2-2"
+					htmlFor="testDate"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testDate")} *
 				</label>
 				<input
-					id="field2-2"
+					id="testDate"
 					type="date"
-					value={testDate}
-					onChange={(e) => setTestDate(e.target.value)}
+					{...register("testDate")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.testDate
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 				/>
+				{errors.testDate && (
+					<p className="mt-1 text-sm text-red-500">{errors.testDate.message}</p>
+				)}
 			</div>
 
 			{/* 検査機関 */}
 			<div>
 				<label
-					htmlFor="field3-3"
+					htmlFor="testedBy"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.testedBy")}
 				</label>
 				<input
-					id="field3-3"
+					id="testedBy"
 					type="text"
-					value={testedBy}
-					onChange={(e) => setTestedBy(e.target.value)}
+					{...register("testedBy")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
@@ -307,16 +351,15 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 			{/* メモ */}
 			<div>
 				<label
-					htmlFor="field4-4"
+					htmlFor="notes"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("labs.notes")}
 				</label>
 				<textarea
-					id="field4-4"
-					value={notes}
-					onChange={(e) => setNotes(e.target.value)}
+					id="notes"
+					{...register("notes")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
@@ -341,15 +384,14 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 					{t("actions.cancel")}
 				</button>
 				<button
-					type="button"
-					onClick={handleSave}
-					disabled={!selectedTestId || !value}
+					type="submit"
+					disabled={isSubmitting}
 					className="flex-1 rounded-lg p-3 font-medium text-white transition-colors disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{t("actions.save")}
+					{isSubmitting ? t("actions.saving") : t("actions.save")}
 				</button>
 			</div>
-		</div>
+		</form>
 	);
 }

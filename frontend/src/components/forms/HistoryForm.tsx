@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { MedicalHistory, MedicalHistoryType } from "@/types";
@@ -12,48 +14,68 @@ type HistoryFormProps = {
 	onCancel?: () => void;
 };
 
+// バリデーションスキーマ
+const historyFormSchema = z.object({
+	type: z.enum(["condition", "surgery", "procedure", "other"]),
+	diagnosis: z
+		.string()
+		.min(1, "診断名を入力してください")
+		.max(300, "300文字以内で入力してください"),
+	diagnosisDate: z.string().optional(),
+	resolvedDate: z.string().optional(),
+	icd10Code: z
+		.string()
+		.regex(/^([A-Z]\d{2}(\.\d{1,2})?)?$/, "無効なICD-10コードです（例: E11.9）")
+		.optional()
+		.or(z.literal("")),
+	diagnosedBy: z.string().max(200, "200文字以内で入力してください").optional(),
+	description: z
+		.string()
+		.max(1000, "1000文字以内で入力してください")
+		.optional(),
+	status: z.enum(["active", "resolved", "chronic"]).optional(),
+	notes: z.string().max(1000, "1000文字以内で入力してください").optional(),
+});
+
+type HistoryFormData = z.infer<typeof historyFormSchema>;
+
 export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 	const t = useTranslations();
 	const { settings, addMedicalHistory } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [formData, setFormData] = useState({
-		type: "condition" as MedicalHistoryType,
-		diagnosis: "",
-		diagnosisDate: "",
-		resolvedDate: "",
-		icd10Code: "",
-		diagnosedBy: "",
-		description: "",
-		status: "active" as "active" | "resolved" | "chronic" | undefined,
-		notes: "",
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<HistoryFormData>({
+		resolver: zodResolver(historyFormSchema),
+		mode: "onBlur",
+		defaultValues: {
+			type: "condition",
+			diagnosis: "",
+			diagnosisDate: "",
+			resolvedDate: "",
+			icd10Code: "",
+			diagnosedBy: "",
+			description: "",
+			status: "active",
+			notes: "",
+		},
 	});
 
-	const handleInputChange = (
-		field: string,
-		value:
-			| string
-			| MedicalHistoryType
-			| "active"
-			| "resolved"
-			| "chronic"
-			| undefined,
-	) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
-	};
-
-	const handleSave = () => {
+	const onSubmit = (data: HistoryFormData) => {
 		const history: MedicalHistory = {
 			id: uuidv4(),
-			type: formData.type,
-			diagnosis: formData.diagnosis,
-			diagnosisDate: formData.diagnosisDate || undefined,
-			resolvedDate: formData.resolvedDate || undefined,
-			icd10Code: formData.icd10Code || undefined,
-			diagnosedBy: formData.diagnosedBy || undefined,
-			description: formData.description || undefined,
-			status: formData.status,
-			notes: formData.notes || undefined,
+			type: data.type as MedicalHistoryType,
+			diagnosis: data.diagnosis,
+			diagnosisDate: data.diagnosisDate || undefined,
+			resolvedDate: data.resolvedDate || undefined,
+			icd10Code: data.icd10Code || undefined,
+			diagnosedBy: data.diagnosedBy || undefined,
+			description: data.description || undefined,
+			status: data.status,
+			notes: data.notes || undefined,
 		};
 
 		addMedicalHistory(history);
@@ -61,21 +83,18 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 	};
 
 	return (
-		<div className="space-y-4">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<div>
 				<label
-					htmlFor="field1-1"
+					htmlFor="type"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("histories.type")} *
 				</label>
 				<select
-					id="field1-1"
-					value={formData.type}
-					onChange={(e) =>
-						handleInputChange("type", e.target.value as MedicalHistoryType)
-					}
+					id="type"
+					{...register("type")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
@@ -92,41 +111,46 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 
 			<div>
 				<label
-					htmlFor="field2-2"
+					htmlFor="diagnosis"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("histories.diagnosis")} *
 				</label>
 				<input
-					id="field2-2"
+					id="diagnosis"
 					type="text"
-					value={formData.diagnosis}
-					onChange={(e) => handleInputChange("diagnosis", e.target.value)}
+					{...register("diagnosis")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.diagnosis
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("histories.diagnosis")}
 				/>
+				{errors.diagnosis && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.diagnosis.message}
+					</p>
+				)}
 			</div>
 
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
-						htmlFor="field3-3"
+						htmlFor="diagnosisDate"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("histories.diagnosisDate")}
 					</label>
 					<input
-						id="field3-3"
+						id="diagnosisDate"
 						type="date"
-						value={formData.diagnosisDate}
-						onChange={(e) => handleInputChange("diagnosisDate", e.target.value)}
+						{...register("diagnosisDate")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -138,23 +162,15 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 
 				<div>
 					<label
-						htmlFor="field4-4"
+						htmlFor="status"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						{t("histories.status")}
 					</label>
 					<select
-						id="field4-4"
-						value={formData.status || ""}
-						onChange={(e) =>
-							handleInputChange(
-								"status",
-								e.target.value === ""
-									? undefined
-									: (e.target.value as "active" | "resolved" | "chronic"),
-							)
-						}
+						id="status"
+						{...register("status")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -162,7 +178,6 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 							color: theme.colors.text,
 						}}
 					>
-						<option value="">{t("common.none")}</option>
 						<option value="active">{t("histories.statuses.active")}</option>
 						<option value="resolved">{t("histories.statuses.resolved")}</option>
 						<option value="chronic">{t("histories.statuses.chronic")}</option>
@@ -173,40 +188,45 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 			<div className="grid grid-cols-2 gap-4">
 				<div>
 					<label
-						htmlFor="field5-5"
+						htmlFor="icd10Code"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						ICD-10コード
 					</label>
 					<input
-						id="field5-5"
+						id="icd10Code"
 						type="text"
-						value={formData.icd10Code}
-						onChange={(e) => handleInputChange("icd10Code", e.target.value)}
+						{...register("icd10Code")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
+							borderColor: errors.icd10Code
+								? "#ef4444"
+								: `${theme.colors.textSecondary}40`,
 							color: theme.colors.text,
 						}}
 						placeholder="例: E11.9"
 					/>
+					{errors.icd10Code && (
+						<p className="mt-1 text-sm text-red-500">
+							{errors.icd10Code.message}
+						</p>
+					)}
 				</div>
 
 				<div>
 					<label
-						htmlFor="field6-6"
+						htmlFor="resolvedDate"
 						className="mb-1 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
 						完治日
 					</label>
 					<input
-						id="field6-6"
+						id="resolvedDate"
 						type="date"
-						value={formData.resolvedDate}
-						onChange={(e) => handleInputChange("resolvedDate", e.target.value)}
+						{...register("resolvedDate")}
 						className="w-full rounded-lg border p-3"
 						style={{
 							backgroundColor: theme.colors.surface,
@@ -219,71 +239,87 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 
 			<div>
 				<label
-					htmlFor="field5-5"
+					htmlFor="diagnosedBy"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("histories.diagnosedBy")}
 				</label>
 				<input
-					id="field5-5"
+					id="diagnosedBy"
 					type="text"
-					value={formData.diagnosedBy}
-					onChange={(e) => handleInputChange("diagnosedBy", e.target.value)}
+					{...register("diagnosedBy")}
 					className="w-full rounded-lg border p-3"
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.diagnosedBy
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("histories.diagnosedBy")}
 				/>
+				{errors.diagnosedBy && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.diagnosedBy.message}
+					</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field6-6"
+					htmlFor="description"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("histories.description")}
 				</label>
 				<textarea
-					id="field6-6"
-					value={formData.description}
-					onChange={(e) => handleInputChange("description", e.target.value)}
+					id="description"
+					{...register("description")}
 					className="w-full rounded-lg border p-3"
 					rows={4}
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.description
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("histories.description")}
 				/>
+				{errors.description && (
+					<p className="mt-1 text-sm text-red-500">
+						{errors.description.message}
+					</p>
+				)}
 			</div>
 
 			<div>
 				<label
-					htmlFor="field7-7"
+					htmlFor="notes"
 					className="mb-1 block text-sm font-medium"
 					style={{ color: theme.colors.text }}
 				>
 					{t("histories.notes")}
 				</label>
 				<textarea
-					id="field7-7"
-					value={formData.notes}
-					onChange={(e) => handleInputChange("notes", e.target.value)}
+					id="notes"
+					{...register("notes")}
 					className="w-full rounded-lg border p-3"
 					rows={3}
 					style={{
 						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
+						borderColor: errors.notes
+							? "#ef4444"
+							: `${theme.colors.textSecondary}40`,
 						color: theme.colors.text,
 					}}
 					placeholder={t("histories.notes")}
 				/>
+				{errors.notes && (
+					<p className="mt-1 text-sm text-red-500">{errors.notes.message}</p>
+				)}
 			</div>
 
 			<div className="flex gap-3 md:max-w-md md:mx-auto">
@@ -299,15 +335,14 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 					{t("actions.cancel")}
 				</button>
 				<button
-					type="button"
-					onClick={handleSave}
-					disabled={!formData.diagnosis}
+					type="submit"
+					disabled={isSubmitting}
 					className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{t("actions.save")}
+					{isSubmitting ? t("actions.saving") : t("actions.save")}
 				</button>
 			</div>
-		</div>
+		</form>
 	);
 }

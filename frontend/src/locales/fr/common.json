@@ -450,5 +450,81 @@
 			"3months": "3 mois",
 			"year": "1 an"
 		}
+	},
+	"validation": {
+		"healthData": {
+			"required": "Les données de santé sont requises",
+			"meta": {
+				"required": "Les métadonnées sont requises",
+				"schemaVersion": "La version du schéma est requise dans les métadonnées"
+			},
+			"dataType": {
+				"unknown": "Type de données inconnu : {{dataType}}"
+			},
+			"profile": {
+				"required": "Le profil utilisateur est requis (basic_profile)",
+				"country": {
+					"required": "Le code pays est requis",
+					"invalid": "Format de code pays invalide (ISO 3166-1 alpha-2, ex : JP, US)"
+				},
+				"gender": {
+					"required": "Le genre est requis"
+				},
+				"bloodType": {
+					"invalid": "Type sanguin invalide : {{bloodType}}"
+				}
+			},
+			"medications": {
+				"array": "Les médicaments doivent être un tableau",
+				"item": {
+					"id": "L'ID du médicament est requis (index {{index}})",
+					"name": "Le nom du médicament est requis (index {{index}})",
+					"codes": {
+						"atc": "Format de code ATC invalide (index {{index}}) : {{code}}. Format attendu : A10BA02",
+						"rxnorm": "Format de code RxNorm invalide (index {{index}}) : {{code}}. Attendu : 1-7 chiffres"
+					}
+				}
+			},
+			"conditions": {
+				"array": "Les conditions doivent être un tableau",
+				"item": {
+					"id": "L'ID de la condition est requis (index {{index}})",
+					"name": "Le nom de la condition est requis (index {{index}})",
+					"codes": {
+						"icd10": "Format de code ICD-10 invalide (index {{index}}) : {{code}}. Format attendu : E11.9"
+					}
+				}
+			},
+			"labResults": {
+				"array": "Les résultats de laboratoire doivent être un tableau",
+				"item": {
+					"id": "L'ID du résultat de laboratoire est requis (index {{index}})",
+					"date": "La date du résultat de laboratoire est requise (index {{index}})",
+					"items": {
+						"required": "Le résultat de laboratoire doit avoir au moins un élément de test (index {{index}})",
+						"codes": {
+							"loinc": "Format de code LOINC invalide : {{code}}. Format attendu : 4548-4"
+						},
+						"value": {
+							"number": "La valeur du résultat de laboratoire doit être un nombre"
+						},
+						"unit": {
+							"required": "L'unité du résultat de laboratoire est requise"
+						}
+					}
+				}
+			},
+			"imaging": {
+				"array": "Les études d'imagerie doivent être un tableau",
+				"item": {
+					"id": "L'ID de l'étude d'imagerie est requis (index {{index}})",
+					"date": "La date de l'étude d'imagerie est requise (index {{index}})",
+					"modality": {
+						"required": "La modalité d'imagerie est requise (index {{index}})",
+						"invalid": "Modalité DICOM invalide (index {{index}}) : {{modality}}. Attendu : CT, MR, US, XR, XA, OT"
+					}
+				}
+			}
+		}
 	}
 }

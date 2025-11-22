@@ -4,16 +4,18 @@
  * Encrypts HealthData with Seal and uploads to Walrus storage.
  *
  * ## Features
+ * - HealthData validation before encryption
  * - HealthData encryption using Seal's threshold IBE
  * - Automatic upload to Walrus decentralized storage
  * - Progress tracking for multi-step operation
  * - Error handling with detailed status
  *
  * ## Encryption Flow
- * 1. Generate seal_id from wallet address
- * 2. Encrypt HealthData with Seal (2-of-n threshold)
- * 3. Upload encrypted blob to Walrus
- * 4. Return walrus_blob_id and seal_id for on-chain storage
+ * 1. Validate HealthData against schema
+ * 2. Generate seal_id from wallet address
+ * 3. Encrypt HealthData with Seal (2-of-n threshold)
+ * 4. Upload encrypted blob to Walrus
+ * 5. Return walrus_blob_id and seal_id for on-chain storage
  *
  * ## Usage
  * ```typescript
@@ -33,6 +35,10 @@ import {
 	encryptHealthData,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import {
+	HealthDataValidationError,
+	validateHealthData,
+} from "@/lib/validation/healthDataValidator";
 import { uploadToWalrus } from "@/lib/walrus";
 import type { HealthData } from "@/types/healthData";
 
@@ -41,6 +47,7 @@ import type { HealthData } from "@/types/healthData";
  */
 export type EncryptionProgress =
 	| "idle"
+	| "validating"
 	| "generating_seal_id"
 	| "encrypting"
 	| "uploading"
@@ -101,21 +108,53 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 			sealId: string,
 			dataType: string,
 		): Promise<EncryptionResult> => {
-			setProgress("encrypting");
+			setProgress("validating");
 			setError(null);
 
 			try {
-				// Step 1: Create Seal client
+				// Step 1: Validate HealthData before encryption
+				console.log(
+					`[EncryptAndStore] Validating HealthData for type: ${dataType}...`,
+				);
+
+				try {
+					validateHealthData(healthData, dataType);
+				} catch (validationError) {
+					if (validationError instanceof HealthDataValidationError) {
+						console.error(
+							`[EncryptAndStore] Validation failed: ${validationError.message}`,
+							{
+								field: validationError.field,
+								dataType: validationError.dataType,
+							},
+						);
+						throw new Error(
+							`Data validation failed: ${validationError.message}${
+								validationError.field
+									? ` (field: ${validationError.field})`
+									: ""
+							}`,
+						);
+					}
+					throw validationError;
+				}
+
+				console.log(
+					"[EncryptAndStore] Validation passed, proceeding with encryption...",
+				);
+
+				// Step 2: Create Seal client
+				setProgress("encrypting");
 				const sealClient = createSealClient(suiClient);
 
-				// Step 2: Calculate threshold based on number of key servers
+				// Step 3: Calculate threshold based on number of key servers
 				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
 				console.log(
 					`[EncryptAndStore] Encrypting HealthData with Seal (threshold: ${threshold}, servers: ${SEAL_KEY_SERVERS.length})...`,
 				);
 
-				// Step 3: Encrypt HealthData
+				// Step 4: Encrypt HealthData
 				const { encryptedObject, backupKey } = await encryptHealthData({
 					healthData,
 					sealClient,
@@ -127,7 +166,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					`[EncryptAndStore] Encryption complete, size: ${encryptedObject.length} bytes`,
 				);
 
-				// Step 4: Upload to Walrus
+				// Step 5: Upload to Walrus
 				setProgress("uploading");
 				console.log("[EncryptAndStore] Uploading to Walrus...");
 
@@ -137,7 +176,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					`[EncryptAndStore] Upload complete, blobId: ${walrusRef.blobId}`,
 				);
 
-				// Step 5: Return result
+				// Step 6: Return result
 				setProgress("completed");
 
 				return {

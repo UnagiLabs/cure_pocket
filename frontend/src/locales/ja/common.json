@@ -557,5 +557,81 @@
 			"3months": "3ヶ月",
 			"year": "1年"
 		}
+	},
+	"validation": {
+		"healthData": {
+			"required": "ヘルスデータが必要です",
+			"meta": {
+				"required": "メタデータが必要です",
+				"schemaVersion": "スキーマバージョンが必要です"
+			},
+			"dataType": {
+				"unknown": "不明なデータ型: {{dataType}}"
+			},
+			"profile": {
+				"required": "プロフィールが必要です（basic_profile）",
+				"country": {
+					"required": "国コードが必要です",
+					"invalid": "国コード形式が無効です（ISO 3166-1 alpha-2、例: JP）"
+				},
+				"gender": {
+					"required": "性別が必要です"
+				},
+				"bloodType": {
+					"invalid": "無効な血液型です"
+				}
+			},
+			"medications": {
+				"array": "薬剤は配列である必要があります",
+				"item": {
+					"id": "薬剤IDが必要です（インデックス {{index}}）",
+					"name": "薬剤名が必要です（インデックス {{index}}）",
+					"codes": {
+						"atc": "無効なATCコード形式（インデックス {{index}}）: {{code}}。期待される形式: A10BA02",
+						"rxnorm": "無効なRxNormコード形式（インデックス {{index}}）: {{code}}。期待される形式: 1-7桁"
+					}
+				}
+			},
+			"conditions": {
+				"array": "疾病は配列である必要があります",
+				"item": {
+					"id": "疾病IDが必要です（インデックス {{index}}）",
+					"name": "疾病名が必要です（インデックス {{index}}）",
+					"codes": {
+						"icd10": "無効なICD-10コード形式（インデックス {{index}}）: {{code}}。期待される形式: E11.9"
+					}
+				}
+			},
+			"labResults": {
+				"array": "検査値は配列である必要があります",
+				"item": {
+					"id": "検査IDが必要です（インデックス {{index}}）",
+					"date": "検査日が必要です（インデックス {{index}}）",
+					"items": {
+						"required": "検査項目が少なくとも1つ必要です（インデックス {{index}}）",
+						"codes": {
+							"loinc": "無効なLOINCコード形式（インデックス {{index}}.{{itemIndex}}）: {{code}}。期待される形式: 4548-4"
+						},
+						"value": {
+							"number": "検査値は数値である必要があります（インデックス {{index}}.{{itemIndex}}）"
+						},
+						"unit": {
+							"required": "検査単位が必要です（インデックス {{index}}.{{itemIndex}}）"
+						}
+					}
+				}
+			},
+			"imaging": {
+				"array": "画像データは配列である必要があります",
+				"item": {
+					"id": "画像IDが必要です（インデックス {{index}}）",
+					"date": "検査日が必要です（インデックス {{index}}）",
+					"modality": {
+						"required": "モダリティが必要です（インデックス {{index}}）",
+						"invalid": "無効なDICOMモダリティ（インデックス {{index}}）: {{modality}}。期待される値: CT, MR, US, XR, XA, OT"
+					}
+				}
+			}
+		}
 	}
 }

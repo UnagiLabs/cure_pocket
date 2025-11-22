@@ -556,5 +556,81 @@
 			"3months": "3 Months",
 			"year": "1 Year"
 		}
+	},
+	"validation": {
+		"healthData": {
+			"required": "Health data is required",
+			"meta": {
+				"required": "Metadata is required",
+				"schemaVersion": "Schema version is required in metadata"
+			},
+			"dataType": {
+				"unknown": "Unknown data type: {{dataType}}"
+			},
+			"profile": {
+				"required": "User profile is required (basic_profile)",
+				"country": {
+					"required": "Country code is required",
+					"invalid": "Invalid country code format (ISO 3166-1 alpha-2, e.g., JP, US)"
+				},
+				"gender": {
+					"required": "Gender is required"
+				},
+				"bloodType": {
+					"invalid": "Invalid blood type: {{bloodType}}"
+				}
+			},
+			"medications": {
+				"array": "Medications must be an array",
+				"item": {
+					"id": "Medication ID is required (index {{index}})",
+					"name": "Medication name is required (index {{index}})",
+					"codes": {
+						"atc": "Invalid ATC code format (index {{index}}): {{code}}. Expected format: A10BA02",
+						"rxnorm": "Invalid RxNorm code format (index {{index}}): {{code}}. Expected 1-7 digits"
+					}
+				}
+			},
+			"conditions": {
+				"array": "Conditions must be an array",
+				"item": {
+					"id": "Condition ID is required (index {{index}})",
+					"name": "Condition name is required (index {{index}})",
+					"codes": {
+						"icd10": "Invalid ICD-10 code format (index {{index}}): {{code}}. Expected format: E11.9"
+					}
+				}
+			},
+			"labResults": {
+				"array": "Lab results must be an array",
+				"item": {
+					"id": "Lab result ID is required (index {{index}})",
+					"date": "Lab result date is required (index {{index}})",
+					"items": {
+						"required": "Lab result must have at least one test item (index {{index}})",
+						"codes": {
+							"loinc": "Invalid LOINC code format: {{code}}. Expected format: 4548-4"
+						},
+						"value": {
+							"number": "Lab result value must be a number"
+						},
+						"unit": {
+							"required": "Lab result unit is required"
+						}
+					}
+				}
+			},
+			"imaging": {
+				"array": "Imaging studies must be an array",
+				"item": {
+					"id": "Imaging study ID is required (index {{index}})",
+					"date": "Imaging study date is required (index {{index}})",
+					"modality": {
+						"required": "Imaging modality is required (index {{index}})",
+						"invalid": "Invalid DICOM modality (index {{index}}): {{modality}}. Expected one of: CT, MR, US, XR, XA, OT"
+					}
+				}
+			}
+		}
 	}
 }
