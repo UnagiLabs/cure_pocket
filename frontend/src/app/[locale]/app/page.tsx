@@ -16,6 +16,7 @@ import {
 	Calendar,
 	ChevronRight,
 	Weight,
+	Share2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -350,34 +351,35 @@ export default function HomePage() {
 
 					<button
 						type="button"
-						onClick={() => router.push(`/${locale}/app/card`)}
+						onClick={() => router.push(`/${locale}/app/add/medication`)}
 						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
 					>
-						<div className="w-10 h-10 rounded-full bg-[#FF6B6B]/10 flex items-center justify-center text-[#FF6B6B]">
-							<Heart size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
+							<Package size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">{t("home.emergency")}</span>
+						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight">{t("home.medicationNotebook")}</span>
 					</button>
 
 					<button
 						type="button"
+						onClick={() => router.push(`/${locale}/app/add/lab`)}
 						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
 					>
-						<div className="w-10 h-10 rounded-full bg-[#F6E05E]/20 flex items-center justify-center text-[#D69E2E]">
-							<Calendar size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]">
+							<FlaskConical size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">{t("home.appointments")}</span>
+						<span className="text-[10px] font-bold text-slate-500">{t("home.labResults")}</span>
 					</button>
 
 					<button
 						type="button"
-						onClick={() => router.push(`/${locale}/app/add`)}
+						onClick={() => router.push(`/${locale}/app/add/imaging`)}
 						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
 					>
-						<div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-							<Plus size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#8B5CF6]/10 flex items-center justify-center text-[#8B5CF6]">
+							<Scan size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">{t("home.records")}</span>
+						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight">{t("home.imagingData")}</span>
 					</button>
 				</div>
 			</section>

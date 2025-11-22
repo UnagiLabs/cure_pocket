@@ -43,6 +43,9 @@
 		"emergency": "緊急",
 		"appointments": "予約",
 		"records": "記録",
+		"medicationNotebook": "お薬手帳",
+		"labResults": "検査値",
+		"imagingData": "画像データ",
 		"guestGreeting": "こんにちは、ゲスト",
 		"greetingWithName": "こんにちは、{{name}}さん",
 		"profileSetupBanner": {
