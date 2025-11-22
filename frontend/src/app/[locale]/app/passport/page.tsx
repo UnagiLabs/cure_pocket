@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { useMintPassport } from "@/hooks/useMintPassport";
 import { usePassport } from "@/hooks/usePassport";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
 
 /**
@@ -34,8 +35,17 @@ export default function PassportPage() {
 	 */
 	async function handle_mint_passport() {
 		try {
-			// MVP段階ではモック値を使用（walrus_blob_idは削除）
-			await mint("init_seal", undefined, false); // seal_id, country_code, analytics_opt_in
+			// ウォレット接続確認
+			if (!walletAddress) {
+				throw new Error("ウォレットが接続されていません");
+			}
+
+			// ウォレットアドレスから決定論的にseal_idを生成
+			const seal_id = await generateSealId(walletAddress);
+			console.log(`[Mint] Generated seal_id: ${seal_id.substring(0, 16)}...`);
+
+			// パスポートをmint
+			await mint(seal_id, undefined, false); // seal_id, country_code, analytics_opt_in
 		} catch (error) {
 			// エラーはuseMintPassportで処理される
 			console.error("パスポート発行エラー:", error);
