@@ -206,7 +206,9 @@ export default function SettingsPage() {
 						</div>
 						<div className="flex items-center text-sm">
 							<div className="mr-2 h-2 w-2 rounded-full bg-green-500" />
-							<span style={{ color: theme.colors.text }}>{t("settings.lastSyncRecent")}</span>
+							<span style={{ color: theme.colors.text }}>
+								{t("settings.lastSyncRecent")}
+							</span>
 						</div>
 					</div>
 				</div>

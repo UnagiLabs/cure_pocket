@@ -40,7 +40,14 @@ export default function EmergencyCardPage() {
 	const [expiresAt, setExpiresAt] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedCategories, setSelectedCategories] = useState<
-		("medications" | "allergies" | "histories" | "labs" | "imaging" | "vitals")[]
+		(
+			| "medications"
+			| "allergies"
+			| "histories"
+			| "labs"
+			| "imaging"
+			| "vitals"
+		)[]
 	>(["medications", "allergies"]);
 
 	const activeMedications = medications.filter((m) => m.status === "active");
@@ -52,7 +59,13 @@ export default function EmergencyCardPage() {
 	const recentVitals = vitalSigns.slice(0, 3);
 
 	const handleCategoryToggle = (
-		category: "medications" | "allergies" | "histories" | "labs" | "imaging" | "vitals",
+		category:
+			| "medications"
+			| "allergies"
+			| "histories"
+			| "labs"
+			| "imaging"
+			| "vitals",
 	) => {
 		setSelectedCategories((prev) =>
 			prev.includes(category)
@@ -108,10 +121,7 @@ export default function EmergencyCardPage() {
 			{/* Header - Hide on desktop as it's shown in top bar */}
 			<div className="lg:hidden mb-6 flex items-center">
 				<AlertCircle className="mr-2 h-5 w-5 text-red-500" />
-				<h1
-					className="text-lg font-bold"
-					style={{ color: theme.colors.text }}
-				>
+				<h1 className="text-lg font-bold" style={{ color: theme.colors.text }}>
 					{t("card.title")}
 				</h1>
 			</div>
@@ -386,7 +396,11 @@ export default function EmergencyCardPage() {
 							{recentVitals.map((vital) => (
 								<li key={vital.id} style={{ color: theme.colors.text }}>
 									<span className="mr-2">•</span>
-									{t(`vitals.${vital.type}`)}: {vital.systolic && vital.diastolic ? `${vital.systolic}/${vital.diastolic}` : vital.value} {vital.unit || ""}
+									{t(`vitals.${vital.type}`)}:{" "}
+									{vital.systolic && vital.diastolic
+										? `${vital.systolic}/${vital.diastolic}`
+										: vital.value}{" "}
+									{vital.unit || ""}
 								</li>
 							))}
 						</ul>

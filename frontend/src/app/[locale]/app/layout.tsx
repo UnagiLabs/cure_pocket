@@ -1,8 +1,7 @@
 "use client";
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { CreditCard, Home, Menu, Plus, Settings, Activity, Calendar, FileText, User, Bell } from "lucide-react";
-import Image from "next/image";
+import { Activity, Bell, Calendar, FileText, Plus, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -21,7 +20,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
 	const locale = useLocale();
 	const { walletAddress, settings } = useApp();
 	const [activeTab, setActiveTab] = useState("home");
-	const [showMenu, setShowMenu] = useState(false);
 	const theme = getTheme(settings.theme);
 	const currentAccount = useCurrentAccount();
 
@@ -71,14 +69,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
 			}}
 		>
 			{/* Desktop Sidebar Navigation */}
-			<aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 border-r transition-colors duration-500"
+			<aside
+				className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 border-r transition-colors duration-500"
 				style={{
 					backgroundColor: theme.colors.surface,
-					borderColor: `${theme.colors.textSecondary}20`
+					borderColor: `${theme.colors.textSecondary}20`,
 				}}
 			>
 				{/* Logo/Brand */}
-				<div className="px-6 py-8 border-b" style={{ borderColor: `${theme.colors.textSecondary}20` }}>
+				<div
+					className="px-6 py-8 border-b"
+					style={{ borderColor: `${theme.colors.textSecondary}20` }}
+				>
 					<div className="flex items-center gap-3">
 						<div
 							className="w-12 h-12 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-lg"
@@ -89,14 +91,27 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							<Activity size={24} strokeWidth={2.5} />
 						</div>
 						<div>
-							<h1 className="text-lg font-bold" style={{ color: theme.colors.text }}>CurePocket</h1>
-							<p className="text-xs" style={{ color: theme.colors.textSecondary }}>Health Passport</p>
+							<h1
+								className="text-lg font-bold"
+								style={{ color: theme.colors.text }}
+							>
+								CurePocket
+							</h1>
+							<p
+								className="text-xs"
+								style={{ color: theme.colors.textSecondary }}
+							>
+								Health Passport
+							</p>
 						</div>
 					</div>
 				</div>
 
 				{/* Profile Section */}
-				<div className="px-6 py-6 border-b" style={{ borderColor: `${theme.colors.textSecondary}20` }}>
+				<div
+					className="px-6 py-6 border-b"
+					style={{ borderColor: `${theme.colors.textSecondary}20` }}
+				>
 					<div className="flex items-center gap-3">
 						<div
 							className="w-12 h-12 rounded-full bg-gradient-to-tr flex items-center justify-center text-white shadow-md"
@@ -112,10 +127,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							</span>
 						</div>
 						<div className="flex-1 min-w-0">
-							<p className="text-xs" style={{ color: theme.colors.textSecondary }}>
+							<p
+								className="text-xs"
+								style={{ color: theme.colors.textSecondary }}
+							>
 								{t("home.greetingShort")}
 							</p>
-							<h2 className="text-sm font-bold truncate" style={{ color: theme.colors.text }}>
+							<h2
+								className="text-sm font-bold truncate"
+								style={{ color: theme.colors.text }}
+							>
 								{walletAddress
 									? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
 									: t("home.guest")}
@@ -131,8 +152,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						onClick={() => navigateTo("/app", "home")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
-							backgroundColor: activeTab === "home" ? `${theme.colors.primary}15` : "transparent",
-							color: activeTab === "home" ? theme.colors.primary : theme.colors.text,
+							backgroundColor:
+								activeTab === "home"
+									? `${theme.colors.primary}15`
+									: "transparent",
+							color:
+								activeTab === "home" ? theme.colors.primary : theme.colors.text,
 						}}
 					>
 						<Activity size={20} strokeWidth={activeTab === "home" ? 2.5 : 2} />
@@ -144,8 +169,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						onClick={() => navigateTo("/app/card", "card")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
-							backgroundColor: activeTab === "card" ? `${theme.colors.primary}15` : "transparent",
-							color: activeTab === "card" ? theme.colors.primary : theme.colors.text,
+							backgroundColor:
+								activeTab === "card"
+									? `${theme.colors.primary}15`
+									: "transparent",
+							color:
+								activeTab === "card" ? theme.colors.primary : theme.colors.text,
 						}}
 					>
 						<Calendar size={20} strokeWidth={activeTab === "card" ? 2.5 : 2} />
@@ -157,8 +186,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						onClick={() => navigateTo("/app/data", "files")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
-							backgroundColor: activeTab === "files" ? `${theme.colors.primary}15` : "transparent",
-							color: activeTab === "files" ? theme.colors.primary : theme.colors.text,
+							backgroundColor:
+								activeTab === "files"
+									? `${theme.colors.primary}15`
+									: "transparent",
+							color:
+								activeTab === "files"
+									? theme.colors.primary
+									: theme.colors.text,
 						}}
 					>
 						<FileText size={20} strokeWidth={activeTab === "files" ? 2.5 : 2} />
@@ -170,15 +205,24 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						onClick={() => navigateTo("/app/settings", "profile")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
-							backgroundColor: activeTab === "profile" ? `${theme.colors.primary}15` : "transparent",
-							color: activeTab === "profile" ? theme.colors.primary : theme.colors.text,
+							backgroundColor:
+								activeTab === "profile"
+									? `${theme.colors.primary}15`
+									: "transparent",
+							color:
+								activeTab === "profile"
+									? theme.colors.primary
+									: theme.colors.text,
 						}}
 					>
 						<User size={20} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
 						<span className="font-medium">{t("tabs.profile")}</span>
 					</button>
 
-					<div className="pt-4 mt-4 border-t" style={{ borderColor: `${theme.colors.textSecondary}20` }}>
+					<div
+						className="pt-4 mt-4 border-t"
+						style={{ borderColor: `${theme.colors.textSecondary}20` }}
+					>
 						<button
 							type="button"
 							onClick={() => navigateTo("/app/add", "add")}
@@ -201,57 +245,67 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					className="lg:hidden px-6 pt-8 pb-2 flex justify-between items-center sticky top-0 z-30 transition-colors duration-500"
 					style={{ backgroundColor: theme.colors.background }}
 				>
-				<div className="flex items-center gap-3">
-					<div
-						className="w-10 h-10 rounded-full bg-gradient-to-tr flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 transition-transform"
-						style={{
-							backgroundImage:
-								theme.id === "midnight-travel"
-									? `linear-gradient(to top right, ${theme.colors.primary}, #0F172A)`
-									: `linear-gradient(to top right, #1A365D, #2c5282)`,
-						}}
-					>
-						<span className="font-bold text-sm">
-							{walletAddress ? walletAddress.slice(0, 2).toUpperCase() : "U"}
-						</span>
+					<div className="flex items-center gap-3">
+						<div
+							className="w-10 h-10 rounded-full bg-gradient-to-tr flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+							style={{
+								backgroundImage:
+									theme.id === "midnight-travel"
+										? `linear-gradient(to top right, ${theme.colors.primary}, #0F172A)`
+										: `linear-gradient(to top right, #1A365D, #2c5282)`,
+							}}
+						>
+							<span className="font-bold text-sm">
+								{walletAddress ? walletAddress.slice(0, 2).toUpperCase() : "U"}
+							</span>
+						</div>
+						<div>
+							<p
+								className="text-xs"
+								style={{ color: theme.colors.textSecondary }}
+							>
+								{t("home.greetingShort")}
+							</p>
+							<h1
+								className="text-lg font-bold leading-tight"
+								style={{ color: theme.colors.text }}
+							>
+								{walletAddress
+									? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+									: t("home.guest")}
+							</h1>
+						</div>
 					</div>
-					<div>
-						<p className="text-xs" style={{ color: theme.colors.textSecondary }}>
-							{t("home.greetingShort")}
-						</p>
-						<h1 className="text-lg font-bold leading-tight" style={{ color: theme.colors.text }}>
-							{walletAddress
-								? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-								: t("home.guest")}
-						</h1>
+					<div className="flex gap-3 items-center">
+						<WalletButton size="small" variant="mobile" />
+						<button
+							type="button"
+							className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-all relative"
+							style={{ color: theme.colors.textSecondary }}
+						>
+							<Bell size={20} />
+							<span
+								className="absolute top-2 right-2 w-2 h-2 rounded-full border border-white"
+								style={{ backgroundColor: theme.colors.accent }}
+							></span>
+						</button>
 					</div>
-				</div>
-				<div className="flex gap-3 items-center">
-					<WalletButton size="small" variant="mobile" />
-					<button
-						type="button"
-						className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-all relative"
-						style={{ color: theme.colors.textSecondary }}
-					>
-						<Bell size={20} />
-						<span
-							className="absolute top-2 right-2 w-2 h-2 rounded-full border border-white"
-							style={{ backgroundColor: theme.colors.accent }}
-						></span>
-					</button>
-				</div>
 				</header>
 
 				{/* Desktop Top Bar */}
-				<div className="hidden lg:block sticky top-0 z-20 border-b py-4 px-8 backdrop-blur-sm"
+				<div
+					className="hidden lg:block sticky top-0 z-20 border-b py-4 px-8 backdrop-blur-sm"
 					style={{
 						backgroundColor: `${theme.colors.background}f0`,
-						borderColor: `${theme.colors.textSecondary}20`
+						borderColor: `${theme.colors.textSecondary}20`,
 					}}
 				>
 					<div className="flex items-center justify-between">
 						<div>
-							<h1 className="text-2xl font-bold" style={{ color: theme.colors.text }}>
+							<h1
+								className="text-2xl font-bold"
+								style={{ color: theme.colors.text }}
+							>
 								{activeTab === "home" && t("tabs.home")}
 								{activeTab === "vitals" && t("tabs.vitals")}
 								{activeTab === "card" && t("home.share")}
@@ -280,80 +334,88 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 				{/* Main Content Container */}
 				<main className="flex-1 overflow-y-auto lg:h-auto">
-					<div className="lg:max-w-7xl lg:mx-auto">
-						{children}
-					</div>
+					<div className="lg:max-w-7xl lg:mx-auto">{children}</div>
 				</main>
 
 				{/* Mobile Bottom Navigation */}
 				<nav
 					className="lg:hidden absolute bottom-0 w-full border-t pb-6 pt-2 px-6 z-40 transition-colors duration-500 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]"
-				style={{
-					backgroundColor: `${theme.colors.surface}e6`,
-					backdropFilter: "blur(10px)",
-					borderColor: "#e2e8f0",
-				}}
-			>
-				<div className="flex justify-between items-center">
-					<button
-						type="button"
-						onClick={() => navigateTo("/app", "home")}
-						className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
-						style={{
-							color: activeTab === "home" ? theme.colors.primary : "#94a3b8",
-						}}
-					>
-						<Activity size={24} strokeWidth={activeTab === "home" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">{t("tabs.home")}</span>
-					</button>
+					style={{
+						backgroundColor: `${theme.colors.surface}e6`,
+						backdropFilter: "blur(10px)",
+						borderColor: "#e2e8f0",
+					}}
+				>
+					<div className="flex justify-between items-center">
+						<button
+							type="button"
+							onClick={() => navigateTo("/app", "home")}
+							className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
+							style={{
+								color: activeTab === "home" ? theme.colors.primary : "#94a3b8",
+							}}
+						>
+							<Activity
+								size={24}
+								strokeWidth={activeTab === "home" ? 2.5 : 2}
+							/>
+							<span className="text-[10px] font-bold">{t("tabs.home")}</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => navigateTo("/app/card", "card")}
-						className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
-						style={{
-							color: activeTab === "card" ? theme.colors.primary : "#94a3b8",
-						}}
-					>
-						<Calendar size={24} strokeWidth={activeTab === "card" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">{t("home.share")}</span>
-					</button>
+						<button
+							type="button"
+							onClick={() => navigateTo("/app/card", "card")}
+							className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
+							style={{
+								color: activeTab === "card" ? theme.colors.primary : "#94a3b8",
+							}}
+						>
+							<Calendar
+								size={24}
+								strokeWidth={activeTab === "card" ? 2.5 : 2}
+							/>
+							<span className="text-[10px] font-bold">{t("home.share")}</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => navigateTo("/app/add", "add")}
-						className="w-14 h-14 -mt-8 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform"
-						style={{
-							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
-						}}
-					>
-						<Plus size={28} />
-					</button>
+						<button
+							type="button"
+							onClick={() => navigateTo("/app/add", "add")}
+							className="w-14 h-14 -mt-8 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform"
+							style={{
+								backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
+							}}
+						>
+							<Plus size={28} />
+						</button>
 
-					<button
-						type="button"
-						onClick={() => navigateTo("/app/data", "files")}
-						className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
-						style={{
-							color: activeTab === "files" ? theme.colors.primary : "#94a3b8",
-						}}
-					>
-						<FileText size={24} strokeWidth={activeTab === "files" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">{t("tabs.data")}</span>
-					</button>
+						<button
+							type="button"
+							onClick={() => navigateTo("/app/data", "files")}
+							className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
+							style={{
+								color: activeTab === "files" ? theme.colors.primary : "#94a3b8",
+							}}
+						>
+							<FileText
+								size={24}
+								strokeWidth={activeTab === "files" ? 2.5 : 2}
+							/>
+							<span className="text-[10px] font-bold">{t("tabs.data")}</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => navigateTo("/app/settings", "profile")}
-						className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
-						style={{
-							color: activeTab === "profile" ? theme.colors.primary : "#94a3b8",
-						}}
-					>
-						<User size={24} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">{t("tabs.profile")}</span>
-					</button>
-				</div>
+						<button
+							type="button"
+							onClick={() => navigateTo("/app/settings", "profile")}
+							className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
+							style={{
+								color:
+									activeTab === "profile" ? theme.colors.primary : "#94a3b8",
+							}}
+						>
+							<User size={24} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
+							<span className="text-[10px] font-bold">{t("tabs.profile")}</span>
+						</button>
+					</div>
 				</nav>
 			</div>
 

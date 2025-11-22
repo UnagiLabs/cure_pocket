@@ -79,6 +79,7 @@ export interface CreateConsentTokenPayload {
 		| "histories"
 		| "labs"
 		| "imaging"
+		| "vitals"
 	)[]; // 表示するカテゴリー
 }
 

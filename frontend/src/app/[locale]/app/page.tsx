@@ -1,33 +1,27 @@
 "use client";
 
 import {
-	Activity,
-	AlertCircle,
 	AlertTriangle,
+	Droplet,
 	FileText,
 	FlaskConical,
-	Package,
-	Plus,
-	Scan,
 	Heart,
-	Thermometer,
-	Droplet,
+	Package,
 	QrCode,
-	Calendar,
-	ChevronRight,
+	Scan,
+	Thermometer,
 	Weight,
-	Share2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { Badge } from "@/components/ui/Badge";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 import type { Prescription } from "@/types";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { SectionTitle } from "@/components/ui/SectionTitle";
-import { Badge } from "@/components/ui/Badge";
 
 /**
  * ホーム画面（ダッシュボード）
@@ -38,7 +32,6 @@ export default function HomePage() {
 	const router = useRouter();
 	const locale = useLocale();
 	const {
-		medications,
 		prescriptions,
 		allergies,
 		medicalHistories,
@@ -46,14 +39,10 @@ export default function HomePage() {
 		imagingReports,
 		vitalSigns,
 		settings,
-		profile,
 		setPrescriptions,
 		walletAddress,
 	} = useApp();
 	const theme = getTheme(settings.theme);
-
-	// ユーザー名をプロフィールから取得、未設定時はGuest表示
-	const displayName = profile?.name || null;
 
 	useEffect(() => {
 		// Load demo prescriptions if empty
@@ -61,7 +50,9 @@ export default function HomePage() {
 			const demoPrescriptions: Prescription[] = [
 				{
 					id: uuidv4(),
-					prescriptionDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 7 days ago
+					prescriptionDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+						.toISOString()
+						.split("T")[0], // 7 days ago
 					clinic: "Central Medical Center",
 					department: "Cardiology",
 					doctorName: "Dr. Smith",
@@ -88,7 +79,9 @@ export default function HomePage() {
 				},
 				{
 					id: uuidv4(),
-					prescriptionDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 14 days ago
+					prescriptionDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+						.toISOString()
+						.split("T")[0], // 14 days ago
 					clinic: "Downtown Family Clinic",
 					department: "Internal Medicine",
 					doctorName: "Dr. Johnson",
@@ -110,14 +103,6 @@ export default function HomePage() {
 		}
 	}, [prescriptions.length, walletAddress, setPrescriptions]);
 
-	const activeMedicationsCount = prescriptions.reduce(
-		(count, prescription) => count + prescription.medications.length,
-		0,
-	);
-	const importantHistoriesCount = medicalHistories.filter(
-		(h) => h.status === "active" || h.type === "surgery",
-	).length;
-
 	// 最近の更新を時系列で取得
 	const recentUpdates = useMemo(() => {
 		const updates: Array<{
@@ -129,10 +114,13 @@ export default function HomePage() {
 		}> = [];
 
 		prescriptions.forEach((prescription) => {
-			const medicationNames = prescription.medications.map(m => m.drugName).join(", ");
-			const displayTitle = medicationNames.length > 50
-				? medicationNames.substring(0, 50) + "..."
-				: medicationNames;
+			const medicationNames = prescription.medications
+				.map((m) => m.drugName)
+				.join(", ");
+			const displayTitle =
+				medicationNames.length > 50
+					? `${medicationNames.substring(0, 50)}...`
+					: medicationNames;
 
 			updates.push({
 				id: prescription.id,
@@ -190,57 +178,15 @@ export default function HomePage() {
 			.slice(0, 5);
 	}, [prescriptions, allergies, medicalHistories, labResults, imagingReports]);
 
-	const summaryCards = [
-		{
-			id: "medications",
-			icon: Package,
-			title: t("dashboard.summary.medications"),
-			count: activeMedicationsCount,
-			color: theme.colors.primary,
-		},
-		{
-			id: "allergies",
-			icon: AlertTriangle,
-			title: t("dashboard.summary.allergies"),
-			count: allergies.length,
-			color: "#EF4444",
-		},
-		{
-			id: "histories",
-			icon: FileText,
-			title: t("dashboard.summary.histories"),
-			count: importantHistoriesCount,
-			color: "#8B5CF6",
-		},
-		{
-			id: "labs",
-			icon: FlaskConical,
-			title: t("dashboard.summary.labs"),
-			count: labResults.length,
-			color: "#10B981",
-		},
-		{
-			id: "imaging",
-			icon: Scan,
-			title: t("dashboard.summary.imaging"),
-			count: imagingReports.length,
-			color: "#3B82F6",
-		},
-		{
-			id: "vitals",
-			icon: Activity,
-			title: t("dashboard.summary.vitals"),
-			count: vitalSigns.length,
-			color: "#F59E0B",
-		},
-	];
-
 	// Get latest vital signs for display
 	const latestVitals = useMemo(() => {
 		const vitalsMap = new Map();
 		vitalSigns.forEach((vital) => {
 			const existing = vitalsMap.get(vital.type);
-			if (!existing || new Date(vital.recordedAt) > new Date(existing.recordedAt)) {
+			if (
+				!existing ||
+				new Date(vital.recordedAt) > new Date(existing.recordedAt)
+			) {
 				vitalsMap.set(vital.type, vital);
 			}
 		});
@@ -253,7 +199,10 @@ export default function HomePage() {
 	const weightVital = latestVitals.get("weight");
 
 	return (
-		<div className="space-y-8 pb-24 lg:pb-8 px-4 md:px-8 lg:px-12 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
+		<div
+			className="space-y-8 pb-24 lg:pb-8 px-4 md:px-8 lg:px-12 animate-fade-in"
+			style={{ backgroundColor: theme.colors.background }}
+		>
 			{/* Today's Vitals */}
 			<section className="mt-2 lg:mt-6">
 				<SectionTitle>{t("home.todayVitals")}</SectionTitle>
@@ -264,38 +213,59 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Heart size={14} className="text-[#FF6B6B]" /> {t("vitals.bloodPressure")}
+							<Heart size={14} className="text-[#FF6B6B]" />{" "}
+							{t("vitals.bloodPressure")}
 						</div>
 						{bloodPressureVital ? (
 							<>
 								<div className="flex items-baseline gap-1">
-									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									<div
+										className="text-2xl font-bold font-inter"
+										style={{ color: theme.colors.text }}
+									>
 										{bloodPressureVital.systolic}
 									</div>
 									<span className="text-sm opacity-60">/</span>
-									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									<div
+										className="text-2xl font-bold font-inter"
+										style={{ color: theme.colors.text }}
+									>
 										{bloodPressureVital.diastolic}
 									</div>
 								</div>
 								<div className="flex gap-2 text-xs">
-									<span className="text-slate-500">{t("vitals.systolicShort")} {bloodPressureVital.systolic}</span>
-									<span className="text-slate-500">{t("vitals.diastolicShort")} {bloodPressureVital.diastolic}</span>
+									<span className="text-slate-500">
+										{t("vitals.systolicShort")} {bloodPressureVital.systolic}
+									</span>
+									<span className="text-slate-500">
+										{t("vitals.diastolicShort")} {bloodPressureVital.diastolic}
+									</span>
 								</div>
 							</>
 						) : (
 							<>
 								<div className="flex items-baseline gap-1">
-									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									<div
+										className="text-2xl font-bold font-inter"
+										style={{ color: theme.colors.text }}
+									>
 										120
 									</div>
 									<span className="text-sm opacity-60">/</span>
-									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+									<div
+										className="text-2xl font-bold font-inter"
+										style={{ color: theme.colors.text }}
+									>
 										90
 									</div>
 								</div>
 								<div className="flex gap-2 text-xs">
-									<span className="text-slate-500">{t("vitals.systolicShort")} 120</span>
-									<span className="text-slate-500">{t("vitals.diastolicShort")} 90</span>
+									<span className="text-slate-500">
+										{t("vitals.systolicShort")} 120
+									</span>
+									<span className="text-slate-500">
+										{t("vitals.diastolicShort")} 90
+									</span>
 								</div>
 							</>
 						)}
@@ -307,14 +277,23 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Thermometer size={14} className="text-[#FF6B6B]" /> {t("vitals.temperature")}
+							<Thermometer size={14} className="text-[#FF6B6B]" />{" "}
+							{t("vitals.temperature")}
 						</div>
-						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+						<div
+							className="text-2xl font-bold font-inter"
+							style={{ color: theme.colors.text }}
+						>
 							{temperatureVital?.value || "36.2"}
 							<span className="text-sm font-normal ml-1 opacity-60">°C</span>
 						</div>
 						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-							<div className="bg-[#FF6B6B] h-full rounded-full" style={{ width: `${((temperatureVital?.value || 36.2) - 35) * 50}%` }}></div>
+							<div
+								className="bg-[#FF6B6B] h-full rounded-full"
+								style={{
+									width: `${((temperatureVital?.value || 36.2) - 35) * 50}%`,
+								}}
+							></div>
 						</div>
 					</GlassCard>
 
@@ -324,14 +303,24 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Droplet size={14} style={{ color: theme.colors.primary }} /> {t("vitals.bloodGlucose")}
+							<Droplet size={14} style={{ color: theme.colors.primary }} />{" "}
+							{t("vitals.bloodGlucose")}
 						</div>
-						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+						<div
+							className="text-2xl font-bold font-inter"
+							style={{ color: theme.colors.text }}
+						>
 							{bloodGlucoseVital?.value || "96"}
 							<span className="text-sm font-normal ml-1 opacity-60">mg/dL</span>
 						</div>
 						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-							<div className="h-full rounded-full" style={{ backgroundColor: theme.colors.primary, width: `${Math.min((bloodGlucoseVital?.value || 96) / 2, 100)}%` }}></div>
+							<div
+								className="h-full rounded-full"
+								style={{
+									backgroundColor: theme.colors.primary,
+									width: `${Math.min((bloodGlucoseVital?.value || 96) / 2, 100)}%`,
+								}}
+							></div>
 						</div>
 					</GlassCard>
 
@@ -341,14 +330,23 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Weight size={14} className="text-[#8B5CF6]" /> {t("vitals.weight")}
+							<Weight size={14} className="text-[#8B5CF6]" />{" "}
+							{t("vitals.weight")}
 						</div>
-						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+						<div
+							className="text-2xl font-bold font-inter"
+							style={{ color: theme.colors.text }}
+						>
 							{weightVital?.value || "53"}
 							<span className="text-sm font-normal ml-1 opacity-60">kg</span>
 						</div>
 						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-							<div className="bg-[#8B5CF6] h-full rounded-full" style={{ width: `${Math.min((weightVital?.value || 53) / 100 * 100, 100)}%` }}></div>
+							<div
+								className="bg-[#8B5CF6] h-full rounded-full"
+								style={{
+									width: `${Math.min(((weightVital?.value || 53) / 100) * 100, 100)}%`,
+								}}
+							></div>
 						</div>
 					</GlassCard>
 				</div>
@@ -358,71 +356,78 @@ export default function HomePage() {
 			<section>
 				<div className="max-w-4xl mx-auto">
 					<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide lg:overflow-visible lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-6">
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/card`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
-					>
-						<div
-							className="w-10 h-10 rounded-full flex items-center justify-center lg:w-14 lg:h-14"
-							style={{ backgroundColor: `${theme.colors.primary}20`, color: theme.colors.primary }}
+						<button
+							type="button"
+							onClick={() => router.push(`/${locale}/app/card`)}
+							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 						>
-							<QrCode className="w-5 h-5 lg:w-7 lg:h-7" />
-						</div>
-						<span className="text-[10px] font-bold text-slate-500 lg:text-sm">{t("home.share")}</span>
-					</button>
+							<div
+								className="w-10 h-10 rounded-full flex items-center justify-center lg:w-14 lg:h-14"
+								style={{
+									backgroundColor: `${theme.colors.primary}20`,
+									color: theme.colors.primary,
+								}}
+							>
+								<QrCode className="w-5 h-5 lg:w-7 lg:h-7" />
+							</div>
+							<span className="text-[10px] font-bold text-slate-500 lg:text-sm">
+								{t("home.share")}
+							</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/medications`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
-					>
-						<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] lg:w-14 lg:h-14">
-							<Package className="w-5 h-5 lg:w-7 lg:h-7" />
-						</div>
-						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
-							{t("home.medicationNotebook")}
-						</span>
-					</button>
+						<button
+							type="button"
+							onClick={() => router.push(`/${locale}/app/medications`)}
+							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
+						>
+							<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] lg:w-14 lg:h-14">
+								<Package className="w-5 h-5 lg:w-7 lg:h-7" />
+							</div>
+							<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
+								{t("home.medicationNotebook")}
+							</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/add/lab`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
-					>
-						<div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B] lg:w-14 lg:h-14">
-							<FlaskConical className="w-5 h-5 lg:w-7 lg:h-7" />
-						</div>
-						<span className="text-[10px] font-bold text-slate-500 lg:text-sm">
-							{t("home.labResults")}
-						</span>
-					</button>
+						<button
+							type="button"
+							onClick={() => router.push(`/${locale}/app/add/lab`)}
+							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
+						>
+							<div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B] lg:w-14 lg:h-14">
+								<FlaskConical className="w-5 h-5 lg:w-7 lg:h-7" />
+							</div>
+							<span className="text-[10px] font-bold text-slate-500 lg:text-sm">
+								{t("home.labResults")}
+							</span>
+						</button>
 
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/add/imaging`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
-					>
-						<div className="w-10 h-10 rounded-full bg-[#8B5CF6]/10 flex items-center justify-center text-[#8B5CF6] lg:w-14 lg:h-14">
-							<Scan className="w-5 h-5 lg:w-7 lg:h-7" />
-						</div>
-						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
-							{t("home.imagingData")}
-						</span>
-					</button>
-				</div>
+						<button
+							type="button"
+							onClick={() => router.push(`/${locale}/app/add/imaging`)}
+							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
+						>
+							<div className="w-10 h-10 rounded-full bg-[#8B5CF6]/10 flex items-center justify-center text-[#8B5CF6] lg:w-14 lg:h-14">
+								<Scan className="w-5 h-5 lg:w-7 lg:h-7" />
+							</div>
+							<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
+								{t("home.imagingData")}
+							</span>
+						</button>
+					</div>
 				</div>
 			</section>
 
 			{/* Recent Updates Timeline */}
 			{recentUpdates.length > 0 && (
 				<section>
-					<SectionTitle action onActionClick={() => router.push(`/${locale}/app/add`)}>
+					<SectionTitle
+						action
+						onActionClick={() => router.push(`/${locale}/app/add`)}
+					>
 						{t("home.recentRecords")}
 					</SectionTitle>
 					<div className="relative pl-4 border-l-2 border-slate-100 ml-2 space-y-6">
 						{recentUpdates.map((update, index) => {
-							const Icon = update.icon;
 							return (
 								<div key={update.id} className="relative group cursor-pointer">
 									<div
@@ -438,7 +443,10 @@ export default function HomePage() {
 												{t(`dataTypes.${update.type}`)}
 											</Badge>
 										</div>
-										<h3 className="font-bold mb-1" style={{ color: theme.colors.text }}>
+										<h3
+											className="font-bold mb-1"
+											style={{ color: theme.colors.text }}
+										>
 											{update.title}
 										</h3>
 										<p className="text-xs text-slate-500 flex items-center gap-1">

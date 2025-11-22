@@ -8,7 +8,11 @@ interface SectionTitleProps {
 	onActionClick?: () => void;
 }
 
-export function SectionTitle({ children, action, onActionClick }: SectionTitleProps) {
+export function SectionTitle({
+	children,
+	action,
+	onActionClick,
+}: SectionTitleProps) {
 	const { settings } = useApp();
 	const theme = themes[settings.theme];
 
@@ -22,6 +26,7 @@ export function SectionTitle({ children, action, onActionClick }: SectionTitlePr
 			</h2>
 			{action && (
 				<button
+					type="button"
 					onClick={onActionClick}
 					className="text-xs font-medium hover:opacity-70 transition-opacity"
 					style={{ color: theme.colors.primary }}

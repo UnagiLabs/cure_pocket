@@ -118,10 +118,7 @@ export function DrugAutocomplete({
 					{suggestions.map((suggestion, index) => (
 						<button
 							type="button"
-							key={`${suggestion.rxcui}-${
-								// biome-ignore lint/suspicious/noArrayIndexKey: This is a temporary list
-								index
-							}`}
+							key={`${suggestion.rxcui}-${index}`}
 							onClick={() => handleSuggestionClick(suggestion)}
 							className="w-full text-left px-3 py-2.5 hover:bg-opacity-50 transition-colors border-b last:border-b-0"
 							style={{

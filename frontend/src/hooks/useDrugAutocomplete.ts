@@ -32,7 +32,11 @@ export function useDrugAutocomplete() {
 
 		try {
 			const results = await searchDrugNames(searchQuery, 10);
-			console.log("[useDrugAutocomplete] Got results:", results.length, results);
+			console.log(
+				"[useDrugAutocomplete] Got results:",
+				results.length,
+				results,
+			);
 			setSuggestions(results);
 			setIsOpen(results.length > 0);
 			console.log("[useDrugAutocomplete] isOpen set to:", results.length > 0);

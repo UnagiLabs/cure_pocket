@@ -120,10 +120,7 @@ export default function AddDataPage() {
 		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8">
 			{/* Header - Hide on desktop as it's shown in top bar */}
 			<div className="lg:hidden mb-6">
-				<h1
-					className="text-xl font-bold"
-					style={{ color: theme.colors.text }}
-				>
+				<h1 className="text-xl font-bold" style={{ color: theme.colors.text }}>
 					{t("tabs.addNew")}
 				</h1>
 			</div>

@@ -239,7 +239,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	};
 
 	const deletePrescription = (id: string) => {
-		setPrescriptions((prev) => prev.filter((prescription) => prescription.id !== id));
+		setPrescriptions((prev) =>
+			prev.filter((prescription) => prescription.id !== id),
+		);
 	};
 
 	// Allergy CRUD operations

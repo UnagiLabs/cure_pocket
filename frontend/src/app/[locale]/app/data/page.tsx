@@ -1,8 +1,15 @@
 "use client";
 
-import { Activity, FileText, Heart, Image as ImageIcon, Pill, Stethoscope } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import {
+	Activity,
+	FileText,
+	Heart,
+	Image as ImageIcon,
+	Pill,
+	Stethoscope,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
@@ -30,7 +37,13 @@ export default function DataOverviewPage() {
 			imaging: imagingReports.length,
 			vitals: vitalSigns.length,
 		}),
-		[medicalHistories.length, prescriptions.length, labResults.length, imagingReports.length, vitalSigns.length],
+		[
+			medicalHistories.length,
+			prescriptions.length,
+			labResults.length,
+			imagingReports.length,
+			vitalSigns.length,
+		],
 	);
 
 	const formatDate = (value: string | null | undefined) => {
@@ -76,12 +89,16 @@ export default function DataOverviewPage() {
 					<div className="flex flex-wrap gap-3 lg:gap-4">
 						<SummaryChip
 							icon={<Stethoscope className="h-3.5 w-3.5" />}
-							label={t("dataOverview.chips.conditions", { default: "Conditions" })}
+							label={t("dataOverview.chips.conditions", {
+								default: "Conditions",
+							})}
 							value={summary.conditions}
 						/>
 						<SummaryChip
 							icon={<Pill className="h-3.5 w-3.5" />}
-							label={t("dataOverview.chips.prescriptions", { default: "Prescriptions" })}
+							label={t("dataOverview.chips.prescriptions", {
+								default: "Prescriptions",
+							})}
 							value={summary.prescriptions}
 						/>
 						<SummaryChip
@@ -105,21 +122,30 @@ export default function DataOverviewPage() {
 						<div className="grid grid-cols-2 gap-3 text-xs lg:text-sm">
 							<InfoRow
 								label={t("settings.displayName", { default: "Display name" })}
-								value={profile?.displayName || t("dataOverview.empty", { default: "Not set" })}
+								value={
+									profile?.name ||
+									t("dataOverview.empty", { default: "Not set" })
+								}
 							/>
 							<InfoRow
 								label={t("settings.ageBand", { default: "Age band" })}
-								value={profile?.ageBand || t("dataOverview.empty", { default: "Not set" })}
+								value={
+									profile?.ageBand ||
+									t("dataOverview.empty", { default: "Not set" })
+								}
 							/>
 							<InfoRow
 								label={t("settings.country", { default: "Country" })}
-								value={profile?.country || t("dataOverview.empty", { default: "Not set" })}
+								value={
+									profile?.country ||
+									t("dataOverview.empty", { default: "Not set" })
+								}
 							/>
 							<InfoRow
 								label={t("vitals.weight", { default: "Weight" })}
 								value={
-									profile?.weight
-										? `${profile.weight} kg`
+									profile?.weightKg
+										? `${profile.weightKg} kg`
 										: t("dataOverview.empty", { default: "Not set" })
 								}
 							/>
@@ -147,11 +173,17 @@ export default function DataOverviewPage() {
 										className="flex items-start justify-between gap-3 rounded-lg bg-black/5 px-3 py-2 text-xs lg:text-sm"
 									>
 										<div className="space-y-0.5">
-											<p className="font-medium" style={{ color: theme.colors.text }}>
-												{history.conditionName}
+											<p
+												className="font-medium"
+												style={{ color: theme.colors.text }}
+											>
+												{history.diagnosis}
 											</p>
-											<p className="text-[11px] lg:text-xs" style={{ color: theme.colors.textSecondary }}>
-												{formatDate(history.diagnosedAt)}
+											<p
+												className="text-[11px] lg:text-xs"
+												style={{ color: theme.colors.textSecondary }}
+											>
+												{formatDate(history.diagnosisDate)}
 											</p>
 										</div>
 										{history.status && (
@@ -166,7 +198,9 @@ export default function DataOverviewPage() {
 					</SectionCard>
 
 					<SectionCard
-						title={t("dataOverview.prescriptions", { default: "Prescriptions" })}
+						title={t("dataOverview.prescriptions", {
+							default: "Prescriptions",
+						})}
 						accentColor="#6366F1"
 						icon={<FileText className="h-4 w-4 text-[#6366F1]" />}
 						onClickEdit={() => router.push(`/${locale}/app/medications`)}
@@ -175,7 +209,9 @@ export default function DataOverviewPage() {
 							<EmptyState
 								label={t("medications.noPrescriptions")}
 								actionLabel={t("medications.addFirstPrescription")}
-								onClickAction={() => router.push(`/${locale}/app/add/medication`)}
+								onClickAction={() =>
+									router.push(`/${locale}/app/add/medication`)
+								}
 							/>
 						) : (
 							<div className="space-y-3">
@@ -187,7 +223,10 @@ export default function DataOverviewPage() {
 									>
 										<div className="flex items-start justify-between gap-2 mb-1.5">
 											<div>
-												<p className="font-medium" style={{ color: theme.colors.text }}>
+												<p
+													className="font-medium"
+													style={{ color: theme.colors.text }}
+												>
 													{p.clinic}
 												</p>
 												<p
@@ -227,7 +266,9 @@ export default function DataOverviewPage() {
 					>
 						{summary.labs === 0 ? (
 							<EmptyState
-								label={t("dataOverview.noLabs", { default: "No lab results registered" })}
+								label={t("dataOverview.noLabs", {
+									default: "No lab results registered",
+								})}
 							/>
 						) : (
 							<ul className="space-y-2 text-xs lg:text-sm">
@@ -237,22 +278,31 @@ export default function DataOverviewPage() {
 										className="flex items-center justify-between rounded-lg bg-black/5 px-3 py-1.5"
 									>
 										<div>
-											<p className="font-medium" style={{ color: theme.colors.text }}>
+											<p
+												className="font-medium"
+												style={{ color: theme.colors.text }}
+											>
 												{lab.testName}
 											</p>
 											<p
 												className="text-[11px] lg:text-xs"
 												style={{ color: theme.colors.textSecondary }}
 											>
-												{formatDate(lab.collectedAt)}
+												{formatDate(lab.testDate)}
 											</p>
 										</div>
 										<div className="text-right">
-											<p className="text-sm font-semibold" style={{ color: theme.colors.text }}>
+											<p
+												className="text-sm font-semibold"
+												style={{ color: theme.colors.text }}
+											>
 												{lab.value} {lab.unit}
 											</p>
 											{lab.referenceRange && (
-												<p className="text-[10px]" style={{ color: theme.colors.textSecondary }}>
+												<p
+													className="text-[10px]"
+													style={{ color: theme.colors.textSecondary }}
+												>
 													{lab.referenceRange}
 												</p>
 											)}
@@ -271,7 +321,9 @@ export default function DataOverviewPage() {
 					>
 						{summary.imaging === 0 ? (
 							<EmptyState
-								label={t("dataOverview.noImaging", { default: "No imaging data registered" })}
+								label={t("dataOverview.noImaging", {
+									default: "No imaging data registered",
+								})}
 							/>
 						) : (
 							<div className="space-y-2">
@@ -282,14 +334,17 @@ export default function DataOverviewPage() {
 										style={{ borderColor: `${theme.colors.textSecondary}20` }}
 									>
 										<div>
-											<p className="font-medium" style={{ color: theme.colors.text }}>
-												{img.modality} · {img.bodyPart}
+											<p
+												className="font-medium"
+												style={{ color: theme.colors.text }}
+											>
+												{img.type.toUpperCase()} · {img.bodyPart}
 											</p>
 											<p
 												className="text-[11px] lg:text-xs"
 												style={{ color: theme.colors.textSecondary }}
 											>
-												{formatDate(img.performedAt)}
+												{formatDate(img.examDate)}
 											</p>
 										</div>
 										{img.findings && (
@@ -314,7 +369,9 @@ export default function DataOverviewPage() {
 					>
 						{summary.vitals === 0 ? (
 							<EmptyState
-								label={t("dataOverview.noVitals", { default: "No vital records yet" })}
+								label={t("dataOverview.noVitals", {
+									default: "No vital records yet",
+								})}
 								actionLabel={t("add.vitalsDescription")}
 								onClickAction={() => router.push(`/${locale}/app/add/vital`)}
 							/>
@@ -326,12 +383,18 @@ export default function DataOverviewPage() {
 										key={vital.id}
 										className="rounded-lg bg-black/5 px-3 py-2 flex flex-col gap-0.5"
 									>
-										<p className="font-medium" style={{ color: theme.colors.text }}>
+										<p
+											className="font-medium"
+											style={{ color: theme.colors.text }}
+										>
 											{vital.type}
 										</p>
 										<p className="text-sm font-semibold">
 											{vital.value ?? `${vital.systolic}/${vital.diastolic}`}{" "}
-											<span className="text-[11px]" style={{ color: theme.colors.textSecondary }}>
+											<span
+												className="text-[11px]"
+												style={{ color: theme.colors.textSecondary }}
+											>
 												{vital.unit}
 											</span>
 										</p>
@@ -380,7 +443,13 @@ interface SectionCardProps {
 	children: React.ReactNode;
 }
 
-function SectionCard({ title, accentColor, icon, onClickEdit, children }: SectionCardProps) {
+function SectionCard({
+	title,
+	accentColor,
+	icon,
+	onClickEdit,
+	children,
+}: SectionCardProps) {
 	return (
 		<section
 			className="rounded-2xl border bg-white/70 p-4 lg:p-5 shadow-sm backdrop-blur-sm"
@@ -392,9 +461,14 @@ function SectionCard({ title, accentColor, icon, onClickEdit, children }: Sectio
 						className="flex h-7 w-7 items-center justify-center rounded-full"
 						style={{ backgroundColor: `${accentColor}20` }}
 					>
-						{icon ?? <FileText className="h-4 w-4" style={{ color: accentColor }} />}
+						{icon ?? (
+							<FileText className="h-4 w-4" style={{ color: accentColor }} />
+						)}
 					</div>
-					<h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: accentColor }}>
+					<h2
+						className="text-xs font-semibold uppercase tracking-wide"
+						style={{ color: accentColor }}
+					>
 						{title}
 					</h2>
 				</div>

@@ -8,25 +8,63 @@ interface GlassCardProps {
 	onClick?: () => void;
 }
 
-export function GlassCard({ children, className = "", onClick }: GlassCardProps) {
+export function GlassCard({
+	children,
+	className = "",
+	onClick,
+}: GlassCardProps) {
 	const { settings } = useApp();
 	const theme = themes[settings.theme];
 
+	if (onClick) {
+		return (
+			<button
+				type="button"
+				onClick={onClick}
+				className={`
+				bg-white/80 backdrop-blur-md
+				border border-white/40
+				shadow-sm
+				rounded-2xl
+				p-5 transition-all duration-300 hover:scale-[1.01]
+				cursor-pointer
+				${className}
+			`}
+				style={{
+					backgroundColor:
+						theme.id === "midnight-travel"
+							? `${theme.colors.surface}cc`
+							: undefined,
+					borderColor:
+						theme.id === "midnight-travel"
+							? `${theme.colors.textSecondary}40`
+							: undefined,
+				}}
+			>
+				{children}
+			</button>
+		);
+	}
+
 	return (
 		<div
-			onClick={onClick}
 			className={`
 				bg-white/80 backdrop-blur-md
 				border border-white/40
 				shadow-sm
 				rounded-2xl
 				p-5 transition-all duration-300 hover:scale-[1.01]
-				${onClick ? "cursor-pointer" : ""}
 				${className}
 			`}
 			style={{
-				backgroundColor: theme.id === "midnight-travel" ? `${theme.colors.surface}cc` : undefined,
-				borderColor: theme.id === "midnight-travel" ? `${theme.colors.textSecondary}40` : undefined,
+				backgroundColor:
+					theme.id === "midnight-travel"
+						? `${theme.colors.surface}cc`
+						: undefined,
+				borderColor:
+					theme.id === "midnight-travel"
+						? `${theme.colors.textSecondary}40`
+						: undefined,
 			}}
 		>
 			{children}

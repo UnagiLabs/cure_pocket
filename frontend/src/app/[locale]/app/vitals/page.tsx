@@ -2,9 +2,9 @@
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Activity, Droplet, Heart, Thermometer, Weight } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import VitalSignChart from "@/components/VitalSignChart";
@@ -26,8 +26,11 @@ export default function VitalsPage() {
 	const locale = useLocale();
 	const searchParams = useSearchParams();
 	const { walletAddress, settings, vitalSigns, addVitalSign } = useApp();
-	const [selectedType, setSelectedType] = useState<VitalSignType>("blood-pressure");
-	const [period, setPeriod] = useState<"week" | "month" | "3months" | "year">("month");
+	const [selectedType, setSelectedType] =
+		useState<VitalSignType>("blood-pressure");
+	const [period, setPeriod] = useState<"week" | "month" | "3months" | "year">(
+		"month",
+	);
 	const theme = getTheme(settings.theme);
 	const currentAccount = useCurrentAccount();
 
@@ -35,7 +38,9 @@ export default function VitalsPage() {
 	const [systolic, setSystolic] = useState("");
 	const [diastolic, setDiastolic] = useState("");
 	const [value, setValue] = useState("");
-	const [recordedAt, setRecordedAt] = useState(new Date().toISOString().slice(0, 16));
+	const [recordedAt, setRecordedAt] = useState(
+		new Date().toISOString().slice(0, 16),
+	);
 	const [notes, setNotes] = useState("");
 
 	// Set initial type from URL parameter
@@ -188,153 +193,153 @@ export default function VitalsPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Input Form */}
 				<GlassCard>
-				<h3
-					className="text-sm font-bold mb-4 uppercase tracking-wider"
-					style={{ color: theme.colors.textSecondary }}
-				>
-					{t("vitals.newRecord")}
-				</h3>
+					<h3
+						className="text-sm font-bold mb-4 uppercase tracking-wider"
+						style={{ color: theme.colors.textSecondary }}
+					>
+						{t("vitals.newRecord")}
+					</h3>
 
-				<div className="space-y-4">
-					{/* 血圧の場合 */}
-					{selectedType === "blood-pressure" ? (
-						<div className="grid grid-cols-2 gap-3">
+					<div className="space-y-4">
+						{/* 血圧の場合 */}
+						{selectedType === "blood-pressure" ? (
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label
+										htmlFor="systolic"
+										className="block text-xs font-medium mb-1"
+										style={{ color: theme.colors.textSecondary }}
+									>
+										{t("vitals.systolic")} *
+									</label>
+									<input
+										id="systolic"
+										type="number"
+										value={systolic}
+										onChange={(e) => setSystolic(e.target.value)}
+										className="w-full rounded-lg border p-2.5 text-sm"
+										style={{
+											backgroundColor: theme.colors.surface,
+											borderColor: `${theme.colors.textSecondary}40`,
+											color: theme.colors.text,
+										}}
+										placeholder="120"
+									/>
+								</div>
+								<div>
+									<label
+										htmlFor="diastolic"
+										className="block text-xs font-medium mb-1"
+										style={{ color: theme.colors.textSecondary }}
+									>
+										{t("vitals.diastolic")} *
+									</label>
+									<input
+										id="diastolic"
+										type="number"
+										value={diastolic}
+										onChange={(e) => setDiastolic(e.target.value)}
+										className="w-full rounded-lg border p-2.5 text-sm"
+										style={{
+											backgroundColor: theme.colors.surface,
+											borderColor: `${theme.colors.textSecondary}40`,
+											color: theme.colors.text,
+										}}
+										placeholder="80"
+									/>
+								</div>
+							</div>
+						) : (
 							<div>
 								<label
-									htmlFor="systolic"
+									htmlFor="value"
 									className="block text-xs font-medium mb-1"
 									style={{ color: theme.colors.textSecondary }}
 								>
-									{t("vitals.systolic")} *
+									{getTypeLabel(selectedType)} ({getUnit(selectedType)}) *
 								</label>
 								<input
-									id="systolic"
+									id="value"
 									type="number"
-									value={systolic}
-									onChange={(e) => setSystolic(e.target.value)}
+									step={selectedType === "temperature" ? "0.1" : "1"}
+									value={value}
+									onChange={(e) => setValue(e.target.value)}
 									className="w-full rounded-lg border p-2.5 text-sm"
 									style={{
 										backgroundColor: theme.colors.surface,
 										borderColor: `${theme.colors.textSecondary}40`,
 										color: theme.colors.text,
 									}}
-									placeholder="120"
+									placeholder={
+										selectedType === "temperature"
+											? "36.5"
+											: selectedType === "blood-glucose"
+												? "96"
+												: "53"
+									}
 								/>
 							</div>
-							<div>
-								<label
-									htmlFor="diastolic"
-									className="block text-xs font-medium mb-1"
-									style={{ color: theme.colors.textSecondary }}
-								>
-									{t("vitals.diastolic")} *
-								</label>
-								<input
-									id="diastolic"
-									type="number"
-									value={diastolic}
-									onChange={(e) => setDiastolic(e.target.value)}
-									className="w-full rounded-lg border p-2.5 text-sm"
-									style={{
-										backgroundColor: theme.colors.surface,
-										borderColor: `${theme.colors.textSecondary}40`,
-										color: theme.colors.text,
-									}}
-									placeholder="80"
-								/>
-							</div>
-						</div>
-					) : (
+						)}
+
+						{/* 測定日時 */}
 						<div>
 							<label
-								htmlFor="value"
+								htmlFor="recordedAt"
 								className="block text-xs font-medium mb-1"
 								style={{ color: theme.colors.textSecondary }}
 							>
-								{getTypeLabel(selectedType)} ({getUnit(selectedType)}) *
+								{t("vitals.recordedAt")} *
 							</label>
 							<input
-								id="value"
-								type="number"
-								step={selectedType === "temperature" ? "0.1" : "1"}
-								value={value}
-								onChange={(e) => setValue(e.target.value)}
+								id="recordedAt"
+								type="datetime-local"
+								value={recordedAt}
+								onChange={(e) => setRecordedAt(e.target.value)}
 								className="w-full rounded-lg border p-2.5 text-sm"
 								style={{
 									backgroundColor: theme.colors.surface,
 									borderColor: `${theme.colors.textSecondary}40`,
 									color: theme.colors.text,
 								}}
-								placeholder={
-									selectedType === "temperature"
-										? "36.5"
-										: selectedType === "blood-glucose"
-											? "96"
-											: "53"
-								}
 							/>
 						</div>
-					)}
 
-					{/* 測定日時 */}
-					<div>
-						<label
-							htmlFor="recordedAt"
-							className="block text-xs font-medium mb-1"
-							style={{ color: theme.colors.textSecondary }}
-						>
-							{t("vitals.recordedAt")} *
-						</label>
-						<input
-							id="recordedAt"
-							type="datetime-local"
-							value={recordedAt}
-							onChange={(e) => setRecordedAt(e.target.value)}
-							className="w-full rounded-lg border p-2.5 text-sm"
+						{/* メモ */}
+						<div>
+							<label
+								htmlFor="notes"
+								className="block text-xs font-medium mb-1"
+								style={{ color: theme.colors.textSecondary }}
+							>
+								{t("vitals.notes")}
+							</label>
+							<textarea
+								id="notes"
+								value={notes}
+								onChange={(e) => setNotes(e.target.value)}
+								className="w-full rounded-lg border p-2.5 text-sm"
+								rows={2}
+								style={{
+									backgroundColor: theme.colors.surface,
+									borderColor: `${theme.colors.textSecondary}40`,
+									color: theme.colors.text,
+								}}
+								placeholder={t("vitals.notesPlaceholder")}
+							/>
+						</div>
+
+						{/* 保存ボタン */}
+						<button
+							type="button"
+							onClick={handleSave}
+							className="w-full rounded-lg p-3 font-medium text-white transition-all hover:scale-[1.02] active:scale-95"
 							style={{
-								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
+								backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
 							}}
-						/>
-					</div>
-
-					{/* メモ */}
-					<div>
-						<label
-							htmlFor="notes"
-							className="block text-xs font-medium mb-1"
-							style={{ color: theme.colors.textSecondary }}
 						>
-							{t("vitals.notes")}
-						</label>
-						<textarea
-							id="notes"
-							value={notes}
-							onChange={(e) => setNotes(e.target.value)}
-							className="w-full rounded-lg border p-2.5 text-sm"
-							rows={2}
-							style={{
-								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-							placeholder={t("vitals.notesPlaceholder")}
-						/>
+							{t("vitals.saveRecord")}
+						</button>
 					</div>
-
-					{/* 保存ボタン */}
-					<button
-						type="button"
-						onClick={handleSave}
-						className="w-full rounded-lg p-3 font-medium text-white transition-all hover:scale-[1.02] active:scale-95"
-						style={{
-							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
-						}}
-					>
-						{t("vitals.saveRecord")}
-					</button>
-				</div>
 				</GlassCard>
 
 				{/* Chart Section */}
@@ -350,7 +355,9 @@ export default function VitalsPage() {
 						<select
 							value={period}
 							onChange={(e) =>
-								setPeriod(e.target.value as "week" | "month" | "3months" | "year")
+								setPeriod(
+									e.target.value as "week" | "month" | "3months" | "year",
+								)
 							}
 							className="rounded-lg border px-3 py-1.5 text-xs font-medium"
 							style={{

@@ -5,7 +5,16 @@ import {
 	useCurrentAccount,
 	useWallets,
 } from "@mysten/dapp-kit";
-import { ArrowRight, Shield, Globe as GlobeIcon, Heart, Lock, Sparkles, Zap, Database } from "lucide-react";
+import {
+	ArrowRight,
+	Database,
+	Globe as GlobeIcon,
+	Heart,
+	Lock,
+	Shield,
+	Sparkles,
+	Zap,
+} from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -36,8 +45,8 @@ export default function LandingPage() {
 		const handleScroll = () => {
 			setIsScrolled(window.scrollY > 20);
 		};
-		window.addEventListener('scroll', handleScroll);
-		return () => window.removeEventListener('scroll', handleScroll);
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
 	const handleConnect = () => {
@@ -81,14 +90,24 @@ export default function LandingPage() {
 			{/* Animated Background Elements */}
 			<div className="fixed inset-0 overflow-hidden pointer-events-none">
 				<div className="absolute top-20 left-10 w-72 h-72 bg-teal-200/20 rounded-full blur-3xl animate-pulse"></div>
-				<div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-				<div className="absolute top-1/2 left-1/2 w-64 h-64 bg-coral-200/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+				<div
+					className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-200/20 rounded-full blur-3xl animate-pulse"
+					style={{ animationDelay: "1s" }}
+				></div>
+				<div
+					className="absolute top-1/2 left-1/2 w-64 h-64 bg-coral-200/10 rounded-full blur-3xl animate-pulse"
+					style={{ animationDelay: "2s" }}
+				></div>
 			</div>
 
 			{/* Floating Header with Glassmorphism */}
-			<header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-				isScrolled ? 'bg-white/70 backdrop-blur-xl shadow-lg shadow-teal-500/5' : 'bg-transparent'
-			}`}>
+			<header
+				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+					isScrolled
+						? "bg-white/70 backdrop-blur-xl shadow-lg shadow-teal-500/5"
+						: "bg-transparent"
+				}`}
+			>
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex justify-between items-center h-16 sm:h-20">
 						<div className="flex items-center gap-3 group cursor-pointer">
@@ -185,7 +204,7 @@ export default function LandingPage() {
 						{[
 							{ icon: Shield, label: "Secure & Private" },
 							{ icon: Lock, label: "Encrypted Data" },
-							{ icon: GlobeIcon, label: "Global Access" }
+							{ icon: GlobeIcon, label: "Global Access" },
 						].map((item, index) => (
 							<div
 								key={item.label}
@@ -215,34 +234,38 @@ export default function LandingPage() {
 					</div>
 
 					<div className="grid sm:grid-cols-2 gap-4 sm:gap-8 max-w-4xl mx-auto">
-						{(t.raw("landing.about.features") as string[]).map((feature, index) => {
-							const icons = [Database, Lock, Heart, Zap];
-							const Icon = icons[index % icons.length];
-							const gradients = [
-								'from-teal-500 to-cyan-500',
-								'from-cyan-500 to-blue-500',
-								'from-teal-600 to-emerald-500',
-								'from-cyan-600 to-teal-600'
-							];
+						{(t.raw("landing.about.features") as string[]).map(
+							(feature, index) => {
+								const icons = [Database, Lock, Heart, Zap];
+								const Icon = icons[index % icons.length];
+								const gradients = [
+									"from-teal-500 to-cyan-500",
+									"from-cyan-500 to-blue-500",
+									"from-teal-600 to-emerald-500",
+									"from-cyan-600 to-teal-600",
+								];
 
-							return (
-								<div
-									key={feature}
-									className="group relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-md border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
-									style={{ animationDelay: `${index * 100}ms` }}
-								>
-									<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/30 to-cyan-100/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+								return (
+									<div
+										key={feature}
+										className="group relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-md border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+										style={{ animationDelay: `${index * 100}ms` }}
+									>
+										<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/30 to-cyan-100/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-									<div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradients[index]} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-										<Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+										<div
+											className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradients[index]} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}
+										>
+											<Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+										</div>
+
+										<p className="relative text-sm sm:text-lg text-gray-700 leading-relaxed font-medium">
+											{feature}
+										</p>
 									</div>
-
-									<p className="relative text-sm sm:text-lg text-gray-700 leading-relaxed font-medium">
-										{feature}
-									</p>
-								</div>
-							);
-						})}
+								);
+							},
+						)}
 					</div>
 				</div>
 			</section>
@@ -265,7 +288,7 @@ export default function LandingPage() {
 						{[
 							{ step: "1", text: t("landing.howToStart.step1"), emoji: "👛" },
 							{ step: "2", text: t("landing.howToStart.step2"), emoji: "🎫" },
-							{ step: "3", text: t("landing.howToStart.step3"), emoji: "✨" }
+							{ step: "3", text: t("landing.howToStart.step3"), emoji: "✨" },
 						].map((item, index) => (
 							<div
 								key={item.step}
@@ -296,12 +319,17 @@ export default function LandingPage() {
 			<section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
 				<div className="absolute inset-0 bg-gradient-to-br from-teal-100/30 via-cyan-100/30 to-blue-100/30"></div>
 				<div className="absolute top-10 left-10 w-64 h-64 bg-teal-300/30 rounded-full blur-3xl animate-pulse"></div>
-				<div className="absolute bottom-10 right-10 w-80 h-80 bg-cyan-300/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+				<div
+					className="absolute bottom-10 right-10 w-80 h-80 bg-cyan-300/30 rounded-full blur-3xl animate-pulse"
+					style={{ animationDelay: "1s" }}
+				></div>
 
 				<div className="max-w-4xl mx-auto text-center relative z-10">
 					<div className="relative p-8 sm:p-12 rounded-3xl bg-white/40 backdrop-blur-2xl border-2 border-white/60 shadow-2xl shadow-teal-500/20">
 						<div className="absolute -top-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full shadow-lg">
-							<span className="text-white font-bold text-sm">🎉 Join Us Today!</span>
+							<span className="text-white font-bold text-sm">
+								🎉 Join Us Today!
+							</span>
 						</div>
 
 						<h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 mt-4">
@@ -323,7 +351,9 @@ export default function LandingPage() {
 								className="relative inline-flex items-center gap-3 px-10 sm:px-14 py-5 sm:py-6 text-base sm:text-lg font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
 							>
 								<Sparkles className="w-5 h-5 animate-pulse" />
-								<span>{isConnecting ? t("wallet.connecting") : "Start App Now"}</span>
+								<span>
+									{isConnecting ? t("wallet.connecting") : "Start App Now"}
+								</span>
 								<ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
 							</button>
 						</div>
@@ -415,11 +445,11 @@ export default function LandingPage() {
 					animation: gradient-slow 5s ease infinite;
 				}
 
-				.hover\:scale-102:hover {
+				.hover:scale-102:hover {
 					transform: scale(1.02);
 				}
 
-				.hover\:shadow-3xl:hover {
+				.hover:shadow-3xl:hover {
 					box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
 				}
 			`}</style>

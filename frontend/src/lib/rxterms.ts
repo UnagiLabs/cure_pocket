@@ -78,11 +78,17 @@ export async function searchDrugNames(
 			const rxcui = rxcuiArray[0] || undefined;
 
 			// Get strength from extra fields if available
-			const strengthsAndForms =
-				extraFields.STRENGTHS_AND_FORMS?.[index] || [];
+			const strengthsAndForms = extraFields.STRENGTHS_AND_FORMS?.[index] || [];
 			const strength = strengthsAndForms[0] || undefined;
 
-			console.log(`[RxTerms] Result ${index} - displayName:`, displayName, "rxcui:", rxcui, "strength:", strength);
+			console.log(
+				`[RxTerms] Result ${index} - displayName:`,
+				displayName,
+				"rxcui:",
+				rxcui,
+				"strength:",
+				strength,
+			);
 
 			return {
 				displayName,

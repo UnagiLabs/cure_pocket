@@ -355,7 +355,10 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 		return groups;
 	}, []);
 
-	const evaluateStatus = (value: number, field: LabFieldDefinition): EvaluationStatus => {
+	const evaluateStatus = (
+		value: number,
+		field: LabFieldDefinition,
+	): EvaluationStatus => {
 		const { refLow, refHigh } = field;
 
 		if (refLow != null && refHigh != null) {
@@ -777,12 +780,9 @@ export function LabForm({ onSaved, onCancel }: LabFormProps) {
 																	: "#6b7280",
 												}}
 											>
-												{row.status === "low" &&
-													t("labs.result.low")}
-												{row.status === "normal" &&
-													t("labs.result.normal")}
-												{row.status === "high" &&
-													t("labs.result.high")}
+												{row.status === "low" && t("labs.result.low")}
+												{row.status === "normal" && t("labs.result.normal")}
+												{row.status === "high" && t("labs.result.high")}
 												{row.status === "notEntered" &&
 													t("labs.result.notEntered")}
 											</span>
@@ -844,9 +844,7 @@ function LabInputRow({
 					{unit}
 				</span>
 			</div>
-			<div className="text-[11px] text-gray-500 md:text-xs">
-				{reference}
-			</div>
+			<div className="text-[11px] text-gray-500 md:text-xs">{reference}</div>
 		</div>
 	);
 }
