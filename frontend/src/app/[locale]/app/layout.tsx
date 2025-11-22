@@ -144,7 +144,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<Calendar size={20} strokeWidth={activeTab === "card" ? 2.5 : 2} />
-						<span className="font-medium">{t("tabs.records")}</span>
+						<span className="font-medium">{t("home.share")}</span>
 					</button>
 
 					<button
@@ -248,7 +248,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							<h1 className="text-2xl font-bold" style={{ color: theme.colors.text }}>
 								{activeTab === "home" && t("tabs.home")}
 								{activeTab === "vitals" && t("tabs.vitals")}
-								{activeTab === "card" && t("tabs.records")}
+								{activeTab === "card" && t("home.share")}
 								{activeTab === "files" && t("tabs.data")}
 								{activeTab === "profile" && t("tabs.profile")}
 								{activeTab === "add" && t("tabs.addNew")}
@@ -308,7 +308,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<Calendar size={24} strokeWidth={activeTab === "card" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">{t("tabs.records")}</span>
+						<span className="text-[10px] font-bold">{t("home.share")}</span>
 					</button>
 
 					<button
