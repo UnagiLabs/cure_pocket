@@ -9,10 +9,16 @@ import { v4 as uuidv4 } from "uuid";
 import { DiseaseSelect } from "@/components/forms/DiseaseSelect";
 import { useApp } from "@/contexts/AppContext";
 import { useCheckDataEntryExists } from "@/hooks/useCheckDataEntryExists";
-import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
+import {
+	type HealthDataTypes,
+	useEncryptAndStore,
+} from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import { profileToHealthData } from "@/lib/profileConverter";
+import {
+	historiesToConditions,
+	profileToBasicProfile,
+} from "@/lib/profileConverter";
 import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
 import type { AgeBand, MedicalHistory, PatientProfile } from "@/types";
@@ -52,22 +58,19 @@ export default function ConditionsPage() {
 		updateProfile,
 		medicalHistories,
 		setMedicalHistories,
-		medications,
 		allergies,
-		labResults,
-		imagingReports,
 	} = useApp();
 	const theme = useMemo(() => getTheme(settings.theme), [settings.theme]);
 
 	const { passport, has_passport } = usePassport();
 	const {
-		encryptAndStore,
+		encryptAndStoreMultiple,
 		isEncrypting,
 		progress,
 		error: _encryptError,
 	} = useEncryptAndStore();
 	const {
-		updatePassportData,
+		updateMultiplePassportData,
 		isUpdating,
 		error: _updateError,
 	} = useUpdatePassportData();
@@ -203,31 +206,59 @@ export default function ConditionsPage() {
 
 			const profileToSave = buildProfileForSave();
 
-			const healthData = profileToHealthData(
+			// Step 1: 保存するデータ型を準備
+			const dataItems: Array<{
+				data: HealthDataTypes;
+				dataType: "basic_profile" | "conditions";
+			}> = [];
+
+			// basic_profile は常に保存
+			const basicProfileData = profileToBasicProfile(
 				profileToSave,
-				medications,
 				allergies,
-				historiesToSave,
-				labResults,
-				imagingReports,
 				locale,
 			);
+			dataItems.push({
+				data: basicProfileData,
+				dataType: "basic_profile",
+			});
 
+			// conditions データがある場合のみ追加
+			if (!skipConditions && cleanedConditions.length > 0) {
+				const conditionsData = historiesToConditions(
+					profileToSave,
+					cleanedConditions,
+					locale,
+				);
+				dataItems.push({
+					data: conditionsData,
+					dataType: "conditions",
+				});
+			}
+
+			// Step 2: 並列暗号化とアップロード
 			const sealId = await generateSealId(currentAccount.address);
-			const { blobId } = await encryptAndStore(
-				healthData,
+			const encryptionResults = await encryptAndStoreMultiple(
+				dataItems,
 				sealId,
-				"basic_profile",
 			);
 
-			// オンチェーンの状態を確認してreplaceフラグを決定
-			const dataEntryExists = await checkExists(passport.id, "basic_profile");
+			// Step 3: 各データ型のオンチェーン存在チェック
+			const dataEntries = await Promise.all(
+				encryptionResults.map(async (result) => {
+					const exists = await checkExists(passport.id, result.dataType);
+					return {
+						dataType: result.dataType,
+						blobIds: [result.blobId],
+						replace: exists,
+					};
+				}),
+			);
 
-			await updatePassportData({
+			// Step 4: 1トランザクションで全データ型を登録
+			await updateMultiplePassportData({
 				passportId: passport.id,
-				dataType: "basic_profile",
-				blobIds: [blobId],
-				replace: dataEntryExists,
+				dataEntries,
 			});
 
 			updateProfile(profileToSave);

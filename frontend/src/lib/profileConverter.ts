@@ -13,15 +13,24 @@ import type {
 	MedicalHistory,
 	Medication,
 	PatientProfile,
+	VitalSign,
 } from "@/types";
 import type {
+	BasicProfileData,
 	Condition,
+	ConditionsData,
 	HealthData,
 	Allergy as HealthDataAllergy,
 	LabResult as HealthDataLabResult,
 	Medication as HealthDataMedication,
+	ImagingMetaData,
 	ImagingStudy,
+	LabResultsData,
 	LocalizedString,
+	MedicationsData,
+	MetaData,
+	SelfMetric,
+	SelfMetricsData,
 	UserProfile,
 } from "@/types/healthData";
 
@@ -95,7 +104,7 @@ function convertUserProfile(profile: PatientProfile): UserProfile {
 	};
 
 	// Add blood type if available
-	if (profile.bloodType && profile.bloodType !== "unknown") {
+	if (profile.bloodType && profile.bloodType !== "Unknown") {
 		userProfile.blood_type = profile.bloodType;
 	}
 
@@ -425,11 +434,9 @@ export function healthDataToPatientProfile(
 	const surgeries: PatientProfile["surgeries"] = [];
 
 	// Map HealthData blood_type to PatientProfile bloodType
-	// Both use "A", "B", "O", "AB", "unknown" format (no Rh factor)
+	// Both now use the same format with Rh factor (e.g., "A+", "B-", "Unknown")
 	const mappedBloodType: PatientProfile["bloodType"] =
-		bloodType && ["A", "B", "O", "AB"].includes(bloodType)
-			? (bloodType as "A" | "B" | "O" | "AB")
-			: "unknown";
+		bloodType as PatientProfile["bloodType"];
 
 	// Build PatientProfile
 	const profile: PatientProfile = {
@@ -513,4 +520,157 @@ export function profileToHealthData(
 		imaging: convertImagingStudies(imagingReports, locale),
 		allergies: convertAllergies(profile, locale),
 	};
+}
+
+// ==========================================
+// Data Type-Specific Conversion Functions (v2.0.0)
+// ==========================================
+
+/**
+ * Create metadata for data type-specific objects
+ */
+function createMetadata(): MetaData {
+	return {
+		schema_version: "2.0.0",
+		updated_at: Date.now(),
+		generator: "CurePocket_Web_v1",
+	};
+}
+
+/**
+ * Convert PatientProfile to BasicProfileData
+ *
+ * @param profile - Patient profile from form
+ * @param allergies - Allergy list from app state (UI format)
+ * @param locale - Locale for localized strings
+ * @returns BasicProfileData for encryption
+ */
+export function profileToBasicProfile(
+	profile: PatientProfile,
+	_allergies: Allergy[],
+	locale = "en",
+): BasicProfileData {
+	return {
+		meta: createMetadata(),
+		profile: convertUserProfile(profile),
+		allergies: convertAllergies(profile, locale),
+	};
+}
+
+/**
+ * Convert Medication list to MedicationsData
+ *
+ * @param medications - Medication list from app state
+ * @param locale - Locale for localized strings
+ * @returns MedicationsData for encryption
+ */
+export function medicationsToMedicationsData(
+	medications: Medication[],
+	locale = "en",
+): MedicationsData {
+	return {
+		meta: createMetadata(),
+		medications: convertMedications(medications, locale),
+	};
+}
+
+/**
+ * Convert MedicalHistory list to ConditionsData
+ *
+ * @param profile - Patient profile (for chronic conditions)
+ * @param medicalHistories - Medical history list from app state
+ * @param locale - Locale for localized strings
+ * @returns ConditionsData for encryption
+ */
+export function historiesToConditions(
+	profile: PatientProfile,
+	medicalHistories: MedicalHistory[],
+	locale = "en",
+): ConditionsData {
+	return {
+		meta: createMetadata(),
+		conditions: convertConditions(profile, medicalHistories, locale),
+	};
+}
+
+/**
+ * Convert LabResult list to LabResultsData
+ *
+ * @param labResults - Lab result list from app state
+ * @param locale - Locale for localized strings
+ * @returns LabResultsData for encryption
+ */
+export function labResultsToLabResultsData(
+	labResults: LabResult[],
+	locale = "en",
+): LabResultsData {
+	return {
+		meta: createMetadata(),
+		lab_results: convertLabResults(labResults, locale),
+	};
+}
+
+/**
+ * Convert ImagingReport list to ImagingMetaData
+ *
+ * @param imagingReports - Imaging report list from app state
+ * @param locale - Locale for localized strings
+ * @returns ImagingMetaData for encryption
+ */
+export function imagingReportsToImagingMeta(
+	imagingReports: ImagingReport[],
+	locale = "en",
+): ImagingMetaData {
+	return {
+		meta: createMetadata(),
+		imaging_meta: convertImagingStudies(imagingReports, locale),
+	};
+}
+
+/**
+ * Convert VitalSign list to SelfMetricsData
+ *
+ * @param vitalSigns - Vital sign list from app state
+ * @returns SelfMetricsData for encryption
+ */
+export function vitalsToSelfMetrics(vitalSigns: VitalSign[]): SelfMetricsData {
+	const selfMetrics: SelfMetric[] = vitalSigns.map((vital) => {
+		const metric: SelfMetric = {
+			id: vital.id,
+			metric_type: mapVitalType(vital.type),
+			recorded_at: vital.recordedAt,
+			unit: vital.unit,
+			notes: vital.notes,
+		};
+
+		// Handle blood pressure (has both systolic and diastolic)
+		if (vital.type === "blood-pressure" && vital.systolic && vital.diastolic) {
+			metric.systolic = vital.systolic;
+			metric.diastolic = vital.diastolic;
+		} else if (vital.value !== undefined) {
+			// Other metrics have a single value
+			metric.value = vital.value;
+		}
+
+		return metric;
+	});
+
+	return {
+		meta: createMetadata(),
+		self_metrics: selfMetrics,
+	};
+}
+
+/**
+ * Map VitalSignType to SelfMetric metric_type
+ */
+function mapVitalType(type: VitalSign["type"]): SelfMetric["metric_type"] {
+	const typeMap: Record<VitalSign["type"], SelfMetric["metric_type"]> = {
+		"blood-pressure": "blood_pressure",
+		"heart-rate": "heart_rate",
+		"blood-glucose": "blood_glucose",
+		temperature: "temperature",
+		weight: "weight",
+	};
+	return typeMap[type] || "other";
 }

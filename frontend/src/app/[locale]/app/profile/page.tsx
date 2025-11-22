@@ -292,11 +292,15 @@ export default function ProfilePage() {
 							}}
 						>
 							<option value="">{t("selectOptional")}</option>
-							<option value="A">A</option>
-							<option value="B">B</option>
-							<option value="O">O</option>
-							<option value="AB">AB</option>
-							<option value="unknown">{t("unknown")}</option>
+							<option value="A+">A+</option>
+							<option value="A-">A-</option>
+							<option value="B+">B+</option>
+							<option value="B-">B-</option>
+							<option value="AB+">AB+</option>
+							<option value="AB-">AB-</option>
+							<option value="O+">O+</option>
+							<option value="O-">O-</option>
+							<option value="Unknown">{t("unknown")}</option>
 						</select>
 					</div>
 				</div>

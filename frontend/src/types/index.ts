@@ -247,7 +247,16 @@ export interface PatientProfile {
 	gender: Gender;
 	country: CountryCode | null;
 	preferredLanguage: string | null;
-	bloodType?: "A" | "B" | "O" | "AB" | "unknown";
+	bloodType?:
+		| "A+"
+		| "A-"
+		| "B+"
+		| "B-"
+		| "AB+"
+		| "AB-"
+		| "O+"
+		| "O-"
+		| "Unknown";
 	heightCm?: number;
 	weightKg?: number;
 

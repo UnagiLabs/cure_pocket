@@ -209,8 +209,8 @@ export async function generateSealId(
  * @param params - Encryption parameters
  * @returns Encrypted data and symmetric key
  */
-export async function encryptHealthData(params: {
-	healthData: HealthData;
+export async function encryptHealthData<T = HealthData>(params: {
+	healthData: T;
 	sealClient: SealClient;
 	sealId: string; // hex string (without package prefix)
 	threshold?: number;
