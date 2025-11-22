@@ -249,6 +249,9 @@ strong {
   border-radius: 24px;
   padding: 40px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tech-stack h3 {
@@ -259,10 +262,16 @@ strong {
 
 .ui-mockup {
   margin-top: 2em;
+  width: 100%;
+  max-height: 360px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
 }
 
 .ui-mockup img {
   max-width: 100%;
+  max-height: 360px;
   border-radius: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border: 3px solid rgba(255, 255, 255, 0.3);
