@@ -3,7 +3,7 @@
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Activity, Droplet, Heart, Thermometer, Weight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
@@ -24,6 +24,7 @@ export default function VitalsPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
+	const searchParams = useSearchParams();
 	const { walletAddress, settings, vitalSigns, addVitalSign } = useApp();
 	const [selectedType, setSelectedType] = useState<VitalSignType>("blood-pressure");
 	const [period, setPeriod] = useState<"week" | "month" | "3months" | "year">("month");
@@ -36,6 +37,14 @@ export default function VitalsPage() {
 	const [value, setValue] = useState("");
 	const [recordedAt, setRecordedAt] = useState(new Date().toISOString().slice(0, 16));
 	const [notes, setNotes] = useState("");
+
+	// Set initial type from URL parameter
+	useEffect(() => {
+		const typeParam = searchParams.get("type") as VitalSignType | null;
+		if (typeParam && VITAL_TYPES.includes(typeParam)) {
+			setSelectedType(typeParam);
+		}
+	}, [searchParams]);
 
 	// Redirect if not connected
 	const isWalletConnected = currentAccount !== null;

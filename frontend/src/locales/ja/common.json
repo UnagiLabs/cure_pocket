@@ -73,7 +73,12 @@
 		"frequency": "頻度",
 		"startDate": "開始日",
 		"endDate": "終了日（任意）",
-		"reason": "理由"
+		"reason": "理由",
+		"vitalsDescription": "バイタルデータを記録",
+		"bloodPressureAdd": "血圧を記録",
+		"bloodGlucoseAdd": "血糖値を記録",
+		"temperatureAdd": "体温を記録",
+		"weightAdd": "体重を記録"
 	},
 	"medications": {
 		"title": "服用中のお薬",
