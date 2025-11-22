@@ -15,6 +15,10 @@ export function useCheckDataEntryExists() {
 	 */
 	const checkExists = useCallback(
 		async (passportId: string, dataType: string): Promise<boolean> => {
+			console.log(
+				`[CheckDataEntryExists] Checking existence: passportId=${passportId}, dataType=${dataType}`,
+			);
+
 			try {
 				const result = await suiClient.getDynamicFieldObject({
 					parentId: passportId,
@@ -24,14 +28,46 @@ export function useCheckDataEntryExists() {
 					},
 				});
 
-				// Dynamic Fieldが存在する場合、result.dataはnullではない
-				return result.data !== null;
-			} catch (error) {
-				// エラーが発生した場合は存在しないと判断
-				console.warn(
-					`[CheckDataEntryExists] Failed to check existence for ${dataType}:`,
-					error,
+				console.log(
+					`[CheckDataEntryExists] getDynamicFieldObject result:`,
+					JSON.stringify(result, null, 2),
 				);
+				console.log(
+					`[CheckDataEntryExists] result.data type: ${typeof result.data}, value:`,
+					result.data,
+				);
+
+				// Dynamic Fieldが存在する場合、result.dataはnullではない
+				// さらに、contentフィールドが存在することも確認
+				const exists =
+					result.data !== null &&
+					result.data !== undefined &&
+					result.data.content !== undefined;
+
+				console.log(`[CheckDataEntryExists] Final decision: exists=${exists}`);
+
+				return exists;
+			} catch (error) {
+				// Dynamic Field not foundエラーは正常（存在しない）
+				if (
+					error instanceof Error &&
+					error.message.includes("Dynamic field not found")
+				) {
+					console.log(
+						`[CheckDataEntryExists] Dynamic field not found for ${dataType} (expected for new data)`,
+					);
+					return false;
+				}
+
+				// その他のエラーの詳細をログ出力
+				console.warn(`[CheckDataEntryExists] Error occurred for ${dataType}:`);
+				console.warn(`  Error type: ${error?.constructor?.name}`);
+				console.warn(
+					`  Error message: ${error instanceof Error ? error.message : String(error)}`,
+				);
+				console.warn(`  Full error:`, error);
+
+				// 不明なエラーの場合も存在しないと判断（安全側に倒す）
 				return false;
 			}
 		},
