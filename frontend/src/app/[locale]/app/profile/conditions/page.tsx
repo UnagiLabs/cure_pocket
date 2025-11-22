@@ -212,7 +212,7 @@ export default function ConditionsPage() {
 			);
 
 			const sealId = await generateSealId(currentAccount.address);
-			const { blobId, dataType } = await encryptAndStore(
+			const { blobId } = await encryptAndStore(
 				healthData,
 				sealId,
 				"basic_profile",
