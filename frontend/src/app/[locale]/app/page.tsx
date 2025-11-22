@@ -233,7 +233,7 @@ export default function HomePage() {
 		<div className="space-y-8 pb-24 px-6 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
 			{/* Today's Vitals */}
 			<section className="mt-2">
-				<SectionTitle>今日のバイタル</SectionTitle>
+				<SectionTitle>{t("home.todayVitals")}</SectionTitle>
 				<div className="grid grid-cols-2 gap-4">
 					{/* Blood Pressure Card */}
 					<GlassCard
@@ -241,7 +241,7 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Heart size={14} className="text-[#FF6B6B]" /> 血圧
+							<Heart size={14} className="text-[#FF6B6B]" /> {t("vitals.bloodPressure")}
 						</div>
 						{bloodPressureVital ? (
 							<>
@@ -255,8 +255,8 @@ export default function HomePage() {
 									</div>
 								</div>
 								<div className="flex gap-2 text-xs">
-									<span className="text-slate-500">最高 {bloodPressureVital.systolic}</span>
-									<span className="text-slate-500">最低 {bloodPressureVital.diastolic}</span>
+									<span className="text-slate-500">{t("vitals.systolicShort")} {bloodPressureVital.systolic}</span>
+									<span className="text-slate-500">{t("vitals.diastolicShort")} {bloodPressureVital.diastolic}</span>
 								</div>
 							</>
 						) : (
@@ -271,8 +271,8 @@ export default function HomePage() {
 									</div>
 								</div>
 								<div className="flex gap-2 text-xs">
-									<span className="text-slate-500">最高 120</span>
-									<span className="text-slate-500">最低 90</span>
+									<span className="text-slate-500">{t("vitals.systolicShort")} 120</span>
+									<span className="text-slate-500">{t("vitals.diastolicShort")} 90</span>
 								</div>
 							</>
 						)}
@@ -284,7 +284,7 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Thermometer size={14} className="text-[#FF6B6B]" /> 体温
+							<Thermometer size={14} className="text-[#FF6B6B]" /> {t("vitals.temperature")}
 						</div>
 						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
 							{temperatureVital?.value || "36.2"}
@@ -301,7 +301,7 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Droplet size={14} style={{ color: theme.colors.primary }} /> 血糖値
+							<Droplet size={14} style={{ color: theme.colors.primary }} /> {t("vitals.bloodGlucose")}
 						</div>
 						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
 							{bloodGlucoseVital?.value || "96"}
@@ -318,7 +318,7 @@ export default function HomePage() {
 						onClick={() => router.push(`/${locale}/app/vitals`)}
 					>
 						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-							<Weight size={14} className="text-[#8B5CF6]" /> 体重
+							<Weight size={14} className="text-[#8B5CF6]" /> {t("vitals.weight")}
 						</div>
 						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
 							{weightVital?.value || "53"}
@@ -345,7 +345,7 @@ export default function HomePage() {
 						>
 							<QrCode size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">共有</span>
+						<span className="text-[10px] font-bold text-slate-500">{t("home.share")}</span>
 					</button>
 
 					<button
@@ -356,7 +356,7 @@ export default function HomePage() {
 						<div className="w-10 h-10 rounded-full bg-[#FF6B6B]/10 flex items-center justify-center text-[#FF6B6B]">
 							<Heart size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">緊急</span>
+						<span className="text-[10px] font-bold text-slate-500">{t("home.emergency")}</span>
 					</button>
 
 					<button
@@ -366,7 +366,7 @@ export default function HomePage() {
 						<div className="w-10 h-10 rounded-full bg-[#F6E05E]/20 flex items-center justify-center text-[#D69E2E]">
 							<Calendar size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">予約</span>
+						<span className="text-[10px] font-bold text-slate-500">{t("home.appointments")}</span>
 					</button>
 
 					<button
@@ -377,7 +377,7 @@ export default function HomePage() {
 						<div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
 							<Plus size={20} />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">記録</span>
+						<span className="text-[10px] font-bold text-slate-500">{t("home.records")}</span>
 					</button>
 				</div>
 			</section>
@@ -386,7 +386,7 @@ export default function HomePage() {
 			{recentUpdates.length > 0 && (
 				<section>
 					<SectionTitle action onActionClick={() => router.push(`/${locale}/app/add`)}>
-						直近の記録
+						{t("home.recentRecords")}
 					</SectionTitle>
 					<div className="relative pl-4 border-l-2 border-slate-100 ml-2 space-y-6">
 						{recentUpdates.map((update, index) => {

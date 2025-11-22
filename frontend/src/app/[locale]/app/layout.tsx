@@ -68,12 +68,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					</div>
 					<div>
 						<p className="text-xs" style={{ color: theme.colors.textSecondary }}>
-							こんにちは、
+							{t("home.greetingShort")}
 						</p>
 						<h1 className="text-lg font-bold leading-tight" style={{ color: theme.colors.text }}>
 							{walletAddress
 								? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-								: "ゲスト"}
+								: t("home.guest")}
 						</h1>
 					</div>
 				</div>
@@ -116,7 +116,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<Activity size={24} strokeWidth={activeTab === "home" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">ホーム</span>
+						<span className="text-[10px] font-bold">{t("tabs.home")}</span>
 					</button>
 
 					<button
@@ -128,7 +128,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<Calendar size={24} strokeWidth={activeTab === "card" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">記録</span>
+						<span className="text-[10px] font-bold">{t("tabs.records")}</span>
 					</button>
 
 					<button
@@ -151,7 +151,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<FileText size={24} strokeWidth={activeTab === "files" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">データ</span>
+						<span className="text-[10px] font-bold">{t("tabs.data")}</span>
 					</button>
 
 					<button
@@ -163,7 +163,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						}}
 					>
 						<User size={24} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
-						<span className="text-[10px] font-bold">私</span>
+						<span className="text-[10px] font-bold">{t("tabs.profile")}</span>
 					</button>
 				</div>
 			</nav>

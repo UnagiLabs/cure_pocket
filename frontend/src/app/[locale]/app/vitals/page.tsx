@@ -95,11 +95,11 @@ export default function VitalsPage() {
 	const handleSave = () => {
 		if (selectedType === "blood-pressure") {
 			if (!systolic || !diastolic) {
-				alert("最高血圧と最低血圧を入力してください");
+				alert("Please enter both systolic and diastolic blood pressure");
 				return;
 			}
 		} else if (!value) {
-			alert("値を入力してください");
+			alert("Please enter a value");
 			return;
 		}
 
@@ -179,7 +179,7 @@ export default function VitalsPage() {
 					className="text-sm font-bold mb-4 uppercase tracking-wider"
 					style={{ color: theme.colors.textSecondary }}
 				>
-					新しいデータを記録
+					{t("vitals.newRecord")}
 				</h3>
 
 				<div className="space-y-4">
@@ -306,7 +306,7 @@ export default function VitalsPage() {
 								borderColor: `${theme.colors.textSecondary}40`,
 								color: theme.colors.text,
 							}}
-							placeholder="メモを入力..."
+							placeholder={t("vitals.notesPlaceholder")}
 						/>
 					</div>
 
@@ -319,7 +319,7 @@ export default function VitalsPage() {
 							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
 						}}
 					>
-						記録を保存
+						{t("vitals.saveRecord")}
 					</button>
 				</div>
 			</GlassCard>
@@ -330,7 +330,7 @@ export default function VitalsPage() {
 					className="text-sm font-bold uppercase tracking-wider"
 					style={{ color: theme.colors.textSecondary }}
 				>
-					データ履歴
+					{t("vitals.dataHistory")}
 				</h3>
 				<select
 					value={period}
