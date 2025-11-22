@@ -614,23 +614,4 @@ entry fun revoke_consent_token(
 
 ---
 
-### 9.3 開発環境セットアップ
-
-```bash
-# Sui CLI確認
-sui --version
-
-# Move コンパイル
-cd contract
-sui move build
-
-# テスト実行
-sui move test
-
-# パッケージ公開
-sui client publish --gas-budget 100000000
-```
-
----
-
 **この要件定義書は「生きたドキュメント」です。実装過程で必要に応じて更新してください。**
