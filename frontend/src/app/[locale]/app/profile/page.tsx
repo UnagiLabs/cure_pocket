@@ -231,16 +231,21 @@ export default function ProfilePage() {
 			console.log("[ProfileSave] Step 3: Encrypting and uploading...");
 
 			// 6. Encrypt and upload to Walrus
-			const { blobId } = await encryptAndStore(healthData, sealId);
-			console.log(`[ProfileSave] Upload complete, blobId: ${blobId}`);
+			const { blobId, dataType } = await encryptAndStore(
+				healthData,
+				sealId,
+				"basic_profile", // データ種別
+			);
+			console.log(`[ProfileSave] Upload complete, blobId: ${blobId}, dataType: ${dataType}`);
 
 			console.log("[ProfileSave] Step 4: Updating passport on-chain...");
 
-			// 7. Update passport on-chain
+			// 7. Update passport on-chain with Dynamic Fields
 			await updatePassportData({
 				passportId: passport.id,
-				blobId,
-				sealId,
+				dataType: "basic_profile",
+				blobIds: [blobId], // Blob IDの配列
+				replace: true, // 既存のbasic_profileを置き換え
 			});
 			console.log("[ProfileSave] Passport updated successfully");
 
