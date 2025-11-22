@@ -212,12 +212,17 @@ export default function ConditionsPage() {
 			);
 
 			const sealId = await generateSealId(currentAccount.address);
-			const { blobId } = await encryptAndStore(healthData, sealId);
+			const { blobId, dataType } = await encryptAndStore(
+				healthData,
+				sealId,
+				"basic_profile",
+			);
 
 			await updatePassportData({
 				passportId: passport.id,
-				blobId,
-				sealId,
+				dataType: "basic_profile",
+				blobIds: [blobId],
+				replace: !!profile,
 			});
 
 			updateProfile(profileToSave);
