@@ -15,6 +15,7 @@ import {
 	QrCode,
 	Calendar,
 	ChevronRight,
+	Weight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -225,11 +226,113 @@ export default function HomePage() {
 
 	const temperatureVital = latestVitals.get("temperature");
 	const bloodGlucoseVital = latestVitals.get("blood-glucose");
+	const bloodPressureVital = latestVitals.get("blood-pressure");
+	const weightVital = latestVitals.get("weight");
 
 	return (
 		<div className="space-y-8 pb-24 px-6 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
-			{/* Quick Actions (Horizontal Scroll) */}
+			{/* Today's Vitals */}
 			<section className="mt-2">
+				<SectionTitle>今日のバイタル</SectionTitle>
+				<div className="grid grid-cols-2 gap-4">
+					{/* Blood Pressure Card */}
+					<GlassCard
+						className="flex flex-col gap-3 group cursor-pointer"
+						onClick={() => router.push(`/${locale}/app/vitals`)}
+					>
+						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+							<Heart size={14} className="text-[#FF6B6B]" /> 血圧
+						</div>
+						{bloodPressureVital ? (
+							<>
+								<div className="flex items-baseline gap-1">
+									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+										{bloodPressureVital.systolic}
+									</div>
+									<span className="text-sm opacity-60">/</span>
+									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+										{bloodPressureVital.diastolic}
+									</div>
+								</div>
+								<div className="flex gap-2 text-xs">
+									<span className="text-slate-500">最高 {bloodPressureVital.systolic}</span>
+									<span className="text-slate-500">最低 {bloodPressureVital.diastolic}</span>
+								</div>
+							</>
+						) : (
+							<>
+								<div className="flex items-baseline gap-1">
+									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+										120
+									</div>
+									<span className="text-sm opacity-60">/</span>
+									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+										90
+									</div>
+								</div>
+								<div className="flex gap-2 text-xs">
+									<span className="text-slate-500">最高 120</span>
+									<span className="text-slate-500">最低 90</span>
+								</div>
+							</>
+						)}
+					</GlassCard>
+
+					{/* Temperature Card */}
+					<GlassCard
+						className="flex flex-col gap-3 group cursor-pointer"
+						onClick={() => router.push(`/${locale}/app/vitals`)}
+					>
+						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+							<Thermometer size={14} className="text-[#FF6B6B]" /> 体温
+						</div>
+						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+							{temperatureVital?.value || "36.2"}
+							<span className="text-sm font-normal ml-1 opacity-60">°C</span>
+						</div>
+						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+							<div className="bg-[#FF6B6B] h-full rounded-full" style={{ width: `${((temperatureVital?.value || 36.2) - 35) * 50}%` }}></div>
+						</div>
+					</GlassCard>
+
+					{/* Blood Glucose Card */}
+					<GlassCard
+						className="flex flex-col gap-3 group cursor-pointer"
+						onClick={() => router.push(`/${locale}/app/vitals`)}
+					>
+						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+							<Droplet size={14} style={{ color: theme.colors.primary }} /> 血糖値
+						</div>
+						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+							{bloodGlucoseVital?.value || "96"}
+							<span className="text-sm font-normal ml-1 opacity-60">mg/dL</span>
+						</div>
+						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+							<div className="h-full rounded-full" style={{ backgroundColor: theme.colors.primary, width: `${Math.min((bloodGlucoseVital?.value || 96) / 2, 100)}%` }}></div>
+						</div>
+					</GlassCard>
+
+					{/* Weight Card */}
+					<GlassCard
+						className="flex flex-col gap-3 group cursor-pointer"
+						onClick={() => router.push(`/${locale}/app/vitals`)}
+					>
+						<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+							<Weight size={14} className="text-[#8B5CF6]" /> 体重
+						</div>
+						<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
+							{weightVital?.value || "53"}
+							<span className="text-sm font-normal ml-1 opacity-60">kg</span>
+						</div>
+						<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+							<div className="bg-[#8B5CF6] h-full rounded-full" style={{ width: `${Math.min((weightVital?.value || 53) / 100 * 100, 100)}%` }}></div>
+						</div>
+					</GlassCard>
+				</div>
+			</section>
+
+			{/* Quick Actions (Horizontal Scroll) */}
+			<section>
 				<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
 					<button
 						type="button"
@@ -276,89 +379,6 @@ export default function HomePage() {
 						</div>
 						<span className="text-[10px] font-bold text-slate-500">記録</span>
 					</button>
-				</div>
-			</section>
-
-			{/* Vitals Widgets */}
-			{(temperatureVital || bloodGlucoseVital) && (
-				<section>
-					<SectionTitle>今日のバイタル</SectionTitle>
-					<div className="grid grid-cols-2 gap-4">
-						{temperatureVital && (
-							<GlassCard className="flex flex-col gap-3">
-								<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-									<Thermometer size={14} className="text-[#FF6B6B]" /> 体温
-								</div>
-								<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
-									{temperatureVital.value}
-									<span className="text-sm font-normal ml-1 opacity-60">°C</span>
-								</div>
-								<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-									<div className="bg-[#FF6B6B] h-full rounded-full" style={{ width: `${((temperatureVital.value || 36) - 35) * 50}%` }}></div>
-								</div>
-							</GlassCard>
-						)}
-
-						{bloodGlucoseVital && (
-							<GlassCard className="flex flex-col gap-3">
-								<div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-									<Droplet size={14} style={{ color: theme.colors.primary }} /> 血糖値
-								</div>
-								<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
-									{bloodGlucoseVital.value}
-									<span className="text-sm font-normal ml-1 opacity-60">mg/dL</span>
-								</div>
-								<div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-									<div className="h-full rounded-full" style={{ backgroundColor: theme.colors.primary, width: `${Math.min((bloodGlucoseVital.value || 100) / 2, 100)}%` }}></div>
-								</div>
-							</GlassCard>
-						)}
-					</div>
-				</section>
-			)}
-
-			{/* Summary Cards Grid */}
-			<section>
-				<SectionTitle>健康データサマリー</SectionTitle>
-				<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-					{summaryCards.map((card) => {
-						const Icon = card.icon;
-						return (
-							<GlassCard
-								key={card.id}
-								onClick={() => {
-									const paths: Record<string, string> = {
-										medications: `/${locale}/app/medications`,
-										allergies: `/${locale}/app/allergies`,
-										histories: `/${locale}/app/histories`,
-										labs: `/${locale}/app/labs`,
-										imaging: `/${locale}/app/imaging`,
-										vitals: `/${locale}/app/vitals`,
-									};
-									router.push(paths[card.id] || `/${locale}/app`);
-								}}
-								className="flex flex-col gap-3 group"
-							>
-								<div className="flex items-center justify-between">
-									<div
-										className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-										style={{ backgroundColor: `${card.color}20`, color: card.color }}
-									>
-										<Icon size={20} />
-									</div>
-									<ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
-								</div>
-								<div>
-									<div className="text-2xl font-bold font-inter" style={{ color: theme.colors.text }}>
-										{card.count}
-									</div>
-									<div className="text-xs font-bold text-slate-500 mt-1">
-										{card.title}
-									</div>
-								</div>
-							</GlassCard>
-						);
-					})}
 				</div>
 			</section>
 
