@@ -14,6 +14,7 @@
 - `lab_results`: CSV（カンマ区切り固定）1本以上（採血1回=1レコード行）
 - `imaging_meta`: JSON 1本以上（1スタディ=1Blob想定）
 - `imaging_binary`: DICOMまたはZIP（シリーズやインスタンスの実体）複数
+- `self_metrics`: CSV（カンマ区切り固定）1本以上（日常記録: 血圧・体重など）
 
 SBT（MedicalPassport）側では各種ごとに複数の Blob ID を Dynamic Field で管理する：
 
@@ -24,7 +25,8 @@ passport
   ├─ conditions    : [blob_id_latest]
   └─ lab_results   : [blob_id_2025-11-21, blob_id_2025-08-01, ...]
   ├─ imaging_meta  : [blob_id_meta_study1, blob_id_meta_study2, ...]
-  └─ imaging_binary: [blob_id_dicom001, blob_id_zip_seriesA, ...]
+  ├─ imaging_binary: [blob_id_dicom001, blob_id_zip_seriesA, ...]
+  └─ self_metrics  : [blob_id_metrics_2025-11, blob_id_metrics_2025-10, ...]
 ```
 
 ## 2. 採用する標準規格
@@ -159,6 +161,28 @@ collected_on,loinc_code,value,unit,ref_low,ref_high,flag,notes
 - DICOM/ZIP/PNG いずれも UTF-8 でファイル名を付ける場合はASCIIに揃えると安全。
 - `imaging_binary` には複数Blobを登録可能。シリーズ単位ZIPと個別DICOMを併存させてもよい。
 
+### 3.6 日常記録データ（self_metrics, CSV）
+
+日々のバイタル・計測データを1行1記録で保持。カンマ区切り固定、ヘッダー必須。
+
+列定義（順序固定、不要項目は空欄可）:
+1. `recorded_at` : 測定日時 (ISO8601; もしくは YYYY-MM-DDTHH:MM)
+2. `metric`      : 計測種別（例: "blood_pressure", "weight", "pulse", "temperature"）
+3. `systolic`    : 収縮期血圧 mmHg（血圧以外は空）
+4. `diastolic`   : 拡張期血圧 mmHg（血圧以外は空）
+5. `pulse`       : 脈拍 bpm（任意）
+6. `value`       : 数値（体重・体温などをここに格納）
+7. `unit`        : 単位（例: "kg", "°C", "bpm"）
+8. `notes`       : 任意メモ（カンマを含む場合はダブルクオート）
+
+CSV例:
+```
+recorded_at,metric,systolic,diastolic,pulse,value,unit,notes
+2025-11-22T07:30:00Z,blood_pressure,128,82,72,,,"morning"
+2025-11-22T07:31:00Z,weight,,,,62.4,kg,
+2025-11-22T07:32:00Z,temperature,,,,36.7,°C,
+```
+
 ## 4. バリデーション指針
 
 - 日付は `YYYY-MM-DD`、コードは大文字で保存する。
@@ -170,7 +194,8 @@ collected_on,loinc_code,value,unit,ref_low,ref_high,flag,notes
 - lab_results: CSV はヘッダー行必須・8列固定（不足/超過列はNG）。
 - imaging_meta: 必須フィールド `study_uid` / `modality` / `body_site` / `series[*].series_uid` / `series[*].modality` / `series[*].instance_blobs[*].dicom_blob_id` / `schema_version` を満たすこと。
 - imaging_binary: 中身が拡張子に適合すること（DICOM/ZIP）。
-- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions` / `lab_results` / `imaging_meta` / `imaging_binary`）を必ず指定する。
+- self_metrics: CSV はヘッダー行必須・8列固定（不足/超過列はNG）。
+- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions` / `lab_results` / `imaging_meta` / `imaging_binary` / `self_metrics`）を必ず指定する。
 
 ## 5. 更新ポリシー
 
