@@ -46,6 +46,8 @@ Cure Pocketは、**世界中どこでも使える個人用ヘルスパスポー�
 - **プライバシー保護**: 医療データはオフチェーン暗号化保存
 - **グローバル対応**: 国際標準準拠（ISO 3166-1 alpha-2）
 - **回復可能**: ウォレット紛失時の管理者による移行機能
+- **統計提供の明示同意**: パスポートに`analytics_opt_in`フラグを保持
+- **柔軟なデータ参照**: 医療データのWalrus Blob IDをパスポート配下のDynamic Fieldsで種別ごとに管理
 
 ---
 
@@ -121,11 +123,9 @@ sequenceDiagram
     participant SEAL as Seal
 
     User->>UI: 医療データ登録
-    UI->>WALRUS: 暗号化データアップロード
-    WALRUS-->>UI: blob_id
     UI->>SEAL: 暗号鍵生成
     SEAL-->>UI: seal_id
-    UI->>ACC: mint_medical_passport(blob_id, seal_id, country_code)
+    UI->>ACC: mint_medical_passport(seal_id, country_code, analytics_opt_in)
     ACC->>REG: has_passport確認
     REG-->>ACC: false
     ACC->>MP: create_passport_internal
@@ -145,9 +145,9 @@ sequenceDiagram
 ```move
 public struct MedicalPassport has key {
     id: object::UID,
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
 }
 ```
 
@@ -156,9 +156,9 @@ public struct MedicalPassport has key {
 | フィールド | 型 | 説明 | 制約 |
 |-----------|----|----|------|
 | `id` | `object::UID` | Suiオブジェクト識別子 | 自動生成 |
-| `walrus_blob_id` | `String` | Walrus上の暗号化医療データID | 非空文字列 |
 | `seal_id` | `String` | Seal暗号化システムの鍵/ポリシーID | 非空文字列 |
 | `country_code` | `String` | 発行国コード（ISO 3166-1 alpha-2） | 非空文字列（例: "JP", "US"） |
+| `analytics_opt_in` | `bool` | 匿名統計データ提供可否フラグ | 必須（true/false） |
 
 #### Soulbound実装の仕組み
 
@@ -222,6 +222,16 @@ PassportRegistry.id (UID)
 
 ---
 
+### 3.3 データエントリ参照（Dynamic Fields）
+
+- `MedicalPassport` 本体は `seal_id`・`country_code`・`analytics_opt_in` のみを保持し、医療データ本体は保持しない。
+- 薬・検査値・画像・病歴など各データ種の Walrus Blob ID は、パスポート配下の Dynamic Fields で管理する。
+  - 例: `"medication" -> vector<String>`、`"lab" -> vector<String>`、`"imaging" -> vector<String>` など
+- Dynamic Fields により、データ種ごとに複数の Blob ID を柔軟に追加・更新できる。
+- Seal による暗号/復号はデータ種単位で実行し、フロントエンドは種別を指定して対応する Blob を取得・復号する。
+
+---
+
 ### 3.4 AdminCap（管理者権限）
 
 ```move
@@ -260,7 +270,9 @@ public struct PassportMigrationEvent has copy, drop {
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    walrus_blob_id: String,
+    seal_id: String,
+    country_code: String,
+    analytics_opt_in: bool,
     timestamp_ms: u64,
 }
 ```
@@ -272,7 +284,9 @@ public struct PassportMigrationEvent has copy, drop {
 | `old_owner` | `address` | 移行元ウォレットアドレス |
 | `new_owner` | `address` | 移行先ウォレットアドレス |
 | `passport_id` | `object::ID` | 移行されたパスポートのオブジェクトID |
-| `walrus_blob_id` | `String` | 継承されたWalrus blob ID |
+| `seal_id` | `String` | 継承されたSeal ID |
+| `country_code` | `String` | 継承された国コード |
+| `analytics_opt_in` | `bool` | 継承された統計データ提供可否 |
 | `timestamp_ms` | `u64` | 移行実行時刻（Unix timestamp, ミリ秒） |
 
 #### 用途
@@ -299,7 +313,7 @@ public struct PassportMigrationEvent has copy, drop {
 
 - **FR-1.1**: 誰でもセルフmintできる（AdminCap不要）
 - **FR-1.2**: 1ウォレット1枚まで（二重mint禁止）
-- **FR-1.3**: 必須フィールド: `walrus_blob_id`, `seal_id`, `country_code`（すべて非空文字列）
+- **FR-1.3**: 必須フィールド: `seal_id`、`country_code`（非空文字列）と `analytics_opt_in`（bool）
 - **FR-1.4**: mint後のパスポートはSoulbound（譲渡不可）
 - **FR-1.5**: mint後のパスポートはユーザーアドレスに自動転送
 
@@ -312,7 +326,7 @@ sequenceDiagram
     participant MP as medical_passport.move
     participant REG as PassportRegistry
 
-    User->>ACC: mint_medical_passport(registry, blob_id, seal_id, country_code)
+    User->>ACC: mint_medical_passport(registry, seal_id, country_code, analytics_opt_in)
     ACC->>REG: has_passport(user_address)?
     alt 既に所持
         REG-->>ACC: true
@@ -320,7 +334,7 @@ sequenceDiagram
     else 未所持
         REG-->>ACC: false
         ACC->>MP: create_passport_internal
-        MP->>MP: バリデーション（非空文字列）
+        MP->>MP: バリデーション（非空文字列: seal_id, country_code）
         alt バリデーションエラー
             MP-->>ACC: abort: E_EMPTY_*
         else OK
@@ -354,7 +368,7 @@ sequenceDiagram
 
 #### 詳細要件
 
-- **FR-2.1**: 個別フィールド取得（`walrus_blob_id`, `seal_id`, `country_code`）
+- **FR-2.1**: 個別フィールド取得（`seal_id`, `country_code`, `analytics_opt_in`）
 - **FR-2.2**: 一括フィールド取得（`get_all_fields`）
 - **FR-2.3**: 所有状態確認（`has_passport`）
 - **FR-2.4**: すべてのgetter関数はimmutable参照で動作
@@ -417,10 +431,10 @@ sequenceDiagram
 
 | 関数名 | 戻り値 | 用途 |
 |--------|--------|------|
-| `get_walrus_blob_id` | `&String` | Walrus blob ID取得 |
 | `get_seal_id` | `&String` | Seal ID取得 |
 | `get_country_code` | `&String` | 国コード取得 |
-| `get_all_fields` | `(&String, &String, &String)` | 全フィールド一括取得 |
+| `get_analytics_opt_in` | `bool` | 統計データ提供可否取得 |
+| `get_all_fields` | `(&String, &String, bool)` | 全フィールド一括取得 |
 | `has_passport` | `bool` | 所有状態確認 |
 
 #### 受け入れ基準
@@ -445,7 +459,7 @@ sequenceDiagram
 
 - **FR-3.1**: AdminCapを持つ管理者のみ実行可能
 - **FR-3.2**: 移行先はパスポート未所持であること
-- **FR-3.3**: データ継承（`walrus_blob_id`, `seal_id`, `country_code`）
+- **FR-3.3**: データ継承（`seal_id`, `country_code`, `analytics_opt_in`）
 - **FR-3.4**: 移行元のパスポートは削除（burn）
 - **FR-3.5**: 移行イベントを発行（監査証跡）
 - **FR-3.6**: マーカーの原子的更新（移行元削除、移行先登録）
@@ -469,12 +483,12 @@ sequenceDiagram
         REG-->>ADM: false
         ADM->>REG: unregister_passport_by_owner(old_owner)
         ADM->>MP: get_passport_data(passport)
-        MP-->>ADM: (blob_id, seal_id, country_code)
+        MP-->>ADM: (seal_id, country_code, analytics_opt_in)
         ADM->>Clock: timestamp_ms()
         Clock-->>ADM: timestamp
         ADM->>MP: emit_migration_event
         ADM->>MP: burn_passport(passport)
-        ADM->>MP: create_passport_internal(blob_id, seal_id, country_code)
+        ADM->>MP: create_passport_internal(seal_id, country_code, analytics_opt_in)
         MP-->>ADM: new_passport
         ADM->>MP: transfer_to(new_owner)
         ADM->>REG: register_passport_with_id(new_passport_id, new_owner)
@@ -598,9 +612,9 @@ sequenceDiagram
 ```move
 entry fun mint_medical_passport(
     registry: &mut PassportRegistry,
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 )
 ```
@@ -609,10 +623,10 @@ entry fun mint_medical_passport(
 |------|------|
 | **権限** | 誰でも呼び出し可能（AdminCap不要） |
 | **制約** | 1ウォレット1枚まで |
-| **引数** | `registry`: 共有PassportRegistry<br/>`walrus_blob_id`: Walrus blob ID（非空）<br/>`seal_id`: Seal ID（非空）<br/>`country_code`: 国コード（非空） |
+| **引数** | `registry`: 共有PassportRegistry<br/>`seal_id`: Seal ID（非空）<br/>`country_code`: 国コード（非空）<br/>`analytics_opt_in`: 匿名統計データ提供可否（bool） |
 | **戻り値** | なし（entryなのでvoid） |
 | **副作用** | パスポート作成<br/>tx送信者に転送<br/>Registryに登録 |
-| **エラー** | `E_ALREADY_HAS_PASSPORT (4)`: 既に所持<br/>`E_EMPTY_WALRUS_BLOB_ID (1)`: blob_idが空<br/>`E_EMPTY_SEAL_ID (2)`: seal_idが空<br/>`E_EMPTY_COUNTRY_CODE (3)`: country_codeが空 |
+| **エラー** | `E_ALREADY_HAS_PASSPORT (3)`: 既に所持<br/>`E_EMPTY_SEAL_ID (1)`: seal_idが空<br/>`E_EMPTY_COUNTRY_CODE (2)`: country_codeが空 |
 
 **使用例（PTB）**:
 ```typescript
@@ -620,9 +634,9 @@ tx.moveCall({
   target: `${PACKAGE_ID}::accessor::mint_medical_passport`,
   arguments: [
     tx.object(PASSPORT_REGISTRY_ID),
-    tx.pure.string("walrus_blob_abc123"),
     tx.pure.string("seal_xyz789"),
     tx.pure.string("JP"),
+    tx.pure.bool(true),
   ],
 });
 ```
@@ -630,20 +644,6 @@ tx.moveCall({
 ---
 
 #### 6.1.2 Getter関数群
-
-##### get_walrus_blob_id
-
-```move
-public fun get_walrus_blob_id(passport: &MedicalPassport): &String
-```
-
-| 項目 | 内容 |
-|------|------|
-| **権限** | 誰でも呼び出し可能 |
-| **引数** | `passport`: MedicalPassportへのimmutable参照 |
-| **戻り値** | Walrus blob IDへの参照 |
-
----
 
 ##### get_seal_id
 
@@ -673,17 +673,31 @@ public fun get_country_code(passport: &MedicalPassport): &String
 
 ---
 
-##### get_all_fields
+##### get_analytics_opt_in
 
 ```move
-public fun get_all_fields(passport: &MedicalPassport): (&String, &String, &String)
+public fun get_analytics_opt_in(passport: &MedicalPassport): bool
 ```
 
 | 項目 | 内容 |
 |------|------|
 | **権限** | 誰でも呼び出し可能 |
 | **引数** | `passport`: MedicalPassportへのimmutable参照 |
-| **戻り値** | `(walrus_blob_id, seal_id, country_code)`のタプル |
+| **戻り値** | 統計データ提供可否（bool） |
+
+---
+
+##### get_all_fields
+
+```move
+public fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool)
+```
+
+| 項目 | 内容 |
+|------|------|
+| **権限** | 誰でも呼び出し可能 |
+| **引数** | `passport`: MedicalPassportへのimmutable参照 |
+| **戻り値** | `(seal_id, country_code, analytics_opt_in)`のタプル |
 
 ---
 
@@ -760,9 +774,9 @@ if (result.effects.status.status === 'success') {
 public fun admin_mint_medical_passport(
     _admin: &AdminCap,
     registry: &mut PassportRegistry,
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 )
 ```
@@ -771,10 +785,10 @@ public fun admin_mint_medical_passport(
 |------|------|
 | **権限** | AdminCapを所有している者のみ |
 | **機能** | accessor.moveのmintと同じだが、管理者権限が必要 |
-| **引数** | `_admin`: AdminCapへの参照（権限証明）<br/>`registry`: 共有PassportRegistry<br/>`walrus_blob_id`: Walrus blob ID（非空）<br/>`seal_id`: Seal ID（非空）<br/>`country_code`: 国コード（非空） |
+| **引数** | `_admin`: AdminCapへの参照（権限証明）<br/>`registry`: 共有PassportRegistry<br/>`seal_id`: Seal ID（非空）<br/>`country_code`: 国コード（非空）<br/>`analytics_opt_in`: 匿名統計データ提供可否（bool） |
 | **戻り値** | なし |
 | **副作用** | パスポート作成<br/>tx送信者に転送<br/>Registryに登録 |
-| **エラー** | `E_ALREADY_HAS_PASSPORT (4)`: 既に所持<br/>`E_EMPTY_WALRUS_BLOB_ID (1)`: blob_idが空<br/>`E_EMPTY_SEAL_ID (2)`: seal_idが空<br/>`E_EMPTY_COUNTRY_CODE (3)`: country_codeが空 |
+| **エラー** | `E_ALREADY_HAS_PASSPORT (3)`: 既に所持<br/>`E_EMPTY_SEAL_ID (1)`: seal_idが空<br/>`E_EMPTY_COUNTRY_CODE (2)`: country_codeが空 |
 
 ---
 
@@ -804,7 +818,7 @@ public fun migrate_passport(
 **動作フロー詳細**:
 1. 移行先の状態チェック（`has_passport`）
 2. 移行元の所有マーカーを削除（`unregister_passport_by_owner`）
-3. パスポートデータを取得（`get_passport_data`）
+3. パスポートデータを取得（`get_passport_data`：seal_id, country_code, analytics_opt_in）
 4. 移行イベントを構築・発行（`emit_migration_event`）
 5. 元のパスポートを削除（`burn_passport`）
 6. 同じデータで新しいパスポートを作成（`create_passport_internal`）
@@ -822,9 +836,9 @@ public fun migrate_passport(
 
 ```move
 public(package) fun create_passport_internal(
-    walrus_blob_id: String,
     seal_id: String,
     country_code: String,
+    analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 ): MedicalPassport
 ```
@@ -832,7 +846,7 @@ public(package) fun create_passport_internal(
 | 項目 | 内容 |
 |------|------|
 | **用途** | パスポート作成（バリデーション込み） |
-| **バリデーション** | `walrus_blob_id`非空チェック<br/>`seal_id`非空チェック<br/>`country_code`非空チェック |
+| **バリデーション** | `seal_id`非空チェック<br/>`country_code`非空チェック |
 | **戻り値** | 新しい`MedicalPassport` |
 
 ---
@@ -879,13 +893,15 @@ public(package) fun is_passport_owner(
 #### 6.3.4 移行サポート
 
 ```move
-public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, String)
+public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, bool)
 public(package) fun burn_passport(passport: MedicalPassport)
 public(package) fun emit_migration_event(
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    walrus_blob_id: String,
+    seal_id: String,
+    country_code: String,
+    analytics_opt_in: bool,
     timestamp_ms: u64
 )
 ```
@@ -931,11 +947,10 @@ public(package) fun seal_approve_patient_only_internal(
 
 | コード | 定数名 | 説明 | 発生条件 | 対処方法 |
 |-------|--------|------|---------|---------|
-| **1** | `E_EMPTY_WALRUS_BLOB_ID` | Walrus blob IDが空文字列 | mint時に`walrus_blob_id`が空 | 有効なblob IDを指定 |
-| **2** | `E_EMPTY_SEAL_ID` | Seal IDが空文字列 | mint時に`seal_id`が空 | 有効なseal IDを指定 |
-| **3** | `E_EMPTY_COUNTRY_CODE` | 国コードが空文字列 | mint時に`country_code`が空 | 有効な国コード（例: "JP"）を指定 |
-| **4** | `E_ALREADY_HAS_PASSPORT` | 既にパスポートを所持している | 同じアドレスが2回mint | 既存パスポートを使用 |
-| **5** | `E_MIGRATION_TARGET_HAS_PASSPORT` | 移行先が既にパスポートを所持 | 移行先アドレスが既に所持 | 別のアドレスに移行 |
+| **1** | `E_EMPTY_SEAL_ID` | Seal IDが空文字列 | mint時に`seal_id`が空 | 有効なseal IDを指定 |
+| **2** | `E_EMPTY_COUNTRY_CODE` | 国コードが空文字列 | mint時に`country_code`が空 | 有効な国コード（例: "JP"）を指定 |
+| **3** | `E_ALREADY_HAS_PASSPORT` | 既にパスポートを所持している | 同じアドレスが2回mint | 既存パスポートを使用 |
+| **4** | `E_MIGRATION_TARGET_HAS_PASSPORT` | 移行先が既にパスポートを所持 | 移行先アドレスが既に所持 | 別のアドレスに移行 |
 | **102** | `E_NO_ACCESS` | アクセス拒否（Sealアクセス制御） | Sealアクセス制御で所有者以外が復号リクエスト | パスポート所有者のみが復号リクエスト可能 |
 
 ### 7.2 エラーハンドリング例（TypeScript）
@@ -952,8 +967,8 @@ try {
     // E_ALREADY_HAS_PASSPORT
     console.error('既にパスポートを所持しています');
   } else if (error.message.includes('abort code: 1')) {
-    // E_EMPTY_WALRUS_BLOB_ID
-    console.error('Walrus blob IDが無効です');
+    // E_EMPTY_SEAL_ID
+    console.error('Seal IDが無効です');
   }
   // その他のエラーハンドリング
 }
@@ -970,9 +985,6 @@ try {
 **検証タイミング**: `create_passport_internal()`実行時
 
 ```move
-// walrus_blob_id
-assert!(!string::is_empty(&walrus_blob_id), E_EMPTY_WALRUS_BLOB_ID);
-
 // seal_id
 assert!(!string::is_empty(&seal_id), E_EMPTY_SEAL_ID);
 
@@ -1075,9 +1087,8 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 
 | Test ID | テスト名 | 検証内容 | 期待エラー | ステータス |
 |---------|---------|---------|-----------|-----------|
-| **TEST-4** | 空blob_id | 空のwalrus_blob_id | abort code 1 | Pass |
-| **TEST-5** | 空seal_id | 空のseal_id | abort code 2 | Pass |
-| **TEST-6** | 空country_code | 空のcountry_code | abort code 3 | Pass |
+| **TEST-4** | 空seal_id | 空のseal_id | abort code 1 | Pass |
+| **TEST-5** | 空country_code | 空のcountry_code | abort code 2 | Pass |
 
 ---
 
@@ -1156,7 +1167,7 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 - 空文字列バリデーション
 
 #### データアクセス
-- 個別フィールドgetter（`walrus_blob_id`, `seal_id`, `country_code`）
+- 個別フィールドgetter（`seal_id`, `country_code`, `analytics_opt_in`）
 - 一括取得getter（`get_all_fields`）
 - 所有状態確認（`has_passport`）
 
@@ -1164,7 +1175,7 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 - 管理者による紛失対応移行
 - 移行先の状態チェック（1ウォレット1枚制約遵守）
 - 元パスポートのburn
-- データ継承（`walrus_blob_id`, `seal_id`, `country_code`を保持）
+- データ継承（`seal_id`, `country_code`, `analytics_opt_in`を保持）
 - 移行イベント発行（監査証跡）
 - マーカー管理（移行元削除、移行先登録）
 
@@ -1207,16 +1218,17 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 
 #### Phase 2: データ管理システム
 
-- **MedicalVault**: データインデックス管理
-- **MedicationEntry**: 薬剤データ
-- **LabEntry**: 検査値データ
-- **ImagingEntry**: 画像データ
-- **HistoryEntry**: 手術歴・病歴データ
+- **Dynamic Fieldベースのインデックス**: MedicalPassport配下のDynamic FieldsにWalrus Blob IDを格納
+- **MedicationEntry**: 薬剤データ（Blob参照）
+- **LabEntry**: 検査値データ（Blob参照）
+- **ImagingEntry**: 画像データ（Blob参照）
+- **HistoryEntry**: 手術歴・病歴データ（Blob参照）
 
 #### Phase 3: アクセス制御
 
 - **ConsentToken**: 閲覧権限管理 ✅ **実装済み（v1.2.0）**
 - **時限付きアクセス権**: 有効期限付き閲覧許可 ✅ **実装済み（ConsentTokenに含まれる）**
+- **データ種別ごとの一時復号鍵付与**: Seal で医療者にカテゴリー単位の復号権を付与
 
 #### Phase 4: データ経済
 
@@ -1245,7 +1257,6 @@ assert!(is_passport_owner(registry, passport_id, sender), E_NO_ACCESS);
 ```
 cure_pocket/
 |-- medical_passport.move (既存)
-|-- medical_vault.move (新規)
 |-- consent_token.move (新規)
 |-- analytics_pool.move (新規)
 +-- fhir_adapter.move (新規)
@@ -1254,15 +1265,9 @@ cure_pocket/
 #### 11.2.2 データモデル拡張
 
 ```move
-// 将来の拡張例
-public struct MedicalVault has key {
-    id: object::UID,
-    passport_id: object::ID,
-    medications: vector<MedicationEntry>,
-    lab_results: vector<LabEntry>,
-    imaging: vector<ImagingEntry>,
-    histories: vector<HistoryEntry>,
-}
+// 将来の拡張例（パスポート配下のDynamic FieldsでBlob参照を管理）
+// フィールドキー例: b"medication", b"lab", b"imaging", b"history"
+// 値例: vector<String> (Walrus Blob IDのリスト)
 ```
 
 ---
