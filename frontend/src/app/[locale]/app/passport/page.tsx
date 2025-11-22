@@ -14,7 +14,7 @@ import { getTheme } from "@/lib/themes";
  * ウォレット接続後、最初に訪れるページ
  */
 export default function PassportPage() {
-	const _t = useTranslations();
+	const t = useTranslations("passport");
 	const router = useRouter();
 	const locale = useLocale();
 	const { settings, walletAddress, profile } = useApp();
@@ -94,10 +94,10 @@ export default function PassportPage() {
 						className="mb-2 text-3xl font-bold"
 						style={{ color: theme.colors.text }}
 					>
-						メディカルパスポート
+						{t("title")}
 					</h1>
 					<p className="text-sm" style={{ color: theme.colors.textSecondary }}>
-						あなたの医療情報を安全に管理するパスポートを発行します
+						{t("subtitle")}
 					</p>
 				</div>
 
@@ -119,7 +119,7 @@ export default function PassportPage() {
 								className="text-sm"
 								style={{ color: theme.colors.textSecondary }}
 							>
-								パスポート状態を確認中...
+								{t("messages.checking")}
 							</span>
 						</div>
 					</div>
@@ -137,7 +137,7 @@ export default function PassportPage() {
 								style={{ color: "#EF4444" }}
 							/>
 							<h3 className="text-lg font-bold" style={{ color: "#DC2626" }}>
-								エラーが発生しました
+								{t("messages.errorTitle")}
 							</h3>
 						</div>
 						<p
@@ -152,7 +152,7 @@ export default function PassportPage() {
 							className="w-full rounded-lg p-3 text-sm font-medium text-white"
 							style={{ backgroundColor: "#EF4444" }}
 						>
-							再読み込み
+							{t("actions.reload")}
 						</button>
 					</div>
 				) : is_mint_success || passport_status.has_passport ? (
@@ -169,16 +169,14 @@ export default function PassportPage() {
 								style={{ color: "#10B981" }}
 							/>
 							<h3 className="text-lg font-bold" style={{ color: "#059669" }}>
-								パスポート発行完了！
+								{t("messages.successTitle")}
 							</h3>
 						</div>
 						<p
 							className="mb-4 text-center text-sm"
 							style={{ color: "#047857" }}
 						>
-							メディカルパスポートが正常に発行されました。
-							<br />
-							プロフィール登録画面へ移動します...
+							{t("messages.successBody")}
 						</p>
 						<div className="flex justify-center">
 							<Loader2
@@ -200,23 +198,24 @@ export default function PassportPage() {
 								className="mb-2 font-bold"
 								style={{ color: theme.colors.text }}
 							>
-								パスポートとは？
+								{t("faq.title")}
 							</h3>
 							<p
 								className="mb-4 text-sm leading-relaxed"
 								style={{ color: theme.colors.textSecondary }}
 							>
-								メディカルパスポートは、あなたの医療データを安全に管理するためのデジタル証明書です。
-								Suiブロックチェーン上に発行され、あなただけがアクセスできます。
+								{t("faq.description")}
 							</p>
 							<div
 								className="space-y-2 text-sm"
 								style={{ color: theme.colors.textSecondary }}
 							>
-								<p>✅ 医療データの安全な管理</p>
-								<p>✅ グローバルアクセス可能</p>
-								<p>✅ プライバシー保護</p>
-								<p>✅ QRコードで簡単共有</p>
+								{(Array.isArray(t.raw("faq.points"))
+									? (t.raw("faq.points") as string[])
+									: []
+								).map((point) => (
+									<p key={point}>✅ {point}</p>
+								))}
 							</div>
 						</div>
 
@@ -242,10 +241,10 @@ export default function PassportPage() {
 							{is_mint_pending ? (
 								<span className="flex items-center justify-center">
 									<Loader2 className="mr-2 h-5 w-5 animate-spin" />
-									発行中...
+									{t("actions.minting")}
 								</span>
 							) : (
-								"パスポートを発行する"
+								t("actions.mint")
 							)}
 						</button>
 
@@ -259,7 +258,7 @@ export default function PassportPage() {
 								border: `1px solid ${theme.colors.textSecondary}40`,
 							}}
 						>
-							戻る
+							{t("actions.back")}
 						</button>
 					</div>
 				)}

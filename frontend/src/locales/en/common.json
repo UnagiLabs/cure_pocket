@@ -124,6 +124,8 @@
 		"connectionFailed": "Failed to connect wallet. Please try again."
 	},
 	"passport": {
+		"title": "Medical Passport",
+		"subtitle": "Issue a passport to securely manage your medical information.",
 		"mintSuccessTitle": "Passport minted successfully",
 		"mintSuccessDescription": "Your medical passport has been issued successfully.",
 		"checkTransaction": "View transaction →",
@@ -134,7 +136,29 @@
 		"minting": "Minting...",
 		"mintButton": "Mint passport",
 		"hasPassportTitle": "Passport is ready",
-		"hasPassportDescription": "Your medical passport is issued and active."
+		"hasPassportDescription": "Your medical passport is issued and active.",
+		"messages": {
+			"checking": "Checking passport status...",
+			"errorTitle": "An error occurred",
+			"successTitle": "Passport issued!",
+			"successBody": "Your Medical Passport has been issued. Redirecting to profile setup..."
+		},
+		"actions": {
+			"reload": "Reload",
+			"mint": "Issue passport",
+			"minting": "Issuing...",
+			"back": "Back"
+		},
+		"faq": {
+			"title": "What is a passport?",
+			"description": "The Medical Passport is a digital credential on the Sui blockchain that securely manages your medical data. Only you can access it.",
+			"points": [
+				"Secure management of medical data",
+				"Global access",
+				"Privacy protection",
+				"Easy sharing via QR code"
+			]
+		}
 	},
 	"themes": {
 		"classic-blue": "Classic Blue",
@@ -269,7 +293,116 @@
 		"vital": "Vital Sign"
 	},
 	"profile": {
-		"name": "Name"
+		"title": "Profile Settings",
+		"description": "Initial setup after issuing your passport. Enter basic info now and add disease details on the next screen.",
+		"basicInfo": "Basic Information",
+		"birthDate": "Date of Birth",
+		"gender": "Gender",
+		"genders": {
+			"male": "Male",
+			"female": "Female",
+			"other": "Other",
+			"unknown": "Prefer not to say"
+		},
+		"country": "Nationality",
+		"selectPlaceholder": "Please select",
+		"bloodType": "Blood Type",
+		"selectOptional": "Not selected",
+		"unknown": "Unknown",
+		"allergy": "Allergies",
+		"allergySelectPlaceholder": "Choose a common allergy",
+		"allergyOther": "Other",
+		"allergyOtherPlaceholder": "Enter other allergies",
+		"add": "Add",
+		"nextToConditions": "Continue to Disease Information",
+		"allergyOptions": {
+			"peanut": "Peanut",
+			"shellfish": "Shellfish",
+			"egg": "Egg",
+			"milk": "Milk",
+			"buckwheat": "Buckwheat",
+			"wheat": "Wheat",
+			"penicillin": "Medication (e.g., Penicillin)",
+			"latex": "Latex"
+		},
+		"countries": {
+			"JP": "Japan",
+			"US": "United States",
+			"CN": "China",
+			"KR": "South Korea",
+			"TW": "Taiwan",
+			"HK": "Hong Kong",
+			"SG": "Singapore",
+			"TH": "Thailand",
+			"VN": "Vietnam",
+			"PH": "Philippines",
+			"ID": "Indonesia",
+			"MY": "Malaysia",
+			"IN": "India",
+			"BD": "Bangladesh",
+			"PK": "Pakistan",
+			"AE": "United Arab Emirates",
+			"SA": "Saudi Arabia",
+			"EG": "Egypt",
+			"ZA": "South Africa",
+			"NG": "Nigeria",
+			"KE": "Kenya",
+			"GB": "United Kingdom",
+			"FR": "France",
+			"DE": "Germany",
+			"ES": "Spain",
+			"IT": "Italy",
+			"NL": "Netherlands",
+			"SE": "Sweden",
+			"CH": "Switzerland",
+			"AU": "Australia",
+			"NZ": "New Zealand",
+			"CA": "Canada",
+			"MX": "Mexico",
+			"BR": "Brazil",
+			"AR": "Argentina",
+			"CL": "Chile",
+			"other": "Other"
+		}
+	},
+	"conditions": {
+		"title": "Disease Information",
+		"description": "Organize diseases with ICD-10 codes. If unsure, you can skip and add later.",
+		"add": "Add",
+		"resolved": {
+			"title": "Past illnesses (resolved)",
+			"description": "Enter resolved illnesses with resolution date and ICD-10 code if known."
+		},
+		"active": {
+			"title": "Current illnesses (under treatment)",
+			"description": "Add active illnesses with ICD-10 codes when possible."
+		},
+		"fields": {
+			"diagnosisPlaceholder": "Enter condition name",
+			"icd10": "ICD-10 Code",
+			"icdExample": "e.g., E11.9",
+			"icdExampleActive": "e.g., I10",
+			"onset": "Onset date",
+			"resolved": "Resolved date",
+			"notesPlaceholder": "Notes (course, treatment, etc.)",
+			"notesActivePlaceholder": "Notes on treatment or symptoms"
+		},
+		"messages": {
+			"saved": "Saved",
+			"encrypting": "Encrypting data...",
+			"uploading": "Uploading to Walrus...",
+			"updating": "Updating passport...",
+			"noPassport": "Passport not issued. Please issue it before saving."
+		},
+		"errors": {
+			"wallet": "Wallet is not connected",
+			"passport": "Passport not issued. Please issue it first.",
+			"saveFailed": "Failed to save disease information"
+		},
+		"actions": {
+			"later": "Register later",
+			"save": "Save"
+		}
 	},
 	"landing": {
 		"about": {

@@ -124,6 +124,8 @@
 		"connectionFailed": "ウォレット接続に失敗しました。もう一度お試しください。"
 	},
 	"passport": {
+		"title": "メディカルパスポート",
+		"subtitle": "医療情報を安全に管理するパスポートを発行します。",
 		"mintSuccessTitle": "パスポート発行成功",
 		"mintSuccessDescription": "メディカルパスポートが正常に発行されました。",
 		"checkTransaction": "トランザクションを確認 →",
@@ -134,7 +136,29 @@
 		"minting": "発行中...",
 		"mintButton": "パスポートを発行する",
 		"hasPassportTitle": "パスポートを所持しています",
-		"hasPassportDescription": "メディカルパスポートが正常に発行されています。"
+		"hasPassportDescription": "メディカルパスポートが正常に発行されています。",
+		"messages": {
+			"checking": "パスポート状態を確認中...",
+			"errorTitle": "エラーが発生しました",
+			"successTitle": "パスポート発行完了！",
+			"successBody": "メディカルパスポートが発行されました。プロフィール登録へ移動します..."
+		},
+		"actions": {
+			"reload": "再読み込み",
+			"mint": "パスポートを発行する",
+			"minting": "発行中...",
+			"back": "戻る"
+		},
+		"faq": {
+			"title": "パスポートとは？",
+			"description": "メディカルパスポートは、Suiブロックチェーン上で医療データを安全に管理するためのデジタル証明書です。アクセスできるのはあなただけです。",
+			"points": [
+				"医療データの安全な管理",
+				"グローバルアクセス",
+				"プライバシー保護",
+				"QRコードで簡単共有"
+			]
+		}
 	},
 	"themes": {
 		"classic-blue": "クラシックブルー",
@@ -269,7 +293,117 @@
 		"vital": "バイタルデータ"
 	},
 	"profile": {
+		"title": "プロフィール設定",
+		"description": "パスポート発行後の初期設定です。基本情報を入力し、疾病情報は次の画面で登録できます。",
+		"basicInfo": "基本情報",
+		"birthDate": "生年月日",
+		"gender": "性別",
+		"genders": {
+			"male": "男性",
+			"female": "女性",
+			"other": "その他",
+			"unknown": "回答しない"
+		},
+		"country": "国籍",
+		"selectPlaceholder": "選択してください",
+		"bloodType": "血液型",
+		"selectOptional": "選択しない",
+		"unknown": "不明",
+		"allergy": "アレルギー",
+		"allergySelectPlaceholder": "主要なアレルギーを選択",
+		"allergyOther": "その他",
+		"allergyOtherPlaceholder": "その他のアレルギーを入力",
+		"add": "追加",
+		"nextToConditions": "疾病情報の登録へ進む",
+		"allergyOptions": {
+			"peanut": "ピーナッツ",
+			"shellfish": "甲殻類",
+			"egg": "卵",
+			"milk": "乳",
+			"buckwheat": "そば",
+			"wheat": "小麦",
+			"penicillin": "薬剤（ペニシリンなど）",
+			"latex": "ラテックス"
+		},
+		"countries": {
+			"JP": "日本",
+			"US": "アメリカ合衆国",
+			"CN": "中国",
+			"KR": "韓国",
+			"TW": "台湾",
+			"HK": "香港",
+			"SG": "シンガポール",
+			"TH": "タイ",
+			"VN": "ベトナム",
+			"PH": "フィリピン",
+			"ID": "インドネシア",
+			"MY": "マレーシア",
+			"IN": "インド",
+			"BD": "バングラデシュ",
+			"PK": "パキスタン",
+			"AE": "アラブ首長国連邦",
+			"SA": "サウジアラビア",
+			"EG": "エジプト",
+			"ZA": "南アフリカ",
+			"NG": "ナイジェリア",
+			"KE": "ケニア",
+			"GB": "イギリス",
+			"FR": "フランス",
+			"DE": "ドイツ",
+			"ES": "スペイン",
+			"IT": "イタリア",
+			"NL": "オランダ",
+			"SE": "スウェーデン",
+			"CH": "スイス",
+			"AU": "オーストラリア",
+			"NZ": "ニュージーランド",
+			"CA": "カナダ",
+			"MX": "メキシコ",
+			"BR": "ブラジル",
+			"AR": "アルゼンチン",
+			"CL": "チリ",
+			"other": "その他"
+		},
 		"name": "名前"
+	},
+	"conditions": {
+		"title": "疾病情報",
+		"description": "ICD-10分類で疾病情報を整理します。入力が難しい場合は「後で登録」でスキップできます。",
+		"add": "追加",
+		"resolved": {
+			"title": "既往歴（完治したもの）",
+			"description": "完治日やICD-10コードが分かれば入力してください。"
+		},
+		"active": {
+			"title": "現病歴（治療中）",
+			"description": "治療中の疾病をICD-10コード付きで登録してください。"
+		},
+		"fields": {
+			"diagnosisPlaceholder": "疾患名を入力",
+			"icd10": "ICD-10コード",
+			"icdExample": "例: E11.9",
+			"icdExampleActive": "例: I10",
+			"onset": "発症日",
+			"resolved": "完治日",
+			"notesPlaceholder": "メモ（経過、治療内容など）",
+			"notesActivePlaceholder": "治療内容や症状のメモ"
+		},
+		"messages": {
+			"saved": "保存しました",
+			"encrypting": "データを暗号化中...",
+			"uploading": "Walrusにアップロード中...",
+			"updating": "パスポートを更新中...",
+			"noPassport": "パスポートが発行されていません。保存する前に発行してください。"
+		},
+		"errors": {
+			"wallet": "ウォレットが接続されていません",
+			"passport": "パスポートが発行されていません。先にパスポートを発行してください。",
+			"saveFailed": "疾病情報の保存に失敗しました"
+		},
+		"actions": {
+			"later": "後で登録",
+			"save": "保存する"
+		}
 	},
 	"landing": {
 		"about": {
