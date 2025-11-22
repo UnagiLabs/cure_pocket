@@ -354,55 +354,63 @@ export default function HomePage() {
 				</div>
 			</section>
 
-			{/* Quick Actions (Horizontal Scroll) */}
+			{/* Quick Actions */}
 			<section>
-				<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
+				<div className="max-w-4xl mx-auto">
+					<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide lg:overflow-visible lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-6">
 					<button
 						type="button"
 						onClick={() => router.push(`/${locale}/app/card`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 					>
 						<div
-							className="w-10 h-10 rounded-full flex items-center justify-center"
+							className="w-10 h-10 rounded-full flex items-center justify-center lg:w-14 lg:h-14"
 							style={{ backgroundColor: `${theme.colors.primary}20`, color: theme.colors.primary }}
 						>
-							<QrCode size={20} />
+							<QrCode className="w-5 h-5 lg:w-7 lg:h-7" />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">{t("home.share")}</span>
+						<span className="text-[10px] font-bold text-slate-500 lg:text-sm">{t("home.share")}</span>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => router.push(`/${locale}/app/medications`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 					>
-						<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
-							<Package size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] lg:w-14 lg:h-14">
+							<Package className="w-5 h-5 lg:w-7 lg:h-7" />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight">{t("home.medicationNotebook")}</span>
+						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
+							{t("home.medicationNotebook")}
+						</span>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => router.push(`/${locale}/app/add/lab`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 					>
-						<div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]">
-							<FlaskConical size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B] lg:w-14 lg:h-14">
+							<FlaskConical className="w-5 h-5 lg:w-7 lg:h-7" />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500">{t("home.labResults")}</span>
+						<span className="text-[10px] font-bold text-slate-500 lg:text-sm">
+							{t("home.labResults")}
+						</span>
 					</button>
 
 					<button
 						type="button"
 						onClick={() => router.push(`/${locale}/app/add/imaging`)}
-						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
+						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 					>
-						<div className="w-10 h-10 rounded-full bg-[#8B5CF6]/10 flex items-center justify-center text-[#8B5CF6]">
-							<Scan size={20} />
+						<div className="w-10 h-10 rounded-full bg-[#8B5CF6]/10 flex items-center justify-center text-[#8B5CF6] lg:w-14 lg:h-14">
+							<Scan className="w-5 h-5 lg:w-7 lg:h-7" />
 						</div>
-						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight">{t("home.imagingData")}</span>
+						<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
+							{t("home.imagingData")}
+						</span>
 					</button>
+				</div>
 				</div>
 			</section>
 
