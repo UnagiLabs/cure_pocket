@@ -1,66 +1,55 @@
 "use client";
 
-import { BarChart3, List, Plus, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { Activity, Droplet, Heart, Thermometer, Weight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { VitalForm } from "@/components/forms/VitalForm";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import VitalSignChart from "@/components/VitalSignChart";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
-import type { VitalSignType } from "@/types";
+import type { VitalSign, VitalSignType } from "@/types";
 
-/**
- * バイタルデータ一覧ページ
- * グラフとリストの両方を表示し、同一画面で追加も行う
- */
+// 4種類のバイタルのみサポート
+const VITAL_TYPES: VitalSignType[] = [
+	"blood-pressure",
+	"temperature",
+	"blood-glucose",
+	"weight",
+];
+
 export default function VitalsPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const searchParams = useSearchParams();
-	const { vitalSigns, settings } = useApp();
+	const { walletAddress, settings, vitalSigns, addVitalSign } = useApp();
+	const [selectedType, setSelectedType] = useState<VitalSignType>("blood-pressure");
+	const [period, setPeriod] = useState<"week" | "month" | "3months" | "year">("month");
 	const theme = getTheme(settings.theme);
+	const currentAccount = useCurrentAccount();
 
-	const [viewMode, setViewMode] = useState<"graph" | "list">("graph");
-	const [selectedType, setSelectedType] = useState<VitalSignType | "all">(
-		"all",
-	);
-	const [period, setPeriod] = useState<"week" | "month" | "3months" | "year">(
-		"month",
-	);
-	const [isAddOpen, setIsAddOpen] = useState(false);
+	// Form state
+	const [systolic, setSystolic] = useState("");
+	const [diastolic, setDiastolic] = useState("");
+	const [value, setValue] = useState("");
+	const [recordedAt, setRecordedAt] = useState(new Date().toISOString().slice(0, 16));
+	const [notes, setNotes] = useState("");
 
+	// Redirect if not connected
+	const isWalletConnected = currentAccount !== null;
 	useEffect(() => {
-		setIsAddOpen(searchParams.get("mode") === "add");
-	}, [searchParams]);
+		if (!walletAddress && !isWalletConnected) {
+			router.push(`/${locale}`);
+		}
+	}, [walletAddress, isWalletConnected, router, locale]);
 
-	// タイプ別にデータをグループ化
-	const dataByType = useMemo(() => {
-		const grouped: Record<VitalSignType, typeof vitalSigns> = {
-			"blood-pressure": [],
-			"heart-rate": [],
-			"blood-glucose": [],
-			temperature: [],
-			weight: [],
-		};
-
-		vitalSigns.forEach((vital) => {
-			if (grouped[vital.type]) {
-				grouped[vital.type].push(vital);
-			}
-		});
-
-		return grouped;
-	}, [vitalSigns]);
-
-	// タイプに応じたラベルを取得
-	const getTypeLabel = (vitalType: VitalSignType): string => {
-		switch (vitalType) {
+	// Helper functions
+	const getTypeLabel = (type: VitalSignType): string => {
+		switch (type) {
 			case "blood-pressure":
 				return t("vitals.bloodPressure");
-			case "heart-rate":
-				return t("vitals.heartRate");
 			case "blood-glucose":
 				return t("vitals.bloodGlucose");
 			case "temperature":
@@ -72,334 +61,305 @@ export default function VitalsPage() {
 		}
 	};
 
-	// 表示するデータを取得
-	const displayData = useMemo(() => {
-		if (selectedType === "all") {
-			return vitalSigns;
+	const getUnit = (type: VitalSignType): string => {
+		switch (type) {
+			case "blood-pressure":
+				return "mmHg";
+			case "blood-glucose":
+				return "mg/dL";
+			case "temperature":
+				return "°C";
+			case "weight":
+				return "kg";
+			default:
+				return "";
 		}
-		return vitalSigns.filter((vital) => vital.type === selectedType);
-	}, [vitalSigns, selectedType]);
-
-	// 期間でフィルタリング
-	const periodFilteredData = useMemo(() => {
-		const now = new Date();
-		const periodMs = {
-			week: 7 * 24 * 60 * 60 * 1000,
-			month: 30 * 24 * 60 * 60 * 1000,
-			"3months": 90 * 24 * 60 * 60 * 1000,
-			year: 365 * 24 * 60 * 60 * 1000,
-		};
-
-		const cutoff = new Date(now.getTime() - periodMs[period]);
-
-		return displayData.filter((vital) => {
-			const recordedDate = new Date(vital.recordedAt);
-			return recordedDate >= cutoff;
-		});
-	}, [displayData, period]);
-
-	// ソート済みデータ
-	const sortedData = useMemo(() => {
-		return [...periodFilteredData].sort(
-			(a, b) =>
-				new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
-		);
-	}, [periodFilteredData]);
-
-	const vitalTypes: VitalSignType[] = [
-		"blood-pressure",
-		"heart-rate",
-		"blood-glucose",
-		"temperature",
-		"weight",
-	];
-
-	const openAdd = () => {
-		setIsAddOpen(true);
-		const params = new URLSearchParams(searchParams.toString());
-		params.set("mode", "add");
-		router.replace(`/${locale}/app/vitals?${params.toString()}`);
 	};
 
-	const closeAdd = () => {
-		setIsAddOpen(false);
-		const params = new URLSearchParams(searchParams.toString());
-		params.delete("mode");
-		const query = params.toString();
-		router.replace(`/${locale}/app/vitals${query ? `?${query}` : ""}`);
+	const getIcon = (type: VitalSignType) => {
+		switch (type) {
+			case "blood-pressure":
+				return <Heart size={20} className="text-[#FF6B6B]" />;
+			case "temperature":
+				return <Thermometer size={20} className="text-[#4ECDC4]" />;
+			case "blood-glucose":
+				return <Droplet size={20} className="text-[#95E1D3]" />;
+			case "weight":
+				return <Weight size={20} className="text-[#FFE66D]" />;
+			default:
+				return <Activity size={20} />;
+		}
+	};
+
+	// Handle save
+	const handleSave = () => {
+		if (selectedType === "blood-pressure") {
+			if (!systolic || !diastolic) {
+				alert("最高血圧と最低血圧を入力してください");
+				return;
+			}
+		} else if (!value) {
+			alert("値を入力してください");
+			return;
+		}
+
+		const vitalSign: VitalSign = {
+			id: crypto.randomUUID(),
+			type: selectedType,
+			recordedAt: new Date(recordedAt).toISOString(),
+			unit: getUnit(selectedType),
+			notes: notes || undefined,
+		};
+
+		if (selectedType === "blood-pressure") {
+			vitalSign.systolic = Number.parseFloat(systolic);
+			vitalSign.diastolic = Number.parseFloat(diastolic);
+		} else {
+			vitalSign.value = Number.parseFloat(value);
+		}
+
+		addVitalSign(vitalSign);
+
+		// Reset form
+		setSystolic("");
+		setDiastolic("");
+		setValue("");
+		setNotes("");
+		setRecordedAt(new Date().toISOString().slice(0, 16));
 	};
 
 	return (
-		<div className="p-4 md:p-6 space-y-6">
+		<div className="px-6 py-4 space-y-6 pb-32">
 			{/* Header */}
-			<div className="mb-6 flex items-center justify-between md:mb-8">
-				<h1
-					className="text-xl font-bold md:text-2xl"
-					style={{ color: theme.colors.text }}
-				>
-					{t("vitals.title")}
-				</h1>
-				<button
-					type="button"
-					onClick={openAdd}
-					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
-					style={{ backgroundColor: theme.colors.primary }}
-				>
-					<Plus className="h-4 w-4" />
-					{t("vitals.add")}
-				</button>
-			</div>
+			<SectionTitle>{t("vitals.title")}</SectionTitle>
 
-			{/* Controls */}
-			<div className="mb-6 space-y-4 md:flex md:items-center md:justify-between md:gap-4 md:space-y-0">
-				{/* タイプ選択 */}
-				<div className="flex flex-wrap gap-2">
+			{/* Vital Type Tabs */}
+			<div className="grid grid-cols-4 gap-2">
+				{VITAL_TYPES.map((type) => (
 					<button
+						key={type}
 						type="button"
-						onClick={() => setSelectedType("all")}
-						className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-							selectedType === "all" ? "text-white" : "border-2"
+						onClick={() => setSelectedType(type)}
+						className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+							selectedType === type
+								? "shadow-md scale-105"
+								: "opacity-60 hover:opacity-100"
 						}`}
-						style={
-							selectedType === "all"
-								? { backgroundColor: theme.colors.primary }
-								: {
-										borderColor: `${theme.colors.textSecondary}40`,
-										color: theme.colors.text,
-									}
-						}
-					>
-						{t("dataTypes.vital")}
-					</button>
-					{vitalTypes.map((type) => (
-						<button
-							type="button"
-							key={type}
-							onClick={() => setSelectedType(type)}
-							className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-								selectedType === type ? "text-white" : "border-2"
-							}`}
-							style={
-								selectedType === type
-									? { backgroundColor: theme.colors.primary }
-									: {
-											borderColor: `${theme.colors.textSecondary}40`,
-											color: theme.colors.text,
-										}
-							}
-						>
-							{getTypeLabel(type)}
-						</button>
-					))}
-				</div>
-
-				{/* 期間選択と表示モード */}
-				<div className="flex items-center gap-2">
-					<select
-						value={period}
-						onChange={(e) =>
-							setPeriod(e.target.value as "week" | "month" | "3months" | "year")
-						}
-						className="rounded-lg border-2 p-2 text-sm"
 						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
+							backgroundColor:
+								selectedType === type
+									? `${theme.colors.primary}15`
+									: `${theme.colors.surface}80`,
+							borderWidth: selectedType === type ? "2px" : "1px",
+							borderColor:
+								selectedType === type
+									? theme.colors.primary
+									: `${theme.colors.textSecondary}20`,
 						}}
 					>
-						<option value="week">{t("vitals.period.week")}</option>
-						<option value="month">{t("vitals.period.month")}</option>
-						<option value="3months">{t("vitals.period.3months")}</option>
-						<option value="year">{t("vitals.period.year")}</option>
-					</select>
-
-					<div
-						className="flex rounded-lg border-2"
-						style={{ borderColor: `${theme.colors.textSecondary}40` }}
-					>
-						<button
-							type="button"
-							onClick={() => setViewMode("graph")}
-							className={`rounded-l-lg p-2 transition-colors ${
-								viewMode === "graph" ? "text-white" : ""
-							}`}
-							style={
-								viewMode === "graph"
-									? { backgroundColor: theme.colors.primary }
-									: {
-											backgroundColor: theme.colors.surface,
-											color: theme.colors.text,
-										}
-							}
+						{getIcon(type)}
+						<span
+							className="text-[10px] font-bold text-center leading-tight"
+							style={{
+								color:
+									selectedType === type
+										? theme.colors.primary
+										: theme.colors.textSecondary,
+							}}
 						>
-							<BarChart3 className="h-4 w-4" />
-						</button>
-						<button
-							type="button"
-							onClick={() => setViewMode("list")}
-							className={`rounded-r-lg p-2 transition-colors ${
-								viewMode === "list" ? "text-white" : ""
-							}`}
-							style={
-								viewMode === "list"
-									? { backgroundColor: theme.colors.primary }
-									: {
-											backgroundColor: theme.colors.surface,
-											color: theme.colors.text,
-										}
-							}
-						>
-							<List className="h-4 w-4" />
-						</button>
-					</div>
-				</div>
+							{getTypeLabel(type)}
+						</span>
+					</button>
+				))}
 			</div>
 
-			{/* Content */}
-			{sortedData.length === 0 ? (
-				<div
-					className="flex h-64 items-center justify-center rounded-lg"
-					style={{ backgroundColor: theme.colors.surface }}
+			{/* Input Form */}
+			<GlassCard>
+				<h3
+					className="text-sm font-bold mb-4 uppercase tracking-wider"
+					style={{ color: theme.colors.textSecondary }}
 				>
-					<p style={{ color: theme.colors.textSecondary }}>
-						{t("vitals.noData")}
-					</p>
-				</div>
-			) : viewMode === "graph" ? (
-				<div className="space-y-8">
-					{selectedType === "all" ? (
-						vitalTypes.map((type) => {
-							if (dataByType[type].length === 0) return null;
-							return (
-								<div
-									key={type}
-									className="rounded-xl p-4 shadow-sm md:p-6"
-									style={{ backgroundColor: theme.colors.surface }}
-								>
-									<VitalSignChart
-										vitalSigns={vitalSigns}
-										type={type}
-										period={period}
-										themeId={settings.theme}
-									/>
-								</div>
-							);
-						})
-					) : (
-						<div
-							className="rounded-xl p-4 shadow-sm md:p-6"
-							style={{ backgroundColor: theme.colors.surface }}
-						>
-							<VitalSignChart
-								vitalSigns={vitalSigns}
-								type={selectedType}
-								period={period}
-								themeId={settings.theme}
-							/>
-						</div>
-					)}
-				</div>
-			) : (
-				<div className="space-y-3">
-					{sortedData.map((vital) => {
-						const date = new Date(vital.recordedAt);
-						const dateStr = date.toLocaleString("ja-JP", {
-							year: "numeric",
-							month: "short",
-							day: "numeric",
-							hour: "2-digit",
-							minute: "2-digit",
-						});
+					新しいデータを記録
+				</h3>
 
-						return (
-							<div
-								key={vital.id}
-								className="rounded-lg border-2 p-4"
+				<div className="space-y-4">
+					{/* 血圧の場合 */}
+					{selectedType === "blood-pressure" ? (
+						<div className="grid grid-cols-2 gap-3">
+							<div>
+								<label
+									htmlFor="systolic"
+									className="block text-xs font-medium mb-1"
+									style={{ color: theme.colors.textSecondary }}
+								>
+									{t("vitals.systolic")} *
+								</label>
+								<input
+									id="systolic"
+									type="number"
+									value={systolic}
+									onChange={(e) => setSystolic(e.target.value)}
+									className="w-full rounded-lg border p-2.5 text-sm"
+									style={{
+										backgroundColor: theme.colors.surface,
+										borderColor: `${theme.colors.textSecondary}40`,
+										color: theme.colors.text,
+									}}
+									placeholder="120"
+								/>
+							</div>
+							<div>
+								<label
+									htmlFor="diastolic"
+									className="block text-xs font-medium mb-1"
+									style={{ color: theme.colors.textSecondary }}
+								>
+									{t("vitals.diastolic")} *
+								</label>
+								<input
+									id="diastolic"
+									type="number"
+									value={diastolic}
+									onChange={(e) => setDiastolic(e.target.value)}
+									className="w-full rounded-lg border p-2.5 text-sm"
+									style={{
+										backgroundColor: theme.colors.surface,
+										borderColor: `${theme.colors.textSecondary}40`,
+										color: theme.colors.text,
+									}}
+									placeholder="80"
+								/>
+							</div>
+						</div>
+					) : (
+						<div>
+							<label
+								htmlFor="value"
+								className="block text-xs font-medium mb-1"
+								style={{ color: theme.colors.textSecondary }}
+							>
+								{getTypeLabel(selectedType)} ({getUnit(selectedType)}) *
+							</label>
+							<input
+								id="value"
+								type="number"
+								step={selectedType === "temperature" ? "0.1" : "1"}
+								value={value}
+								onChange={(e) => setValue(e.target.value)}
+								className="w-full rounded-lg border p-2.5 text-sm"
 								style={{
 									backgroundColor: theme.colors.surface,
 									borderColor: `${theme.colors.textSecondary}40`,
+									color: theme.colors.text,
 								}}
-							>
-								<div className="flex items-center justify-between">
-									<div>
-										<div
-											className="font-semibold"
-											style={{ color: theme.colors.text }}
-										>
-											{getTypeLabel(vital.type)}
-										</div>
-										<div
-											className="mt-1 text-sm"
-											style={{ color: theme.colors.textSecondary }}
-										>
-											{dateStr}
-										</div>
-									</div>
-									<div className="text-right">
-										{vital.type === "blood-pressure" ? (
-											<div
-												className="font-bold"
-												style={{ color: theme.colors.primary }}
-											>
-												{vital.systolic}/{vital.diastolic} {vital.unit}
-											</div>
-										) : (
-											<div
-												className="font-bold"
-												style={{ color: theme.colors.primary }}
-											>
-												{vital.value} {vital.unit}
-											</div>
-										)}
-										{vital.notes && (
-											<div
-												className="mt-1 text-xs"
-												style={{ color: theme.colors.textSecondary }}
-											>
-												{vital.notes}
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-						);
-					})}
-				</div>
-			)}
+								placeholder={
+									selectedType === "temperature"
+										? "36.5"
+										: selectedType === "blood-glucose"
+											? "96"
+											: "53"
+								}
+							/>
+						</div>
+					)}
 
-			{/* Add Vital Form (inline panel) */}
-			{isAddOpen && (
-				<div
-					className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t bg-white p-4 shadow-lg md:static md:rounded-xl md:border md:p-6"
-					style={{
-						backgroundColor: theme.colors.background,
-						borderColor: `${theme.colors.textSecondary}20`,
-					}}
-				>
-					<div className="mb-4 flex items-center justify-between">
-						<h2
-							className="text-lg font-bold md:text-xl"
-							style={{ color: theme.colors.text }}
-						>
-							{t("vitals.add")}
-						</h2>
-						<button
-							type="button"
-							onClick={closeAdd}
-							className="rounded-full p-2"
+					{/* 測定日時 */}
+					<div>
+						<label
+							htmlFor="recordedAt"
+							className="block text-xs font-medium mb-1"
 							style={{ color: theme.colors.textSecondary }}
 						>
-							<X className="h-5 w-5" />
-						</button>
+							{t("vitals.recordedAt")} *
+						</label>
+						<input
+							id="recordedAt"
+							type="datetime-local"
+							value={recordedAt}
+							onChange={(e) => setRecordedAt(e.target.value)}
+							className="w-full rounded-lg border p-2.5 text-sm"
+							style={{
+								backgroundColor: theme.colors.surface,
+								borderColor: `${theme.colors.textSecondary}40`,
+								color: theme.colors.text,
+							}}
+						/>
 					</div>
-					<VitalForm
-						onSaved={() => {
-							closeAdd();
+
+					{/* メモ */}
+					<div>
+						<label
+							htmlFor="notes"
+							className="block text-xs font-medium mb-1"
+							style={{ color: theme.colors.textSecondary }}
+						>
+							{t("vitals.notes")}
+						</label>
+						<textarea
+							id="notes"
+							value={notes}
+							onChange={(e) => setNotes(e.target.value)}
+							className="w-full rounded-lg border p-2.5 text-sm"
+							rows={2}
+							style={{
+								backgroundColor: theme.colors.surface,
+								borderColor: `${theme.colors.textSecondary}40`,
+								color: theme.colors.text,
+							}}
+							placeholder="メモを入力..."
+						/>
+					</div>
+
+					{/* 保存ボタン */}
+					<button
+						type="button"
+						onClick={handleSave}
+						className="w-full rounded-lg p-3 font-medium text-white transition-all hover:scale-[1.02] active:scale-95"
+						style={{
+							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
 						}}
-						onCancel={closeAdd}
-					/>
+					>
+						記録を保存
+					</button>
 				</div>
-			)}
+			</GlassCard>
+
+			{/* Period Selector */}
+			<div className="flex items-center justify-between">
+				<h3
+					className="text-sm font-bold uppercase tracking-wider"
+					style={{ color: theme.colors.textSecondary }}
+				>
+					データ履歴
+				</h3>
+				<select
+					value={period}
+					onChange={(e) =>
+						setPeriod(e.target.value as "week" | "month" | "3months" | "year")
+					}
+					className="rounded-lg border px-3 py-1.5 text-xs font-medium"
+					style={{
+						backgroundColor: theme.colors.surface,
+						borderColor: `${theme.colors.textSecondary}40`,
+						color: theme.colors.text,
+					}}
+				>
+					<option value="week">{t("vitals.period.week")}</option>
+					<option value="month">{t("vitals.period.month")}</option>
+					<option value="3months">{t("vitals.period.3months")}</option>
+					<option value="year">{t("vitals.period.year")}</option>
+				</select>
+			</div>
+
+			{/* Chart */}
+			<GlassCard>
+				<VitalSignChart
+					vitalSigns={vitalSigns}
+					type={selectedType}
+					period={period}
+					themeId={settings.theme}
+				/>
+			</GlassCard>
 		</div>
 	);
 }
