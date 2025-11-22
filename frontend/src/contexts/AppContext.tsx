@@ -10,6 +10,17 @@ import {
 } from "react";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import {
+	buildPatientAccessPTB,
+	createSealClient,
+	decryptHealthData,
+} from "@/lib/seal";
+import {
+	getDataEntryBlobIds,
+	getSuiClient,
+	PASSPORT_REGISTRY_ID,
+} from "@/lib/suiClient";
+import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type {
 	Allergy,
 	AppState,
@@ -22,6 +33,7 @@ import type {
 	UserSettings,
 	VitalSign,
 } from "@/types";
+import type { BasicProfileData, ConditionsData } from "@/types/healthData";
 
 interface AppContextType extends AppState {
 	setWalletAddress: (address: string | null) => void;
@@ -163,25 +175,191 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					return; // useEffect will re-run after sessionKey is created
 				}
 
-				// TODO: Dynamic Fields対応 - 各data_typeごとにblob_idsを取得して復号化
-				// 現在の実装は一時的に無効化しています
-				// 実装手順:
-				// 1. contract::accessor::get_data_entry(passport, data_type)を呼び出してblob_idsを取得
-				// 2. 各data_typeごとにdecryptAndFetchを呼び出し
-				// 3. 復号化されたデータを適切な状態にセット
-				console.log(
-					"[AppContext] Dynamic Fields対応が必要です。一時的にデータ取得をスキップします。",
+				// Step 2: Load basic_profile data from Dynamic Fields
+				console.log("[AppContext] Loading basic_profile data...");
+				const basicProfileBlobIds = await getDataEntryBlobIds(
+					passport.id,
+					"basic_profile",
 				);
 
-				// 以下は旧実装（walrusBlobIdベース）のため、コメントアウト
-				// const healthData = await decryptAndFetch({
-				// 	blobId: passport.walrusBlobId, // ← このフィールドは削除されました
-				// 	sealId: passport.sealId,
-				// 	sessionKey,
-				// 	passportId: passport.id,
-				// });
-				// const decryptedProfile = healthDataToPatientProfile(healthData);
-				// setProfile(decryptedProfile);
+				if (basicProfileBlobIds.length === 0) {
+					console.log(
+						"[AppContext] No basic_profile data found, user needs to complete profile setup",
+					);
+					setIsLoading(false);
+					return;
+				}
+
+				// Use the latest blob (last element in array)
+				const latestBlobId =
+					basicProfileBlobIds[basicProfileBlobIds.length - 1];
+				console.log(
+					"[AppContext] Downloading basic_profile blob:",
+					latestBlobId,
+				);
+
+				// Step 3: Download encrypted data from Walrus
+				const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
+
+				// Step 4: Build transaction bytes for decryption
+				const suiClient = getSuiClient();
+				const txBytes = await buildPatientAccessPTB({
+					passportObjectId: passport.id,
+					registryObjectId: PASSPORT_REGISTRY_ID,
+					suiClient,
+					sealId: passport.sealId,
+				});
+
+				// Step 5: Create Seal client and decrypt
+				const sealClient = createSealClient(suiClient);
+				const decryptedData = await decryptHealthData({
+					encryptedData,
+					sealClient,
+					sessionKey,
+					txBytes,
+					sealId: passport.sealId,
+				});
+
+				// Step 6: Convert BasicProfileData to PatientProfile
+				const basicProfileData = decryptedData as BasicProfileData;
+
+				// Manual conversion from BasicProfileData to PatientProfile
+				// (healthDataToPatientProfile expects old HealthData format)
+				const birthYear = basicProfileData.profile.birth_year;
+				const currentYear = new Date().getFullYear();
+				const age = currentYear - birthYear;
+
+				let ageBand: PatientProfile["ageBand"] = null;
+				if (age >= 10 && age < 20) ageBand = "10s";
+				else if (age >= 20 && age < 30) ageBand = "20s";
+				else if (age >= 30 && age < 40) ageBand = "30s";
+				else if (age >= 40 && age < 50) ageBand = "40s";
+				else if (age >= 50 && age < 60) ageBand = "50s";
+				else if (age >= 60 && age < 70) ageBand = "60s";
+				else if (age >= 70 && age < 80) ageBand = "70s";
+				else if (age >= 80) ageBand = "80plus";
+
+				const decryptedProfile: PatientProfile = {
+					birthDate: null,
+					ageBand,
+					gender:
+						basicProfileData.profile.gender === "other"
+							? "unknown"
+							: (basicProfileData.profile.gender as
+									| "male"
+									| "female"
+									| "unknown"),
+					country: basicProfileData.profile.country || null,
+					preferredLanguage: null,
+					heightCm: basicProfileData.profile.biometrics?.height_cm,
+					weightKg: basicProfileData.profile.biometrics?.weight_kg,
+					bloodType: basicProfileData.profile
+						.blood_type as PatientProfile["bloodType"],
+					smokingStatus: "unknown",
+					alcoholUse: "unknown",
+					exercise: "unknown",
+					drugAllergies: basicProfileData.allergies
+						.filter((a) => a.substance.code_type === "rxnorm")
+						.map((a) => ({
+							name: a.substance.name,
+							severity: a.severity as "mild" | "moderate" | "severe",
+						})),
+					foodAllergies: basicProfileData.allergies
+						.filter((a) => a.substance.code_type === "food")
+						.map((a) => a.substance.name),
+					hasAnaphylaxisHistory: basicProfileData.allergies.some(
+						(a) => a.severity === "severe",
+					),
+					chronicConditions: [],
+					surgeries: [],
+					dataSharing: {
+						preference: "deny",
+						shareMedication: false,
+						shareLabs: false,
+						shareConditions: false,
+						shareSurgeries: false,
+						shareLifestyle: false,
+						rewardsEnabled: false,
+					},
+				};
+				setProfile(decryptedProfile);
+
+				// Set allergies from basic_profile
+				if (basicProfileData.allergies) {
+					const convertedAllergies = basicProfileData.allergies.map(
+						(allergy) => ({
+							id: allergy.id,
+							substance: allergy.substance.name,
+							severity: allergy.severity as "mild" | "moderate" | "severe",
+							symptoms: allergy.reaction || "",
+							onsetDate: new Date().toISOString().split("T")[0],
+							notes: "",
+						}),
+					);
+					setAllergies(convertedAllergies);
+				}
+
+				console.log("[AppContext] Profile loaded successfully");
+
+				// Step 7: Load conditions data (optional - may not exist)
+				try {
+					const conditionsBlobIds = await getDataEntryBlobIds(
+						passport.id,
+						"conditions",
+					);
+
+					if (conditionsBlobIds.length > 0) {
+						const latestConditionsBlobId =
+							conditionsBlobIds[conditionsBlobIds.length - 1];
+						console.log(
+							"[AppContext] Downloading conditions blob:",
+							latestConditionsBlobId,
+						);
+
+						const encryptedConditionsData = await downloadFromWalrusByBlobId(
+							latestConditionsBlobId,
+						);
+						const decryptedConditionsData = await decryptHealthData({
+							encryptedData: encryptedConditionsData,
+							sealClient,
+							sessionKey,
+							txBytes,
+							sealId: passport.sealId,
+						});
+
+						const conditionsData = decryptedConditionsData as ConditionsData;
+
+						// Convert Condition[] to MedicalHistory[]
+						const medicalHistories: MedicalHistory[] =
+							conditionsData.conditions.map((condition) => ({
+								id: condition.id,
+								type: "condition" as const,
+								diagnosis: condition.name.en,
+								diagnosisDate: condition.onset_date || "",
+								status:
+									condition.status === "resolved"
+										? ("resolved" as const)
+										: ("chronic" as const),
+								description: condition.note || "",
+								icd10Code: condition.codes.icd10,
+								resolvedDate:
+									condition.status === "resolved"
+										? condition.note?.match(/完治日: (\d{4}-\d{2}-\d{2})/)?.[1]
+										: undefined,
+								notes: condition.note || "",
+							}));
+
+						setMedicalHistories(medicalHistories);
+
+						console.log("[AppContext] Conditions loaded successfully");
+					}
+				} catch (conditionsError) {
+					console.log(
+						"[AppContext] No conditions data found or failed to load:",
+						conditionsError,
+					);
+					// This is not critical - user may not have entered conditions yet
+				}
 			} catch (error) {
 				console.error("[AppContext] Failed to initialize profile data:", error);
 				// Don't block the app on decryption failure

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { useCheckProfileExists } from "@/hooks/useCheckProfileExists";
 import { useMintPassport } from "@/hooks/useMintPassport";
 import { usePassport } from "@/hooks/usePassport";
 import { generateSealId } from "@/lib/sealIdGenerator";
@@ -23,6 +24,8 @@ export default function PassportPage() {
 
 	// パスポート状態を取得
 	const passport_status = usePassport();
+	const { profileExists, loading: profile_check_loading } =
+		useCheckProfileExists();
 	const {
 		mint,
 		isPending: is_mint_pending,
@@ -61,21 +64,41 @@ export default function PassportPage() {
 
 	// パスポート発行成功後、プロフィール登録画面へ遷移
 	useEffect(() => {
-		// TODO: Dynamic Fields対応
-		// 新しいモデルでは、データの存在確認にget_data_entryを使用する必要がある
-		// 現在は簡略化: profileがロード済みならホームへ、なければプロフィール入力へ
+		// Skip if still checking profile existence
+		if (profile_check_loading) {
+			return;
+		}
 
-		// 既にパスポートがあり、プロフィールもロード済みならホームへ
-		if (passport_status.has_passport && profile) {
+		// Case 1: パスポートあり & プロフィールデータあり → ホーム画面へ
+		// Use both profileExists (on-chain check) and profile (loaded state) for reliability
+		if (passport_status.has_passport && (profileExists || profile)) {
+			console.log(
+				"[PassportPage] Passport and profile both exist, redirecting to home",
+			);
 			router.replace(`/${locale}/app`);
 			return;
 		}
 
-		// パスポートあり（または新規mint完了）の場合はプロフィール入力へ
-		if (is_mint_success || passport_status.has_passport) {
+		// Case 2: パスポートあり（または新規mint完了）& プロフィールデータなし → プロフィール入力へ
+		if (
+			(is_mint_success || passport_status.has_passport) &&
+			!profileExists &&
+			!profile
+		) {
+			console.log(
+				"[PassportPage] Passport exists but no profile data, redirecting to profile setup",
+			);
 			router.replace(`/${locale}/app/profile`);
 		}
-	}, [is_mint_success, passport_status.has_passport, profile, router, locale]);
+	}, [
+		is_mint_success,
+		passport_status.has_passport,
+		profileExists,
+		profile,
+		profile_check_loading,
+		router,
+		locale,
+	]);
 
 	if (!walletAddress) {
 		return null; // リダイレクト中
