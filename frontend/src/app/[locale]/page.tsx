@@ -5,7 +5,7 @@ import {
 	useCurrentAccount,
 	useWallets,
 } from "@mysten/dapp-kit";
-import { ArrowRight, Shield, Globe as GlobeIcon, Heart, Lock, Sparkles, Zap, Users, Database } from "lucide-react";
+import { ArrowRight, Shield, Globe as GlobeIcon, Heart, Lock, Sparkles, Zap, Database } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -102,7 +102,7 @@ export default function LandingPage() {
 									className="rounded-xl relative"
 								/>
 							</div>
-							<span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
+							<span className="text-xl sm:text-2xl font-bold text-gray-800 hover:text-teal-600 transition-colors duration-300">
 								{t("appName")}
 							</span>
 						</div>
@@ -144,7 +144,7 @@ export default function LandingPage() {
 			</header>
 
 			{/* Hero Section */}
-			<section className="relative pt-32 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8">
+			<section className="relative pt-32 sm:pt-40 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">
 				<div className="max-w-6xl mx-auto text-center relative z-10">
 					{/* Cute Badge with Animation */}
 					<div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200/50 mb-6 sm:mb-8 backdrop-blur-sm shadow-lg shadow-teal-500/10 animate-bounce-slow">
@@ -166,7 +166,7 @@ export default function LandingPage() {
 					</p>
 
 					{/* CTA Button with Glassmorphism */}
-					<div className="relative inline-block group mb-12">
+					<div className="relative inline-block group mb-6 sm:mb-8">
 						<div className="absolute -inset-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-500 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition duration-300 animate-gradient-slow"></div>
 						<button
 							type="button"
@@ -180,22 +180,20 @@ export default function LandingPage() {
 						</button>
 					</div>
 
-					{/* Trust Indicators with Cards */}
-					<div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 max-w-4xl mx-auto">
+					{/* Trust Indicators - Icon Only */}
+					<div className="flex justify-center items-center gap-3 sm:gap-4 max-w-4xl mx-auto">
 						{[
-							{ icon: Shield, text: "Secure & Private", color: "teal" },
-							{ icon: Lock, text: "Encrypted Data", color: "cyan" },
-							{ icon: GlobeIcon, text: "Global Access", color: "teal" }
+							{ icon: Shield, label: "Secure & Private" },
+							{ icon: Lock, label: "Encrypted Data" },
+							{ icon: GlobeIcon, label: "Global Access" }
 						].map((item, index) => (
 							<div
-								key={item.text}
-								className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/60 backdrop-blur-md border border-teal-100/50 shadow-lg shadow-teal-500/5 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-105"
+								key={item.label}
+								className="group relative p-3 sm:p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-teal-100/50 shadow-lg shadow-teal-500/5 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-110"
 								style={{ animationDelay: `${index * 100}ms` }}
+								title={item.label}
 							>
-								<div className={`p-2 rounded-xl bg-gradient-to-br from-${item.color}-100 to-${item.color}-50`}>
-									<item.icon className={`w-4 h-4 text-${item.color}-600`} />
-								</div>
-								<span className="text-sm font-semibold text-gray-700">{item.text}</span>
+								<item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600" />
 							</div>
 						))}
 					</div>
@@ -203,7 +201,7 @@ export default function LandingPage() {
 			</section>
 
 			{/* Features Section with Glassmorphism Cards */}
-			<section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative">
+			<section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
 				<div className="max-w-6xl mx-auto relative z-10">
 					<div className="text-center mb-12 sm:mb-16">
 						<h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
@@ -216,32 +214,30 @@ export default function LandingPage() {
 						</p>
 					</div>
 
-					<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+					<div className="grid sm:grid-cols-2 gap-4 sm:gap-8 max-w-4xl mx-auto">
 						{(t.raw("landing.about.features") as string[]).map((feature, index) => {
-							const icons = [Heart, Shield, Database, Users, Zap, GlobeIcon];
+							const icons = [Database, Lock, Heart, Zap];
 							const Icon = icons[index % icons.length];
 							const gradients = [
 								'from-teal-500 to-cyan-500',
 								'from-cyan-500 to-blue-500',
 								'from-teal-600 to-emerald-500',
-								'from-cyan-600 to-teal-600',
-								'from-teal-400 to-cyan-400',
-								'from-cyan-400 to-blue-400'
+								'from-cyan-600 to-teal-600'
 							];
 
 							return (
 								<div
 									key={feature}
-									className="group relative p-6 sm:p-8 rounded-3xl bg-white/70 backdrop-blur-md border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+									className="group relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-md border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-105 hover:-translate-y-1"
 									style={{ animationDelay: `${index * 100}ms` }}
 								>
 									<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/30 to-cyan-100/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-									<div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${gradients[index]} flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-										<Icon className="w-7 h-7 text-white" />
+									<div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradients[index]} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
+										<Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
 									</div>
 
-									<p className="relative text-base sm:text-lg text-gray-700 leading-relaxed font-medium">
+									<p className="relative text-sm sm:text-lg text-gray-700 leading-relaxed font-medium">
 										{feature}
 									</p>
 								</div>
@@ -252,20 +248,20 @@ export default function LandingPage() {
 			</section>
 
 			{/* How It Works Section */}
-			<section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-teal-50/30 to-white">
+			<section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-teal-50/30 to-white">
 				<div className="max-w-4xl mx-auto">
-					<div className="text-center mb-12 sm:mb-16">
+					<div className="text-center mb-8 sm:mb-16">
 						<h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
 							<span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
 								{t("landing.howToStart.title")}
 							</span>
 						</h2>
-						<p className="text-lg sm:text-xl text-gray-600 font-medium">
+						<p className="text-base sm:text-xl text-gray-600 font-medium">
 							Get started in minutes ⚡
 						</p>
 					</div>
 
-					<div className="space-y-6 sm:space-y-8">
+					<div className="space-y-4 sm:space-y-8">
 						{[
 							{ step: "1", text: t("landing.howToStart.step1"), emoji: "👛" },
 							{ step: "2", text: t("landing.howToStart.step2"), emoji: "🎫" },
@@ -273,21 +269,21 @@ export default function LandingPage() {
 						].map((item, index) => (
 							<div
 								key={item.step}
-								className="group relative flex gap-4 sm:gap-6 items-start p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-sm border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-102 hover:-translate-y-1"
+								className="group relative flex gap-3 sm:gap-6 items-start p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-sm border-2 border-teal-100/50 hover:border-teal-300/50 shadow-xl shadow-teal-500/5 hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-300 hover:scale-102 hover:-translate-y-1"
 								style={{ animationDelay: `${index * 150}ms` }}
 							>
-								<div className="absolute -left-3 -top-3 text-4xl opacity-20 group-hover:opacity-40 transition-opacity">
+								<div className="hidden sm:block absolute -left-3 -top-3 text-4xl opacity-20 group-hover:opacity-40 transition-opacity">
 									{item.emoji}
 								</div>
 
 								<div className="flex-shrink-0 relative">
-									<div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-									<div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-teal-500/30">
+									<div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl sm:rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+									<div className="relative w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base sm:text-xl shadow-lg shadow-teal-500/30">
 										{item.step}
 									</div>
 								</div>
 
-								<p className="text-base sm:text-lg text-gray-700 pt-3 leading-relaxed font-medium flex-1">
+								<p className="text-sm sm:text-lg text-gray-700 pt-2 sm:pt-3 leading-relaxed font-medium flex-1">
 									{item.text}
 								</p>
 							</div>
@@ -354,7 +350,7 @@ export default function LandingPage() {
 									className="rounded-xl relative"
 								/>
 							</div>
-							<span className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+							<span className="text-lg font-bold text-gray-800 group-hover:text-teal-600 transition-colors duration-300">
 								{t("appName")}
 							</span>
 						</div>
