@@ -19,8 +19,8 @@
  * ```typescript
  * const { encryptAndStore, isEncrypting, progress, error } = useEncryptAndStore();
  *
- * const result = await encryptAndStore(healthData);
- * console.log(result.blobId, result.sealId);
+ * const result = await encryptAndStore(healthData, sealId, "medications");
+ * console.log(result.blobId, result.dataType, result.sealId);
  * ```
  */
 "use client";
@@ -53,6 +53,8 @@ export type EncryptionProgress =
 export interface EncryptionResult {
 	/** Walrus blob ID (content-addressed) */
 	blobId: string;
+	/** Data type (e.g., "basic_profile", "medications") */
+	dataType: string;
 	/** Seal ID for decryption policy */
 	sealId: string;
 	/** Backup encryption key (optional, for recovery) */
@@ -67,6 +69,7 @@ export interface UseEncryptAndStoreReturn {
 	encryptAndStore: (
 		healthData: HealthData,
 		sealId: string,
+		dataType: string,
 	) => Promise<EncryptionResult>;
 	/** Whether encryption/upload operation is in progress */
 	isEncrypting: boolean;
@@ -96,6 +99,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 		async (
 			healthData: HealthData,
 			sealId: string,
+			dataType: string,
 		): Promise<EncryptionResult> => {
 			setProgress("encrypting");
 			setError(null);
@@ -138,6 +142,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 
 				return {
 					blobId: walrusRef.blobId,
+					dataType,
 					sealId,
 					backupKey,
 				};

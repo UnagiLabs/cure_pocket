@@ -1,26 +1,37 @@
 /**
  * useUpdatePassportData Hook
  *
- * Updates MedicalPassport walrus_blob_id and seal_id on-chain after profile save.
+ * Updates MedicalPassport Dynamic Fields on-chain after data save.
+ * Replaces the old single-blob model with data-type-based blob management.
  *
  * ## Features
- * - Call update_walrus_blob_id contract function
- * - Call update_seal_id contract function
+ * - Call add_data_entry contract function (add new data type)
+ * - Call replace_data_entry contract function (replace existing data type)
  * - Transaction status management with error handling
- * - Support for sequential or batch updates
+ * - Support for multiple blob IDs per data type
  *
  * ## Contract Functions
- * - `update_walrus_blob_id(registry, passport, new_blob_id, clock)`
- * - `update_seal_id(registry, passport, new_seal_id, clock)`
+ * - `add_data_entry(passport, data_type, blob_ids)`
+ * - `replace_data_entry(passport, data_type, blob_ids)`
  *
  * ## Usage
  * ```typescript
  * const { updatePassportData, isUpdating, error } = useUpdatePassportData();
  *
+ * // Add new data type
  * await updatePassportData({
  *   passportId: "0x123...",
- *   blobId: "abc...",
- *   sealId: "def...",
+ *   dataType: "medications",
+ *   blobIds: ["abc...", "def..."],
+ *   replace: false, // add mode
+ * });
+ *
+ * // Replace existing data type
+ * await updatePassportData({
+ *   passportId: "0x123...",
+ *   dataType: "basic_profile",
+ *   blobIds: ["xyz..."],
+ *   replace: true, // replace mode
  * });
  * ```
  */
@@ -42,40 +53,36 @@ function getPackageId(): string {
 }
 
 /**
- * PassportRegistry ID from environment
+ * Data types for medical records
  */
-function getRegistryId(): string {
-	const registryId = process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID;
-	if (!registryId) {
-		throw new Error("NEXT_PUBLIC_PASSPORT_REGISTRY_ID is not set");
-	}
-	return registryId;
-}
+export type DataType =
+	| "basic_profile"
+	| "medications"
+	| "allergies"
+	| "histories"
+	| "lab_results"
+	| "imaging"
+	| "vitals";
 
 /**
- * Clock object ID (shared object on Sui)
- */
-const CLOCK_OBJECT_ID = "0x6";
-
-/**
- * Update parameters
+ * Update parameters for Dynamic Fields
  */
 export interface UpdatePassportParams {
 	/** MedicalPassport object ID */
 	passportId: string;
-	/** New Walrus blob ID (optional, updates if provided) */
-	blobId?: string;
-	/** New Seal ID (optional, updates if provided) */
-	sealId?: string;
-	/** Custom registry ID (optional, uses env default if not provided) */
-	registryId?: string;
+	/** Data type (e.g., "basic_profile", "medications") */
+	dataType: DataType | string;
+	/** Array of Walrus blob IDs for this data type */
+	blobIds: string[];
+	/** If true, use replace_data_entry; if false, use add_data_entry */
+	replace?: boolean;
 }
 
 /**
  * Hook return type
  */
 export interface UseUpdatePassportDataReturn {
-	/** Update passport walrus_blob_id and/or seal_id */
+	/** Update passport Dynamic Fields (add or replace data entry) */
 	updatePassportData: (params: UpdatePassportParams) => Promise<void>;
 	/** Whether update transaction is in progress */
 	isUpdating: boolean;
@@ -86,7 +93,7 @@ export interface UseUpdatePassportDataReturn {
 }
 
 /**
- * Update MedicalPassport data (walrus_blob_id and seal_id) on-chain
+ * Update MedicalPassport Dynamic Fields on-chain
  *
  * @returns Update controls and status
  */
@@ -100,17 +107,15 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	const [digest, setDigest] = useState<string | null>(null);
 
 	/**
-	 * Update passport data on-chain
+	 * Update passport Dynamic Fields on-chain
 	 */
 	const updatePassportData = useCallback(
 		async (params: UpdatePassportParams) => {
-			const { passportId, blobId, sealId, registryId } = params;
+			const { passportId, dataType, blobIds, replace = false } = params;
 
-			// Validate: at least one field must be provided
-			if (!blobId && !sealId) {
-				throw new Error(
-					"At least one of blobId or sealId must be provided for update",
-				);
+			// Validate: blob IDs must be provided
+			if (!blobIds || blobIds.length === 0) {
+				throw new Error("At least one blob ID must be provided");
 			}
 
 			setIsUpdating(true);
@@ -119,46 +124,30 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 
 			try {
 				const packageId = getPackageId();
-				const effectiveRegistryId = registryId || getRegistryId();
 
 				console.log("[UpdatePassport] Preparing transaction...");
 				console.log(`  Passport ID: ${passportId}`);
-				console.log(`  Registry ID: ${effectiveRegistryId}`);
-				if (blobId) console.log(`  New Blob ID: ${blobId}`);
-				if (sealId) console.log(`  New Seal ID: ${sealId}`);
+				console.log(`  Data Type: ${dataType}`);
+				console.log(`  Blob IDs: ${blobIds.join(", ")}`);
+				console.log(`  Mode: ${replace ? "replace" : "add"}`);
 
 				// Build transaction
 				const tx = new Transaction();
 
-				// Update walrus_blob_id if provided
-				if (blobId) {
-					tx.moveCall({
-						target: `${packageId}::accessor::update_walrus_blob_id`,
-						arguments: [
-							tx.object(effectiveRegistryId), // registry
-							tx.object(passportId), // passport
-							tx.pure.string(blobId), // new_blob_id
-							tx.object(CLOCK_OBJECT_ID), // clock
-						],
-					});
-				}
-
-				// Update seal_id if provided
-				if (sealId) {
-					tx.moveCall({
-						target: `${packageId}::accessor::update_seal_id`,
-						arguments: [
-							tx.object(effectiveRegistryId), // registry
-							tx.object(passportId), // passport
-							tx.pure.string(sealId), // new_seal_id
-							tx.object(CLOCK_OBJECT_ID), // clock
-						],
-					});
-				}
+				// Use add_data_entry or replace_data_entry
+				const functionName = replace ? "replace_data_entry" : "add_data_entry";
+				tx.moveCall({
+					target: `${packageId}::accessor::${functionName}`,
+					arguments: [
+						tx.object(passportId), // passport
+						tx.pure.string(dataType), // data_type
+						tx.pure.vector("string", blobIds), // blob_ids (vector<String>)
+					],
+				});
 
 				console.log("[UpdatePassport] Executing transaction...");
 
-				// ✅ Execute transaction with mutateAsync
+				// Execute transaction
 				const result = await signAndExecuteTransaction({
 					transaction: tx,
 				});
