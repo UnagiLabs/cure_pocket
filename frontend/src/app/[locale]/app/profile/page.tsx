@@ -247,7 +247,7 @@ export default function ProfilePage() {
 				passportId: passport.id,
 				dataType: "basic_profile",
 				blobIds: [blobId], // Blob IDの配列
-				replace: true, // 既存のbasic_profileを置き換え
+				replace: !!profile, // 初回はfalse（add）、2回目以降はtrue（replace）
 			});
 			console.log("[ProfileSave] Passport updated successfully");
 
