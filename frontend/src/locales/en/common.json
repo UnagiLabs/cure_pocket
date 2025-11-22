@@ -55,6 +55,23 @@
 			"button": "Set up profile"
 		}
 	},
+	"dataOverview": {
+		"title": "Health Data Overview",
+		"description": "A unified dashboard to view your SBT-backed health data — basic profile, conditions, prescriptions, lab results, imaging, and vitals — at a glance.",
+		"basicInfo": "Basic Profile",
+		"conditions": "Conditions",
+		"prescriptions": "Prescriptions",
+		"empty": "Not set",
+		"noConditions": "No conditions registered",
+		"noLabs": "No lab results registered",
+		"noImaging": "No imaging data registered",
+		"noVitals": "No vital records yet",
+		"chips": {
+			"conditions": "Conditions",
+			"prescriptions": "Prescriptions",
+			"vitals": "Vitals"
+		}
+	},
 	"add": {
 		"title": "Add Medication",
 		"subtitle": "Choose how to add",
@@ -74,7 +91,8 @@
 		"frequency": "Frequency",
 		"startDate": "Start Date",
 		"endDate": "End Date (optional)",
-		"reason": "Reason"
+		"reason": "Reason",
+		"vitalsDescription": "Record your vital signs"
 	},
 	"medications": {
 		"title": "Your Medications",
@@ -133,7 +151,12 @@
 		"printCard": "Print Card",
 		"currentMedications": "Current Medications",
 		"scanToView": "Scan to view",
-		"englishVersion": "English version available"
+		"englishVersion": "English version available",
+		"selectCategories": "Select categories to share",
+		"emergencyInfo": {
+			"title": "How to use this in emergencies",
+			"description": "Show this QR code to healthcare professionals to share only the categories you selected. The link automatically expires 24 hours after creation."
+		}
 	},
 	"settings": {
 		"title": "Settings",
@@ -298,7 +321,8 @@
 		"selectTest": "Please select a test",
 		"valuePlaceholder": "Enter value",
 		"validation": {
-			"required": "Please enter test name and value"
+			"required": "Please enter test name and value",
+			"noValues": "Please enter at least one lab value."
 		},
 		"categories": {
 			"CBC": "CBC",
@@ -309,7 +333,27 @@
 			"inflammation": "Inflammation",
 			"endocrine": "Endocrine",
 			"urine": "Urine Qualitative"
-		}
+		},
+		"groups": {
+			"cbc": "CBC (Blood Count)",
+			"electrolyteRenal": "Electrolytes & Renal Function",
+			"liver": "Liver Function",
+			"lipid": "Lipid Profile",
+			"glucose": "Glucose / HbA1c",
+			"optional": "Optional Tests"
+		},
+		"resultSummaryTitle": "Result overview (prototype)",
+		"result": {
+			"headerTest": "Test",
+			"headerValue": "Your value",
+			"headerReference": "Reference range",
+			"headerStatus": "Interpretation",
+			"low": "Low (below reference)",
+			"normal": "Within reference range",
+			"high": "High (above reference)",
+			"notEntered": "Not entered"
+		},
+		"disclaimer": "This interpretation is for reference only and is not a medical diagnosis. Always consult a healthcare professional for clinical decisions."
 	},
 	"imaging": {
 		"title": "Imaging Reports",

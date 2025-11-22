@@ -54,6 +54,23 @@
 			"button": "プロフィールを設定する"
 		}
 	},
+	"dataOverview": {
+		"title": "ヘルスデータ概要",
+		"description": "SBT に保存された「基本情報・疾病・処方・検査値・画像・バイタル」を、1つの画面で直感的に俯瞰できるダッシュボードです。",
+		"basicInfo": "基本プロフィール",
+		"conditions": "疾病情報",
+		"prescriptions": "処方情報",
+		"empty": "未登録",
+		"noConditions": "疾病情報は登録されていません",
+		"noLabs": "検査値は登録されていません",
+		"noImaging": "画像データは登録されていません",
+		"noVitals": "バイタルデータはまだありません",
+		"chips": {
+			"conditions": "疾病",
+			"prescriptions": "処方",
+			"vitals": "バイタル"
+		}
+	},
 	"add": {
 		"title": "薬を追加",
 		"subtitle": "追加方法を選択してください",
@@ -308,7 +325,8 @@
 		"selectTest": "検査項目を選択してください",
 		"valuePlaceholder": "値を入力してください",
 		"validation": {
-			"required": "検査項目と値を入力してください"
+			"required": "検査項目と値を入力してください",
+			"noValues": "少なくとも1つ以上の検査値を入力してください。"
 		},
 		"categories": {
 			"CBC": "血算",
@@ -319,7 +337,27 @@
 			"inflammation": "炎症",
 			"endocrine": "内分泌",
 			"urine": "尿定性"
-		}
+		},
+		"groups": {
+			"cbc": "CBC（血算）",
+			"electrolyteRenal": "電解質・腎機能",
+			"liver": "肝機能",
+			"lipid": "脂質",
+			"glucose": "血糖・HbA1c",
+			"optional": "オプション項目"
+		},
+		"resultSummaryTitle": "検査値のざっくり判定（プロトタイプ）",
+		"result": {
+			"headerTest": "項目",
+			"headerValue": "入力値",
+			"headerReference": "参考基準値",
+			"headerStatus": "判定",
+			"low": "低い（参考値未満）",
+			"normal": "基準範囲内",
+			"high": "高い（参考値超過）",
+			"notEntered": "未入力"
+		},
+		"disclaimer": "※この判定はあくまで参考情報であり、診断や治療方針を決めるものではありません。必ず医師などの医療専門職による評価を受けてください。"
 	},
 	"imaging": {
 		"title": "画像レポート",

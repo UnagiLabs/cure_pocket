@@ -30,20 +30,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 	// Update active tab based on pathname
 	useEffect(() => {
-		if (pathname.includes('/vitals')) {
-			setActiveTab('vitals');
-		} else if (pathname.includes('/card')) {
-			setActiveTab('card');
-		} else if (pathname.includes('/medications')) {
-			setActiveTab('files');
-		} else if (pathname.includes('/settings')) {
-			setActiveTab('settings');
-		} else if (pathname.includes('/profile')) {
-			setActiveTab('profile');
-		} else if (pathname.includes('/add')) {
-			setActiveTab('add');
-		} else if (pathname.endsWith('/app')) {
-			setActiveTab('home');
+		if (pathname.includes("/vitals")) {
+			setActiveTab("vitals");
+		} else if (pathname.includes("/card")) {
+			setActiveTab("card");
+		} else if (pathname.includes("/data")) {
+			setActiveTab("files");
+		} else if (pathname.includes("/medications")) {
+			// legacy route fallback
+			setActiveTab("files");
+		} else if (pathname.includes("/settings")) {
+			setActiveTab("settings");
+		} else if (pathname.includes("/profile")) {
+			setActiveTab("profile");
+		} else if (pathname.includes("/add")) {
+			setActiveTab("add");
+		} else if (pathname.endsWith("/app")) {
+			setActiveTab("home");
 		}
 	}, [pathname]);
 
@@ -151,7 +154,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 					<button
 						type="button"
-						onClick={() => navigateTo("/app/medications", "files")}
+						onClick={() => navigateTo("/app/data", "files")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
 							backgroundColor: activeTab === "files" ? `${theme.colors.primary}15` : "transparent",
@@ -252,7 +255,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 								{activeTab === "home" && t("tabs.home")}
 								{activeTab === "vitals" && t("tabs.vitals")}
 								{activeTab === "card" && t("home.share")}
-								{activeTab === "files" && t("home.medicationNotebook")}
+								{activeTab === "files" && t("tabs.data")}
 								{activeTab === "settings" && t("tabs.settings")}
 								{activeTab === "profile" && t("tabs.profile")}
 								{activeTab === "add" && t("tabs.addNew")}
@@ -329,7 +332,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 					<button
 						type="button"
-						onClick={() => navigateTo("/app/medications", "files")}
+						onClick={() => navigateTo("/app/data", "files")}
 						className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
 						style={{
 							color: activeTab === "files" ? theme.colors.primary : "#94a3b8",
