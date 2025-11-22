@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Activity,
 	AlertCircle,
 	AlertTriangle,
 	Clock,
@@ -30,6 +31,7 @@ export default function EmergencyCardPage() {
 		medicalHistories,
 		labResults,
 		imagingReports,
+		vitalSigns,
 		settings,
 		walletAddress,
 	} = useApp();
@@ -38,7 +40,7 @@ export default function EmergencyCardPage() {
 	const [expiresAt, setExpiresAt] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedCategories, setSelectedCategories] = useState<
-		("medications" | "allergies" | "histories" | "labs" | "imaging")[]
+		("medications" | "allergies" | "histories" | "labs" | "imaging" | "vitals")[]
 	>(["medications", "allergies"]);
 
 	const activeMedications = medications.filter((m) => m.status === "active");
@@ -47,9 +49,10 @@ export default function EmergencyCardPage() {
 	);
 	const recentLabResults = labResults.slice(0, 3);
 	const latestImaging = imagingReports[0];
+	const recentVitals = vitalSigns.slice(0, 3);
 
 	const handleCategoryToggle = (
-		category: "medications" | "allergies" | "histories" | "labs" | "imaging",
+		category: "medications" | "allergies" | "histories" | "labs" | "imaging" | "vitals",
 	) => {
 		setSelectedCategories((prev) =>
 			prev.includes(category)
@@ -97,6 +100,7 @@ export default function EmergencyCardPage() {
 		{ id: "histories" as const, label: t("dataTypes.history"), icon: FileText },
 		{ id: "labs" as const, label: t("dataTypes.lab"), icon: FlaskConical },
 		{ id: "imaging" as const, label: t("dataTypes.imaging"), icon: Scan },
+		{ id: "vitals" as const, label: t("dataTypes.vitals"), icon: Activity },
 	];
 
 	return (
@@ -363,6 +367,29 @@ export default function EmergencyCardPage() {
 								</p>
 							)}
 						</div>
+					</div>
+				)}
+
+				{/* Vital Signs */}
+				{selectedCategories.includes("vitals") && recentVitals.length > 0 && (
+					<div
+						className="rounded-xl p-4 shadow-sm md:p-6"
+						style={{ backgroundColor: theme.colors.surface }}
+					>
+						<h3
+							className="mb-3 font-bold md:text-lg"
+							style={{ color: theme.colors.text }}
+						>
+							{t("vitals.title")}
+						</h3>
+						<ul className="space-y-2">
+							{recentVitals.map((vital) => (
+								<li key={vital.id} style={{ color: theme.colors.text }}>
+									<span className="mr-2">•</span>
+									{t(`vitals.${vital.type}`)}: {vital.systolic && vital.diastolic ? `${vital.systolic}/${vital.diastolic}` : vital.value} {vital.unit || ""}
+								</li>
+							))}
+						</ul>
 					</div>
 				)}
 			</div>

@@ -78,6 +78,7 @@
 	},
 	"medications": {
 		"title": "您的药物",
+		"description": "在一个地方管理当前所有处方用药。",
 		"morning": "早晨",
 		"afternoon": "下午",
 		"evening": "傍晚",
@@ -178,6 +179,7 @@
 	"allergies": {
 		"title": "过敏",
 		"add": "添加过敏",
+		"description": "记录对药物、食物等重要过敏信息，方便就医时告知。",
 		"substance": "过敏原",
 		"severity": "严重程度",
 		"symptoms": "症状",
@@ -195,6 +197,7 @@
 	"histories": {
 		"title": "病史",
 		"add": "添加病史",
+		"pageDescription": "记录既往疾病、手术和重要的医疗史信息。",
 		"type": "类型",
 		"diagnosis": "诊断/手术名称",
 		"diagnosisDate": "诊断/手术日期",
@@ -218,6 +221,7 @@
 	"labs": {
 		"title": "检验结果",
 		"add": "添加检验结果",
+		"description": "记录重要的检验数据，以便长期查看趋势。",
 		"testName": "检验名称",
 		"value": "检验值",
 		"unit": "单位",
@@ -247,6 +251,7 @@
 	"imaging": {
 		"title": "影像报告",
 		"add": "添加影像报告",
+		"description": "保存 X 光、CT、MRI 等影像检查的报告。",
 		"type": "影像类型",
 		"bodyPart": "检查部位",
 		"examDate": "检查日期",

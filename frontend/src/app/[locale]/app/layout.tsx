@@ -36,7 +36,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 			setActiveTab('card');
 		} else if (pathname.includes('/medications')) {
 			setActiveTab('files');
-		} else if (pathname.includes('/settings') || pathname.includes('/profile')) {
+		} else if (pathname.includes('/settings')) {
+			setActiveTab('settings');
+		} else if (pathname.includes('/profile')) {
 			setActiveTab('profile');
 		} else if (pathname.includes('/add')) {
 			setActiveTab('add');
@@ -221,7 +223,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						</h1>
 					</div>
 				</div>
-				<div className="flex gap-3">
+				<div className="flex gap-3 items-center">
+					<WalletButton size="small" variant="mobile" />
 					<button
 						type="button"
 						className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-all relative"
@@ -249,12 +252,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 								{activeTab === "home" && t("tabs.home")}
 								{activeTab === "vitals" && t("tabs.vitals")}
 								{activeTab === "card" && t("home.share")}
-								{activeTab === "files" && t("tabs.data")}
+								{activeTab === "files" && t("home.medicationNotebook")}
+								{activeTab === "settings" && t("tabs.settings")}
 								{activeTab === "profile" && t("tabs.profile")}
 								{activeTab === "add" && t("tabs.addNew")}
 							</h1>
 						</div>
 						<div className="flex items-center gap-4">
+							<WalletButton size="medium" variant="desktop" />
 							<button
 								type="button"
 								className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-all relative"

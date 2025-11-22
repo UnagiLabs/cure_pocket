@@ -51,13 +51,21 @@ export default function LabsPage() {
 	return (
 		<div className="p-4 md:p-6 space-y-6">
 			{/* Header */}
-			<div className="mb-2 flex items-center justify-between md:mb-4">
-				<h1
-					className="text-xl font-bold md:text-2xl"
-					style={{ color: theme.colors.text }}
-				>
-					{t("labs.title")}
-				</h1>
+			<div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+				<div>
+					<h1
+						className="text-xl font-bold md:text-2xl"
+						style={{ color: theme.colors.text }}
+					>
+						{t("labs.title")}
+					</h1>
+					<p
+						className="mt-1 text-sm"
+						style={{ color: theme.colors.textSecondary }}
+					>
+						{t("labs.description")}
+					</p>
+				</div>
 				<button
 					type="button"
 					onClick={openAdd}

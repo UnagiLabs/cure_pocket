@@ -79,7 +79,7 @@ export default function AddDataPage() {
 			icon: Package,
 			title: t("dataTypes.medication"),
 			description: t("add.manualDescription"),
-			route: `/${locale}/app/add/medication`,
+			route: `/${locale}/app/medications`,
 			color: theme.colors.primary,
 		},
 		{

@@ -18,6 +18,7 @@ import type {
 	MedicalHistory,
 	Medication,
 	PatientProfile,
+	Prescription,
 	UserSettings,
 	VitalSign,
 } from "@/types";
@@ -28,6 +29,10 @@ interface AppContextType extends AppState {
 	addMedication: (medication: Medication) => void;
 	updateMedication: (id: string, updates: Partial<Medication>) => void;
 	deleteMedication: (id: string) => void;
+	setPrescriptions: (prescriptions: Prescription[]) => void;
+	addPrescription: (prescription: Prescription) => void;
+	updatePrescription: (id: string, updates: Partial<Prescription>) => void;
+	deletePrescription: (id: string) => void;
 	setAllergies: (allergies: Allergy[]) => void;
 	addAllergy: (allergy: Allergy) => void;
 	updateAllergy: (id: string, updates: Partial<Allergy>) => void;
@@ -69,6 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	// Mysten dApp Kitから現在のアカウント情報を取得
 	const currentAccount = useCurrentAccount();
 	const [medications, setMedications] = useState<Medication[]>([]);
+	const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 	const [allergies, setAllergies] = useState<Allergy[]>([]);
 	const [medicalHistories, setMedicalHistories] = useState<MedicalHistory[]>(
 		[],
@@ -219,6 +225,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setMedications((prev) => prev.filter((med) => med.id !== id));
 	};
 
+	// Prescription CRUD operations
+	const addPrescription = (prescription: Prescription) => {
+		setPrescriptions((prev) => [...prev, prescription]);
+	};
+
+	const updatePrescription = (id: string, updates: Partial<Prescription>) => {
+		setPrescriptions((prev) =>
+			prev.map((prescription) =>
+				prescription.id === id ? { ...prescription, ...updates } : prescription,
+			),
+		);
+	};
+
+	const deletePrescription = (id: string) => {
+		setPrescriptions((prev) => prev.filter((prescription) => prescription.id !== id));
+	};
+
 	// Allergy CRUD operations
 	const addAllergy = (allergy: Allergy) => {
 		setAllergies((prev) => [...prev, allergy]);
@@ -353,6 +376,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 			value={{
 				walletAddress,
 				medications,
+				prescriptions,
 				allergies,
 				medicalHistories,
 				labResults,
@@ -366,6 +390,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				addMedication,
 				updateMedication,
 				deleteMedication,
+				setPrescriptions,
+				addPrescription,
+				updatePrescription,
+				deletePrescription,
 				setAllergies,
 				addAllergy,
 				updateAllergy,

@@ -78,6 +78,7 @@
 	},
 	"medications": {
 		"title": "Vos médicaments",
+		"description": "Gérez vos ordonnances en cours depuis un seul endroit.",
 		"morning": "Matin",
 		"afternoon": "Après-midi",
 		"evening": "Soir",
@@ -178,6 +179,7 @@
 	"allergies": {
 		"title": "Allergies",
 		"add": "Ajouter une allergie",
+		"description": "Notez les allergies aux médicaments, aux aliments et aux autres substances importantes.",
 		"substance": "Allergène",
 		"severity": "Gravité",
 		"symptoms": "Symptômes",
@@ -195,6 +197,7 @@
 	"histories": {
 		"title": "Antécédents médicaux",
 		"add": "Ajouter des antécédents médicaux",
+		"pageDescription": "Conservez une trace des maladies, opérations et antécédents médicaux importants.",
 		"type": "Type",
 		"diagnosis": "Diagnostic / Nom de la chirurgie",
 		"diagnosisDate": "Date du diagnostic / de la chirurgie",
@@ -218,6 +221,7 @@
 	"labs": {
 		"title": "Résultats de laboratoire",
 		"add": "Ajouter un résultat de laboratoire",
+		"description": "Enregistrez les résultats importants pour suivre l'évolution de vos analyses.",
 		"testName": "Nom du test",
 		"value": "Valeur",
 		"unit": "Unité",
@@ -247,6 +251,7 @@
 	"imaging": {
 		"title": "Rapports d'imagerie",
 		"add": "Ajouter un rapport d'imagerie",
+		"description": "Conservez les comptes rendus de radiographies, scanners, IRM et autres examens d'imagerie.",
 		"type": "Type d'imagerie",
 		"bodyPart": "Partie du corps",
 		"examDate": "Date d'examen",

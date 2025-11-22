@@ -24,7 +24,7 @@ import { useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
-import type { Medication } from "@/types";
+import type { Prescription } from "@/types";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Badge } from "@/components/ui/Badge";
@@ -39,6 +39,7 @@ export default function HomePage() {
 	const locale = useLocale();
 	const {
 		medications,
+		prescriptions,
 		allergies,
 		medicalHistories,
 		labResults,
@@ -46,7 +47,7 @@ export default function HomePage() {
 		vitalSigns,
 		settings,
 		profile,
-		setMedications,
+		setPrescriptions,
 		walletAddress,
 	} = useApp();
 	const theme = getTheme(settings.theme);
@@ -55,48 +56,64 @@ export default function HomePage() {
 	const displayName = profile?.name || null;
 
 	useEffect(() => {
-		// Load demo medications if empty
-		if (medications.length === 0 && walletAddress) {
-			const demoMedications: Medication[] = [
+		// Load demo prescriptions if empty
+		if (prescriptions.length === 0 && walletAddress) {
+			const demoPrescriptions: Prescription[] = [
 				{
 					id: uuidv4(),
-					name: "ロスバスタチン",
-					dose: "5mg",
-					frequency: "1日1回",
-					timing: "morning",
-					clinic: "○○内科",
-					form: "tablet",
-					status: "active",
+					prescriptionDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 7 days ago
+					clinic: "Central Medical Center",
+					department: "Cardiology",
+					doctorName: "Dr. Smith",
+					medications: [
+						{
+							id: uuidv4(),
+							drugName: "Aspirin 81 MG Oral Tablet",
+							strength: "81 MG",
+							dosage: "Once daily",
+							quantity: "1 tablet",
+							duration: "30 days",
+						},
+						{
+							id: uuidv4(),
+							drugName: "Atorvastatin 10 MG Oral Tablet",
+							strength: "10 MG",
+							dosage: "Once daily at bedtime",
+							quantity: "1 tablet",
+							duration: "30 days",
+						},
+					],
+					symptoms: "High cholesterol, cardiovascular prevention",
+					notes: "Take aspirin with food to reduce stomach upset",
 				},
 				{
 					id: uuidv4(),
-					name: "メトホルミン",
-					dose: "500mg",
-					frequency: "1日2回",
-					timing: "afternoon",
-					clinic: "△△クリニック",
-					form: "tablet",
-					warning: "食直前",
-					status: "active",
-				},
-				{
-					id: uuidv4(),
-					name: "アムロジピン",
-					dose: "5mg",
-					frequency: "1日1回",
-					timing: "morning",
-					clinic: "○○内科",
-					form: "tablet",
-					status: "active",
+					prescriptionDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 14 days ago
+					clinic: "Downtown Family Clinic",
+					department: "Internal Medicine",
+					doctorName: "Dr. Johnson",
+					medications: [
+						{
+							id: uuidv4(),
+							drugName: "Metformin 500 MG Oral Tablet",
+							strength: "500 MG",
+							dosage: "Twice daily with meals",
+							quantity: "1 tablet",
+							duration: "30 days",
+						},
+					],
+					symptoms: "Type 2 diabetes management",
+					notes: "Monitor blood glucose levels regularly",
 				},
 			];
-			setMedications(demoMedications);
+			setPrescriptions(demoPrescriptions);
 		}
-	}, [medications.length, walletAddress, setMedications]);
+	}, [prescriptions.length, walletAddress, setPrescriptions]);
 
-	const activeMedicationsCount = medications.filter(
-		(m) => m.status === "active",
-	).length;
+	const activeMedicationsCount = prescriptions.reduce(
+		(count, prescription) => count + prescription.medications.length,
+		0,
+	);
 	const importantHistoriesCount = medicalHistories.filter(
 		(h) => h.status === "active" || h.type === "surgery",
 	).length;
@@ -111,12 +128,17 @@ export default function HomePage() {
 			icon: typeof Package;
 		}> = [];
 
-		medications.forEach((med) => {
+		prescriptions.forEach((prescription) => {
+			const medicationNames = prescription.medications.map(m => m.drugName).join(", ");
+			const displayTitle = medicationNames.length > 50
+				? medicationNames.substring(0, 50) + "..."
+				: medicationNames;
+
 			updates.push({
-				id: med.id,
+				id: prescription.id,
 				type: "medication",
-				title: med.name,
-				date: med.startDate || new Date().toISOString(),
+				title: `${prescription.clinic} - ${displayTitle}`,
+				date: prescription.prescriptionDate,
 				icon: Package,
 			});
 		});
@@ -166,7 +188,7 @@ export default function HomePage() {
 		return updates
 			.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 			.slice(0, 5);
-	}, [medications, allergies, medicalHistories, labResults, imagingReports]);
+	}, [prescriptions, allergies, medicalHistories, labResults, imagingReports]);
 
 	const summaryCards = [
 		{
@@ -351,7 +373,7 @@ export default function HomePage() {
 
 					<button
 						type="button"
-						onClick={() => router.push(`/${locale}/app/add/medication`)}
+						onClick={() => router.push(`/${locale}/app/medications`)}
 						className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform"
 					>
 						<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">

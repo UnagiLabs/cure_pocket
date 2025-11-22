@@ -78,6 +78,7 @@
 	},
 	"medications": {
 		"title": "Your Medications",
+		"description": "Manage your current prescriptions in one place.",
 		"morning": "Morning",
 		"afternoon": "Afternoon",
 		"evening": "Evening",
@@ -85,7 +86,42 @@
 		"asNeeded": "As Needed",
 		"clinic": "Clinic",
 		"warning": "Warning",
-		"noMedications": "No active medications registered"
+		"noMedications": "No active medications registered",
+		"noPrescriptions": "No prescriptions registered",
+		"addFirstPrescription": "Add your first prescription",
+		"addNewPrescription": "Add new prescription"
+	},
+	"prescriptions": {
+		"addNew": "Add Prescription",
+		"basicInfo": "Prescription Information",
+		"prescriptionDate": "Prescription Date",
+		"clinic": "Medical Facility",
+		"clinicPlaceholder": "e.g., General Hospital",
+		"department": "Department",
+		"departmentPlaceholder": "e.g., Internal Medicine, Orthopedics",
+		"doctorName": "Doctor's Name",
+		"doctorNamePlaceholder": "e.g., Dr. Smith",
+		"medications": "Medications",
+		"medication": "Medication",
+		"addMedication": "Add medication",
+		"drugName": "Drug Name",
+		"drugNamePlaceholder": "e.g., Aspirin 100mg",
+		"strength": "Strength",
+		"dosage": "Dosage",
+		"dosagePlaceholder": "e.g., Twice daily, after meals",
+		"quantity": "Quantity",
+		"duration": "Duration/Amount",
+		"additionalInfo": "Notes & Attachments",
+		"symptoms": "Symptoms/Purpose",
+		"symptomsPlaceholder": "e.g., Headache, fever",
+		"notes": "Notes",
+		"notesPlaceholder": "e.g., Do not take on empty stomach",
+		"photoAttachmentComingSoon": "Photo attachment (coming soon)",
+		"attachments": "attachments",
+		"validation": {
+			"clinicRequired": "Please enter medical facility name",
+			"medicationRequired": "Please enter at least one medication name"
+		}
 	},
 	"card": {
 		"title": "Emergency Card",
@@ -112,11 +148,15 @@
 		"country": "Country",
 		"allergies": "Allergies",
 		"profile": "Profile",
+		"profileSettings": "Profile Settings",
 		"dataExport": "Data Export",
 		"walletConnected": "Wallet Connected",
 		"walrusStorage": "Walrus Storage",
 		"encrypted": "Encrypted",
-		"lastSync": "Last sync: {{time}}"
+		"lastSync": "Last sync: {{time}}",
+		"researchContribution": "Research Contribution",
+		"earnedRewards": "Earned Rewards",
+		"lastSyncRecent": "Last sync: 2 minutes ago"
 	},
 	"wallet": {
 		"connect": "Connect Wallet",
@@ -202,6 +242,7 @@
 	"allergies": {
 		"title": "Allergies",
 		"add": "Add Allergy",
+		"description": "Record drug, food, and other allergies for emergencies.",
 		"substance": "Allergen",
 		"severity": "Severity",
 		"symptoms": "Symptoms",
@@ -219,6 +260,7 @@
 	"histories": {
 		"title": "Medical History",
 		"add": "Add Medical History",
+		"pageDescription": "Keep track of past illnesses, surgeries, and important medical history.",
 		"type": "Type",
 		"diagnosis": "Diagnosis / Surgery Name",
 		"diagnosisDate": "Diagnosis / Surgery Date",
@@ -242,6 +284,7 @@
 	"labs": {
 		"title": "Lab Results",
 		"add": "Add Lab Result",
+		"description": "Store key lab results so you can track trends over time.",
 		"testName": "Test Name",
 		"value": "Value",
 		"unit": "Unit",
@@ -271,6 +314,7 @@
 	"imaging": {
 		"title": "Imaging Reports",
 		"add": "Add Imaging Report",
+		"description": "Save reports from X-rays, CT, MRI, and other imaging.",
 		"type": "Imaging Type",
 		"bodyPart": "Body Part",
 		"examDate": "Exam Date",
@@ -306,7 +350,8 @@
 		"history": "History",
 		"lab": "Lab Result",
 		"imaging": "Imaging Report",
-		"vital": "Vital Sign"
+		"vital": "Vital Sign",
+		"vitals": "Vital Signs"
 	},
 	"profile": {
 		"title": "Profile Settings",

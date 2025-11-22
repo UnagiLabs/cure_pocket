@@ -82,6 +82,7 @@
 	},
 	"medications": {
 		"title": "服用中のお薬",
+		"description": "処方箋情報をまとめて管理します。",
 		"morning": "朝",
 		"afternoon": "昼",
 		"evening": "夕",
@@ -89,7 +90,42 @@
 		"asNeeded": "頓服",
 		"clinic": "クリニック",
 		"warning": "注意",
-		"noMedications": "服用中の薬は登録されていません"
+		"noMedications": "服用中の薬は登録されていません",
+		"noPrescriptions": "処方箋が登録されていません",
+		"addFirstPrescription": "最初の処方箋を追加",
+		"addNewPrescription": "新しい処方箋を追加"
+	},
+	"prescriptions": {
+		"addNew": "処方箋を追加",
+		"basicInfo": "処方基本情報",
+		"prescriptionDate": "処方日",
+		"clinic": "医療機関名",
+		"clinicPlaceholder": "例：〇〇病院",
+		"department": "診療科",
+		"departmentPlaceholder": "例：内科、整形外科",
+		"doctorName": "医師名",
+		"doctorNamePlaceholder": "例：山田太郎",
+		"medications": "処方薬",
+		"medication": "薬品",
+		"addMedication": "薬を追加",
+		"drugName": "薬品名",
+		"drugNamePlaceholder": "例：ロキソニン錠60mg",
+		"strength": "規格",
+		"dosage": "用法",
+		"dosagePlaceholder": "例：1日2回、食後",
+		"quantity": "用量",
+		"duration": "日数/総量",
+		"additionalInfo": "メモ・添付",
+		"symptoms": "症状・目的",
+		"symptomsPlaceholder": "例：頭痛、発熱",
+		"notes": "注意・自由メモ",
+		"notesPlaceholder": "例：空腹時服用不可",
+		"photoAttachmentComingSoon": "写真添付機能（近日公開予定）",
+		"attachments": "添付ファイル",
+		"validation": {
+			"clinicRequired": "医療機関名を入力してください",
+			"medicationRequired": "最低1つの薬品名を入力してください"
+		}
 	},
 	"card": {
 		"title": "緊急カード",
@@ -216,6 +252,7 @@
 	"allergies": {
 		"title": "アレルギー",
 		"add": "アレルギーを追加",
+		"description": "薬や食べ物などのアレルギーを記録します。",
 		"substance": "アレルギー物質",
 		"severity": "重症度",
 		"symptoms": "症状",
@@ -233,6 +270,7 @@
 	"histories": {
 		"title": "病歴",
 		"add": "病歴を追加",
+		"pageDescription": "既往歴や手術歴などの重要な病歴をまとめておきます。",
 		"type": "タイプ",
 		"diagnosis": "診断名・手術名",
 		"diagnosisDate": "診断日・手術日",
@@ -256,6 +294,7 @@
 	"labs": {
 		"title": "検査値",
 		"add": "検査値を追加",
+		"description": "血液検査などの検査値を記録して推移を確認できます。",
 		"testName": "検査名",
 		"value": "検査値",
 		"unit": "単位",
@@ -285,6 +324,7 @@
 	"imaging": {
 		"title": "画像レポート",
 		"add": "画像レポートを追加",
+		"description": "レントゲンやCTなどの画像検査レポートを保存します。",
 		"type": "画像タイプ",
 		"bodyPart": "検査部位",
 		"examDate": "検査実施日",
@@ -320,7 +360,8 @@
 		"history": "病歴",
 		"lab": "検査値",
 		"imaging": "画像レポート",
-		"vital": "バイタルデータ"
+		"vital": "バイタルデータ",
+		"vitals": "バイタルデータ"
 	},
 	"profile": {
 		"title": "プロフィール設定",

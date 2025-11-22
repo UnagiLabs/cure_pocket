@@ -78,6 +78,7 @@
 	},
 	"medications": {
 		"title": "Seus medicamentos",
+		"description": "Gerencie todas as suas prescrições em um só lugar.",
 		"morning": "Manhã",
 		"afternoon": "Tarde",
 		"evening": "Noite",
@@ -178,6 +179,7 @@
 	"allergies": {
 		"title": "Alergias",
 		"add": "Adicionar alergia",
+		"description": "Registre alergias a medicamentos, alimentos e outras substâncias importantes.",
 		"substance": "Alérgeno",
 		"severity": "Gravidade",
 		"symptoms": "Sintomas",
@@ -195,6 +197,7 @@
 	"histories": {
 		"title": "Histórico médico",
 		"add": "Adicionar histórico médico",
+		"pageDescription": "Registre doenças anteriores, cirurgias e outros históricos médicos importantes.",
 		"type": "Tipo",
 		"diagnosis": "Diagnóstico / Nome da cirurgia",
 		"diagnosisDate": "Data do diagnóstico / cirurgia",
@@ -218,6 +221,7 @@
 	"labs": {
 		"title": "Resultados de laboratório",
 		"add": "Adicionar resultado de laboratório",
+		"description": "Registre resultados importantes para acompanhar a evolução dos exames.",
 		"testName": "Nome do teste",
 		"value": "Valor",
 		"unit": "Unidade",
@@ -247,6 +251,7 @@
 	"imaging": {
 		"title": "Relatórios de imagem",
 		"add": "Adicionar relatório de imagem",
+		"description": "Guarde relatórios de raios X, tomografias, ressonâncias e outros exames de imagem.",
 		"type": "Tipo de imagem",
 		"bodyPart": "Parte do corpo",
 		"examDate": "Data do exame",
