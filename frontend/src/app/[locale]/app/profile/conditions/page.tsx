@@ -369,6 +369,7 @@ export default function ConditionsPage() {
 																e.target.value,
 															)
 														}
+														lang={locale}
 														className="w-full rounded-lg border p-2 text-sm"
 														style={{
 															backgroundColor: theme.colors.background,
@@ -396,6 +397,7 @@ export default function ConditionsPage() {
 																e.target.value,
 															)
 														}
+														lang={locale}
 														className="w-full rounded-lg border p-2 text-sm"
 														style={{
 															backgroundColor: theme.colors.background,
@@ -551,6 +553,7 @@ export default function ConditionsPage() {
 																e.target.value,
 															)
 														}
+														lang={locale}
 														className="w-full rounded-lg border p-2 text-sm"
 														style={{
 															backgroundColor: theme.colors.background,
