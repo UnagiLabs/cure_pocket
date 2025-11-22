@@ -183,6 +183,16 @@ strong {
   text-align: center;
 }
 
+.vision-slide .logo-area {
+  margin-bottom: 1em;
+}
+
+.vision-logo {
+  max-width: 150px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
 .vision-slide h1 {
   color: var(--white);
   font-size: 64px;
@@ -496,6 +506,16 @@ strong {
   text-align: center;
 }
 
+.thankyou-slide .logo-area {
+  margin-bottom: 1em;
+}
+
+.thankyou-logo {
+  max-width: 180px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
 .thankyou-slide h1 {
   color: var(--white);
   font-size: 72px;
@@ -546,6 +566,53 @@ strong {
 .title-slide .slide-number,
 .thankyou-slide .slide-number {
   color: var(--white);
+}
+
+/* Hackathon Achievements */
+.hackathon-achievements {
+  position: absolute;
+  right: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+}
+
+.hackathon-achievements h3 {
+  color: var(--white);
+  font-size: 28px;
+  margin-bottom: 1em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hackathon-logos {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.achievement-item {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hackathon-logo {
+  max-width: 150px;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.achievement-item p {
+  font-size: 18px;
+  color: var(--white);
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* Print Styles */
