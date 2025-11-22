@@ -230,11 +230,11 @@ export default function HomePage() {
 	const weightVital = latestVitals.get("weight");
 
 	return (
-		<div className="space-y-8 pb-24 px-6 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
+		<div className="space-y-8 pb-24 px-4 md:px-8 lg:px-12 animate-fade-in" style={{ backgroundColor: theme.colors.background }}>
 			{/* Today's Vitals */}
 			<section className="mt-2">
 				<SectionTitle>{t("home.todayVitals")}</SectionTitle>
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 					{/* Blood Pressure Card */}
 					<GlassCard
 						className="flex flex-col gap-3 group cursor-pointer"

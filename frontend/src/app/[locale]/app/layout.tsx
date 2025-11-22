@@ -41,7 +41,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 	return (
 		<div
-			className="relative flex min-h-screen flex-col max-w-md mx-auto shadow-2xl overflow-hidden transition-colors duration-500"
+			className="relative flex min-h-screen flex-col w-full md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto shadow-2xl overflow-hidden transition-colors duration-500"
 			style={{
 				backgroundColor: theme.colors.background,
 				color: theme.colors.text,

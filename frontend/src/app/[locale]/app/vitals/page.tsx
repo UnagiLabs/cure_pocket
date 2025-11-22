@@ -129,12 +129,12 @@ export default function VitalsPage() {
 	};
 
 	return (
-		<div className="px-6 py-4 space-y-6 pb-32">
+		<div className="px-4 md:px-8 lg:px-12 py-4 space-y-6 pb-32">
 			{/* Header */}
 			<SectionTitle>{t("vitals.title")}</SectionTitle>
 
 			{/* Vital Type Tabs */}
-			<div className="grid grid-cols-4 gap-2">
+			<div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2 md:gap-4 max-w-2xl mx-auto">
 				{VITAL_TYPES.map((type) => (
 					<button
 						key={type}
@@ -173,8 +173,10 @@ export default function VitalsPage() {
 				))}
 			</div>
 
-			{/* Input Form */}
-			<GlassCard>
+			{/* Form and Chart Layout */}
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				{/* Input Form */}
+				<GlassCard>
 				<h3
 					className="text-sm font-bold mb-4 uppercase tracking-wider"
 					style={{ color: theme.colors.textSecondary }}
@@ -322,44 +324,48 @@ export default function VitalsPage() {
 						{t("vitals.saveRecord")}
 					</button>
 				</div>
-			</GlassCard>
+				</GlassCard>
 
-			{/* Period Selector */}
-			<div className="flex items-center justify-between">
-				<h3
-					className="text-sm font-bold uppercase tracking-wider"
-					style={{ color: theme.colors.textSecondary }}
-				>
-					{t("vitals.dataHistory")}
-				</h3>
-				<select
-					value={period}
-					onChange={(e) =>
-						setPeriod(e.target.value as "week" | "month" | "3months" | "year")
-					}
-					className="rounded-lg border px-3 py-1.5 text-xs font-medium"
-					style={{
-						backgroundColor: theme.colors.surface,
-						borderColor: `${theme.colors.textSecondary}40`,
-						color: theme.colors.text,
-					}}
-				>
-					<option value="week">{t("vitals.period.week")}</option>
-					<option value="month">{t("vitals.period.month")}</option>
-					<option value="3months">{t("vitals.period.3months")}</option>
-					<option value="year">{t("vitals.period.year")}</option>
-				</select>
+				{/* Chart Section */}
+				<div className="space-y-4">
+					{/* Period Selector */}
+					<div className="flex items-center justify-between">
+						<h3
+							className="text-sm font-bold uppercase tracking-wider"
+							style={{ color: theme.colors.textSecondary }}
+						>
+							{t("vitals.dataHistory")}
+						</h3>
+						<select
+							value={period}
+							onChange={(e) =>
+								setPeriod(e.target.value as "week" | "month" | "3months" | "year")
+							}
+							className="rounded-lg border px-3 py-1.5 text-xs font-medium"
+							style={{
+								backgroundColor: theme.colors.surface,
+								borderColor: `${theme.colors.textSecondary}40`,
+								color: theme.colors.text,
+							}}
+						>
+							<option value="week">{t("vitals.period.week")}</option>
+							<option value="month">{t("vitals.period.month")}</option>
+							<option value="3months">{t("vitals.period.3months")}</option>
+							<option value="year">{t("vitals.period.year")}</option>
+						</select>
+					</div>
+
+					{/* Chart */}
+					<GlassCard>
+						<VitalSignChart
+							vitalSigns={vitalSigns}
+							type={selectedType}
+							period={period}
+							themeId={settings.theme}
+						/>
+					</GlassCard>
+				</div>
 			</div>
-
-			{/* Chart */}
-			<GlassCard>
-				<VitalSignChart
-					vitalSigns={vitalSigns}
-					type={selectedType}
-					period={period}
-					themeId={settings.theme}
-				/>
-			</GlassCard>
 		</div>
 	);
 }
