@@ -96,8 +96,6 @@ export default function VitalSignChart({
 		switch (vitalType) {
 			case "blood-pressure":
 				return t("vitals.bloodPressure");
-			case "heart-rate":
-				return t("vitals.heartRate");
 			case "blood-glucose":
 				return t("vitals.bloodGlucose");
 			case "temperature":
@@ -114,8 +112,6 @@ export default function VitalSignChart({
 		switch (vitalType) {
 			case "blood-pressure":
 				return "mmHg";
-			case "heart-rate":
-				return "bpm";
 			case "blood-glucose":
 				return "mg/dL";
 			case "temperature":

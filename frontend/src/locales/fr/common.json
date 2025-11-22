@@ -16,14 +16,26 @@
 	"tabs": {
 		"home": "Accueil",
 		"add": "Ajouter",
+		"addNew": "Ajouter de nouvelles données",
 		"card": "Carte",
+		"records": "Enregistrements",
+		"data": "Données",
+		"profile": "Profil",
 		"settings": "Paramètres",
 		"medications": "Médicaments",
-		"emergency": "Urgence"
+		"emergency": "Urgence",
+		"vitals": "Signes vitaux"
 	},
 	"home": {
 		"greeting": "Bonjour",
+		"greetingShort": "Bonjour, ",
+		"guest": "Invité",
+		"medicationNotebook": "Carnet de médicaments",
+		"labResults": "Résultats de laboratoire",
+		"imagingData": "Imagerie",
 		"title": "Votre poche aujourd'hui",
+		"todayVitals": "Signes vitaux du jour",
+		"recentRecords": "Enregistrements récents",
 		"activeCount": "{{count}} médicaments actifs",
 		"activeMedications": "Médicaments actifs",
 		"lastUpdated": "Dernière mise à jour : {{time}}",
@@ -31,6 +43,9 @@
 		"history": "Historique",
 		"share": "Partager",
 		"emergencyCard": "Carte d'urgence",
+		"emergency": "Urgence",
+		"appointments": "Rendez-vous",
+		"records": "Enregistrements",
 		"guestGreeting": "Bonjour, Invité",
 		"greetingWithName": "Bonjour, {{name}}",
 		"profileSetupBanner": {
@@ -62,6 +77,7 @@
 	},
 	"medications": {
 		"title": "Vos médicaments",
+		"description": "Gérez vos ordonnances en cours depuis un seul endroit.",
 		"morning": "Matin",
 		"afternoon": "Après-midi",
 		"evening": "Soir",
@@ -162,6 +178,7 @@
 	"allergies": {
 		"title": "Allergies",
 		"add": "Ajouter une allergie",
+		"description": "Notez les allergies aux médicaments, aux aliments et aux autres substances importantes.",
 		"substance": "Allergène",
 		"severity": "Gravité",
 		"symptoms": "Symptômes",
@@ -179,6 +196,7 @@
 	"histories": {
 		"title": "Antécédents médicaux",
 		"add": "Ajouter des antécédents médicaux",
+		"pageDescription": "Conservez une trace des maladies, opérations et antécédents médicaux importants.",
 		"type": "Type",
 		"diagnosis": "Diagnostic / Nom de la chirurgie",
 		"diagnosisDate": "Date du diagnostic / de la chirurgie",
@@ -202,6 +220,7 @@
 	"labs": {
 		"title": "Résultats de laboratoire",
 		"add": "Ajouter un résultat de laboratoire",
+		"description": "Enregistrez les résultats importants pour suivre l'évolution de vos analyses.",
 		"testName": "Nom du test",
 		"value": "Valeur",
 		"unit": "Unité",
@@ -231,6 +250,7 @@
 	"imaging": {
 		"title": "Rapports d'imagerie",
 		"add": "Ajouter un rapport d'imagerie",
+		"description": "Conservez les comptes rendus de radiographies, scanners, IRM et autres examens d'imagerie.",
 		"type": "Type d'imagerie",
 		"bodyPart": "Partie du corps",
 		"examDate": "Date d'examen",
@@ -432,10 +452,13 @@
 		"weight": "Poids",
 		"systolic": "Systolique",
 		"diastolic": "Diastolique",
+		"systolicShort": "Haute",
+		"diastolicShort": "Basse",
 		"value": "Valeur",
 		"unit": "Unité",
 		"recordedAt": "Enregistré à",
 		"notes": "Notes",
+		"notesPlaceholder": "Saisir des notes...",
 		"mmHg": "mmHg",
 		"bpm": "bpm",
 		"mgdL": "mg/dL",
@@ -444,6 +467,9 @@
 		"noData": "Aucune donnée de signes vitaux",
 		"viewGraph": "Voir le graphique",
 		"viewList": "Voir la liste",
+		"newRecord": "Enregistrer de nouvelles données",
+		"dataHistory": "Historique des données",
+		"saveRecord": "Enregistrer",
 		"period": {
 			"week": "1 semaine",
 			"month": "1 mois",

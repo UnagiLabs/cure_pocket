@@ -39,6 +39,38 @@ export interface Medication {
 }
 
 /**
+ * 処方箋（Prescription）
+ * 同じ日・同じ医療機関・同じ診療科でまとめられた処方単位
+ */
+export interface Prescription {
+	id: string; // UUID
+	prescriptionDate: string; // ISO date - 処方日
+	clinic: string; // 医療機関名
+	department?: string; // 診療科
+	doctorName?: string; // 医師名（任意）
+	medications: PrescriptionMedication[]; // この処方に含まれる薬のリスト
+	symptoms?: string; // 症状・目的
+	notes?: string; // 注意・自由メモ
+	attachments?: string[]; // 処方箋/薬袋の写真URL/パス
+
+	// Backend-linked metadata
+	suiObjectId?: string; // Prescription object ID
+	walrusBlobId?: string; // Walrus blob ID
+}
+
+/**
+ * 処方箋内の薬品（PrescriptionMedication）
+ */
+export interface PrescriptionMedication {
+	id: string; // UUID
+	drugName: string; // 薬品名（RxNorm/ATC準拠）
+	strength: string; // 規格（例：5mg、10mg/mLなど）
+	dosage: string; // 用法（例：1日2回、食後など）
+	quantity: string; // 用量（例：1錠、5mLなど）
+	duration?: string; // 日数/総量（例：7日分、14錠など）
+}
+
+/**
  * アレルギー情報
  */
 export type AllergySeverity =
@@ -279,7 +311,8 @@ export interface PatientProfile {
 
 export interface AppState {
 	walletAddress: string | null;
-	medications: Medication[];
+	medications: Medication[]; // 旧形式（後方互換性のため残す）
+	prescriptions: Prescription[]; // 新形式：処方箋ベース
 	allergies: Allergy[];
 	medicalHistories: MedicalHistory[];
 	labResults: LabResult[];

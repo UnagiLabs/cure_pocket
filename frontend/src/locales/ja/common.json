@@ -16,14 +16,23 @@
 	"tabs": {
 		"home": "ホーム",
 		"add": "追加",
+		"addNew": "新しいデータを追加",
 		"card": "カード",
+		"records": "記録",
+		"data": "データ",
+		"profile": "私",
 		"settings": "設定",
 		"medications": "お薬",
-		"emergency": "緊急"
+		"emergency": "緊急",
+		"vitals": "バイタルデータ"
 	},
 	"home": {
 		"greeting": "こんにちは",
+		"greetingShort": "こんにちは、",
+		"guest": "ゲスト",
 		"title": "今日のポケット",
+		"todayVitals": "今日のバイタル",
+		"recentRecords": "直近の記録",
 		"activeCount": "{{count}}種類の薬",
 		"activeMedications": "服用中の薬",
 		"lastUpdated": "最終更新: {{time}}",
@@ -31,12 +40,35 @@
 		"history": "履歴",
 		"share": "共有",
 		"emergencyCard": "緊急カード",
+		"emergency": "緊急",
+		"appointments": "予約",
+		"records": "記録",
+		"medicationNotebook": "お薬手帳",
+		"labResults": "検査値",
+		"imagingData": "画像データ",
 		"guestGreeting": "こんにちは、ゲスト",
 		"greetingWithName": "こんにちは、{{name}}さん",
 		"profileSetupBanner": {
 			"title": "プロフィールを設定しましょう",
 			"description": "基本情報を登録すると、より安全で正確なヘルスケアサービスを受けられます。",
 			"button": "プロフィールを設定する"
+		}
+	},
+	"dataOverview": {
+		"title": "ヘルスデータ概要",
+		"description": "SBT に保存された「基本情報・疾病・処方・検査値・画像・バイタル」を、1つの画面で直感的に俯瞰できるダッシュボードです。",
+		"basicInfo": "基本プロフィール",
+		"conditions": "疾病情報",
+		"prescriptions": "処方情報",
+		"empty": "未登録",
+		"noConditions": "疾病情報は登録されていません",
+		"noLabs": "検査値は登録されていません",
+		"noImaging": "画像データは登録されていません",
+		"noVitals": "バイタルデータはまだありません",
+		"chips": {
+			"conditions": "疾病",
+			"prescriptions": "処方",
+			"vitals": "バイタル"
 		}
 	},
 	"add": {
@@ -58,10 +90,16 @@
 		"frequency": "頻度",
 		"startDate": "開始日",
 		"endDate": "終了日（任意）",
-		"reason": "理由"
+		"reason": "理由",
+		"vitalsDescription": "バイタルデータを記録",
+		"bloodPressureAdd": "血圧を記録",
+		"bloodGlucoseAdd": "血糖値を記録",
+		"temperatureAdd": "体温を記録",
+		"weightAdd": "体重を記録"
 	},
 	"medications": {
 		"title": "服用中のお薬",
+		"description": "処方箋情報をまとめて管理します。",
 		"morning": "朝",
 		"afternoon": "昼",
 		"evening": "夕",
@@ -69,19 +107,60 @@
 		"asNeeded": "頓服",
 		"clinic": "クリニック",
 		"warning": "注意",
-		"noMedications": "服用中の薬は登録されていません"
+		"noMedications": "服用中の薬は登録されていません",
+		"noPrescriptions": "処方箋が登録されていません",
+		"addFirstPrescription": "最初の処方箋を追加",
+		"addNewPrescription": "新しい処方箋を追加"
+	},
+	"prescriptions": {
+		"addNew": "処方箋を追加",
+		"basicInfo": "処方基本情報",
+		"prescriptionDate": "処方日",
+		"clinic": "医療機関名",
+		"clinicPlaceholder": "例：〇〇病院",
+		"department": "診療科",
+		"departmentPlaceholder": "例：内科、整形外科",
+		"doctorName": "医師名",
+		"doctorNamePlaceholder": "例：山田太郎",
+		"medications": "処方薬",
+		"medication": "薬品",
+		"addMedication": "薬を追加",
+		"drugName": "薬品名",
+		"drugNamePlaceholder": "例：ロキソニン錠60mg",
+		"strength": "規格",
+		"dosage": "用法",
+		"dosagePlaceholder": "例：1日2回、食後",
+		"quantity": "用量",
+		"duration": "日数/総量",
+		"additionalInfo": "メモ・添付",
+		"symptoms": "症状・目的",
+		"symptomsPlaceholder": "例：頭痛、発熱",
+		"notes": "注意・自由メモ",
+		"notesPlaceholder": "例：空腹時服用不可",
+		"photoAttachmentComingSoon": "写真添付機能（近日公開予定）",
+		"attachments": "添付ファイル",
+		"validation": {
+			"clinicRequired": "医療機関名を入力してください",
+			"medicationRequired": "最低1つの薬品名を入力してください"
+		}
 	},
 	"card": {
 		"title": "緊急カード",
 		"subtitle": "緊急時お薬情報",
 		"description": "緊急時に医療従事者とお薬情報を共有",
 		"generateQR": "QRコード生成",
+		"generating": "生成中...",
 		"validFor": "有効期限: {{duration}}",
 		"downloadPDF": "PDFダウンロード",
 		"printCard": "印刷用カード生成",
 		"currentMedications": "服用薬一覧",
 		"scanToView": "スキャンすると",
-		"englishVersion": "英語版も表示"
+		"englishVersion": "英語版も表示",
+		"selectCategories": "表示するカテゴリーを選択",
+		"emergencyInfo": {
+			"title": "緊急時の使い方",
+			"description": "このQRコードを医療従事者に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
+		}
 	},
 	"settings": {
 		"title": "設定",
@@ -96,11 +175,15 @@
 		"country": "国",
 		"allergies": "アレルギー",
 		"profile": "プロフィール設定",
+		"profileSettings": "プロフィール設定",
 		"dataExport": "データエクスポート",
 		"walletConnected": "ウォレット接続中",
 		"walrusStorage": "Walrus保存状態",
 		"encrypted": "暗号化済み",
-		"lastSync": "最終同期: {{time}}"
+		"lastSync": "最終同期: {{time}}",
+		"researchContribution": "研究への貢献",
+		"earnedRewards": "獲得報酬",
+		"lastSyncRecent": "最終同期: 2分前"
 	},
 	"wallet": {
 		"connect": "ウォレット接続",
@@ -186,6 +269,7 @@
 	"allergies": {
 		"title": "アレルギー",
 		"add": "アレルギーを追加",
+		"description": "薬や食べ物などのアレルギーを記録します。",
 		"substance": "アレルギー物質",
 		"severity": "重症度",
 		"symptoms": "症状",
@@ -203,6 +287,7 @@
 	"histories": {
 		"title": "病歴",
 		"add": "病歴を追加",
+		"pageDescription": "既往歴や手術歴などの重要な病歴をまとめておきます。",
 		"type": "タイプ",
 		"diagnosis": "診断名・手術名",
 		"diagnosisDate": "診断日・手術日",
@@ -226,6 +311,7 @@
 	"labs": {
 		"title": "検査値",
 		"add": "検査値を追加",
+		"description": "血液検査などの検査値を記録して推移を確認できます。",
 		"testName": "検査名",
 		"value": "検査値",
 		"unit": "単位",
@@ -239,7 +325,8 @@
 		"selectTest": "検査項目を選択してください",
 		"valuePlaceholder": "値を入力してください",
 		"validation": {
-			"required": "検査項目と値を入力してください"
+			"required": "検査項目と値を入力してください",
+			"noValues": "少なくとも1つ以上の検査値を入力してください。"
 		},
 		"categories": {
 			"CBC": "血算",
@@ -250,11 +337,32 @@
 			"inflammation": "炎症",
 			"endocrine": "内分泌",
 			"urine": "尿定性"
-		}
+		},
+		"groups": {
+			"cbc": "CBC（血算）",
+			"electrolyteRenal": "電解質・腎機能",
+			"liver": "肝機能",
+			"lipid": "脂質",
+			"glucose": "血糖・HbA1c",
+			"optional": "オプション項目"
+		},
+		"resultSummaryTitle": "検査値のざっくり判定（プロトタイプ）",
+		"result": {
+			"headerTest": "項目",
+			"headerValue": "入力値",
+			"headerReference": "参考基準値",
+			"headerStatus": "判定",
+			"low": "低い（参考値未満）",
+			"normal": "基準範囲内",
+			"high": "高い（参考値超過）",
+			"notEntered": "未入力"
+		},
+		"disclaimer": "※この判定はあくまで参考情報であり、診断や治療方針を決めるものではありません。必ず医師などの医療専門職による評価を受けてください。"
 	},
 	"imaging": {
 		"title": "画像レポート",
 		"add": "画像レポートを追加",
+		"description": "レントゲンやCTなどの画像検査レポートを保存します。",
 		"type": "画像タイプ",
 		"bodyPart": "検査部位",
 		"examDate": "検査実施日",
@@ -290,7 +398,8 @@
 		"history": "病歴",
 		"lab": "検査値",
 		"imaging": "画像レポート",
-		"vital": "バイタルデータ"
+		"vital": "バイタルデータ",
+		"vitals": "バイタルデータ"
 	},
 	"profile": {
 		"title": "プロフィール設定",
@@ -539,10 +648,13 @@
 		"weight": "体重",
 		"systolic": "最高血圧",
 		"diastolic": "最低血圧",
+		"systolicShort": "最高",
+		"diastolicShort": "最低",
 		"value": "値",
 		"unit": "単位",
 		"recordedAt": "記録日時",
 		"notes": "メモ",
+		"notesPlaceholder": "メモを入力...",
 		"mmHg": "mmHg",
 		"bpm": "bpm",
 		"mgdL": "mg/dL",
@@ -551,6 +663,9 @@
 		"noData": "バイタルデータがありません",
 		"viewGraph": "グラフを表示",
 		"viewList": "リストを表示",
+		"newRecord": "新しいデータを記録",
+		"dataHistory": "データ履歴",
+		"saveRecord": "記録を保存",
 		"period": {
 			"week": "1週間",
 			"month": "1ヶ月",
