@@ -348,7 +348,7 @@ public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &Strin
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
-/// - `data_type_key`: データ種キー（UTF-8のバイト列想定）
+/// - `data_type`: データ種キー（文字列）
 /// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
 ///
 /// ## Aborts
@@ -357,17 +357,17 @@ public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &Strin
 /// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
 public(package) fun add_data_entry(
     passport: &mut MedicalPassport,
-    data_type_key: vector<u8>,
+    data_type: String,
     blob_ids: vector<String>
 ) {
-    assert!(!vector::is_empty(&data_type_key), E_EMPTY_DATA_TYPE_KEY);
+    assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
-        !df::exists_<vector<u8>>(&passport.id, data_type_key),
+        !df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_ALREADY_EXISTS
     );
 
-    df::add(&mut passport.id, data_type_key, blob_ids);
+    df::add(&mut passport.id, data_type, blob_ids);
 }
 
 /// 既存のデータ種に紐づく Blob ID 配列を丸ごと置き換える
@@ -378,7 +378,7 @@ public(package) fun add_data_entry(
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
-/// - `data_type_key`: 置き換えるデータ種キー
+/// - `data_type`: 置き換えるデータ種キー（文字列）
 /// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
 ///
 /// ## Aborts
@@ -387,17 +387,17 @@ public(package) fun add_data_entry(
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun replace_data_entry(
     passport: &mut MedicalPassport,
-    data_type_key: vector<u8>,
+    data_type: String,
     blob_ids: vector<String>
 ) {
-    assert!(!vector::is_empty(&data_type_key), E_EMPTY_DATA_TYPE_KEY);
+    assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
-        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    let entry_ref = df::borrow_mut<vector<u8>, vector<String>>(&mut passport.id, data_type_key);
+    let entry_ref = df::borrow_mut<String, vector<String>>(&mut passport.id, data_type);
     *entry_ref = blob_ids;
 }
 
@@ -405,7 +405,7 @@ public(package) fun replace_data_entry(
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への参照
-/// - `data_type_key`: 取得するデータ種キー
+/// - `data_type`: 取得するデータ種キー（文字列）
 ///
 /// ## 返り値
 /// - `&vector<String>`: 登録済み Blob ID 配列への参照
@@ -414,14 +414,14 @@ public(package) fun replace_data_entry(
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun get_data_entry(
     passport: &MedicalPassport,
-    data_type_key: vector<u8>
+    data_type: String
 ): &vector<String> {
     assert!(
-        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::borrow<vector<u8>, vector<String>>(&passport.id, data_type_key)
+    df::borrow<String, vector<String>>(&passport.id, data_type)
 }
 
 /// 指定データ種の Blob ID 配列を削除し、値を返す
@@ -434,14 +434,14 @@ public(package) fun get_data_entry(
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun remove_data_entry(
     passport: &mut MedicalPassport,
-    data_type_key: vector<u8>
+    data_type: String
 ): vector<String> {
     assert!(
-        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::remove<vector<u8>, vector<String>>(&mut passport.id, data_type_key)
+    df::remove<String, vector<String>>(&mut passport.id, data_type)
 }
 
 // ============================================================

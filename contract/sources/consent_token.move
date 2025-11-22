@@ -119,6 +119,12 @@ const E_SCOPE_NOT_ALLOWED: u64 = 209;
 /// grantor以外による無効化試行（将来用）
 const E_NON_GRANTOR_REVOKE: u64 = 210;
 
+/// パスポート所有者以外がトークン作成を試行
+const E_NOT_PASSPORT_OWNER: u64 = 211;
+
+/// data_typeとrequested_scopeが不一致
+const E_DATA_TYPE_MISMATCH: u64 = 212;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -199,6 +205,28 @@ public(package) fun e_scope_not_allowed(): u64 {
 /// - エラーコード `E_NON_GRANTOR_REVOKE` の値
 public(package) fun e_non_grantor_revoke(): u64 {
     E_NON_GRANTOR_REVOKE
+}
+
+/// E_NOT_PASSPORT_OWNER エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+///
+/// ## 返り値
+/// - エラーコード `E_NOT_PASSPORT_OWNER` の値
+public(package) fun e_not_passport_owner(): u64 {
+    E_NOT_PASSPORT_OWNER
+}
+
+/// E_DATA_TYPE_MISMATCH エラーコードを取得
+///
+/// ## 用途
+/// - assert! で使用するエラーコードを取得
+///
+/// ## 返り値
+/// - エラーコード `E_DATA_TYPE_MISMATCH` の値
+public(package) fun e_data_type_mismatch(): u64 {
+    E_DATA_TYPE_MISMATCH
 }
 
 // ============================================================

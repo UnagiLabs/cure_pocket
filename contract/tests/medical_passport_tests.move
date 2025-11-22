@@ -57,7 +57,7 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
-            let key = b"lab_results";
+            let key = string::utf8(b"lab_results");
             let blobs = sample_blob_ids();
             accessor::add_data_entry(&mut passport, key, blobs);
 
@@ -85,7 +85,7 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
-            let key = b"basic_profile";
+            let key = string::utf8(b"basic_profile");
             accessor::add_data_entry(&mut passport, key, sample_blob_ids());
 
             let new_blobs = vector[string::utf8(b"new_blob")];
@@ -115,7 +115,7 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
-            let key = b"medications";
+            let key = string::utf8(b"medications");
             accessor::add_data_entry(&mut passport, key, sample_blob_ids());
             // 2回目は同じキーで登録しようとすると abort
             accessor::add_data_entry(&mut passport, key, sample_blob_ids());

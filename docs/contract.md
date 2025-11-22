@@ -179,14 +179,14 @@ MedicalPassport.id (UID)
 ### 3.4 ConsentToken（閲覧権限管理）
 
 ```move
-public struct ConsentToken has key {
+public struct ConsentToken has key, store {
     id: object::UID,
-    grantor: address,
-    grantee: address,
     passport_id: object::ID,
-    scope: vector<String>,
+    grantor: address,
+    secret_hash: vector<u8>,
+    scopes: vector<String>,
     expiration_ms: u64,
-    revoked: bool,
+    is_active: bool,
 }
 ```
 
@@ -195,18 +195,26 @@ public struct ConsentToken has key {
 | フィールド | 型 | 説明 |
 |-----------|----|----|
 | `id` | `object::UID` | トークン識別子 |
-| `grantor` | `address` | 付与者（パスポート所有者） |
-| `grantee` | `address` | 被付与者（医療機関など） |
 | `passport_id` | `object::ID` | 対象パスポートID |
-| `scope` | `vector<String>` | アクセス可能なデータ種別 |
+| `grantor` | `address` | 付与者（パスポート所有者） |
+| `secret_hash` | `vector<u8>` | 合言葉のハッシュ（sha3_256） |
+| `scopes` | `vector<String>` | アクセス可能なデータ種別 |
 | `expiration_ms` | `u64` | 有効期限（Unix timestamp, ミリ秒） |
-| `revoked` | `bool` | 無効化フラグ |
+| `is_active` | `bool` | 有効フラグ（true=有効、false=無効化済み） |
+
+#### アクセス制御方式: ハッシュロック
+
+- **合言葉（secret）**: パスポート所有者が医療機関に共有する秘密情報
+- **ハッシュロック**: `secret_hash`にsecretのSHA3-256ハッシュを保存
+- **検証**: Sealキーサーバーが復号リクエスト時に、生secretをハッシュ化して`secret_hash`と比較
+- **利点**: 合言葉を知っている者のみがアクセス可能（柔軟性が高い）
+- **注意**: 被付与者の明示的な指定がないため、secretを知っている人なら誰でもアクセス可能
 
 #### 機能概要
 
-1. **トークン作成**: パスポート所有者が医療機関に閲覧権を付与
-2. **トークン検証**: Sealキーサーバーが復号リクエスト時に検証
-3. **トークン無効化**: パスポート所有者が権限を取り消し
+1. **トークン作成**: パスポート所有者が合言葉を設定して閲覧権を付与
+2. **トークン検証**: Sealキーサーバーが復号リクエスト時に合言葉をハッシュ化して検証
+3. **トークン無効化**: パスポート所有者が`is_active`をfalseに設定して権限を取り消し
 4. **スコープ検証**: データ種別ごとのアクセス制御
 
 ---
@@ -281,28 +289,31 @@ public struct ConsentToken has key {
 #### 詳細要件
 
 - **FR-3.1**: トークン作成（`create_consent_token`）
-  - パスポート所有者のみが作成可能
-  - 被付与者（grantee）、スコープ（データ種別リスト）、有効期限を指定
+  - パスポート所有者のみが作成可能（所有者検証あり）
+  - 合言葉のハッシュ（secret_hash）、スコープ（データ種別リスト）、有効期限を指定
   - 作成時に有効期限を計算（現在時刻 + duration_ms）
+  - 作成されたトークンは共有オブジェクトとして公開
 
 - **FR-3.2**: トークン検証（`seal_approve_consent`）
+  - 有効フラグチェック（is_active == true）
   - 有効期限チェック（現在時刻 < expiration_ms）
-  - 無効化フラグチェック（revoked == false）
-  - パスポートID一致チェック
-  - 被付与者一致チェック（caller == grantee）
-  - スコープ検証（data_typeがscopeに含まれるか）
+  - パスポートID一致チェック（Payload、Token、passport引数の3つが一致）
+  - ハッシュロック検証（Payloadのsecretをハッシュ化して`secret_hash`と比較）
+  - スコープ検証（data_typeがscopesに含まれるか）
+  - data_typeとPayload内のrequested_scopeの一致確認
 
 - **FR-3.3**: トークン無効化（`revoke_consent_token`）
   - 付与者（grantor）のみが無効化可能
-  - revokedフラグをtrueに設定
+  - `is_active`フラグをfalseに設定
 
 #### 受け入れ基準
 
-- パスポート所有者以外はトークン作成不可（`E_CONSENT_NOT_OWNER`）
+- パスポート所有者以外はトークン作成不可（`E_NOT_PASSPORT_OWNER`）
 - 期限切れトークンは検証失敗（`E_CONSENT_EXPIRED`）
 - 無効化済みトークンは検証失敗（`E_CONSENT_REVOKED`）
-- パスポートID不一致は検証失敗（`E_CONSENT_PASSPORT_MISMATCH`）
-- 被付与者不一致は検証失敗（`E_CONSENT_GRANTEE_MISMATCH`）
+- パスポートID不一致は検証失敗（`E_INVALID_PASSPORT_ID`）
+- 合言葉不一致は検証失敗（`E_INVALID_SECRET`）
+- data_type不一致は検証失敗（`E_DATA_TYPE_MISMATCH`）
 - スコープ外のデータ種別は検証失敗（`E_SCOPE_NOT_ALLOWED`）
 
 ---
@@ -446,7 +457,7 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool
 entry fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_id: String
+    blob_ids: vector<String>
 )
 
 entry fun replace_data_entry(
@@ -458,13 +469,19 @@ entry fun replace_data_entry(
 public fun get_data_entry(
     passport: &MedicalPassport,
     data_type: String
-): vector<String>
+): &vector<String>
 
 entry fun remove_data_entry(
     passport: &mut MedicalPassport,
     data_type: String
-)
+): vector<String>
 ```
+
+- `add_data_entry`: データ種別に対してBlob IDリストを新規追加
+- `replace_data_entry`: データ種別のBlob IDリスト全体を置換
+- `get_data_entry`: データ種別のBlob IDリストを取得（参照を返す）
+- `remove_data_entry`: データ種別のBlob IDリストを削除し、値を返す
+- エラー: `E_EMPTY_DATA_TYPE_KEY (9)`, `E_EMPTY_BLOB_IDS (10)`, `E_DATA_ENTRY_ALREADY_EXISTS (11)`, `E_DATA_ENTRY_NOT_FOUND (12)`
 
 ---
 
@@ -490,20 +507,19 @@ entry fun seal_approve_patient_only(
 entry fun create_consent_token(
     passport: &MedicalPassport,
     registry: &PassportRegistry,
-    grantee: address,
-    scope: vector<String>,
+    secret_hash: vector<u8>,
+    scopes: vector<String>,
     duration_ms: u64,
     clock: &Clock,
     ctx: &mut tx_context::TxContext
 )
 
 entry fun seal_approve_consent(
+    id: vector<u8>,
     token: &ConsentToken,
     passport: &MedicalPassport,
-    registry: &PassportRegistry,
     data_type: String,
-    clock: &Clock,
-    ctx: &tx_context::TxContext
+    clock: &Clock
 )
 
 entry fun revoke_consent_token(
@@ -516,22 +532,44 @@ entry fun revoke_consent_token(
 
 ## 7. エラーコード
 
+### MedicalPassport関連
+
 | コード | 定数名 | 説明 | 対処方法 |
 |-------|--------|------|---------|
 | **1** | `E_EMPTY_SEAL_ID` | Seal IDが空文字列 | 有効なseal IDを指定 |
 | **2** | `E_EMPTY_COUNTRY_CODE` | 国コードが空文字列 | 有効な国コード（例: "JP"）を指定 |
 | **3** | `E_ALREADY_HAS_PASSPORT` | 既にパスポートを所持している | 既存パスポートを使用 |
+| **4** | `E_MIGRATION_TARGET_HAS_PASSPORT` | 移行先が既にパスポート所持 | 別のアドレスに移行 |
+| **6** | `E_REGISTRY_ALREADY_REGISTERED` | レジストリに既に登録済み | 既存の登録情報を使用 |
+| **7** | `E_REGISTRY_NOT_FOUND` | レジストリに登録が見つからない | パスポートを作成 |
+| **8** | `E_NOT_OWNER_FOR_MIGRATION` | 移行元の所有者ではない | 所有者のみが移行可能 |
+| **9** | `E_EMPTY_DATA_TYPE_KEY` | データ種別キーが空文字列 | 有効なデータ種別を指定 |
+| **10** | `E_EMPTY_BLOB_IDS` | Blob IDリストが空 | 有効なBlob IDを指定 |
+| **11** | `E_DATA_ENTRY_ALREADY_EXISTS` | データエントリが既に存在 | `replace_data_entry`を使用 |
+| **12** | `E_DATA_ENTRY_NOT_FOUND` | データエントリが見つからない | 存在するデータ種別を指定 |
+
+### SealAccessor関連
+
+| コード | 定数名 | 説明 | 対処方法 |
+|-------|--------|------|---------|
 | **102** | `E_NO_ACCESS` | アクセス拒否（Sealアクセス制御） | パスポート所有者のみが復号リクエスト可能 |
-| **201** | `E_EMPTY_DATA_TYPE` | データ種別が空文字列 | 有効なデータ種別を指定 |
-| **202** | `E_EMPTY_BLOB_ID` | Blob IDが空文字列 | 有効なBlob IDを指定 |
-| **203** | `E_CONSENT_EXPIRED` | ConsentTokenが期限切れ | 新しいトークンを作成 |
-| **204** | `E_CONSENT_REVOKED` | ConsentTokenが無効化済み | 新しいトークンを作成 |
-| **205** | `E_CONSENT_PASSPORT_MISMATCH` | パスポートIDが不一致 | 正しいパスポートを指定 |
-| **206** | `E_CONSENT_GRANTEE_MISMATCH` | 被付与者が不一致 | 正しいgranteeでリクエスト |
-| **207** | `E_CONSENT_NOT_OWNER` | パスポート所有者以外がトークン作成 | パスポート所有者のみ作成可能 |
+
+### ConsentToken関連
+
+| コード | 定数名 | 説明 | 対処方法 |
+|-------|--------|------|---------|
+| **201** | `E_CONSENT_REVOKED` | ConsentTokenが無効化済み | 新しいトークンを作成 |
+| **202** | `E_CONSENT_EXPIRED` | ConsentTokenが期限切れ | 新しいトークンを作成 |
+| **203** | `E_INVALID_PASSPORT_ID` | パスポートIDが不一致 | 正しいパスポートを指定 |
+| **204** | `E_INVALID_SECRET` | シークレットハッシュが不一致 | 正しいシークレットを使用 |
+| **205** | `E_EMPTY_SECRET` | シークレットが空 | 有効なシークレットを指定 |
+| **206** | `E_INVALID_DURATION` | 無効な期間指定 | 適切な期間を指定 |
+| **207** | `E_EMPTY_SCOPES` | スコープリストが空 | 有効なスコープを指定 |
 | **208** | `E_EXPIRATION_OVERFLOW` | 有効期限計算時のオーバーフロー | 適切な期間を指定 |
 | **209** | `E_SCOPE_NOT_ALLOWED` | スコープ不一致 | 許可されたデータ種別を指定 |
 | **210** | `E_NON_GRANTOR_REVOKE` | grantor以外による無効化試行 | grantor（付与者）のみ無効化可能 |
+| **211** | `E_NOT_PASSPORT_OWNER` | パスポート所有者ではない | 所有者のみがトークン作成可能 |
+| **212** | `E_DATA_TYPE_MISMATCH` | データ種別が不一致 | 正しいデータ種別を指定 |
 
 ---
 
