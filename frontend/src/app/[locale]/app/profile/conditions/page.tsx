@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { DiseaseSelect } from "@/components/forms/DiseaseSelect";
 import { useApp } from "@/contexts/AppContext";
 import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
@@ -292,6 +293,20 @@ export default function ConditionsPage() {
 								>
 									<div className="flex items-start justify-between gap-3">
 										<div className="flex-1 space-y-3">
+											<DiseaseSelect
+												onSelect={(condition) => {
+													updateCondition(
+														entry.id,
+														"diagnosis",
+														condition.label,
+													);
+													updateCondition(
+														entry.id,
+														"icd10Code",
+														condition.icd10Code || "",
+													);
+												}}
+											/>
 											<input
 												type="text"
 												value={entry.diagnosis}
@@ -460,6 +475,20 @@ export default function ConditionsPage() {
 								>
 									<div className="flex items-start justify-between gap-3">
 										<div className="flex-1 space-y-3">
+											<DiseaseSelect
+												onSelect={(condition) => {
+													updateCondition(
+														entry.id,
+														"diagnosis",
+														condition.label,
+													);
+													updateCondition(
+														entry.id,
+														"icd10Code",
+														condition.icd10Code || "",
+													);
+												}}
+											/>
 											<input
 												type="text"
 												value={entry.diagnosis}

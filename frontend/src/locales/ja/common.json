@@ -386,7 +386,22 @@
 			"onset": "発症日",
 			"resolved": "完治日",
 			"notesPlaceholder": "メモ（経過、治療内容など）",
-			"notesActivePlaceholder": "治療内容や症状のメモ"
+			"notesActivePlaceholder": "治療内容や症状のメモ",
+			"chapter": "大まかな分類",
+			"search": "病名で検索",
+			"searchPlaceholder": "例: 糖尿病, 高血圧",
+			"noMatch": "該当する疾患が見つかりません"
+		},
+		"chapters": {
+			"cardiovascular": "循環器",
+			"metabolic": "代謝・内分泌",
+			"respiratory": "呼吸器",
+			"renal": "腎・泌尿器",
+			"hepatic": "肝・消化器",
+			"neurological": "神経・精神",
+			"hematology": "血液・腫瘍・免疫",
+			"musculoskeletal": "骨・関節・筋",
+			"gynecologic": "婦人科・妊娠関連"
 		},
 		"messages": {
 			"saved": "保存しました",
