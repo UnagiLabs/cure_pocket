@@ -183,7 +183,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							}}
 						>
 							<Plus size={20} />
-							<span>新しいデータを追加</span>
+							<span>{t("tabs.addNew")}</span>
 						</button>
 					</div>
 				</nav>

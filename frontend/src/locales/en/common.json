@@ -16,13 +16,15 @@
 	"tabs": {
 		"home": "Home",
 		"add": "Add",
+		"addNew": "Add New Data",
 		"card": "Card",
 		"records": "Records",
 		"data": "Data",
 		"profile": "Profile",
 		"settings": "Settings",
 		"medications": "Medications",
-		"emergency": "Emergency"
+		"emergency": "Emergency",
+		"vitals": "Vital Signs"
 	},
 	"home": {
 		"greeting": "Hello",

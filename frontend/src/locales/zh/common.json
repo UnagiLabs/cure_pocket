@@ -16,13 +16,15 @@
 	"tabs": {
 		"home": "主页",
 		"add": "添加",
+		"addNew": "添加新数据",
 		"card": "卡片",
 		"records": "记录",
 		"data": "数据",
 		"profile": "我的",
 		"settings": "设置",
 		"medications": "药物",
-		"emergency": "紧急"
+		"emergency": "紧急",
+		"vitals": "生命体征"
 	},
 	"home": {
 		"greeting": "你好",
