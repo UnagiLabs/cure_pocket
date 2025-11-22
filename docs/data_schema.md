@@ -1,7 +1,7 @@
 # CurePocket Data Schema (Blob-based)
 
-**Version**: 2.0.0  
-**Last Updated**: 2025-11-22  
+**Version**: 2.0.0
+**Last Updated**: 2025-11-22
 **Status**: Draft
 
 後方互換は考慮せず、パスポート配下の Dynamic Field に複数の Walrus Blob ID を種類別に保持する前提で記載しています。各データ種は独立した“箱”として保存し、更新・差し替えも種類単位で行います。
@@ -11,6 +11,7 @@
 - `basic_profile`: JSON 1本以上（例: 最新と過去の更新履歴）
 - `medications`: CSV または TSV 1本以上（調剤明細ごとに分割してもよい）
 - `conditions`: JSON 1本以上（最新スナップショット）
+- `lab_results`: CSV（カンマ区切り固定）1本以上（採血1回=1レコード行）
 
 SBT（MedicalPassport）側では各種ごとに複数の Blob ID を Dynamic Field で管理する：
 
@@ -18,7 +19,8 @@ SBT（MedicalPassport）側では各種ごとに複数の Blob ID を Dynamic Fi
 passport
   ├─ basic_profile : [blob_id_v1, blob_id_v2, ...]
   ├─ medications   : [blob_id_2024Q4, blob_id_2025Q1, ...]
-  └─ conditions    : [blob_id_latest]
+  ├─ conditions    : [blob_id_latest]
+  └─ lab_results   : [blob_id_2025-11-21, blob_id_2025-08-01, ...]
 ```
 
 ## 2. 採用する標準規格
@@ -89,15 +91,36 @@ dispensed_on\tatc_code\trxnorm_code
 }
 ```
 
+### 3.4 検査値（lab_results, CSV）
+
+1行=1検査項目。文字コードは UTF-8、区切りはカンマ固定（TSVは使わない）。ヘッダー必須、列順固定。
+
+列定義:
+1. `collected_on` : 採取日 (YYYY-MM-DD)
+2. `loinc_code`   : LOINC コード (例: 4548-4)
+3. `value`        : 数値 (小数可)
+4. `unit`         : 単位（UCUM推奨, 例: %, mg/dL）
+5. `ref_low`      : 基準下限 (任意, 空でも可)
+6. `ref_high`     : 基準上限 (任意, 空でも可)
+7. `flag`         : H / L / N / U （High/Low/Normal/Unknown）
+8. `notes`        : 任意メモ（カンマを含む場合はダブルクオートでエスケープ）
+
+CSV例:
+```
+collected_on,loinc_code,value,unit,ref_low,ref_high,flag,notes
+2025-11-21,4548-4,6.5,%,4.7,6.2,H,"Post-prandial"
+2025-11-21,718-7,13.8,g/dL,13.5,17.5,N,
+```
+
 ## 4. バリデーション指針
 
 - 各 Blob は上記の最小フィールドを満たすこと。
 - 日付は `YYYY-MM-DD`、コードは大文字で保存する。
-- CSV/TSV はヘッダー行必須。フィールド数は3列固定。
-- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions`）を必ず指定する。
+- medications: CSV/TSV はヘッダー行必須・3列固定。
+- lab_results: CSV はヘッダー行必須・8列固定（不足/超過列はNG）。
+- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions` / `lab_results`）を必ず指定する。
 
 ## 5. 更新ポリシー
 
 - 後方互換を考慮しない。スキーマ変更時は新しい Blob を追加し、古い Blob は参照を外すだけで削除可。
 - フロントエンドはデータ種ごとに最新 Blob を選択して復号・表示する。
-
