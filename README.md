@@ -82,11 +82,11 @@ CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマ�
   - 基礎疾患・既往歴・手術歴
   - 検査値（血液検査など）
   - 画像レポート（レントゲン・CT・MRI などの要約、将来的には実画像）
-- 旅行や救急向けの **Emergency Health Card（緊急ヘルスカード）** を表示・PDF化  
-  （英語＋母語表記、QR付き）
+- パスポート（SBT）は **`seal_id`・`country_code` と、統計データ提供可否の bool（例：`analytics_opt_in`）のみを保持**
+- 薬・検査値・画像・病歴など各データの **Blob ID をダイナミックフィールドで複数管理**
 - 医師・薬剤師などに見せたいときだけ：
-  - 時間制限付きの閲覧リンク（QRコード）を発行  
-  - 見せるカテゴリーを限定（例：薬＋アレルギーのみ）
+  - データ種ごとに Seal で暗号・復号を実行
+  - データ種単位で一時復号鍵を Seal から発行し共有
 
 ### 技術的な構成
 
@@ -97,7 +97,6 @@ CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマ�
   - `PassportRegistry`（1ウォレット1枚制約を管理する共有オブジェクト）  
   - Sealアクセス制御（`seal_accessor`モジュール）  
 - Sui 上には（将来実装予定）：
-  - `MedicalVault`（各種データへのインデックス）  
   - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry` など  
   - `ConsentToken`（閲覧権）  
   - `AnalyticsPool`（データ経済用のプール）
@@ -128,11 +127,10 @@ CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマ�
 ### Sui を使う理由
 
 - オブジェクト指向のモデルがヘルスパスポートと相性が良い：
-  - `MedicalPassport`（唯一のパスポート、実装済み）  
+  - `MedicalPassport`（唯一のパスポート、実装済み。`seal_id`・`country_code`・`analytics_opt_in` を保持し、医療データ参照はダイナミックフィールド）  
   - `PassportRegistry`（1ウォレット1枚制約、実装済み）  
   - Sealアクセス制御（実装済み）  
-  - `MedicalVault`（データの入り口、将来実装予定）  
-  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry`（将来実装予定）  
+  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry`（将来実装予定。Walrus Blob への参照をパスポートのダイナミックフィールドで管理）  
   - `ConsentToken`（閲覧権、将来実装予定）  
   - `AnalyticsPool` / `RewardShare`（データ経済、将来実装予定）
 - 所有権・譲渡不可（SBT）・アクセス権のロジックを  
@@ -172,17 +170,16 @@ objects)    blobs)          control)
   - モバイルフレンドリーな UI
   - Connect Wallet
   - 多言語対応（日本語/英語/中国語/フランス語/ポルトガル語 など）
-  - Emergency Health Card の表示・QR生成
+  - データ種ごとに Seal を用いた暗号・復号を実行（フロントで種別を識別）
 
 - **Sui**（実装済み）
-  - `MedicalPassport`：ユーザーのヘルスパスポートを示す譲渡不可トークン（SBT）  
+  - `MedicalPassport`：ユーザーのヘルスパスポートを示す譲渡不可トークン（SBT）。`seal_id`・`country_code`・統計データ提供可否の bool（`analytics_opt_in`）を保持し、データ参照はダイナミックフィールドに格納  
   - `PassportRegistry`：1ウォレット1枚制約を管理する共有オブジェクト  
   - `seal_accessor`：Sealキーサーバーからの復号リクエストに対するアクセス制御  
   - `admin`：管理者によるパスポート移行機能
 
 - **Sui**（将来実装予定）
-  - `MedicalVault`：Walrus 上のデータ群へのインデックス  
-  - 各種 `*Entry`：薬・検査・画像・病歴などへの参照  
+  - 各種 `*Entry`：薬・検査・画像・病歴などへの参照（Walrus Blob へのポインタのみ、パスポート配下のダイナミックフィールドで管理）  
   - `ConsentToken`：一時的な閲覧権限  
   - `AnalyticsPool`：データ利用報酬の分配ロジック
 
@@ -239,24 +236,21 @@ CurePocket は、データを **2つのレイヤー** に分けて扱います�
 2. `Connect Sui Wallet` ボタンからウォレット接続  
 3. 初回アクセス時（実装済み）：
    - `MedicalPassport` SBT をミント（譲渡不可、1ウォレット1枚制約）
-   - Walrus に暗号化データをアップロードし、Blob ID を取得
    - Seal で暗号鍵を生成し、Seal ID を取得
-   - パスポートに `walrus_blob_id`、`seal_id`、`country_code` を設定
+   - パスポートには `seal_id`、`country_code`、統計データ提供可否フラグ（`analytics_opt_in`）のみを設定
+   - データはカテゴリーごとに暗号化して Walrus に保存し、得た Blob ID をパスポート配下のダイナミックフィールドとして登録
 4. ユーザーが医療データを復号（実装済み）：
    - Sealキーサーバーに復号リクエストを送信
    - Sealキーサーバーが `.dry_run_transaction_block` で `seal_approve_patient_only` を実行
    - パスポート所有者のみが復号可能（`PassportRegistry`で所有権検証）
+   - 復号はデータ種ごとに実行し、対象 Blob ID を指定
 5. ユーザーが薬情報を追加（将来実装予定）：
    - フロントで入力（MVPではフォーム入力）
    - FHIR風 JSON を生成し、暗号化して Walrus に保存
-   - Blob ID を用いて Sui 上で `MedicationEntry` を作成
-6. 緊急用ヘルスカードを表示（将来実装予定）：
-   - 現在の薬・アレルギー・重要な病歴を英語で表示
-   - 医療者向けビューへの QR コードを表示
-7. 医療者が QR を読み取る（将来実装予定）：
-   - バックエンド側で `ConsentToken` を発行
-   - 閲覧用URLにリダイレクトし、限定的な情報だけ参照できる
-8. Analytics のデモ（MVPではモック、将来実装予定）：
+   - Blob ID を用いて Sui 上で `MedicationEntry` を作成し、パスポートのダイナミックフィールドに登録
+6. 医療者への一時閲覧権限付与（将来実装予定）：
+   - データ種ごとに Seal で一時復号鍵を発行し、`ConsentToken` と組み合わせて期間限定アクセスを許可
+7. Analytics のデモ（MVPではモック、将来実装予定）：
    - 匿名化された統計ダッシュボードを表示
    - 「データが使われるとユーザーに報酬が還元される」フローを説明
 
@@ -301,4 +295,3 @@ CurePocket は、データを **2つのレイヤー** に分けて扱います�
 - Key & Access: Seal（暗号鍵管理・アクセス制御）
 - Auth (MVP): Connect Sui Wallet  
   - 将来的には zkLogin（Google/Apple など）対応予定
-
