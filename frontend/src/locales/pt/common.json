@@ -16,14 +16,26 @@
 	"tabs": {
 		"home": "Início",
 		"add": "Adicionar",
+		"addNew": "Adicionar novos dados",
 		"card": "Cartão",
+		"records": "Registros",
+		"data": "Dados",
+		"profile": "Perfil",
 		"settings": "Configurações",
 		"medications": "Medicamentos",
-		"emergency": "Emergência"
+		"emergency": "Emergência",
+		"vitals": "Sinais vitais"
 	},
 	"home": {
 		"greeting": "Olá",
+		"greetingShort": "Olá, ",
+		"guest": "Convidado",
+		"medicationNotebook": "Caderneta de medicamentos",
+		"labResults": "Resultados de laboratório",
+		"imagingData": "Imagens",
 		"title": "Seu bolso hoje",
+		"todayVitals": "Sinais vitais de hoje",
+		"recentRecords": "Registros recentes",
 		"activeCount": "{{count}} medicamentos ativos",
 		"activeMedications": "Medicamentos ativos",
 		"lastUpdated": "Última atualização: {{time}}",
@@ -31,6 +43,9 @@
 		"history": "Histórico",
 		"share": "Compartilhar",
 		"emergencyCard": "Cartão de emergência",
+		"emergency": "Emergência",
+		"appointments": "Consultas",
+		"records": "Registros",
 		"guestGreeting": "Olá, Convidado",
 		"greetingWithName": "Olá, {{name}}",
 		"profileSetupBanner": {
@@ -62,6 +77,7 @@
 	},
 	"medications": {
 		"title": "Seus medicamentos",
+		"description": "Gerencie todas as suas prescrições em um só lugar.",
 		"morning": "Manhã",
 		"afternoon": "Tarde",
 		"evening": "Noite",
@@ -162,6 +178,7 @@
 	"allergies": {
 		"title": "Alergias",
 		"add": "Adicionar alergia",
+		"description": "Registre alergias a medicamentos, alimentos e outras substâncias importantes.",
 		"substance": "Alérgeno",
 		"severity": "Gravidade",
 		"symptoms": "Sintomas",
@@ -179,6 +196,7 @@
 	"histories": {
 		"title": "Histórico médico",
 		"add": "Adicionar histórico médico",
+		"pageDescription": "Registre doenças anteriores, cirurgias e outros históricos médicos importantes.",
 		"type": "Tipo",
 		"diagnosis": "Diagnóstico / Nome da cirurgia",
 		"diagnosisDate": "Data do diagnóstico / cirurgia",
@@ -202,6 +220,7 @@
 	"labs": {
 		"title": "Resultados de laboratório",
 		"add": "Adicionar resultado de laboratório",
+		"description": "Registre resultados importantes para acompanhar a evolução dos exames.",
 		"testName": "Nome do teste",
 		"value": "Valor",
 		"unit": "Unidade",
@@ -231,6 +250,7 @@
 	"imaging": {
 		"title": "Relatórios de imagem",
 		"add": "Adicionar relatório de imagem",
+		"description": "Guarde relatórios de raios X, tomografias, ressonâncias e outros exames de imagem.",
 		"type": "Tipo de imagem",
 		"bodyPart": "Parte do corpo",
 		"examDate": "Data do exame",
@@ -432,10 +452,13 @@
 		"weight": "Peso",
 		"systolic": "Sistólica",
 		"diastolic": "Diastólica",
+		"systolicShort": "Alta",
+		"diastolicShort": "Baixa",
 		"value": "Valor",
 		"unit": "Unidade",
 		"recordedAt": "Registrado em",
 		"notes": "Notas",
+		"notesPlaceholder": "Digite notas...",
 		"mmHg": "mmHg",
 		"bpm": "bpm",
 		"mgdL": "mg/dL",
@@ -444,6 +467,9 @@
 		"noData": "Sem dados de sinais vitais",
 		"viewGraph": "Ver gráfico",
 		"viewList": "Ver lista",
+		"newRecord": "Registrar novos dados",
+		"dataHistory": "Histórico de dados",
+		"saveRecord": "Salvar registro",
 		"period": {
 			"week": "1 semana",
 			"month": "1 mês",

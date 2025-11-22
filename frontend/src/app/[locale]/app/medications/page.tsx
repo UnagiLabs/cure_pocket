@@ -1,232 +1,275 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Calendar, MapPin, Plus, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { MedicationForm } from "@/components/forms/MedicationForm";
+import { useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
 /**
- * 薬一覧ページ
- * 登録された薬を一覧表示し、同一画面で追加も行う
+ * 処方箋一覧ページ
+ * 直近の処方3件を表示（同じ日・同じ医療機関・同じ診療科でグループ化）
  */
 export default function MedicationsPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const searchParams = useSearchParams();
-	const { medications, settings } = useApp();
+	const { prescriptions, settings } = useApp();
 	const theme = getTheme(settings.theme);
 
-	const [isAddOpen, setIsAddOpen] = useState(false);
+	// 処方日順にソート（新しい順）して最新3件を取得
+	const recentPrescriptions = useMemo(() => {
+		return [...prescriptions]
+			.sort((a, b) => {
+				const dateA = new Date(a.prescriptionDate).getTime();
+				const dateB = new Date(b.prescriptionDate).getTime();
+				return dateB - dateA;
+			})
+			.slice(0, 3);
+	}, [prescriptions]);
 
-	// URL の mode=add が付いている場合はフォームを開いた状態で表示
-	useEffect(() => {
-		setIsAddOpen(searchParams.get("mode") === "add");
-	}, [searchParams]);
-
-	// アクティブな薬のみ表示
-	const activeMedications = useMemo(() => {
-		return medications.filter((med) => med.status === "active");
-	}, [medications]);
-
-	// 開始日順にソート（新しい順）
-	const sortedMedications = useMemo(() => {
-		return [...activeMedications].sort((a, b) => {
-			const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
-			const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
-			return dateB - dateA;
+	const formatDate = (dateString: string) => {
+		return new Date(dateString).toLocaleDateString(locale, {
+			year: "numeric",
+			month: "short",
+			day: "numeric",
 		});
-	}, [activeMedications]);
-
-	const openAdd = () => {
-		setIsAddOpen(true);
-		const params = new URLSearchParams(searchParams.toString());
-		params.set("mode", "add");
-		router.replace(`/${locale}/app/medications?${params.toString()}`);
-	};
-
-	const closeAdd = () => {
-		setIsAddOpen(false);
-		const params = new URLSearchParams(searchParams.toString());
-		params.delete("mode");
-		const query = params.toString();
-		router.replace(`/${locale}/app/medications${query ? `?${query}` : ""}`);
 	};
 
 	return (
-		<div className="p-4 md:p-6 space-y-6">
-			{/* Header */}
-			<div className="mb-2 flex items-center justify-between md:mb-4">
-				<h1
-					className="text-xl font-bold md:text-2xl"
-					style={{ color: theme.colors.text }}
-				>
+		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8 space-y-6">
+			{/* Header - Mobile only, desktop shows in top bar */}
+			<div className="lg:hidden mb-4">
+				<h1 className="text-xl font-bold" style={{ color: theme.colors.text }}>
 					{t("medications.title")}
 				</h1>
-				<button
-					type="button"
-					onClick={openAdd}
-					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
-					style={{ backgroundColor: theme.colors.primary }}
+				<p
+					className="mt-1 text-sm"
+					style={{ color: theme.colors.textSecondary }}
 				>
-					<Plus className="h-4 w-4" />
-					{t("add.title")}
-				</button>
+					{t("medications.description")}
+				</p>
 			</div>
 
-			{/* Medications List */}
-			{sortedMedications.length === 0 ? (
+			{/* Prescriptions List */}
+			{recentPrescriptions.length === 0 ? (
 				<div
-					className="flex h-64 items-center justify-center rounded-lg"
+					className="flex flex-col h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
 				>
-					<p style={{ color: theme.colors.textSecondary }}>
-						{t("medications.noMedications")}
+					<p
+						className="mb-4 text-center"
+						style={{ color: theme.colors.textSecondary }}
+					>
+						{t("medications.noPrescriptions")}
 					</p>
+					<button
+						type="button"
+						onClick={() => router.push(`/${locale}/app/add/medication`)}
+						className="flex items-center gap-2 rounded-lg px-6 py-3 font-medium text-white transition-all hover:scale-[1.02]"
+						style={{
+							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
+						}}
+					>
+						<Plus className="h-5 w-5" />
+						{t("medications.addFirstPrescription")}
+					</button>
 				</div>
 			) : (
-				<div className="space-y-3">
-					{sortedMedications.map((medication) => {
-						const startDate = medication.startDate
-							? new Date(medication.startDate).toLocaleDateString("ja-JP", {
-									year: "numeric",
-									month: "short",
-									day: "numeric",
-								})
-							: null;
-
-						return (
+				<div className="space-y-4">
+					{recentPrescriptions.map((prescription) => (
+						<div
+							key={prescription.id}
+							className="rounded-xl border-2 overflow-hidden"
+							style={{
+								backgroundColor: theme.colors.surface,
+								borderColor: `${theme.colors.textSecondary}20`,
+							}}
+						>
+							{/* Prescription Header */}
 							<div
-								key={medication.id}
-								className="rounded-lg border-2 p-4"
+								className="px-4 py-3 border-b"
 								style={{
-									backgroundColor: theme.colors.surface,
-									borderColor: `${theme.colors.textSecondary}40`,
+									backgroundColor: `${theme.colors.primary}10`,
+									borderColor: `${theme.colors.textSecondary}20`,
 								}}
 							>
 								<div className="flex items-start justify-between">
 									<div className="flex-1">
-										<div
-											className="mb-1 font-semibold text-lg"
-											style={{ color: theme.colors.text }}
-										>
-											{medication.name}
+										<div className="flex items-center gap-2 mb-2">
+											<Calendar
+												size={16}
+												style={{ color: theme.colors.primary }}
+											/>
+											<span
+												className="font-bold text-sm"
+												style={{ color: theme.colors.text }}
+											>
+												{formatDate(prescription.prescriptionDate)}
+											</span>
 										</div>
-										{medication.genericName && (
+										<div className="flex items-center gap-2 mb-1">
+											<MapPin
+												size={14}
+												style={{ color: theme.colors.textSecondary }}
+											/>
+											<span
+												className="text-sm font-medium"
+												style={{ color: theme.colors.text }}
+											>
+												{prescription.clinic}
+											</span>
+										</div>
+										{prescription.department && (
 											<div
-												className="mb-2 text-sm"
+												className="text-xs ml-5"
 												style={{ color: theme.colors.textSecondary }}
 											>
-												{t("add.genericName")}: {medication.genericName}
+												{prescription.department}
 											</div>
 										)}
-										<div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
-											{medication.strength && (
-												<span style={{ color: theme.colors.textSecondary }}>
-													{medication.strength}
-												</span>
-											)}
-											{medication.dose && (
-												<span style={{ color: theme.colors.textSecondary }}>
-													{medication.dose}
-												</span>
-											)}
-											{medication.frequency && (
-												<span style={{ color: theme.colors.textSecondary }}>
-													{medication.frequency}
-												</span>
-											)}
-											{medication.timing && (
+										{prescription.doctorName && (
+											<div className="flex items-center gap-2 mt-1 ml-5">
+												<User
+													size={12}
+													style={{ color: theme.colors.textSecondary }}
+												/>
 												<span
-													className="rounded px-2 py-0.5 text-xs"
-													style={{
-														backgroundColor: `${theme.colors.primary}20`,
-														color: theme.colors.primary,
-													}}
+													className="text-xs"
+													style={{ color: theme.colors.textSecondary }}
 												>
-													{t(`medications.${medication.timing}`)}
+													{prescription.doctorName}
 												</span>
-											)}
-										</div>
-										{startDate && (
-											<div
-												className="mb-1 text-xs"
-												style={{ color: theme.colors.textSecondary }}
-											>
-												{t("add.startDate")}: {startDate}
-											</div>
-										)}
-										{medication.reason && (
-											<div
-												className="mt-2 text-sm"
-												style={{ color: theme.colors.textSecondary }}
-											>
-												{t("add.reason")}: {medication.reason}
-											</div>
-										)}
-										{medication.clinic && (
-											<div
-												className="mt-1 text-xs"
-												style={{ color: theme.colors.textSecondary }}
-											>
-												{t("medications.clinic")}: {medication.clinic}
-											</div>
-										)}
-										{medication.warning && (
-											<div
-												className="mt-2 rounded px-2 py-1 text-xs"
-												style={{
-													backgroundColor: "#FEE2E2",
-													color: "#DC2626",
-												}}
-											>
-												{t("medications.warning")}: {medication.warning}
 											</div>
 										)}
 									</div>
 								</div>
 							</div>
-						);
-					})}
+
+							{/* Medications List */}
+							<div className="px-4 py-3 space-y-3">
+								{prescription.medications.map((medication) => (
+									<div
+										key={medication.id}
+										className="pb-3 border-b last:border-b-0"
+										style={{ borderColor: `${theme.colors.textSecondary}10` }}
+									>
+										<div
+											className="font-semibold mb-1"
+											style={{ color: theme.colors.text }}
+										>
+											{medication.drugName}
+										</div>
+										<div className="grid grid-cols-2 gap-2 text-xs">
+											<div>
+												<span style={{ color: theme.colors.textSecondary }}>
+													{t("prescriptions.strength")}:{" "}
+												</span>
+												<span style={{ color: theme.colors.text }}>
+													{medication.strength}
+												</span>
+											</div>
+											<div>
+												<span style={{ color: theme.colors.textSecondary }}>
+													{t("prescriptions.quantity")}:{" "}
+												</span>
+												<span style={{ color: theme.colors.text }}>
+													{medication.quantity}
+												</span>
+											</div>
+											<div className="col-span-2">
+												<span style={{ color: theme.colors.textSecondary }}>
+													{t("prescriptions.dosage")}:{" "}
+												</span>
+												<span style={{ color: theme.colors.text }}>
+													{medication.dosage}
+												</span>
+											</div>
+											{medication.duration && (
+												<div className="col-span-2">
+													<span style={{ color: theme.colors.textSecondary }}>
+														{t("prescriptions.duration")}:{" "}
+													</span>
+													<span style={{ color: theme.colors.text }}>
+														{medication.duration}
+													</span>
+												</div>
+											)}
+										</div>
+									</div>
+								))}
+							</div>
+
+							{/* Symptoms & Notes */}
+							{(prescription.symptoms || prescription.notes) && (
+								<div
+									className="px-4 py-3 border-t text-sm"
+									style={{
+										backgroundColor: `${theme.colors.textSecondary}05`,
+										borderColor: `${theme.colors.textSecondary}20`,
+									}}
+								>
+									{prescription.symptoms && (
+										<div className="mb-2">
+											<span
+												className="font-medium"
+												style={{ color: theme.colors.textSecondary }}
+											>
+												{t("prescriptions.symptoms")}:{" "}
+											</span>
+											<span style={{ color: theme.colors.text }}>
+												{prescription.symptoms}
+											</span>
+										</div>
+									)}
+									{prescription.notes && (
+										<div>
+											<span
+												className="font-medium"
+												style={{ color: theme.colors.textSecondary }}
+											>
+												{t("prescriptions.notes")}:{" "}
+											</span>
+											<span style={{ color: theme.colors.text }}>
+												{prescription.notes}
+											</span>
+										</div>
+									)}
+								</div>
+							)}
+
+							{/* Attachments */}
+							{prescription.attachments &&
+								prescription.attachments.length > 0 && (
+									<div
+										className="px-4 py-2 border-t text-xs"
+										style={{
+											borderColor: `${theme.colors.textSecondary}20`,
+											color: theme.colors.textSecondary,
+										}}
+									>
+										📎 {prescription.attachments.length}{" "}
+										{t("prescriptions.attachments")}
+									</div>
+								)}
+						</div>
+					))}
 				</div>
 			)}
 
-			{/* Add Medication Form (inline panel) */}
-			{isAddOpen && (
-				<div
-					className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t bg-white p-4 shadow-lg md:static md:rounded-xl md:border md:p-6"
-					style={{
-						backgroundColor: theme.colors.background,
-						borderColor: `${theme.colors.textSecondary}20`,
-					}}
-				>
-					<div className="mb-4 flex items-center justify-between">
-						<h2
-							className="text-lg font-bold md:text-xl"
-							style={{ color: theme.colors.text }}
-						>
-							{t("add.title")}
-						</h2>
-						<button
-							type="button"
-							onClick={closeAdd}
-							className="rounded-full p-2"
-							style={{ color: theme.colors.textSecondary }}
-						>
-							<X className="h-5 w-5" />
-						</button>
-					</div>
-					<MedicationForm
-						onSaved={() => {
-							closeAdd();
-						}}
-						onCancel={closeAdd}
-					/>
-				</div>
-			)}
+			{/* Add Button */}
+			<button
+				type="button"
+				onClick={() => router.push(`/${locale}/app/add/medication`)}
+				className="w-full rounded-xl py-4 font-medium text-white transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+				style={{
+					backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
+				}}
+			>
+				<Plus className="h-5 w-5" />
+				{t("medications.addNewPrescription")}
+			</button>
 		</div>
 	);
 }

@@ -16,14 +16,26 @@
 	"tabs": {
 		"home": "Home",
 		"add": "Add",
+		"addNew": "Add New Data",
 		"card": "Card",
+		"records": "Records",
+		"data": "Data",
+		"profile": "Profile",
 		"settings": "Settings",
 		"medications": "Medications",
-		"emergency": "Emergency"
+		"emergency": "Emergency",
+		"vitals": "Vital Signs"
 	},
 	"home": {
 		"greeting": "Hello",
+		"greetingShort": "Hello, ",
+		"guest": "Guest",
+		"medicationNotebook": "Medications",
+		"labResults": "Lab Results",
+		"imagingData": "Imaging",
 		"title": "Your Pocket Today",
+		"todayVitals": "Today's Vitals",
+		"recentRecords": "Recent Records",
 		"activeCount": "{{count}} active medications",
 		"activeMedications": "Active Medications",
 		"lastUpdated": "Last updated: {{time}}",
@@ -31,12 +43,32 @@
 		"history": "History",
 		"share": "Share",
 		"emergencyCard": "Emergency Card",
+		"emergency": "Emergency",
+		"appointments": "Appointments",
+		"records": "Records",
 		"guestGreeting": "Hello Guest",
 		"greetingWithName": "Hello, {{name}}",
 		"profileSetupBanner": {
 			"title": "Set up your profile",
 			"description": "Register your basic information to receive safer and more accurate healthcare services.",
 			"button": "Set up profile"
+		}
+	},
+	"dataOverview": {
+		"title": "Health Data Overview",
+		"description": "A unified dashboard to view your SBT-backed health data — basic profile, conditions, prescriptions, lab results, imaging, and vitals — at a glance.",
+		"basicInfo": "Basic Profile",
+		"conditions": "Conditions",
+		"prescriptions": "Prescriptions",
+		"empty": "Not set",
+		"noConditions": "No conditions registered",
+		"noLabs": "No lab results registered",
+		"noImaging": "No imaging data registered",
+		"noVitals": "No vital records yet",
+		"chips": {
+			"conditions": "Conditions",
+			"prescriptions": "Prescriptions",
+			"vitals": "Vitals"
 		}
 	},
 	"add": {
@@ -58,10 +90,12 @@
 		"frequency": "Frequency",
 		"startDate": "Start Date",
 		"endDate": "End Date (optional)",
-		"reason": "Reason"
+		"reason": "Reason",
+		"vitalsDescription": "Record your vital signs"
 	},
 	"medications": {
 		"title": "Your Medications",
+		"description": "Manage your current prescriptions in one place.",
 		"morning": "Morning",
 		"afternoon": "Afternoon",
 		"evening": "Evening",
@@ -69,7 +103,42 @@
 		"asNeeded": "As Needed",
 		"clinic": "Clinic",
 		"warning": "Warning",
-		"noMedications": "No active medications registered"
+		"noMedications": "No active medications registered",
+		"noPrescriptions": "No prescriptions registered",
+		"addFirstPrescription": "Add your first prescription",
+		"addNewPrescription": "Add new prescription"
+	},
+	"prescriptions": {
+		"addNew": "Add Prescription",
+		"basicInfo": "Prescription Information",
+		"prescriptionDate": "Prescription Date",
+		"clinic": "Medical Facility",
+		"clinicPlaceholder": "e.g., General Hospital",
+		"department": "Department",
+		"departmentPlaceholder": "e.g., Internal Medicine, Orthopedics",
+		"doctorName": "Doctor's Name",
+		"doctorNamePlaceholder": "e.g., Dr. Smith",
+		"medications": "Medications",
+		"medication": "Medication",
+		"addMedication": "Add medication",
+		"drugName": "Drug Name",
+		"drugNamePlaceholder": "e.g., Aspirin 100mg",
+		"strength": "Strength",
+		"dosage": "Dosage",
+		"dosagePlaceholder": "e.g., Twice daily, after meals",
+		"quantity": "Quantity",
+		"duration": "Duration/Amount",
+		"additionalInfo": "Notes & Attachments",
+		"symptoms": "Symptoms/Purpose",
+		"symptomsPlaceholder": "e.g., Headache, fever",
+		"notes": "Notes",
+		"notesPlaceholder": "e.g., Do not take on empty stomach",
+		"photoAttachmentComingSoon": "Photo attachment (coming soon)",
+		"attachments": "attachments",
+		"validation": {
+			"clinicRequired": "Please enter medical facility name",
+			"medicationRequired": "Please enter at least one medication name"
+		}
 	},
 	"card": {
 		"title": "Emergency Card",
@@ -81,7 +150,12 @@
 		"printCard": "Print Card",
 		"currentMedications": "Current Medications",
 		"scanToView": "Scan to view",
-		"englishVersion": "English version available"
+		"englishVersion": "English version available",
+		"selectCategories": "Select categories to share",
+		"emergencyInfo": {
+			"title": "How to use this in emergencies",
+			"description": "Show this QR code to healthcare professionals to share only the categories you selected. The link automatically expires 24 hours after creation."
+		}
 	},
 	"settings": {
 		"title": "Settings",
@@ -96,11 +170,15 @@
 		"country": "Country",
 		"allergies": "Allergies",
 		"profile": "Profile",
+		"profileSettings": "Profile Settings",
 		"dataExport": "Data Export",
 		"walletConnected": "Wallet Connected",
 		"walrusStorage": "Walrus Storage",
 		"encrypted": "Encrypted",
-		"lastSync": "Last sync: {{time}}"
+		"lastSync": "Last sync: {{time}}",
+		"researchContribution": "Research Contribution",
+		"earnedRewards": "Earned Rewards",
+		"lastSyncRecent": "Last sync: 2 minutes ago"
 	},
 	"wallet": {
 		"connect": "Connect Wallet",
@@ -186,6 +264,7 @@
 	"allergies": {
 		"title": "Allergies",
 		"add": "Add Allergy",
+		"description": "Record drug, food, and other allergies for emergencies.",
 		"substance": "Allergen",
 		"severity": "Severity",
 		"symptoms": "Symptoms",
@@ -203,6 +282,7 @@
 	"histories": {
 		"title": "Medical History",
 		"add": "Add Medical History",
+		"pageDescription": "Keep track of past illnesses, surgeries, and important medical history.",
 		"type": "Type",
 		"diagnosis": "Diagnosis / Surgery Name",
 		"diagnosisDate": "Diagnosis / Surgery Date",
@@ -226,6 +306,7 @@
 	"labs": {
 		"title": "Lab Results",
 		"add": "Add Lab Result",
+		"description": "Store key lab results so you can track trends over time.",
 		"testName": "Test Name",
 		"value": "Value",
 		"unit": "Unit",
@@ -239,7 +320,8 @@
 		"selectTest": "Please select a test",
 		"valuePlaceholder": "Enter value",
 		"validation": {
-			"required": "Please enter test name and value"
+			"required": "Please enter test name and value",
+			"noValues": "Please enter at least one lab value."
 		},
 		"categories": {
 			"CBC": "CBC",
@@ -250,11 +332,32 @@
 			"inflammation": "Inflammation",
 			"endocrine": "Endocrine",
 			"urine": "Urine Qualitative"
-		}
+		},
+		"groups": {
+			"cbc": "CBC (Blood Count)",
+			"electrolyteRenal": "Electrolytes & Renal Function",
+			"liver": "Liver Function",
+			"lipid": "Lipid Profile",
+			"glucose": "Glucose / HbA1c",
+			"optional": "Optional Tests"
+		},
+		"resultSummaryTitle": "Result overview (prototype)",
+		"result": {
+			"headerTest": "Test",
+			"headerValue": "Your value",
+			"headerReference": "Reference range",
+			"headerStatus": "Interpretation",
+			"low": "Low (below reference)",
+			"normal": "Within reference range",
+			"high": "High (above reference)",
+			"notEntered": "Not entered"
+		},
+		"disclaimer": "This interpretation is for reference only and is not a medical diagnosis. Always consult a healthcare professional for clinical decisions."
 	},
 	"imaging": {
 		"title": "Imaging Reports",
 		"add": "Add Imaging Report",
+		"description": "Save reports from X-rays, CT, MRI, and other imaging.",
 		"type": "Imaging Type",
 		"bodyPart": "Body Part",
 		"examDate": "Exam Date",
@@ -290,7 +393,8 @@
 		"history": "History",
 		"lab": "Lab Result",
 		"imaging": "Imaging Report",
-		"vital": "Vital Sign"
+		"vital": "Vital Sign",
+		"vitals": "Vital Signs"
 	},
 	"profile": {
 		"title": "Profile Settings",
@@ -538,10 +642,13 @@
 		"weight": "Weight",
 		"systolic": "Systolic",
 		"diastolic": "Diastolic",
+		"systolicShort": "High",
+		"diastolicShort": "Low",
 		"value": "Value",
 		"unit": "Unit",
 		"recordedAt": "Recorded At",
 		"notes": "Notes",
+		"notesPlaceholder": "Enter notes...",
 		"mmHg": "mmHg",
 		"bpm": "bpm",
 		"mgdL": "mg/dL",
@@ -550,6 +657,9 @@
 		"noData": "No vital signs data",
 		"viewGraph": "View Graph",
 		"viewList": "View List",
+		"newRecord": "Record New Data",
+		"dataHistory": "Data History",
+		"saveRecord": "Save Record",
 		"period": {
 			"week": "1 Week",
 			"month": "1 Month",
