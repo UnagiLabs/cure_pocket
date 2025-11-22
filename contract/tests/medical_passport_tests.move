@@ -18,6 +18,10 @@ module cure_pocket::medical_passport_tests {
         (string::utf8(b"seal-123"), string::utf8(b"JP"), true)
     }
 
+    fun sample_blob_ids(): vector<String> {
+        vector[string::utf8(b"blob_a"), string::utf8(b"blob_b")]
+    }
+
     #[test]
     fun create_passport_sets_fields() {
         let mut scenario = ts::begin(ADMIN);
@@ -35,6 +39,88 @@ module cure_pocket::medical_passport_tests {
             assert!(accessor::get_country_code(&passport) == &string::utf8(b"JP"), 1);
             assert!(accessor::get_analytics_opt_in(&passport), 2);
 
+            test_utils::destroy_passport(passport);
+        };
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun add_dynamic_field_registers_blob_ids() {
+        let mut scenario = ts::begin(ADMIN);
+        {
+            let ctx = ts::ctx(&mut scenario);
+            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let mut passport = medical_passport::create_passport_internal(
+                seal_id,
+                country_code,
+                analytics_opt_in,
+                ctx,
+            );
+
+            let key = b"lab_results";
+            let blobs = sample_blob_ids();
+            accessor::add_data_entry(&mut passport, key, blobs);
+
+            let stored = accessor::get_data_entry(&passport, key);
+            assert!(vector::length(stored) == 2, 0);
+            assert!(*vector::borrow(stored, 0) == string::utf8(b"blob_a"), 1);
+            assert!(*vector::borrow(stored, 1) == string::utf8(b"blob_b"), 2);
+
+            let _ = accessor::remove_data_entry(&mut passport, key);
+            test_utils::destroy_passport(passport);
+        };
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun replace_dynamic_field_overwrites_values() {
+        let mut scenario = ts::begin(ADMIN);
+        {
+            let ctx = ts::ctx(&mut scenario);
+            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let mut passport = medical_passport::create_passport_internal(
+                seal_id,
+                country_code,
+                analytics_opt_in,
+                ctx,
+            );
+
+            let key = b"basic_profile";
+            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+
+            let new_blobs = vector[string::utf8(b"new_blob")];
+            accessor::replace_data_entry(&mut passport, key, new_blobs);
+
+            let stored = accessor::get_data_entry(&passport, key);
+            assert!(vector::length(stored) == 1, 0);
+            assert!(*vector::borrow(stored, 0) == string::utf8(b"new_blob"), 1);
+
+            let _ = accessor::remove_data_entry(&mut passport, key);
+            test_utils::destroy_passport(passport);
+        };
+        ts::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 11, location = medical_passport)]
+    fun add_dynamic_field_duplicate_aborts() {
+        let mut scenario = ts::begin(ADMIN);
+        {
+            let ctx = ts::ctx(&mut scenario);
+            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let mut passport = medical_passport::create_passport_internal(
+                seal_id,
+                country_code,
+                analytics_opt_in,
+                ctx,
+            );
+
+            let key = b"medications";
+            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            // 2回目は同じキーで登録しようとすると abort
+            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+
+            let _ = accessor::remove_data_entry(&mut passport, key);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);

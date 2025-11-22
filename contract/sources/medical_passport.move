@@ -125,6 +125,18 @@ const E_REGISTRY_NOT_FOUND: u64 = 7;
 /// 移行元オーナーが不一致
 const E_NOT_OWNER_FOR_MIGRATION: u64 = 8;
 
+/// データ種キーが空
+const E_EMPTY_DATA_TYPE_KEY: u64 = 9;
+
+/// Blob ID リストが空
+const E_EMPTY_BLOB_IDS: u64 = 10;
+
+/// 指定データ種が既に存在
+const E_DATA_ENTRY_ALREADY_EXISTS: u64 = 11;
+
+/// 指定データ種が存在しない
+const E_DATA_ENTRY_NOT_FOUND: u64 = 12;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -322,6 +334,114 @@ public(package) fun get_analytics_opt_in(passport: &MedicalPassport): bool {
 /// - タプル: (seal_id, country_code, analytics_opt_in)
 public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool) {
     (&passport.seal_id, &passport.country_code, passport.analytics_opt_in)
+}
+
+// ============================================================
+// パッケージ内部関数: 動的フィールド (医療データ参照)
+// ============================================================
+
+/// パスポート配下に Walrus Blob ID リストを新規追加
+///
+/// ## 用途
+/// - 医療データ種（例: `basic_profile`, `medications` など）ごとの Blob ID 配列を登録
+/// - データ種キー未登録の場合のみ追加（重複登録はabort）
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassport への可変参照
+/// - `data_type_key`: データ種キー（UTF-8のバイト列想定）
+/// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
+///
+/// ## Aborts
+/// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
+/// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
+/// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
+public(package) fun add_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>,
+    blob_ids: vector<String>
+) {
+    assert!(!vector::is_empty(&data_type_key), E_EMPTY_DATA_TYPE_KEY);
+    assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
+    assert!(
+        !df::exists_<vector<u8>>(&passport.id, data_type_key),
+        E_DATA_ENTRY_ALREADY_EXISTS
+    );
+
+    df::add(&mut passport.id, data_type_key, blob_ids);
+}
+
+/// 既存のデータ種に紐づく Blob ID 配列を丸ごと置き換える
+///
+/// ## 用途
+/// - 最新データへの差し替え
+/// - 古い Blob を全て無効化し、新しい配列に置換
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassport への可変参照
+/// - `data_type_key`: 置き換えるデータ種キー
+/// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+///
+/// ## Aborts
+/// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
+/// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
+/// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
+public(package) fun replace_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>,
+    blob_ids: vector<String>
+) {
+    assert!(!vector::is_empty(&data_type_key), E_EMPTY_DATA_TYPE_KEY);
+    assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
+    assert!(
+        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        E_DATA_ENTRY_NOT_FOUND
+    );
+
+    let entry_ref = df::borrow_mut<vector<u8>, vector<String>>(&mut passport.id, data_type_key);
+    *entry_ref = blob_ids;
+}
+
+/// 指定データ種の Blob ID 配列を取得
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassport への参照
+/// - `data_type_key`: 取得するデータ種キー
+///
+/// ## 返り値
+/// - `&vector<String>`: 登録済み Blob ID 配列への参照
+///
+/// ## Aborts
+/// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
+public(package) fun get_data_entry(
+    passport: &MedicalPassport,
+    data_type_key: vector<u8>
+): &vector<String> {
+    assert!(
+        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        E_DATA_ENTRY_NOT_FOUND
+    );
+
+    df::borrow<vector<u8>, vector<String>>(&passport.id, data_type_key)
+}
+
+/// 指定データ種の Blob ID 配列を削除し、値を返す
+///
+/// ## 用途
+/// - データ種ごとに参照をリセットする
+/// - パスポート削除や移行前のクリーンアップ
+///
+/// ## Aborts
+/// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
+public(package) fun remove_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>
+): vector<String> {
+    assert!(
+        df::exists_<vector<u8>>(&passport.id, data_type_key),
+        E_DATA_ENTRY_NOT_FOUND
+    );
+
+    df::remove<vector<u8>, vector<String>>(&mut passport.id, data_type_key)
 }
 
 // ============================================================

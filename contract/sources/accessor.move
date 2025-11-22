@@ -131,6 +131,53 @@ public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
     medical_passport::get_analytics_opt_in(passport)
 }
 
+/// データ種ごとの Walrus Blob ID 配列を追加（新規のみ）
+///
+/// ## 用途
+/// - `basic_profile` / `medications` / `lab_results` などデータ種ごとのBlob参照を登録
+/// - 既に同じキーが存在する場合はabort
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportへの可変参照
+/// - `data_type_key`: データ種キー（UTF-8バイト列）
+/// - `blob_ids`: Walrus Blob IDの配列（1件以上必須）
+public fun add_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>,
+    blob_ids: vector<String>
+) {
+    medical_passport::add_data_entry(passport, data_type_key, blob_ids)
+}
+
+/// 既存データ種の Blob ID 配列を丸ごと置き換える
+///
+/// ## 用途
+/// - 最新データへの差し替え
+/// - 古いBlob参照を全て無効化し、新しい配列で上書き
+public fun replace_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>,
+    blob_ids: vector<String>
+) {
+    medical_passport::replace_data_entry(passport, data_type_key, blob_ids)
+}
+
+/// データ種の Blob ID 配列を取得
+public fun get_data_entry(
+    passport: &MedicalPassport,
+    data_type_key: vector<u8>
+): &vector<String> {
+    medical_passport::get_data_entry(passport, data_type_key)
+}
+
+/// データ種の Blob ID 配列を削除し、値を返す
+public fun remove_data_entry(
+    passport: &mut MedicalPassport,
+    data_type_key: vector<u8>
+): vector<String> {
+    medical_passport::remove_data_entry(passport, data_type_key)
+}
+
 /// 指定アドレスが既にパスポートを所持しているか確認
 ///
 /// ## 用途
@@ -171,10 +218,12 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool {
 /// ## Aborts
 /// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
 entry fun seal_approve_patient_only(
+    id: vector<u8>,
     passport: &MedicalPassport,
     registry: &PassportRegistry,
     ctx: &tx_context::TxContext
 ) {
+    let _ = id; // Seal identity; kept for API compatibility
     seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
 }
 

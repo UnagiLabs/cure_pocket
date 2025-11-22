@@ -34,7 +34,7 @@ module cure_pocket::seal_accessor_tests {
                 let passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
 
-                accessor::seal_approve_patient_only(&passport, &registry, ts::ctx(&mut scenario));
+            accessor::seal_approve_patient_only(b"", &passport, &registry, ts::ctx(&mut scenario));
 
                 ts::return_shared(registry);
                 ts::return_to_sender(&scenario, passport);
@@ -64,7 +64,7 @@ module cure_pocket::seal_accessor_tests {
                 let passport = ts::take_from_address<MedicalPassport>(&scenario, USER1);
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
 
-                accessor::seal_approve_patient_only(&passport, &registry, ts::ctx(&mut scenario));
+            accessor::seal_approve_patient_only(b"", &passport, &registry, ts::ctx(&mut scenario));
 
                 ts::return_shared(registry);
                 ts::return_to_address(USER1, passport);
