@@ -12,6 +12,8 @@
 - `medications`: CSV または TSV 1本以上（調剤明細ごとに分割してもよい）
 - `conditions`: JSON 1本以上（最新スナップショット）
 - `lab_results`: CSV（カンマ区切り固定）1本以上（採血1回=1レコード行）
+- `imaging_meta`: JSON 1本以上（1スタディ=1Blob想定）
+- `imaging_binary`: DICOMまたはZIP（シリーズやインスタンスの実体）複数
 
 SBT（MedicalPassport）側では各種ごとに複数の Blob ID を Dynamic Field で管理する：
 
@@ -21,6 +23,8 @@ passport
   ├─ medications   : [blob_id_2024Q4, blob_id_2025Q1, ...]
   ├─ conditions    : [blob_id_latest]
   └─ lab_results   : [blob_id_2025-11-21, blob_id_2025-08-01, ...]
+  ├─ imaging_meta  : [blob_id_meta_study1, blob_id_meta_study2, ...]
+  └─ imaging_binary: [blob_id_dicom001, blob_id_zip_seriesA, ...]
 ```
 
 ## 2. 採用する標準規格
@@ -112,13 +116,61 @@ collected_on,loinc_code,value,unit,ref_low,ref_high,flag,notes
 2025-11-21,718-7,13.8,g/dL,13.5,17.5,N,
 ```
 
+### 3.5 画像データ（imaging_meta + imaging_binary）
+
+**構成方針**
+- メタデータは study 単位の JSON（`imaging_meta`）。
+- 実体は DICOM 単体または ZIP でシリーズ/インスタンスを束ねる（`imaging_binary`）。
+- いずれも同じデータ種キー（例: `imaging`）で Seal 制御しやすいよう分割保存。
+
+**メタデータJSON（1スタディ=1Blob）必須/推奨フィールド**
+```json
+{
+  "study_uid": "1.2.392.200036.9123.100.12.1137834.20251121.1",   // 必須
+  "modality": "CT",                                              // 必須 (DICOM Modality)
+  "body_site": "Chest",                                         // 必須（英語/ローカライズ文字列でも可）
+  "performed_at": "2025-11-21T09:15:00Z",                       // 任意: ISO8601
+  "facility": "Tokyo General Hospital",                         // 任意
+  "series": [                                                     // 1スタディ内のシリーズ一覧
+    {
+      "series_uid": "1.2.392.200036.9123.100.12.1137834.20251121.1.2", // 必須
+      "description": "Chest w/ contrast",                       // 任意
+      "modality": "CT",                                         // 必須
+      "instance_blobs": [                                         // DICOMファイル単位の対応
+        {
+          "sop_instance_uid": "1.2.392.200036.9123.100.12.1137834.20251121.1.2.1", // 推奨
+          "dicom_blob_id": "BLOB_DICOM_001",                     // 必須: 実体Blob ID
+          "frames": 1,                                            // 任意: マルチフレーム枚数
+          "sop_class": "1.2.840.10008.5.1.4.1.1.2"              // 任意: SOP Class UID
+        }
+      ],
+      "zip_blob_id": "BLOB_ZIP_SERIES_02"                        // 任意: シリーズをZIP化したBlob
+    }
+  ],
+  "report": {
+    "summary": "No significant abnormalities.",                  // 任意: 簡易レポート
+    "language": "en"                                            // 任意
+  },
+  "schema_version": "2.0.0"                                     // 必須
+}
+```
+
+**運用上の注意**
+- DICOM/ZIP/PNG いずれも UTF-8 でファイル名を付ける場合はASCIIに揃えると安全。
+- `imaging_binary` には複数Blobを登録可能。シリーズ単位ZIPと個別DICOMを併存させてもよい。
+
 ## 4. バリデーション指針
 
+- 日付は `YYYY-MM-DD`、コードは大文字で保存する。
+- medications: CSV/TSV はヘッダー行必須・3列固定。
+- lab_results: CSV はヘッダー行必須・8列固定（不足/超過列はNG）。
 - 各 Blob は上記の最小フィールドを満たすこと。
 - 日付は `YYYY-MM-DD`、コードは大文字で保存する。
 - medications: CSV/TSV はヘッダー行必須・3列固定。
 - lab_results: CSV はヘッダー行必須・8列固定（不足/超過列はNG）。
-- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions` / `lab_results`）を必ず指定する。
+- imaging_meta: 必須フィールド `study_uid` / `modality` / `body_site` / `series[*].series_uid` / `series[*].modality` / `series[*].instance_blobs[*].dicom_blob_id` / `schema_version` を満たすこと。
+- imaging_binary: 中身が拡張子に適合すること（DICOM/ZIP）。
+- Dynamic Field に登録する際は、データ種キー（`basic_profile` / `medications` / `conditions` / `lab_results` / `imaging_meta` / `imaging_binary`）を必ず指定する。
 
 ## 5. 更新ポリシー
 
