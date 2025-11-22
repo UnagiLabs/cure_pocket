@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -52,17 +51,7 @@ export default function AddImagingPage() {
 	return (
 		<div className="p-4 md:p-6">
 			{/* Header */}
-			<div className="mb-6 flex items-center md:mb-8">
-				<button
-					type="button"
-					onClick={() => router.push(`/${locale}/app/add`)}
-					className="mr-3 rounded-lg p-2 transition-colors hover:bg-gray-100"
-				>
-					<ChevronLeft
-						className="h-6 w-6"
-						style={{ color: theme.colors.text }}
-					/>
-				</button>
+			<div className="mb-6 md:mb-8">
 				<h1
 					className="text-lg font-bold md:text-2xl"
 					style={{ color: theme.colors.text }}
@@ -242,17 +231,6 @@ export default function AddImagingPage() {
 				</div>
 
 				<div className="flex gap-3 md:max-w-md md:mx-auto">
-					<button
-						type="button"
-						onClick={() => router.push(`/${locale}/app/add`)}
-						className="flex-1 rounded-xl border-2 p-4 font-medium transition-transform active:scale-95"
-						style={{
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-					>
-						{t("actions.cancel")}
-					</button>
 					<button
 						type="button"
 						onClick={handleSave}
