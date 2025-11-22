@@ -57,11 +57,11 @@ export default function MedicationsPage() {
 	};
 
 	return (
-		<div className="p-4 md:p-6 space-y-6">
-			{/* Header */}
-			<div className="mb-2 flex items-center justify-between md:mb-4">
+		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8 space-y-6">
+			{/* Header - Mobile only, desktop shows in top bar */}
+			<div className="lg:hidden mb-2 flex items-center justify-between">
 				<h1
-					className="text-xl font-bold md:text-2xl"
+					className="text-xl font-bold"
 					style={{ color: theme.colors.text }}
 				>
 					{t("medications.title")}
@@ -73,6 +73,19 @@ export default function MedicationsPage() {
 					style={{ backgroundColor: theme.colors.primary }}
 				>
 					<Plus className="h-4 w-4" />
+					{t("add.title")}
+				</button>
+			</div>
+
+			{/* Desktop Add Button */}
+			<div className="hidden lg:flex justify-end">
+				<button
+					type="button"
+					onClick={openAdd}
+					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
+					style={{ backgroundColor: theme.colors.primary }}
+				>
+					<Plus className="h-5 w-5" />
 					{t("add.title")}
 				</button>
 			</div>

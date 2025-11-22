@@ -29,7 +29,7 @@ export default function SettingsPage() {
 	};
 
 	return (
-		<div className="p-4 md:p-6">
+		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8">
 			{/* Theme Section */}
 			<div className="mb-8">
 				<h2
@@ -142,7 +142,7 @@ export default function SettingsPage() {
 				>
 					<div className="mb-3 flex items-center justify-between">
 						<span className="font-bold" style={{ color: theme.colors.text }}>
-							研究への貢献
+							{t("settings.researchContribution")}
 						</span>
 						<button
 							type="button"
@@ -166,7 +166,7 @@ export default function SettingsPage() {
 						>
 							<div className="flex items-center justify-between">
 								<span className="text-sm" style={{ color: theme.colors.text }}>
-									獲得報酬
+									{t("settings.earnedRewards")}
 								</span>
 								<span
 									className="font-bold"
@@ -206,7 +206,7 @@ export default function SettingsPage() {
 						</div>
 						<div className="flex items-center text-sm">
 							<div className="mr-2 h-2 w-2 rounded-full bg-green-500" />
-							<span style={{ color: theme.colors.text }}>最終同期: 2分前</span>
+							<span style={{ color: theme.colors.text }}>{t("settings.lastSyncRecent")}</span>
 						</div>
 					</div>
 				</div>
@@ -227,7 +227,7 @@ export default function SettingsPage() {
 					style={{ backgroundColor: theme.colors.surface }}
 				>
 					<span className="font-medium" style={{ color: theme.colors.text }}>
-						プロフィール設定
+						{t("settings.profileSettings")}
 					</span>
 					<span
 						className="text-sm"

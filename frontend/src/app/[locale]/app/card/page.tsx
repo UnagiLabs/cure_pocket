@@ -100,12 +100,12 @@ export default function EmergencyCardPage() {
 	];
 
 	return (
-		<div className="p-4 md:p-6">
-			{/* Header */}
-			<div className="mb-6 flex items-center md:mb-8">
-				<AlertCircle className="mr-2 h-5 w-5 text-red-500 md:h-6 md:w-6" />
+		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8">
+			{/* Header - Hide on desktop as it's shown in top bar */}
+			<div className="lg:hidden mb-6 flex items-center">
+				<AlertCircle className="mr-2 h-5 w-5 text-red-500" />
 				<h1
-					className="text-lg font-bold md:text-2xl"
+					className="text-lg font-bold"
 					style={{ color: theme.colors.text }}
 				>
 					{t("card.title")}
@@ -128,7 +128,7 @@ export default function EmergencyCardPage() {
 					className="mb-3 font-bold md:text-lg"
 					style={{ color: theme.colors.text }}
 				>
-					表示するカテゴリーを選択
+					{t("card.selectCategories")}
 				</h3>
 				<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
 					{categoryOptions.map((option) => {
@@ -238,7 +238,7 @@ export default function EmergencyCardPage() {
 					className="w-full rounded-lg p-3 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{isGenerating ? "生成中..." : t("card.generateQR")}
+					{isGenerating ? t("card.generating") : t("card.generateQR")}
 				</button>
 			</div>
 
@@ -395,10 +395,9 @@ export default function EmergencyCardPage() {
 				<div className="flex items-start">
 					<span className="mr-3 text-2xl">ℹ️</span>
 					<div className="text-sm" style={{ color: theme.colors.text }}>
-						<p className="mb-1 font-medium">緊急時の使い方</p>
+						<p className="mb-1 font-medium">{t("card.emergencyInfo.title")}</p>
 						<p style={{ color: theme.colors.textSecondary }}>
-							このQRコードを医療従事者に見せることで、選択したカテゴリーの情報を安全に共有できます。
-							リンクは24時間後に自動的に無効になります。
+							{t("card.emergencyInfo.description")}
 						</p>
 					</div>
 				</div>

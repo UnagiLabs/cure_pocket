@@ -16,13 +16,15 @@
 	"tabs": {
 		"home": "ホーム",
 		"add": "追加",
+		"addNew": "新しいデータを追加",
 		"card": "カード",
 		"records": "記録",
 		"data": "データ",
 		"profile": "私",
 		"settings": "設定",
 		"medications": "お薬",
-		"emergency": "緊急"
+		"emergency": "緊急",
+		"vitals": "バイタルデータ"
 	},
 	"home": {
 		"greeting": "こんにちは",
@@ -86,12 +88,18 @@
 		"subtitle": "緊急時お薬情報",
 		"description": "緊急時に医療従事者とお薬情報を共有",
 		"generateQR": "QRコード生成",
+		"generating": "生成中...",
 		"validFor": "有効期限: {{duration}}",
 		"downloadPDF": "PDFダウンロード",
 		"printCard": "印刷用カード生成",
 		"currentMedications": "服用薬一覧",
 		"scanToView": "スキャンすると",
-		"englishVersion": "英語版も表示"
+		"englishVersion": "英語版も表示",
+		"selectCategories": "表示するカテゴリーを選択",
+		"emergencyInfo": {
+			"title": "緊急時の使い方",
+			"description": "このQRコードを医療従事者に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
+		}
 	},
 	"settings": {
 		"title": "設定",
@@ -106,11 +114,15 @@
 		"country": "国",
 		"allergies": "アレルギー",
 		"profile": "プロフィール設定",
+		"profileSettings": "プロフィール設定",
 		"dataExport": "データエクスポート",
 		"walletConnected": "ウォレット接続中",
 		"walrusStorage": "Walrus保存状態",
 		"encrypted": "暗号化済み",
-		"lastSync": "最終同期: {{time}}"
+		"lastSync": "最終同期: {{time}}",
+		"researchContribution": "研究への貢献",
+		"earnedRewards": "獲得報酬",
+		"lastSyncRecent": "最終同期: 2分前"
 	},
 	"wallet": {
 		"connect": "ウォレット接続",

@@ -129,12 +129,14 @@ export default function VitalsPage() {
 	};
 
 	return (
-		<div className="px-4 md:px-8 lg:px-12 py-4 space-y-6 pb-32">
-			{/* Header */}
-			<SectionTitle>{t("vitals.title")}</SectionTitle>
+		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 space-y-6 pb-32 lg:pb-8">
+			{/* Header - Hide on desktop as it's shown in top bar */}
+			<div className="lg:hidden">
+				<SectionTitle>{t("vitals.title")}</SectionTitle>
+			</div>
 
 			{/* Vital Type Tabs */}
-			<div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-2 md:gap-4 max-w-2xl mx-auto">
+			<div className="grid grid-cols-4 gap-3 lg:gap-4 max-w-3xl mx-auto">
 				{VITAL_TYPES.map((type) => (
 					<button
 						key={type}
