@@ -8,10 +8,8 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { healthDataToPatientProfile } from "@/lib/profileConverter";
 import type {
 	Allergy,
 	AppState,
@@ -82,14 +80,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const [profile, setProfile] = useState<PatientProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Passport and decryption hooks
+	// Passport and session key hooks
 	const { passport, has_passport, loading: passportLoading } = usePassport();
 	const {
 		sessionKey,
 		generateSessionKey,
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
-	const { decryptAndFetch } = useDecryptAndFetch();
 
 	// ウォレットアドレスはdApp Kitから取得
 	const walletAddress = currentAccount?.address || null;
@@ -138,9 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 			// 現在はseal_idの存在のみチェック
 			// 将来的にはDynamic Fieldsから各data_typeのblob_idsを取得する必要がある
 			if (!passport.sealId) {
-				console.log(
-					"[AppContext] Passport has no seal_id, skipping data load",
-				);
+				console.log("[AppContext] Passport has no seal_id, skipping data load");
 				return;
 			}
 
@@ -200,7 +195,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		decryptAndFetch,
 	]);
 
 	// setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）

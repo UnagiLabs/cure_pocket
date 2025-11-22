@@ -236,7 +236,9 @@ export default function ProfilePage() {
 				sealId,
 				"basic_profile", // データ種別
 			);
-			console.log(`[ProfileSave] Upload complete, blobId: ${blobId}, dataType: ${dataType}`);
+			console.log(
+				`[ProfileSave] Upload complete, blobId: ${blobId}, dataType: ${dataType}`,
+			);
 
 			console.log("[ProfileSave] Step 4: Updating passport on-chain...");
 

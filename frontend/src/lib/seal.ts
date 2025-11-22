@@ -336,7 +336,13 @@ export async function buildConsentAccessPTB(params: {
 	suiClient: SuiClient;
 	sealId: string;
 }): Promise<Uint8Array> {
-	const { passportObjectId, consentTokenObjectId, dataType, suiClient, sealId } = params;
+	const {
+		passportObjectId,
+		consentTokenObjectId,
+		dataType,
+		suiClient,
+		sealId,
+	} = params;
 
 	const tx = new Transaction();
 

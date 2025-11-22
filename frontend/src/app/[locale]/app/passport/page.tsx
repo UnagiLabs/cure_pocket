@@ -34,8 +34,8 @@ export default function PassportPage() {
 	 */
 	async function handle_mint_passport() {
 		try {
-			// MVP段階ではモック値を使用
-			await mint("init_blob", "init_seal");
+			// MVP段階ではモック値を使用（walrus_blob_idは削除）
+			await mint("init_seal", undefined, false); // seal_id, country_code, analytics_opt_in
 		} catch (error) {
 			// エラーはuseMintPassportで処理される
 			console.error("パスポート発行エラー:", error);
@@ -51,31 +51,21 @@ export default function PassportPage() {
 
 	// パスポート発行成功後、プロフィール登録画面へ遷移
 	useEffect(() => {
-		// 既にパスポートがあり、blob/sealが揃い、プロフィールもロード済みならホームへ
-		const passport = passport_status.passport;
-		const hasData =
-			passport?.walrusBlobId &&
-			passport.walrusBlobId !== "init_blob" &&
-			passport.walrusBlobId.length > 10 &&
-			!!passport.sealId;
+		// TODO: Dynamic Fields対応
+		// 新しいモデルでは、データの存在確認にget_data_entryを使用する必要がある
+		// 現在は簡略化: profileがロード済みならホームへ、なければプロフィール入力へ
 
-		if (passport_status.has_passport && hasData && profile) {
+		// 既にパスポートがあり、プロフィールもロード済みならホームへ
+		if (passport_status.has_passport && profile) {
 			router.replace(`/${locale}/app`);
 			return;
 		}
 
-		// パスポートありだがデータ未登録（または新規mint完了）の場合はプロフィール入力へ
-		if (is_mint_success || (passport_status.has_passport && !hasData)) {
+		// パスポートあり（または新規mint完了）の場合はプロフィール入力へ
+		if (is_mint_success || passport_status.has_passport) {
 			router.replace(`/${locale}/app/profile`);
 		}
-	}, [
-		is_mint_success,
-		passport_status.has_passport,
-		passport_status.passport,
-		profile,
-		router,
-		locale,
-	]);
+	}, [is_mint_success, passport_status.has_passport, profile, router, locale]);
 
 	if (!walletAddress) {
 		return null; // リダイレクト中
