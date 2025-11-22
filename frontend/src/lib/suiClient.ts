@@ -280,6 +280,84 @@ export async function getAllPassports(
  * @param params - Update parameters
  * @returns Transaction block ready for signing
  */
+/**
+ * Get blob IDs for a specific data type from MedicalPassport Dynamic Fields
+ *
+ * This queries the Dynamic Field associated with a specific data type
+ * (e.g., "medications", "basic_profile") and returns the array of blob IDs.
+ *
+ * Flow:
+ * 1. Query Dynamic Field with data type as key (String type)
+ * 2. Extract blob_ids array from field value (vector<String>)
+ * 3. Return blob IDs for Walrus download
+ *
+ * @param passportObjectId - MedicalPassport Sui object ID
+ * @param dataType - Data type key (e.g., "medications", "basic_profile")
+ * @returns Array of blob IDs, or empty array if data type not found
+ * @throws Error if query fails (except for "not found" which returns empty array)
+ *
+ * @example
+ * ```typescript
+ * const blobIds = await getDataEntryBlobIds(passportId, "medications");
+ * for (const blobId of blobIds) {
+ *   const encryptedData = await downloadFromWalrusByBlobId(blobId);
+ *   // ... decrypt and process
+ * }
+ * ```
+ */
+export async function getDataEntryBlobIds(
+	passportObjectId: string,
+	dataType: string,
+): Promise<string[]> {
+	const client = getSuiClient();
+
+	try {
+		// Query dynamic field with data type as key
+		// Dynamic Field key type is String
+		const dynamicFieldName = {
+			type: "0x1::string::String",
+			value: dataType,
+		};
+
+		const response = await client.getDynamicFieldObject({
+			parentId: passportObjectId,
+			name: dynamicFieldName,
+		});
+
+		if (!response.data) {
+			// Data type not found - this is normal for uninitialized fields
+			return [];
+		}
+
+		// Extract blob_ids from Dynamic Field value
+		const content = response.data.content;
+		if (!content || content.dataType !== "moveObject") {
+			throw new Error("Invalid dynamic field structure");
+		}
+
+		// Dynamic Field value is vector<String> (blob_ids array)
+		const fields = content.fields as { name: unknown; value: string[] };
+		if (!fields.value || !Array.isArray(fields.value)) {
+			throw new Error("Dynamic field value is not an array");
+		}
+
+		return fields.value;
+	} catch (error) {
+		// If error is "Dynamic field not found", return empty array
+		if (
+			error instanceof Error &&
+			error.message.includes("Dynamic field not found")
+		) {
+			return [];
+		}
+
+		if (error instanceof Error) {
+			throw new Error(`Failed to get data entry blob IDs: ${error.message}`);
+		}
+		throw new Error("Failed to get data entry blob IDs: Unknown error");
+	}
+}
+
 export function buildUpdateDataEntryTransaction(params: {
 	passportObjectId: string;
 	dataType: string; // データ種別 (e.g., "basic_profile", "medications")
