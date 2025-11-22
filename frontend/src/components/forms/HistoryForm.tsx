@@ -21,6 +21,8 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 		type: "condition" as MedicalHistoryType,
 		diagnosis: "",
 		diagnosisDate: "",
+		resolvedDate: "",
+		icd10Code: "",
 		diagnosedBy: "",
 		description: "",
 		status: "active" as "active" | "resolved" | "chronic" | undefined,
@@ -46,6 +48,8 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 			type: formData.type,
 			diagnosis: formData.diagnosis,
 			diagnosisDate: formData.diagnosisDate || undefined,
+			resolvedDate: formData.resolvedDate || undefined,
+			icd10Code: formData.icd10Code || undefined,
 			diagnosedBy: formData.diagnosedBy || undefined,
 			description: formData.description || undefined,
 			status: formData.status,
@@ -163,6 +167,53 @@ export function HistoryForm({ onSaved, onCancel }: HistoryFormProps) {
 						<option value="resolved">{t("histories.statuses.resolved")}</option>
 						<option value="chronic">{t("histories.statuses.chronic")}</option>
 					</select>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-2 gap-4">
+				<div>
+					<label
+						htmlFor="field5-5"
+						className="mb-1 block text-sm font-medium"
+						style={{ color: theme.colors.text }}
+					>
+						ICD-10コード
+					</label>
+					<input
+						id="field5-5"
+						type="text"
+						value={formData.icd10Code}
+						onChange={(e) => handleInputChange("icd10Code", e.target.value)}
+						className="w-full rounded-lg border p-3"
+						style={{
+							backgroundColor: theme.colors.surface,
+							borderColor: `${theme.colors.textSecondary}40`,
+							color: theme.colors.text,
+						}}
+						placeholder="例: E11.9"
+					/>
+				</div>
+
+				<div>
+					<label
+						htmlFor="field6-6"
+						className="mb-1 block text-sm font-medium"
+						style={{ color: theme.colors.text }}
+					>
+						完治日
+					</label>
+					<input
+						id="field6-6"
+						type="date"
+						value={formData.resolvedDate}
+						onChange={(e) => handleInputChange("resolvedDate", e.target.value)}
+						className="w-full rounded-lg border p-3"
+						style={{
+							backgroundColor: theme.colors.surface,
+							borderColor: `${theme.colors.textSecondary}40`,
+							color: theme.colors.text,
+						}}
+					/>
 				</div>
 			</div>
 

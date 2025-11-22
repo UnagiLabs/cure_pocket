@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CurePocket - Your Global Health Passport on Sui</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Slide 1: Title -->
+  <section class="slide title-slide">
+    <div class="slide-content">
+      <div class="logo-area">
+        <img src="images/logo.png" alt="CurePocket Logo" class="main-logo">
+      </div>
+      <h1>CurePocket</h1>
+      <h2>Your Global Health Passport on Sui</h2>
+      <div class="profile-section">
+        <div class="profile-images">
+          <img src="images/profile-1.jpg" alt="Shizuku Photo 1" class="profile-img">
+          <img src="images/profile-2.jpg" alt="Shizuku Photo 2" class="profile-img">
+        </div>
+        <div class="profile-text">
+          <p><strong>Shizuku — Pharmacist, Japan</strong></p>
+          <p>Studio Mirai / Sui Builder Community</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Problem -->
+  <section class="slide problem-slide">
+    <div class="slide-content">
+      <h1>People cannot manage their health data well.</h1>
+      <div class="two-column">
+        <div class="column">
+          <ul class="problem-list">
+            <li>💊 <strong>They forget medication history.</strong></li>
+            <li>📄 <strong>They lose the paper with lab results.</strong></li>
+            <li>📖 <strong>They often say: "I don't have my medicine notebook."</strong></li>
+            <li>🌍 <strong>Abroad, health data cannot be shared.</strong></li>
+          </ul>
+        </div>
+        <div class="column visual-area">
+          <h3>This makes safe care difficult.</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: Vision -->
+  <section class="slide vision-slide">
+    <div class="slide-content">
+      <h1>A simple, global health passport</h1>
+      <h2>that protects privacy.</h2>
+      <div class="key-points">
+        <p>✅ <strong>Carry your health data anywhere.</strong></p>
+        <p>✅ <strong>Share only when you want.</strong></p>
+        <p>✅ <strong>Safe, private, user-controlled.</strong></p>
+      </div>
+      <div class="badge">🔒 Privacy First</div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Solution Overview -->
+  <section class="slide solution-slide">
+    <div class="slide-content">
+      <h1>CurePocket stores encrypted:</h1>
+      <div class="two-column">
+        <div class="column">
+          <ul class="feature-list">
+            <li>💊 <strong>Medications</strong> (international drug codes)</li>
+            <li>🏥 <strong>Conditions</strong></li>
+            <li>⚠️ <strong>Allergies</strong></li>
+            <li>🧪 <strong>Lab results</strong></li>
+            <li>📸 <strong>Imaging</strong></li>
+            <li>📊 <strong>Daily vitals</strong> (BP, glucose, weight)</li>
+          </ul>
+        </div>
+        <div class="column tech-stack">
+          <h3>All encrypted with <strong>Seal</strong></h3>
+          <h3>and stored in <strong>Walrus</strong>.</h3>
+          <div class="ui-mockup">
+            <img src="images/ui-mockup.png" alt="UI Mockup">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Architecture -->
+  <section class="slide architecture-slide">
+    <div class="slide-content">
+      <h1>Architecture</h1>
+      <h2>SBT × Dynamic Fields × Walrus</h2>
+      <div class="three-column">
+        <div class="arch-box">
+          <h3>Health Passport = SBT</h3>
+          <ul>
+            <li>Non-transferable</li>
+            <li>Bound to the user</li>
+          </ul>
+        </div>
+        <div class="arch-box">
+          <h3>Dynamic Object Fields</h3>
+          <ul>
+            <li>Add medical data flexibly</li>
+            <li>Each field stores a Walrus Blob ID</li>
+          </ul>
+        </div>
+        <div class="arch-box">
+          <h3>Walrus + Seal</h3>
+          <ul>
+            <li>Off-chain encrypted data</li>
+            <li>User decrypts only when needed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Architecture Diagram -->
+  <section class="slide diagram-slide">
+    <div class="slide-content">
+      <h1>Architecture Diagram</h1>
+      <div class="diagram">
+        <div class="diagram-node sbt-node">Health Passport<br>SBT</div>
+        <div class="diagram-row">
+          <div class="diagram-node field-node">Dynamic Field:<br>meds</div>
+          <div class="diagram-node field-node">Dynamic Field:<br>labs</div>
+          <div class="diagram-node field-node">Dynamic Field:<br>vitals</div>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node blob-node">Blob ID 1</div>
+          <div class="diagram-node blob-node">Blob ID 2</div>
+          <div class="diagram-node blob-node">Blob ID 3</div>
+        </div>
+        <div class="diagram-row">
+          <div class="diagram-node walrus-node">🔒 Encrypted Data<br>Walrus</div>
+          <div class="diagram-node walrus-node">🔒 Encrypted Data<br>Walrus</div>
+          <div class="diagram-node walrus-node">🔒 Encrypted Data<br>Walrus</div>
+        </div>
+      </div>
+      <div class="tech-logos">
+        <div class="logo-images">
+          <img src="images/suilogo.png" alt="Sui" class="tech-logo">
+          <img src="images/walruslogo.png" alt="Walrus" class="tech-logo">
+          <img src="images/seal.png" alt="Seal" class="tech-logo">
+        </div>
+        <p>Powered by: Sui | Walrus | Seal</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: Demo Flow -->
+  <section class="slide demo-slide">
+    <div class="slide-content">
+      <h1>Demo Flow</h1>
+      <div class="flow-steps">
+        <ol>
+          <li><strong>Connect Wallet</strong> 👛</li>
+          <li><strong>Create Health Passport (SBT)</strong> 🎫</li>
+          <li><strong>Add profile data</strong> 📝</li>
+          <li><strong>Add medications / labs / vitals</strong> 💊</li>
+          <li><strong>Seal → Encrypt</strong> 🔒</li>
+          <li><strong>Walrus → Store Blob</strong> 💾</li>
+          <li><strong>Share via QR code</strong> 📱</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Future Work -->
+  <section class="slide future-slide">
+    <div class="slide-content">
+      <h1>Future Work</h1>
+      <h2>Earn × Motivation</h2>
+      <div class="future-content">
+        <h3>Optional anonymous data sharing.</h3>
+        <ul class="future-list">
+          <li>✅ <strong>Users may share fully anonymized statistics.</strong></li>
+          <li>💰 <strong>Users can earn rewards.</strong></li>
+          <li>📈 <strong>Encourages people to save daily health data.</strong></li>
+          <li>🔒 <strong>Privacy-first and always user-controlled.</strong></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Why Sui / Closing -->
+  <section class="slide closing-slide">
+    <div class="slide-content">
+      <h1>Why Sui / Walrus / Seal?</h1>
+      <div class="three-column">
+        <div class="reason-box">
+          <h3>Why Sui?</h3>
+          <ul>
+            <li>Fast and simple UX</li>
+            <li>Secure object model</li>
+            <li>Perfect for SBT + Dynamic Fields</li>
+          </ul>
+        </div>
+        <div class="reason-box">
+          <h3>Why Walrus?</h3>
+          <ul>
+            <li>Cheap, scalable storage</li>
+            <li>Ideal for medical data</li>
+          </ul>
+        </div>
+        <div class="reason-box">
+          <h3>Why Seal?</h3>
+          <ul>
+            <li>Strong encryption</li>
+            <li>User-owned key control</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Thank You -->
+  <section class="slide thankyou-slide">
+    <div class="slide-content">
+      <h1>Thank you for watching.</h1>
+      <p class="project-name"><strong>CurePocket</strong></p>
+      <p>Your Global Health Passport on Sui</p>
+      <p class="github-link">🔗 <a href="https://github.com/UnagiLabs/cure_pocket" target="_blank">https://github.com/UnagiLabs/cure_pocket</a></p>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

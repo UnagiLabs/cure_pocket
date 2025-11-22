@@ -1,364 +1,198 @@
 "use client";
 
-import { useCurrentAccount } from "@mysten/dapp-kit";
-import { Check, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
-import { usePassport } from "@/hooks/usePassport";
-import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import {
-	chronicConditionCategories,
-	criticalConditions,
-} from "@/lib/chronicConditions";
-import { profileToHealthData } from "@/lib/profileConverter";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
-import type {
-	AlcoholUse,
-	ChronicCondition,
-	ExerciseFrequency,
-	Gender,
-	PatientProfile,
-	SmokingStatus,
-} from "@/types";
+import type { AgeBand, Gender, PatientProfile } from "@/types";
 
-/**
- * 患者プロフィール設定ページ
- * チェックボックス形式で基礎疾患を選択できる
- */
+const countryOptions = [
+	{ value: "JP", label: "日本" },
+	{ value: "US", label: "アメリカ合衆国" },
+	{ value: "CN", label: "中国" },
+	{ value: "KR", label: "韓国" },
+	{ value: "TW", label: "台湾" },
+	{ value: "HK", label: "香港" },
+	{ value: "SG", label: "シンガポール" },
+	{ value: "TH", label: "タイ" },
+	{ value: "VN", label: "ベトナム" },
+	{ value: "PH", label: "フィリピン" },
+	{ value: "ID", label: "インドネシア" },
+	{ value: "MY", label: "マレーシア" },
+	{ value: "IN", label: "インド" },
+	{ value: "BD", label: "バングラデシュ" },
+	{ value: "PK", label: "パキスタン" },
+	{ value: "AE", label: "アラブ首長国連邦" },
+	{ value: "SA", label: "サウジアラビア" },
+	{ value: "EG", label: "エジプト" },
+	{ value: "ZA", label: "南アフリカ" },
+	{ value: "NG", label: "ナイジェリア" },
+	{ value: "KE", label: "ケニア" },
+	{ value: "GB", label: "イギリス" },
+	{ value: "FR", label: "フランス" },
+	{ value: "DE", label: "ドイツ" },
+	{ value: "ES", label: "スペイン" },
+	{ value: "IT", label: "イタリア" },
+	{ value: "NL", label: "オランダ" },
+	{ value: "SE", label: "スウェーデン" },
+	{ value: "CH", label: "スイス" },
+	{ value: "AU", label: "オーストラリア" },
+	{ value: "NZ", label: "ニュージーランド" },
+	{ value: "CA", label: "カナダ" },
+	{ value: "MX", label: "メキシコ" },
+	{ value: "BR", label: "ブラジル" },
+	{ value: "AR", label: "アルゼンチン" },
+	{ value: "CL", label: "チリ" },
+	{ value: "other", label: "その他" },
+];
+
+const majorAllergies = [
+	"peanut",
+	"shellfish",
+	"egg",
+	"milk",
+	"buckwheat",
+	"wheat",
+	"penicillin",
+	"latex",
+];
+
+function birthDateToAgeBand(birthDate: string | null): AgeBand | null {
+	if (!birthDate) return null;
+	const birthYear = new Date(birthDate).getFullYear();
+	const currentYear = new Date().getFullYear();
+	const age = currentYear - birthYear;
+
+	if (age < 10) return null;
+	if (age < 20) return "10s";
+	if (age < 30) return "20s";
+	if (age < 40) return "30s";
+	if (age < 50) return "40s";
+	if (age < 60) return "50s";
+	if (age < 70) return "60s";
+	if (age < 80) return "70s";
+	return "80plus";
+}
+
 export default function ProfilePage() {
-	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const currentAccount = useCurrentAccount();
-	const {
-		settings,
-		profile,
-		updateProfile,
-		medications,
-		allergies,
-		medicalHistories,
-		labResults,
-		imagingReports,
-	} = useApp();
-	const theme = getTheme(settings.theme);
-	const { passport, has_passport } = usePassport();
-	const {
-		encryptAndStore,
-		isEncrypting,
-		progress,
-		error: _encryptError,
-	} = useEncryptAndStore();
-	const {
-		updatePassportData,
-		isUpdating,
-		error: _updateError,
-	} = useUpdatePassportData();
-	const [isSaving, setIsSaving] = useState(false);
-	const [showSuccess, setShowSuccess] = useState(false);
-	const [saveError, setSaveError] = useState<string | null>(null);
-	const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-		new Set(["cardiovascular", "metabolic"]),
-	);
+	const t = useTranslations("profile");
+	const { settings, profile, updateProfile } = useApp();
+	const theme = useMemo(() => getTheme(settings.theme), [settings.theme]);
 
-	// フォーム状態
 	const [formData, setFormData] = useState<Partial<PatientProfile>>({
-		name: undefined,
-		ageBand: null,
+		birthDate: null,
 		gender: "unknown",
 		country: null,
-		preferredLanguage: locale,
 		bloodType: undefined,
-		heightCm: undefined,
-		weightKg: undefined,
-		smokingStatus: "unknown",
-		alcoholUse: "unknown",
-		exercise: "unknown",
-		drugAllergies: [],
 		foodAllergies: [],
-		hasAnaphylaxisHistory: null,
-		chronicConditions: [],
-		surgeries: [],
-		dataSharing: {
-			preference: "deny",
-			shareMedication: false,
-			shareLabs: false,
-			shareConditions: false,
-			shareSurgeries: false,
-			shareLifestyle: false,
-			rewardsEnabled: false,
-		},
 	});
+	const [allergyInput, setAllergyInput] = useState("");
+	const [selectedAllergy, setSelectedAllergy] = useState<string>("");
 
-	// プロフィールが読み込まれたらフォームに反映
 	useEffect(() => {
 		if (profile) {
-			setFormData(profile);
+			setFormData({
+				birthDate: profile.birthDate ?? null,
+				gender: profile.gender,
+				country: profile.country,
+				bloodType: profile.bloodType,
+				foodAllergies: profile.foodAllergies || [],
+			});
 		}
 	}, [profile]);
 
-	const toggleCategory = (categoryId: string) => {
-		setExpandedCategories((prev) => {
-			const next = new Set(prev);
-			if (next.has(categoryId)) {
-				next.delete(categoryId);
-			} else {
-				next.add(categoryId);
-			}
-			return next;
-		});
-	};
-
 	const handleInputChange = (
 		field: string,
-		value:
-			| string
-			| number
-			| Gender
-			| SmokingStatus
-			| AlcoholUse
-			| ExerciseFrequency
-			| null
-			| undefined,
+		value: string | Gender | null | undefined,
 	) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
-	const handleChronicConditionToggle = (condition: ChronicCondition) => {
-		setFormData((prev) => {
-			const current = prev.chronicConditions || [];
-			const exists = current.some((c) => c.label === condition.label);
-			if (exists) {
-				return {
-					...prev,
-					chronicConditions: current.filter((c) => c.label !== condition.label),
-				};
-			} else {
-				return {
-					...prev,
-					chronicConditions: [...current, condition],
-				};
-			}
-		});
-	};
-
-	const handleFoodAllergyAdd = (allergy: string) => {
-		if (!allergy.trim()) return;
+	const handleAddAllergy = () => {
+		const allergyName =
+			selectedAllergy === "other" ? allergyInput.trim() : selectedAllergy;
+		if (!allergyName) return;
+		if ((formData.foodAllergies || []).includes(allergyName)) {
+			return;
+		}
 		setFormData((prev) => ({
 			...prev,
-			foodAllergies: [...(prev.foodAllergies || []), allergy.trim()],
+			foodAllergies: [...(prev.foodAllergies || []), allergyName],
 		}));
+		setAllergyInput("");
+		setSelectedAllergy("");
 	};
 
-	const handleFoodAllergyRemove = (index: number) => {
+	const handleRemoveAllergy = (index: number) => {
 		setFormData((prev) => ({
 			...prev,
 			foodAllergies: (prev.foodAllergies || []).filter((_, i) => i !== index),
 		}));
 	};
 
-	const handleSave = async () => {
-		setIsSaving(true);
-		setSaveError(null);
-
-		try {
-			// 1. Validate: Wallet connected
-			if (!currentAccount?.address) {
-				throw new Error("ウォレットが接続されていません");
-			}
-
-			// 2. Validate: Passport exists
-			if (!has_passport || !passport) {
-				throw new Error(
-					"パスポートが発行されていません。先にパスポートを発行してください。",
-				);
-			}
-
-			// 3. Build profile to save
-			const profileToSave: PatientProfile = {
-				ageBand: formData.ageBand || null,
-				gender: formData.gender || "unknown",
-				country: formData.country || null,
-				preferredLanguage: formData.preferredLanguage || locale,
-				bloodType: formData.bloodType,
-				heightCm: formData.heightCm,
-				weightKg: formData.weightKg,
-				smokingStatus: formData.smokingStatus || "unknown",
-				alcoholUse: formData.alcoholUse || "unknown",
-				exercise: formData.exercise || "unknown",
-				drugAllergies: formData.drugAllergies || [],
-				foodAllergies: formData.foodAllergies || [],
-				hasAnaphylaxisHistory: formData.hasAnaphylaxisHistory ?? null,
-				chronicConditions: formData.chronicConditions || [],
-				surgeries: formData.surgeries || [],
-				emergencyContact: formData.emergencyContact,
-				dataSharing: formData.dataSharing || {
-					preference: "deny",
-					shareMedication: false,
-					shareLabs: false,
-					shareConditions: false,
-					shareSurgeries: false,
-					shareLifestyle: false,
-					rewardsEnabled: false,
-				},
-				updatedAt: new Date().toISOString(),
-			};
-
-			console.log("[ProfileSave] Step 1: Converting to HealthData...");
-
-			// 4. Convert to HealthData
-			const healthData = profileToHealthData(
-				profileToSave,
-				medications,
-				allergies,
-				medicalHistories,
-				labResults,
-				imagingReports,
-				locale,
-			);
-
-			console.log("[ProfileSave] Step 2: Generating seal_id...");
-
-			// 5. Generate seal_id
-			const sealId = await generateSealId(currentAccount.address);
-			console.log(
-				`[ProfileSave] Generated seal_id: ${sealId.substring(0, 16)}...`,
-			);
-
-			console.log("[ProfileSave] Step 3: Encrypting and uploading...");
-
-			// 6. Encrypt and upload to Walrus
-			const { blobId, dataType } = await encryptAndStore(
-				healthData,
-				sealId,
-				"basic_profile", // データ種別
-			);
-			console.log(
-				`[ProfileSave] Upload complete, blobId: ${blobId}, dataType: ${dataType}`,
-			);
-
-			console.log("[ProfileSave] Step 4: Updating passport on-chain...");
-
-			// 7. Update passport on-chain with Dynamic Fields
-			await updatePassportData({
-				passportId: passport.id,
-				dataType: "basic_profile",
-				blobIds: [blobId], // Blob IDの配列
-				replace: !!profile, // 初回はfalse（add）、2回目以降はtrue（replace）
-			});
-			console.log("[ProfileSave] Passport updated successfully");
-
-			// 8. Save locally
-			updateProfile(profileToSave);
-
-			// 9. Show success
-			setShowSuccess(true);
-			console.log("[ProfileSave] Save complete!");
-
-			// 新規登録の場合（profileが未設定の場合）はホーム画面へ遷移
-			if (!profile) {
-				setTimeout(() => {
-					router.push(`/${locale}/app`);
-				}, 2000);
-			} else {
-				setTimeout(() => setShowSuccess(false), 3000);
-			}
-		} catch (error) {
-			console.error("[ProfileSave] Failed to save profile:", error);
-			const errorMessage =
-				error instanceof Error
-					? error.message
-					: "プロフィールの保存に失敗しました";
-			setSaveError(errorMessage);
-		} finally {
-			setIsSaving(false);
-		}
+	const handleNext = () => {
+		const birthDate = formData.birthDate || null;
+		updateProfile({
+			birthDate,
+			ageBand: birthDateToAgeBand(birthDate),
+			gender: formData.gender || "unknown",
+			country: formData.country || null,
+			preferredLanguage: locale,
+			bloodType: formData.bloodType || undefined,
+			foodAllergies: formData.foodAllergies || [],
+			updatedAt: new Date().toISOString(),
+		});
+		router.push(`/${locale}/app/profile/conditions`);
 	};
 
-	const selectedConditions = formData.chronicConditions || [];
-
 	return (
-		<div className="p-4 pb-24 md:pb-6 md:p-6">
+		<div className="p-4 pb-24 md:pb-10 md:p-6">
 			<h1
-				className="mb-6 text-xl font-bold md:text-2xl"
+				className="mb-3 text-xl font-bold md:text-2xl"
 				style={{ color: theme.colors.text }}
 			>
-				プロフィール設定
+				{t("title")}
 			</h1>
+			<p className="mb-6 text-sm" style={{ color: theme.colors.textSecondary }}>
+				{t("description")}
+			</p>
 
-			{/* 基本情報 */}
 			<div
-				className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
+				className="rounded-xl p-4 shadow-sm md:p-6 space-y-5"
 				style={{ backgroundColor: theme.colors.surface }}
 			>
 				<h2
-					className="mb-4 text-lg font-bold md:text-xl"
+					className="text-lg font-semibold md:text-xl"
 					style={{ color: theme.colors.text }}
 				>
-					基本情報
+					{t("basicInfo")}
 				</h2>
 
-				<div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-					{/* 名前入力欄 */}
-					<div className="md:col-span-2">
-						<label
-							htmlFor="profile-name"
-							className="mb-1 block text-sm font-medium md:text-base"
-							style={{ color: theme.colors.text }}
-						>
-							{t("profile.name")}
-						</label>
-						<input
-							id="profile-name"
-							type="text"
-							value={formData.name || ""}
-							onChange={(e) =>
-								handleInputChange("name", e.target.value || undefined)
-							}
-							className="w-full rounded-lg border p-3 text-sm md:text-base"
-							style={{
-								backgroundColor: theme.colors.background,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-							placeholder={t("profile.name")}
-						/>
-					</div>
-
+				<div className="grid gap-4 md:grid-cols-2">
 					<div>
 						<label
-							htmlFor="profile-ageBand"
+							htmlFor="birthDate"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
-							年齢帯 *
+							{t("birthDate")}
 						</label>
-						<select
-							id="profile-ageBand"
-							value={formData.ageBand || ""}
-							onChange={(e) =>
-								handleInputChange("ageBand", e.target.value || null)
-							}
+						<input
+							id="birthDate"
+							type="date"
+							value={formData.birthDate || ""}
+							onChange={(e) => handleInputChange("birthDate", e.target.value)}
 							className="w-full rounded-lg border p-3"
 							style={{
 								backgroundColor: theme.colors.background,
 								borderColor: `${theme.colors.textSecondary}40`,
 								color: theme.colors.text,
 							}}
-						>
-							<option value="">選択してください</option>
-							<option value="10s">10代</option>
-							<option value="20s">20代</option>
-							<option value="30s">30代</option>
-							<option value="40s">40代</option>
-							<option value="50s">50代</option>
-							<option value="60s">60代</option>
-							<option value="70s">70代</option>
-							<option value="80plus">80歳以上</option>
-						</select>
+						/>
 					</div>
 
 					<div>
@@ -366,7 +200,7 @@ export default function ProfilePage() {
 							className="mb-1 text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
-							性別 *
+							{t("gender")}
 						</div>
 						<div className="grid grid-cols-2 gap-2">
 							{(["male", "female", "other", "unknown"] as Gender[]).map(
@@ -392,84 +226,60 @@ export default function ProfilePage() {
 											color: theme.colors.text,
 										}}
 									>
-										{gender === "male" && "男性"}
-										{gender === "female" && "女性"}
-										{gender === "other" && "その他"}
-										{gender === "unknown" && "回答しない"}
+										{gender === "male" && t("genders.male")}
+										{gender === "female" && t("genders.female")}
+										{gender === "other" && t("genders.other")}
+										{gender === "unknown" && t("genders.unknown")}
 									</button>
 								),
 							)}
 						</div>
 					</div>
 
-					<div className="grid grid-cols-2 gap-4 md:col-span-2">
-						<div>
-							<label
-								htmlFor="profile-heightCm"
-								className="mb-1 block text-sm font-medium md:text-base"
-								style={{ color: theme.colors.text }}
-							>
-								身長 (cm)
-							</label>
-							<input
-								id="profile-heightCm"
-								type="number"
-								value={formData.heightCm || ""}
-								onChange={(e) =>
-									handleInputChange(
-										"heightCm",
-										e.target.value ? Number(e.target.value) : undefined,
-									)
-								}
-								className="w-full rounded-lg border p-3"
-								style={{
-									backgroundColor: theme.colors.background,
-									borderColor: `${theme.colors.textSecondary}40`,
-									color: theme.colors.text,
-								}}
-								placeholder="170"
-							/>
-						</div>
-
-						<div>
-							<label
-								htmlFor="profile-weightKg"
-								className="mb-1 block text-sm font-medium"
-								style={{ color: theme.colors.text }}
-							>
-								体重 (kg)
-							</label>
-							<input
-								id="profile-weightKg"
-								type="number"
-								value={formData.weightKg || ""}
-								onChange={(e) =>
-									handleInputChange(
-										"weightKg",
-										e.target.value ? Number(e.target.value) : undefined,
-									)
-								}
-								className="w-full rounded-lg border p-3"
-								style={{
-									backgroundColor: theme.colors.background,
-									borderColor: `${theme.colors.textSecondary}40`,
-									color: theme.colors.text,
-								}}
-								placeholder="65"
-							/>
-						</div>
+					<div>
+						<label
+							htmlFor="country"
+							className="mb-1 block text-sm font-medium"
+							style={{ color: theme.colors.text }}
+						>
+							{t("country")}
+						</label>
+						<select
+							id="country"
+							value={formData.country || ""}
+							onChange={(e) => {
+								const value = e.target.value;
+								handleInputChange(
+									"country",
+									value === "" ? null : value === "other" ? null : value,
+								);
+							}}
+							className="w-full rounded-lg border p-3"
+							style={{
+								backgroundColor: theme.colors.background,
+								borderColor: `${theme.colors.textSecondary}40`,
+								color: theme.colors.text,
+							}}
+						>
+							<option value="">{t("selectPlaceholder")}</option>
+							{countryOptions.map((option) => (
+								<option key={option.value} value={option.value}>
+									{t(`countries.${option.value}`)}
+								</option>
+							))}
+						</select>
 					</div>
 
 					<div>
 						<label
-							htmlFor="profile-bloodType"
+							htmlFor="bloodType"
 							className="mb-1 block text-sm font-medium"
 							style={{ color: theme.colors.text }}
 						>
-							血液型
+							{t("bloodType")}
 						</label>
 						<select
-							id="profile-bloodType"
+							id="bloodType"
 							value={formData.bloodType || ""}
 							onChange={(e) =>
 								handleInputChange("bloodType", e.target.value || undefined)
@@ -481,472 +291,110 @@ export default function ProfilePage() {
 								color: theme.colors.text,
 							}}
 						>
-							<option value="">選択しない</option>
-							<option value="A">A型</option>
-							<option value="B">B型</option>
-							<option value="O">O型</option>
-							<option value="AB">AB型</option>
-							<option value="unknown">不明</option>
+							<option value="">{t("selectOptional")}</option>
+							<option value="A">A</option>
+							<option value="B">B</option>
+							<option value="O">O</option>
+							<option value="AB">AB</option>
+							<option value="unknown">{t("unknown")}</option>
 						</select>
 					</div>
 				</div>
-			</div>
 
-			{/* 基礎疾患・慢性疾患（カテゴリ別チェックボックス形式） */}
-			<div
-				className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
-				style={{ backgroundColor: theme.colors.surface }}
-			>
-				<h2
-					className="mb-2 text-lg font-bold md:text-xl"
-					style={{ color: theme.colors.text }}
-				>
-					基礎疾患・慢性疾患
-				</h2>
-				<p
-					className="mb-4 text-sm md:text-base"
-					style={{ color: theme.colors.textSecondary }}
-				>
-					該当するものにチェックを入れてください。カテゴリをタップして展開・折りたたみできます。
-				</p>
-
-				{/* 最重要疾患（常に表示） */}
-				<div className="mb-6">
-					<h3
-						className="mb-3 text-sm font-bold md:text-base"
-						style={{ color: theme.colors.primary }}
-					>
-						⭐ 最重要疾患
-					</h3>
-					<p
-						className="mb-4 text-xs md:text-sm italic"
-						style={{ color: theme.colors.textSecondary }}
-					>
-						健康管理の上で下記疾病の有無は重要です。該当するものは必ず選択してください。
-					</p>
-					<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-						{criticalConditions.map((condition) => {
-							const isSelected = selectedConditions.some(
-								(c) => c.label === condition.label,
-							);
-							return (
-								<label
-									key={condition.label}
-									className="flex items-center rounded-lg border-2 p-3 transition-colors md:p-4"
-									style={{
-										borderColor: isSelected
-											? theme.colors.primary
-											: `${theme.colors.textSecondary}40`,
-										backgroundColor: isSelected
-											? `${theme.colors.primary}10`
-											: "transparent",
-									}}
-								>
-									<input
-										type="checkbox"
-										checked={isSelected}
-										onChange={() => handleChronicConditionToggle(condition)}
-										className="mr-3 h-5 w-5 md:h-6 md:w-6"
-										style={{ accentColor: theme.colors.primary }}
-									/>
-									<span
-										className="text-sm md:text-base"
-										style={{ color: theme.colors.text }}
-									>
-										{condition.label}
-									</span>
-								</label>
-							);
-						})}
-					</div>
-				</div>
-
-				{/* カテゴリ別セクションの説明 */}
-				<div
-					className="mb-4 rounded-lg border-l-4 p-3 md:p-4"
-					style={{
-						borderColor: `${theme.colors.primary}40`,
-						backgroundColor: `${theme.colors.primary}05`,
-					}}
-				>
-					<p
-						className="text-sm font-medium md:text-base"
-						style={{ color: theme.colors.text }}
-					>
-						詳細情報・上記以外の疾患を登録
-					</p>
-					<p
-						className="mt-1 text-xs md:text-sm"
-						style={{ color: theme.colors.textSecondary }}
-					>
-						カテゴリをタップして展開し、該当する疾患にチェックを入れてください。
-					</p>
-				</div>
-
-				{/* カテゴリ別疾患リスト */}
-				<div className="space-y-3">
-					{chronicConditionCategories.map((category) => {
-						const isExpanded = expandedCategories.has(category.id);
-						return (
-							<div
-								key={category.id}
-								className="rounded-lg border"
-								style={{ borderColor: `${theme.colors.textSecondary}40` }}
-							>
-								<button
-									type="button"
-									onClick={() => toggleCategory(category.id)}
-									className="flex w-full items-center justify-between p-3"
-									style={{ backgroundColor: theme.colors.background }}
-								>
-									<span
-										className="font-medium"
-										style={{ color: theme.colors.text }}
-									>
-										{category.label}
-									</span>
-									{isExpanded ? (
-										<ChevronUp
-											className="h-5 w-5"
-											style={{ color: theme.colors.textSecondary }}
-										/>
-									) : (
-										<ChevronDown
-											className="h-5 w-5"
-											style={{ color: theme.colors.textSecondary }}
-										/>
-									)}
-								</button>
-
-								{isExpanded && (
-									<div
-										className="space-y-2 border-t p-3"
-										style={{ borderColor: `${theme.colors.textSecondary}20` }}
-									>
-										{category.conditions.map((condition) => {
-											const isSelected = selectedConditions.some(
-												(c) => c.label === condition.label,
-											);
-											return (
-												<label
-													key={condition.label}
-													className="flex items-center rounded-lg border-2 p-2 transition-colors"
-													style={{
-														borderColor: isSelected
-															? theme.colors.primary
-															: `${theme.colors.textSecondary}30`,
-														backgroundColor: isSelected
-															? `${theme.colors.primary}10`
-															: "transparent",
-													}}
-												>
-													<input
-														type="checkbox"
-														checked={isSelected}
-														onChange={() =>
-															handleChronicConditionToggle(condition)
-														}
-														className="mr-2 h-4 w-4"
-														style={{ accentColor: theme.colors.primary }}
-													/>
-													<span
-														className="text-sm"
-														style={{ color: theme.colors.text }}
-													>
-														{condition.label}
-													</span>
-												</label>
-											);
-										})}
-									</div>
-								)}
-							</div>
-						);
-					})}
-				</div>
-
-				{/* その他（自由記載） */}
-				<div className="mt-4">
+				<div>
 					<label
-						htmlFor="profile-other-conditions"
+						htmlFor="allergy-select"
 						className="mb-2 block text-sm font-medium"
 						style={{ color: theme.colors.text }}
 					>
-						その他の疾患（自由記載）
+						{t("allergy")}
 					</label>
-					<input
-						id="profile-other-conditions"
-						type="text"
-						placeholder="該当する疾患名を入力してください"
-						className="w-full rounded-lg border p-3 text-sm"
-						style={{
-							backgroundColor: theme.colors.background,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						onKeyPress={(e) => {
-							if (e.key === "Enter" && e.currentTarget.value.trim()) {
-								handleChronicConditionToggle({
-									label: e.currentTarget.value.trim(),
-								});
-								e.currentTarget.value = "";
-							}
-						}}
-					/>
-				</div>
-			</div>
-
-			{/* 食物アレルギー */}
-			<div
-				className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
-				style={{ backgroundColor: theme.colors.surface }}
-			>
-				<h2
-					className="mb-4 text-lg font-bold md:text-xl"
-					style={{ color: theme.colors.text }}
-				>
-					食物アレルギー
-				</h2>
-				<div className="mb-3 flex gap-2">
-					<input
-						type="text"
-						placeholder="例: ピーナッツ、エビ"
-						className="flex-1 rounded-lg border p-2"
-						style={{
-							backgroundColor: theme.colors.background,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						onKeyPress={(e) => {
-							if (e.key === "Enter") {
-								handleFoodAllergyAdd(e.currentTarget.value);
-								e.currentTarget.value = "";
-							}
-						}}
-					/>
-					<button
-						type="button"
-						onClick={(e) => {
-							const input = e.currentTarget
-								.previousElementSibling as HTMLInputElement;
-							handleFoodAllergyAdd(input.value);
-							input.value = "";
-						}}
-						className="rounded-lg px-4 py-2 text-sm font-medium text-white"
-						style={{ backgroundColor: theme.colors.primary }}
-					>
-						追加
-					</button>
-				</div>
-				<div className="flex flex-wrap gap-2">
-					{(formData.foodAllergies || []).map((allergy) => (
-						<span
-							key={allergy}
-							className="flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-sm"
-						>
-							{allergy}
-							<button
-								type="button"
-								onClick={() =>
-									handleFoodAllergyRemove(
-										formData.foodAllergies?.indexOf(allergy) || 0,
-									)
-								}
-								className="text-red-600 hover:text-red-800"
+					<div className="flex flex-col gap-3 md:flex-row md:items-end">
+						<div className="flex-1 space-y-2">
+							<select
+								id="allergy-select"
+								value={selectedAllergy}
+								onChange={(e) => setSelectedAllergy(e.target.value)}
+								className="w-full rounded-lg border p-3"
+								style={{
+									backgroundColor: theme.colors.background,
+									borderColor: `${theme.colors.textSecondary}40`,
+									color: theme.colors.text,
+								}}
 							>
-								×
-							</button>
-						</span>
-					))}
-				</div>
-			</div>
-
-			{/* 生活習慣 */}
-			<div
-				className="mb-6 rounded-xl p-4 shadow-sm md:p-6"
-				style={{ backgroundColor: theme.colors.surface }}
-			>
-				<h2
-					className="mb-4 text-lg font-bold md:text-xl"
-					style={{ color: theme.colors.text }}
-				>
-					生活習慣
-				</h2>
-
-				<div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
-					<div>
-						<label
-							htmlFor="profile-smoking"
-							className="mb-1 block text-sm font-medium"
-							style={{ color: theme.colors.text }}
+								<option value="">{t("allergySelectPlaceholder")}</option>
+								{majorAllergies.map((item) => (
+									<option key={item} value={item}>
+										{t(`allergyOptions.${item}`)}
+									</option>
+								))}
+								<option value="other">{t("allergyOther")}</option>
+							</select>
+							{selectedAllergy === "other" && (
+								<input
+									id="allergy-input"
+									type="text"
+									value={allergyInput}
+									onChange={(e) => setAllergyInput(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											handleAddAllergy();
+										}
+									}}
+									className="w-full rounded-lg border p-3"
+									style={{
+										backgroundColor: theme.colors.background,
+										borderColor: `${theme.colors.textSecondary}40`,
+										color: theme.colors.text,
+									}}
+									placeholder={t("allergyOtherPlaceholder")}
+								/>
+							)}
+						</div>
+						<button
+							type="button"
+							onClick={handleAddAllergy}
+							className="rounded-lg px-4 py-2 text-sm font-medium text-white"
+							style={{ backgroundColor: theme.colors.primary }}
 						>
-							喫煙
-						</label>
-						<select
-							id="profile-smoking"
-							value={formData.smokingStatus || "unknown"}
-							onChange={(e) =>
-								handleInputChange(
-									"smokingStatus",
-									e.target.value as SmokingStatus,
-								)
-							}
-							className="w-full rounded-lg border p-3"
-							style={{
-								backgroundColor: theme.colors.background,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-						>
-							<option value="never">吸わない</option>
-							<option value="former">以前吸っていた</option>
-							<option value="current">現在吸っている</option>
-							<option value="unknown">回答しない</option>
-						</select>
+							{t("add")}
+						</button>
 					</div>
 
-					<div>
-						<label
-							htmlFor="profile-alcohol"
-							className="mb-1 block text-sm font-medium"
-							style={{ color: theme.colors.text }}
-						>
-							飲酒
-						</label>
-						<select
-							id="profile-alcohol"
-							value={formData.alcoholUse || "unknown"}
-							onChange={(e) =>
-								handleInputChange("alcoholUse", e.target.value as AlcoholUse)
-							}
-							className="w-full rounded-lg border p-3"
-							style={{
-								backgroundColor: theme.colors.background,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-						>
-							<option value="none">飲まない</option>
-							<option value="light">たまに（週1-2回）</option>
-							<option value="moderate">適度に（週3-4回）</option>
-							<option value="heavy">頻繁に（ほぼ毎日）</option>
-							<option value="unknown">回答しない</option>
-						</select>
-					</div>
-
-					<div>
-						<label
-							htmlFor="profile-exercise"
-							className="mb-1 block text-sm font-medium"
-							style={{ color: theme.colors.text }}
-						>
-							運動習慣
-						</label>
-						<select
-							id="profile-exercise"
-							value={formData.exercise || "unknown"}
-							onChange={(e) =>
-								handleInputChange(
-									"exercise",
-									e.target.value as ExerciseFrequency,
-								)
-							}
-							className="w-full rounded-lg border p-3"
-							style={{
-								backgroundColor: theme.colors.background,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-						>
-							<option value="none">運動しない</option>
-							<option value="1-2/week">週1-2回</option>
-							<option value="3-5/week">週3-5回</option>
-							<option value="daily">毎日</option>
-							<option value="unknown">回答しない</option>
-						</select>
+					<div className="mt-3 flex flex-wrap gap-2">
+						{(formData.foodAllergies || []).map((allergy, index) => (
+							<span
+								key={allergy}
+								className="flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-sm"
+							>
+								{t(`allergyOptions.${allergy}`, { fallback: allergy })}
+								<button
+									type="button"
+									onClick={() => handleRemoveAllergy(index)}
+									className="text-red-600 hover:text-red-800"
+								>
+									<X className="h-4 w-4" />
+								</button>
+							</span>
+						))}
 					</div>
 				</div>
 			</div>
 
-			{/* 保存ボタン */}
 			<div
 				className="fixed bottom-20 left-0 right-0 p-4 md:static md:bottom-auto md:left-auto md:right-auto md:mt-8"
 				style={{ backgroundColor: theme.colors.background }}
 			>
-				{/* Success Message */}
-				{showSuccess && (
-					<div
-						className="mb-3 flex items-center justify-center rounded-lg p-3 md:p-4"
-						style={{ backgroundColor: "#10B981", color: "white" }}
-					>
-						<Check className="mr-2 h-5 w-5" />
-						<span className="md:text-lg">保存しました</span>
-					</div>
-				)}
-
-				{/* Error Message */}
-				{saveError && (
-					<div
-						className="mb-3 rounded-lg p-3 md:p-4"
-						style={{ backgroundColor: "#FEE2E2", color: "#DC2626" }}
-					>
-						<div className="flex items-start">
-							<span className="text-sm md:text-base">{saveError}</span>
-						</div>
-					</div>
-				)}
-
-				{/* Progress Display */}
-				{(isEncrypting || isUpdating) && (
-					<div
-						className="mb-3 rounded-lg p-3 md:p-4"
-						style={{ backgroundColor: `${theme.colors.primary}10` }}
-					>
-						<div className="flex items-center">
-							<div
-								className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-t-transparent"
-								style={{ borderColor: theme.colors.primary }}
-							/>
-							<span
-								className="text-sm md:text-base"
-								style={{ color: theme.colors.text }}
-							>
-								{progress === "encrypting" && "データを暗号化中..."}
-								{progress === "uploading" && "Walrusにアップロード中..."}
-								{isUpdating && "パスポートを更新中..."}
-							</span>
-						</div>
-					</div>
-				)}
-
-				{/* Passport Warning */}
-				{!has_passport && currentAccount?.address && (
-					<div
-						className="mb-3 rounded-lg p-3 md:p-4"
-						style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
-					>
-						<p className="text-sm md:text-base">
-							⚠️
-							パスポートが発行されていません。保存する前にパスポートを発行してください。
-						</p>
-					</div>
-				)}
-
 				<button
 					type="button"
-					onClick={handleSave}
-					disabled={
-						isSaving ||
-						isEncrypting ||
-						isUpdating ||
-						!formData.ageBand ||
-						!has_passport
-					}
-					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 disabled:opacity-50 md:max-w-md md:mx-auto md:p-5 md:text-lg"
+					onClick={handleNext}
+					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:mx-auto md:max-w-md md:p-5 md:text-lg"
 					style={{ backgroundColor: theme.colors.primary }}
+					disabled={!formData.birthDate || !formData.gender}
 				>
-					<Save className="mr-2 h-5 w-5" />
-					{isSaving || isEncrypting || isUpdating ? "保存中..." : "保存"}
+					{t("nextToConditions")}
+					<ChevronRight className="ml-2 h-5 w-5" />
 				</button>
 			</div>
 		</div>

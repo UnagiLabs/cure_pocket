@@ -75,9 +75,11 @@ export interface MedicalHistory {
 	type: MedicalHistoryType; // タイプ（基礎疾患、手術歴など）
 	diagnosis: string; // 診断名・手術名
 	diagnosisDate?: string; // ISO date - 診断日・手術日
+	icd10Code?: string; // ICD-10コード
 	diagnosedBy?: string; // 診断した医療機関・医師名
 	description?: string; // 詳細説明
 	status?: "active" | "resolved" | "chronic"; // 状態（進行中、治癒、慢性など）
+	resolvedDate?: string; // 完治日
 	notes?: string; // その他のメモ
 
 	// Backend-linked metadata
@@ -240,6 +242,7 @@ export interface DataSharing {
 export interface PatientProfile {
 	// 基本情報
 	name?: string; // ユーザー名（SBT実装前の一時的な保存用）
+	birthDate: string | null; // 生年月日
 	ageBand: AgeBand | null;
 	gender: Gender;
 	country: CountryCode | null;

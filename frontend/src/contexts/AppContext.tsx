@@ -314,6 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 			if (!prev) {
 				// 初期プロフィールを作成
 				const defaultProfile: PatientProfile = {
+					birthDate: null,
 					ageBand: null,
 					gender: "unknown",
 					country: null,

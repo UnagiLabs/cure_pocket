@@ -69,6 +69,13 @@ function ageBandToBirthYear(
 	return currentYear - age;
 }
 
+function getBirthYear(profile: PatientProfile): number {
+	if (profile.birthDate) {
+		return new Date(profile.birthDate).getFullYear();
+	}
+	return ageBandToBirthYear(profile.ageBand);
+}
+
 /**
  * Convert PatientProfile to UserProfile (HealthData format)
  *
@@ -76,7 +83,7 @@ function ageBandToBirthYear(
  * @returns UserProfile for HealthData
  */
 function convertUserProfile(profile: PatientProfile): UserProfile {
-	const birthYear = ageBandToBirthYear(profile.ageBand);
+	const birthYear = getBirthYear(profile);
 
 	const userProfile: UserProfile = {
 		birth_year: birthYear,
@@ -203,10 +210,12 @@ function convertConditions(
 						: history.status === "chronic"
 							? "active"
 							: "active",
-				codes: {},
+				codes: history.icd10Code ? { icd10: history.icd10Code } : {},
 				name: createLocalizedString(history.diagnosis, locale),
 				onset_date: history.diagnosisDate,
-				note: history.description || history.notes,
+				note: history.resolvedDate
+					? `${history.description || ""} 完治日: ${history.resolvedDate}`.trim()
+					: history.description || history.notes,
 			});
 		}
 	}
@@ -424,6 +433,7 @@ export function healthDataToPatientProfile(
 
 	// Build PatientProfile
 	const profile: PatientProfile = {
+		birthDate: null,
 		ageBand,
 		gender,
 		country: userProfile.country || null,
