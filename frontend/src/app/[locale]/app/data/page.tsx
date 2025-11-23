@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
@@ -28,6 +28,13 @@ export default function DataOverviewPage() {
 		settings,
 	} = useApp();
 	const theme = getTheme(settings.theme);
+
+	// DEBUG: Log profile data on /data page
+	useEffect(() => {
+		console.log("=== DATA PAGE PROFILE ===");
+		console.log("Profile:", JSON.stringify(profile, null, 2));
+		console.log("========================");
+	}, [profile]);
 
 	const summary = useMemo(
 		() => ({
@@ -121,9 +128,9 @@ export default function DataOverviewPage() {
 					>
 						<div className="grid grid-cols-2 gap-3 text-xs lg:text-sm">
 							<InfoRow
-								label={t("settings.displayName", { default: "Display name" })}
+								label={t("dataOverview.birthDate", { default: "Birth Date" })}
 								value={
-									profile?.name ||
+									profile?.birthDate ||
 									t("dataOverview.empty", { default: "Not set" })
 								}
 							/>
@@ -135,18 +142,25 @@ export default function DataOverviewPage() {
 								}
 							/>
 							<InfoRow
-								label={t("settings.country", { default: "Country" })}
+								label={t("settings.country", { default: "Nationality" })}
 								value={
 									profile?.country ||
 									t("dataOverview.empty", { default: "Not set" })
 								}
 							/>
 							<InfoRow
-								label={t("vitals.weight", { default: "Weight" })}
+								label={t("settings.bloodType", { default: "Blood Type" })}
 								value={
-									profile?.weightKg
-										? `${profile.weightKg} kg`
-										: t("dataOverview.empty", { default: "Not set" })
+									profile?.bloodType ||
+									t("dataOverview.empty", { default: "Not set" })
+								}
+							/>
+							<InfoRow
+								label={t("dataOverview.allergies", { default: "Allergies" })}
+								value={
+									profile?.foodAllergies && profile.foodAllergies.length > 0
+										? profile.foodAllergies.join(", ")
+										: t("dataOverview.none", { default: "None" })
 								}
 							/>
 						</div>

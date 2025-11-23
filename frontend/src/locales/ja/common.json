@@ -65,6 +65,9 @@
 		"noLabs": "検査値は登録されていません",
 		"noImaging": "画像データは登録されていません",
 		"noVitals": "バイタルデータはまだありません",
+		"birthDate": "生年月日",
+		"allergies": "アレルギー",
+		"none": "なし",
 		"chips": {
 			"conditions": "疾病",
 			"prescriptions": "処方",
@@ -173,6 +176,7 @@
 		"displayName": "表示名",
 		"ageBand": "年齢層",
 		"country": "国",
+		"bloodType": "血液型",
 		"allergies": "アレルギー",
 		"profile": "プロフィール設定",
 		"profileSettings": "プロフィール設定",

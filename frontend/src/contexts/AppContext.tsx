@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import { calculateAgeBandFromDate } from "@/lib/profileConverter";
 import {
 	buildPatientAccessPTB,
 	createSealClient,
@@ -223,25 +224,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				// Step 6: Convert BasicProfileData to PatientProfile
 				const basicProfileData = decryptedData as BasicProfileData;
 
-				// Manual conversion from BasicProfileData to PatientProfile
-				// (healthDataToPatientProfile expects old HealthData format)
-				const birthYear = basicProfileData.profile.birth_year;
-				const currentYear = new Date().getFullYear();
-				const age = currentYear - birthYear;
+				// DEBUG: Log decrypted data from Walrus
+				console.log("=== WALRUS DECRYPTED DATA ===");
+				console.log(
+					"Full decrypted data:",
+					JSON.stringify(decryptedData, null, 2),
+				);
+				console.log(
+					"Profile data:",
+					JSON.stringify(basicProfileData.profile, null, 2),
+				);
+				console.log("============================");
 
-				let ageBand: PatientProfile["ageBand"] = null;
-				if (age >= 10 && age < 20) ageBand = "10s";
-				else if (age >= 20 && age < 30) ageBand = "20s";
-				else if (age >= 30 && age < 40) ageBand = "30s";
-				else if (age >= 40 && age < 50) ageBand = "40s";
-				else if (age >= 50 && age < 60) ageBand = "50s";
-				else if (age >= 60 && age < 70) ageBand = "60s";
-				else if (age >= 70 && age < 80) ageBand = "70s";
-				else if (age >= 80) ageBand = "80plus";
+				// Manual conversion from BasicProfileData to PatientProfile
+				// Use birth_date from the new schema
+				const birthDate = basicProfileData.profile.birth_date || null;
+				// Calculate ageBand from birth_date
+				const calculatedAgeBand = birthDate
+					? calculateAgeBandFromDate(birthDate)
+					: null;
 
 				const decryptedProfile: PatientProfile = {
-					birthDate: null,
-					ageBand,
+					birthDate: birthDate,
+					ageBand: calculatedAgeBand,
 					gender:
 						basicProfileData.profile.gender === "other"
 							? "unknown"
@@ -249,27 +254,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									| "male"
 									| "female"
 									| "unknown"),
-					country: basicProfileData.profile.country || null,
+					country: basicProfileData.profile.nationality || null,
 					preferredLanguage: null,
-					heightCm: basicProfileData.profile.biometrics?.height_cm,
-					weightKg: basicProfileData.profile.biometrics?.weight_kg,
+					// heightCm and weightKg are not in basic_profile (moved to self_metrics)
+					heightCm: undefined,
+					weightKg: undefined,
 					bloodType: basicProfileData.profile
 						.blood_type as PatientProfile["bloodType"],
 					smokingStatus: "unknown",
 					alcoholUse: "unknown",
 					exercise: "unknown",
-					drugAllergies: basicProfileData.allergies
-						.filter((a) => a.substance.code_type === "rxnorm")
-						.map((a) => ({
-							name: a.substance.name,
-							severity: a.severity as "mild" | "moderate" | "severe",
-						})),
-					foodAllergies: basicProfileData.allergies
-						.filter((a) => a.substance.code_type === "food")
-						.map((a) => a.substance.name),
-					hasAnaphylaxisHistory: basicProfileData.allergies.some(
-						(a) => a.severity === "severe",
-					),
+					// allergies is now a string[] in the schema
+					drugAllergies: [],
+					foodAllergies: basicProfileData.profile.allergies || [],
+					hasAnaphylaxisHistory: false,
 					chronicConditions: [],
 					surgeries: [],
 					dataSharing: {
@@ -282,16 +280,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 						rewardsEnabled: false,
 					},
 				};
+
+				// DEBUG: Log converted PatientProfile
+				console.log("=== CONVERTED PATIENT PROFILE ===");
+				console.log(
+					"Converted profile:",
+					JSON.stringify(decryptedProfile, null, 2),
+				);
+				console.log("================================");
+
 				setProfile(decryptedProfile);
 
-				// Set allergies from basic_profile
-				if (basicProfileData.allergies) {
-					const convertedAllergies = basicProfileData.allergies.map(
-						(allergy) => ({
-							id: allergy.id,
-							substance: allergy.substance.name,
-							severity: allergy.severity as "mild" | "moderate" | "severe",
-							symptoms: allergy.reaction || "",
+				// Set allergies from basic_profile (allergies is now string[])
+				if (
+					basicProfileData.profile.allergies &&
+					basicProfileData.profile.allergies.length > 0
+				) {
+					const convertedAllergies = basicProfileData.profile.allergies.map(
+						(allergyName, index) => ({
+							id: `allergy-${index}`,
+							substance: allergyName,
+							severity: "moderate" as const,
+							symptoms: "",
 							onsetDate: new Date().toISOString().split("T")[0],
 							notes: "",
 						}),

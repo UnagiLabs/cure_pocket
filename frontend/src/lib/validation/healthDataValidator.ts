@@ -119,19 +119,19 @@ function validateBasicProfile(healthData: HealthData): void {
 	const profile = healthData.profile;
 
 	// Validate required fields
-	if (!profile.country) {
+	if (!profile.nationality) {
 		throw new HealthDataValidationError(
-			"Country (ISO 3166-1 alpha-2) is required in profile",
-			"profile.country",
+			"Nationality (ISO 3166-1 alpha-2) is required in profile",
+			"profile.nationality",
 			"basic_profile",
 		);
 	}
 
-	// Validate country code format (2-letter uppercase)
-	if (!/^[A-Z]{2}$/.test(profile.country)) {
+	// Validate nationality code format (2-letter uppercase)
+	if (!/^[A-Z]{2}$/.test(profile.nationality)) {
 		throw new HealthDataValidationError(
-			`Invalid country code format: ${profile.country}. Expected 2-letter uppercase (e.g., JP, US)`,
-			"profile.country",
+			`Invalid nationality code format: ${profile.nationality}. Expected 2-letter uppercase (e.g., JP, US)`,
+			"profile.nationality",
 			"basic_profile",
 		);
 	}
@@ -408,10 +408,10 @@ export function validateBasicProfileData(data: BasicProfileData): void {
 
 	const profile = data.profile;
 
-	if (!profile.country || !/^[A-Z]{2}$/.test(profile.country)) {
+	if (!profile.nationality || !/^[A-Z]{2}$/.test(profile.nationality)) {
 		throw new HealthDataValidationError(
-			`Invalid country code: ${profile.country}. Expected 2-letter uppercase (e.g., JP, US)`,
-			"profile.country",
+			`Invalid nationality code: ${profile.nationality}. Expected 2-letter uppercase (e.g., JP, US)`,
+			"profile.nationality",
 			"basic_profile",
 		);
 	}
