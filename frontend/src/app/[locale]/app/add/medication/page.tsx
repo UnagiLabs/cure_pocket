@@ -1,5 +1,6 @@
 "use client";
 
+import { useSuiClient } from "@mysten/dapp-kit";
 import {
 	Camera,
 	Image as ImageIcon,
@@ -15,7 +16,20 @@ import { useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { DrugAutocomplete } from "@/components/DrugAutocomplete";
 import { useApp } from "@/contexts/AppContext";
+import { usePassport } from "@/hooks/usePassport";
+import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
+import {
+	csvToUint8Array,
+	prescriptionToMedicationsCsv,
+} from "@/lib/prescriptionConverter";
+import {
+	calculateThreshold,
+	createSealClient,
+	encryptHealthData,
+	SEAL_KEY_SERVERS,
+} from "@/lib/seal";
 import { getTheme } from "@/lib/themes";
+import { uploadToWalrus } from "@/lib/walrus";
 import type { Prescription, PrescriptionMedication } from "@/types";
 
 type InputMode = "image" | "manual";
@@ -69,9 +83,14 @@ export default function AddPrescriptionPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings, addPrescription, prescriptions } = useApp();
+	const { settings, prescriptions } = useApp();
 	const theme = getTheme(settings.theme);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Walrus関連フック
+	const suiClient = useSuiClient();
+	const { passport } = usePassport();
+	const { updatePassportData, isUpdating } = useUpdatePassportData();
 
 	// 入力モード
 	const [inputMode, setInputMode] = useState<InputMode>("image");
@@ -186,7 +205,7 @@ export default function AddPrescriptionPage() {
 		setMedications(updated);
 	};
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		// バリデーション
 		if (!clinic.trim()) {
 			alert(t("prescriptions.validation.clinicRequired"));
@@ -201,30 +220,84 @@ export default function AddPrescriptionPage() {
 			return;
 		}
 
-		// 処方箋オブジェクトを作成
-		const prescription: Prescription = {
-			id: uuidv4(),
-			prescriptionDate,
-			clinic: clinic.trim(),
-			department: department.trim() || undefined,
-			doctorName: doctorName.trim() || undefined,
-			medications: medications
-				.filter((med) => med.drugName.trim() !== "")
-				.map((med) => ({
-					id: uuidv4(),
-					drugName: med.drugName.trim(),
-					strength: med.strength.trim(),
-					dosage: med.dosage.trim(),
-					quantity: med.quantity.trim(),
-					duration: med.duration?.trim() || undefined,
-				})),
-			symptoms: symptoms.trim() || undefined,
-			notes: notes.trim() || undefined,
-			attachments: uploadedImages.length > 0 ? uploadedImages : undefined,
-		};
+		// パスポート確認
+		if (!passport) {
+			alert("パスポートが見つかりません。プロフィールを作成してください。");
+			return;
+		}
 
-		addPrescription(prescription);
-		router.push(`/${locale}/app/medications`);
+		try {
+			// 処方箋オブジェクトを作成
+			const prescription: Prescription = {
+				id: uuidv4(),
+				prescriptionDate,
+				clinic: clinic.trim(),
+				department: department.trim() || undefined,
+				doctorName: doctorName.trim() || undefined,
+				medications: medications
+					.filter((med) => med.drugName.trim() !== "")
+					.map((med) => ({
+						id: uuidv4(),
+						drugName: med.drugName.trim(),
+						strength: med.strength.trim(),
+						dosage: med.dosage.trim(),
+						quantity: med.quantity.trim(),
+						duration: med.duration?.trim() || undefined,
+					})),
+				symptoms: symptoms.trim() || undefined,
+				notes: notes.trim() || undefined,
+				attachments: uploadedImages.length > 0 ? uploadedImages : undefined,
+			};
+
+			console.log("[AddMedication] Converting prescription to CSV...");
+
+			// PrescriptionをCSVに変換
+			const medicationsCsv = prescriptionToMedicationsCsv(prescription);
+			const csvData = csvToUint8Array(medicationsCsv);
+
+			console.log("[AddMedication] CSV generated:", medicationsCsv);
+
+			// Seal暗号化
+			console.log("[AddMedication] Encrypting data with Seal...");
+			const sealClient = createSealClient(suiClient);
+			const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
+
+			const { encryptedObject } = await encryptHealthData({
+				healthData: csvData as unknown as never, // CSVバイト配列を暗号化
+				sealClient,
+				sealId: passport.sealId,
+				threshold,
+			});
+
+			console.log(
+				`[AddMedication] Encryption complete, size: ${encryptedObject.length} bytes`,
+			);
+
+			// Walrusにアップロード
+			console.log("[AddMedication] Uploading to Walrus...");
+			const walrusRef = await uploadToWalrus(encryptedObject);
+
+			console.log(
+				`[AddMedication] Upload complete, blobId: ${walrusRef.blobId}`,
+			);
+
+			// パスポートのDynamic Fieldを更新
+			console.log("[AddMedication] Updating passport data...");
+			await updatePassportData({
+				passportId: passport.id,
+				dataType: "medications",
+				blobIds: [walrusRef.blobId],
+				replace: false, // 追加モード（既存データに追加）
+			});
+
+			console.log("[AddMedication] Save complete!");
+			router.push(`/${locale}/app/medications`);
+		} catch (error) {
+			console.error("[AddMedication] Save failed:", error);
+			alert(
+				`保存に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+			);
+		}
 	};
 
 	return (
@@ -812,12 +885,20 @@ export default function AddPrescriptionPage() {
 					<button
 						type="button"
 						onClick={handleSave}
-						className="w-full rounded-xl py-4 font-medium text-white transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
+						disabled={isUpdating}
+						className="w-full rounded-xl py-4 font-medium text-white transition-all hover:scale-[1.02] active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
 						style={{
 							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
 						}}
 					>
-						{t("actions.save")}
+						{isUpdating ? (
+							<>
+								<Loader2 className="inline mr-2 animate-spin" size={18} />
+								{t("actions.saving")}
+							</>
+						) : (
+							t("actions.save")
+						)}
 					</button>
 				</>
 			)}

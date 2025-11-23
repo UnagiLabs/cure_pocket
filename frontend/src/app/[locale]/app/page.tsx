@@ -14,14 +14,12 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
-import type { Prescription } from "@/types";
 
 /**
  * ホーム画面（ダッシュボード）
@@ -39,69 +37,8 @@ export default function HomePage() {
 		imagingReports,
 		vitalSigns,
 		settings,
-		setPrescriptions,
-		walletAddress,
 	} = useApp();
 	const theme = getTheme(settings.theme);
-
-	useEffect(() => {
-		// Load demo prescriptions if empty
-		if (prescriptions.length === 0 && walletAddress) {
-			const demoPrescriptions: Prescription[] = [
-				{
-					id: uuidv4(),
-					prescriptionDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-						.toISOString()
-						.split("T")[0], // 7 days ago
-					clinic: "Central Medical Center",
-					department: "Cardiology",
-					doctorName: "Dr. Smith",
-					medications: [
-						{
-							id: uuidv4(),
-							drugName: "Aspirin 81 MG Oral Tablet",
-							strength: "81 MG",
-							dosage: "Once daily",
-							quantity: "1 tablet",
-							duration: "30 days",
-						},
-						{
-							id: uuidv4(),
-							drugName: "Atorvastatin 10 MG Oral Tablet",
-							strength: "10 MG",
-							dosage: "Once daily at bedtime",
-							quantity: "1 tablet",
-							duration: "30 days",
-						},
-					],
-					symptoms: "High cholesterol, cardiovascular prevention",
-					notes: "Take aspirin with food to reduce stomach upset",
-				},
-				{
-					id: uuidv4(),
-					prescriptionDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
-						.toISOString()
-						.split("T")[0], // 14 days ago
-					clinic: "Downtown Family Clinic",
-					department: "Internal Medicine",
-					doctorName: "Dr. Johnson",
-					medications: [
-						{
-							id: uuidv4(),
-							drugName: "Metformin 500 MG Oral Tablet",
-							strength: "500 MG",
-							dosage: "Twice daily with meals",
-							quantity: "1 tablet",
-							duration: "30 days",
-						},
-					],
-					symptoms: "Type 2 diabetes management",
-					notes: "Monitor blood glucose levels regularly",
-				},
-			];
-			setPrescriptions(demoPrescriptions);
-		}
-	}, [prescriptions.length, walletAddress, setPrescriptions]);
 
 	// 最近の更新を時系列で取得
 	const recentUpdates = useMemo(() => {
