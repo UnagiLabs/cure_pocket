@@ -32,10 +32,9 @@ import type { Prescription, PrescriptionMedication } from "@/types";
 type InputMode = "image" | "manual";
 
 /**
- * OCRモック関数
- * 実際のOCR実装時にこの関数を置き換える
+ * Gemini APIを使用したOCR処理
  */
-async function mockOCRProcess(): Promise<{
+async function performOCR(images: string[]): Promise<{
 	prescriptionDate: string;
 	clinic: string;
 	department?: string;
@@ -43,33 +42,20 @@ async function mockOCRProcess(): Promise<{
 	medications: Omit<PrescriptionMedication, "id">[];
 	symptoms?: string;
 }> {
-	// 1-2秒のディレイでリアルさを演出
-	await new Promise((resolve) => setTimeout(resolve, 1500));
+	const response = await fetch("/api/ocr/gemini", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ images }),
+	});
 
-	// ダミーの処方箋データ
-	return {
-		prescriptionDate: new Date().toISOString().split("T")[0],
-		clinic: "サンプル医院",
-		department: "内科",
-		doctorName: "山田太郎",
-		medications: [
-			{
-				drugName: "ロキソプロフェンナトリウム錠",
-				strength: "60mg",
-				dosage: "1日3回、食後",
-				quantity: "1錠",
-				duration: "7日分",
-			},
-			{
-				drugName: "レバミピド錠",
-				strength: "100mg",
-				dosage: "1日3回、食後",
-				quantity: "1錠",
-				duration: "7日分",
-			},
-		],
-		symptoms: "頭痛、発熱",
-	};
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || "OCR処理に失敗しました");
+	}
+
+	return await response.json();
 }
 
 /**
@@ -154,7 +140,7 @@ export default function AddPrescriptionPage() {
 
 		setIsOCRProcessing(true);
 		try {
-			const ocrResult = await mockOCRProcess();
+			const ocrResult = await performOCR(uploadedImages);
 
 			// OCR結果を自動入力
 			setPrescriptionDate(ocrResult.prescriptionDate);
