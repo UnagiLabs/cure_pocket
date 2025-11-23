@@ -142,6 +142,15 @@
 		"notesPlaceholder": "例：空腹時服用不可",
 		"photoAttachmentComingSoon": "写真添付機能（近日公開予定）",
 		"attachments": "添付ファイル",
+		"inputFromImage": "画像から入力",
+		"manualInput": "手入力する",
+		"uploadOrTakePhoto": "画像をアップロード/撮影",
+		"dragDropImages": "画像をドラッグ&ドロップ",
+		"clickToUpload": "クリックしてアップロード",
+		"uploadedImages": "アップロード済み画像",
+		"attachedImages": "添付画像",
+		"runOCR": "OCR実行",
+		"ocrProcessing": "OCR処理中...",
 		"validation": {
 			"clinicRequired": "医療機関名を入力してください",
 			"medicationRequired": "最低1つの薬品名を入力してください"
