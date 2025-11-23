@@ -154,6 +154,7 @@ export interface ImagingReport {
 	impression?: string; // 診断的所見
 	// 将来的には画像ファイルへの参照を追加
 	imageUrl?: string; // 画像ファイルのURL（将来的に実装）
+	imageFile?: File; // アップロード用の画像ファイル
 
 	// Backend-linked metadata
 	suiObjectId?: string; // ImagingEntry object ID

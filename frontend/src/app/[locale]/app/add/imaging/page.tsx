@@ -1,12 +1,22 @@
 "use client";
 
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { ImagingForm } from "@/components/forms/ImagingForm";
 import { useApp } from "@/contexts/AppContext";
+import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
+import { usePassport } from "@/hooks/usePassport";
+import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
+import {
+	createImagingBinary,
+	createImagingMeta,
+	generateDicomUIDs,
+} from "@/lib/imagingHelpers";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
-import type { ImagingReport, ImagingType } from "@/types";
+import type { ImagingReport } from "@/types";
 
 /**
  * 画像レポートの追加フォームページ
@@ -15,36 +25,123 @@ export default function AddImagingPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings, addImagingReport } = useApp();
+	const currentAccount = useCurrentAccount();
+	const { settings } = useApp();
+	const { passport } = usePassport();
 	const theme = getTheme(settings.theme);
 
-	const [formData, setFormData] = useState({
-		type: "xray" as ImagingType,
-		bodyPart: "",
-		examDate: "",
-		performedBy: "",
-		summary: "",
-		findings: "",
-		impression: "",
-	});
+	const { encryptAndStoreMultiple, progress, isEncrypting } =
+		useEncryptAndStore();
+	const {
+		updateMultiplePassportData,
+		isUpdating,
+		error: passportError,
+	} = useUpdatePassportData();
 
-	const handleInputChange = (field: string, value: string | ImagingType) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
+	const [uploadError, setUploadError] = useState<string | null>(null);
+
+	const handleSaved = async (report: ImagingReport) => {
+		// If no image file, just navigate back
+		if (!report.imageFile) {
+			router.push(`/${locale}/app`);
+			return;
+		}
+
+		// Check if passport and account exist
+		if (!passport?.id || !currentAccount?.address) {
+			setUploadError("NO_PASSPORT");
+			return;
+		}
+
+		try {
+			setUploadError(null);
+
+			// Generate seal ID for encryption
+			const sealId = await generateSealId(currentAccount.address);
+
+			// Generate DICOM UIDs
+			const dicomUIDs = generateDicomUIDs();
+
+			// Create imaging_binary first (to get the file data)
+			const imagingBinary = await createImagingBinary(report.imageFile);
+
+			// Upload imaging_binary to get blob ID
+			const binaryResults = await encryptAndStoreMultiple(
+				[
+					{
+						data: {
+							meta: {
+								schema_version: "2.0.0",
+								updated_at: Date.now(),
+								generator: "CurePocket_Web_v1",
+							},
+							imaging_binary: imagingBinary,
+						},
+						dataType: "imaging_binary",
+					},
+				],
+				sealId,
+			);
+
+			if (!binaryResults || binaryResults.length === 0) {
+				throw new Error("Failed to upload imaging_binary");
+			}
+
+			const binaryBlobId = binaryResults[0].blobId;
+
+			// Create imaging_meta with the blob ID
+			const imagingMeta = createImagingMeta(report, binaryBlobId, dicomUIDs);
+
+			// Upload imaging_meta
+			const metaResults = await encryptAndStoreMultiple(
+				[
+					{
+						data: {
+							meta: {
+								schema_version: "2.0.0",
+								updated_at: Date.now(),
+								generator: "CurePocket_Web_v1",
+							},
+							imaging_meta: [imagingMeta] as any, // Type assertion: data schema structure doesn't match ImagingStudy type
+						},
+						dataType: "imaging_meta",
+					},
+				],
+				sealId,
+			);
+
+			if (!metaResults || metaResults.length === 0) {
+				throw new Error("Failed to upload imaging_meta");
+			}
+
+			const metaBlobId = metaResults[0].blobId;
+
+			// Update passport with imaging_meta
+			await updateMultiplePassportData({
+				passportId: passport.id,
+				dataEntries: [
+					{
+						dataType: "imaging_meta",
+						blobIds: [metaBlobId],
+						replace: false,
+					},
+					{
+						dataType: "imaging_binary",
+						blobIds: [binaryBlobId],
+						replace: false,
+					},
+				],
+			});
+
+			// Success - navigate back
+			router.push(`/${locale}/app`);
+		} catch (error) {
+			console.error("Failed to upload imaging data:", error);
+			setUploadError(error instanceof Error ? error.message : "UPLOAD_FAILED");
+		}
 	};
 
-	const handleSave = () => {
-		const report: ImagingReport = {
-			id: uuidv4(),
-			type: formData.type,
-			bodyPart: formData.bodyPart || undefined,
-			examDate: formData.examDate || new Date().toISOString().split("T")[0],
-			performedBy: formData.performedBy || undefined,
-			summary: formData.summary,
-			findings: formData.findings || undefined,
-			impression: formData.impression || undefined,
-		};
-
-		addImagingReport(report);
+	const handleCancel = () => {
 		router.push(`/${locale}/app`);
 	};
 
@@ -60,188 +157,65 @@ export default function AddImagingPage() {
 				</h1>
 			</div>
 
+			{/* Upload Progress */}
+			{(isEncrypting || isUpdating) && (
+				<div
+					className="mb-4 rounded-lg border p-4"
+					style={{
+						backgroundColor: theme.colors.surface,
+						borderColor: theme.colors.primary,
+					}}
+				>
+					<p className="font-medium" style={{ color: theme.colors.text }}>
+						{t("imaging.uploading")}
+					</p>
+					<p className="text-sm" style={{ color: theme.colors.textSecondary }}>
+						{progress === "validating" && t("imaging.progress.validating")}
+						{progress === "encrypting" && t("imaging.progress.encrypting")}
+						{progress === "uploading" && t("imaging.progress.uploading")}
+						{isUpdating && "Updating passport..."}
+					</p>
+				</div>
+			)}
+
+			{/* Upload Error */}
+			{uploadError && (
+				<div
+					className="mb-4 rounded-lg border p-4"
+					style={{
+						backgroundColor: "#fee2e2",
+						borderColor: "#ef4444",
+					}}
+				>
+					<p className="font-medium" style={{ color: "#991b1b" }}>
+						{t("imaging.uploadError")}
+					</p>
+					<p className="text-sm" style={{ color: "#991b1b" }}>
+						{uploadError}
+					</p>
+				</div>
+			)}
+
+			{/* Passport Error */}
+			{passportError && (
+				<div
+					className="mb-4 rounded-lg border p-4"
+					style={{
+						backgroundColor: "#fee2e2",
+						borderColor: "#ef4444",
+					}}
+				>
+					<p className="font-medium" style={{ color: "#991b1b" }}>
+						{t("imaging.encryptError")}
+					</p>
+					<p className="text-sm" style={{ color: "#991b1b" }}>
+						{passportError}
+					</p>
+				</div>
+			)}
+
 			{/* Form */}
-			<div className="space-y-4">
-				<div>
-					<label
-						htmlFor="imaging-type"
-						className="mb-1 block text-sm font-medium"
-						style={{ color: theme.colors.text }}
-					>
-						{t("imaging.type")} *
-					</label>
-					<select
-						id="imaging-type"
-						value={formData.type}
-						onChange={(e) =>
-							handleInputChange("type", e.target.value as ImagingType)
-						}
-						className="w-full rounded-lg border p-3"
-						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-					>
-						<option value="xray">{t("imaging.types.xray")}</option>
-						<option value="ct">{t("imaging.types.ct")}</option>
-						<option value="mri">{t("imaging.types.mri")}</option>
-						<option value="ultrasound">{t("imaging.types.ultrasound")}</option>
-						<option value="other">{t("imaging.types.other")}</option>
-					</select>
-				</div>
-
-				<div className="grid grid-cols-2 gap-4">
-					<div>
-						<label
-							htmlFor="imaging-bodyPart"
-							className="mb-1 block text-sm font-medium"
-							style={{ color: theme.colors.text }}
-						>
-							{t("imaging.bodyPart")}
-						</label>
-						<input
-							id="imaging-bodyPart"
-							type="text"
-							value={formData.bodyPart}
-							onChange={(e) => handleInputChange("bodyPart", e.target.value)}
-							className="w-full rounded-lg border p-3"
-							style={{
-								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-							placeholder="胸部"
-						/>
-					</div>
-
-					<div>
-						<label
-							htmlFor="imaging-examDate"
-							className="mb-1 block text-sm font-medium"
-							style={{ color: theme.colors.text }}
-						>
-							{t("imaging.examDate")} *
-						</label>
-						<input
-							id="imaging-examDate"
-							type="date"
-							value={formData.examDate}
-							onChange={(e) => handleInputChange("examDate", e.target.value)}
-							className="w-full rounded-lg border p-3"
-							style={{
-								backgroundColor: theme.colors.surface,
-								borderColor: `${theme.colors.textSecondary}40`,
-								color: theme.colors.text,
-							}}
-						/>
-					</div>
-				</div>
-
-				<div>
-					<label
-						htmlFor="imaging-performedBy"
-						className="mb-1 block text-sm font-medium"
-						style={{ color: theme.colors.text }}
-					>
-						{t("imaging.performedBy")}
-					</label>
-					<input
-						id="imaging-performedBy"
-						type="text"
-						value={formData.performedBy}
-						onChange={(e) => handleInputChange("performedBy", e.target.value)}
-						className="w-full rounded-lg border p-3"
-						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						placeholder={t("imaging.performedBy")}
-					/>
-				</div>
-
-				<div>
-					<label
-						htmlFor="imaging-summary"
-						className="mb-1 block text-sm font-medium"
-						style={{ color: theme.colors.text }}
-					>
-						{t("imaging.summary")} *
-					</label>
-					<textarea
-						id="imaging-summary"
-						value={formData.summary}
-						onChange={(e) => handleInputChange("summary", e.target.value)}
-						className="w-full rounded-lg border p-3"
-						rows={4}
-						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						placeholder={t("imaging.summary")}
-					/>
-				</div>
-
-				<div>
-					<label
-						htmlFor="imaging-findings"
-						className="mb-1 block text-sm font-medium"
-						style={{ color: theme.colors.text }}
-					>
-						{t("imaging.findings")}
-					</label>
-					<textarea
-						id="imaging-findings"
-						value={formData.findings}
-						onChange={(e) => handleInputChange("findings", e.target.value)}
-						className="w-full rounded-lg border p-3"
-						rows={4}
-						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						placeholder={t("imaging.findings")}
-					/>
-				</div>
-
-				<div>
-					<label
-						htmlFor="imaging-impression"
-						className="mb-1 block text-sm font-medium"
-						style={{ color: theme.colors.text }}
-					>
-						{t("imaging.impression")}
-					</label>
-					<textarea
-						id="imaging-impression"
-						value={formData.impression}
-						onChange={(e) => handleInputChange("impression", e.target.value)}
-						className="w-full rounded-lg border p-3"
-						rows={3}
-						style={{
-							backgroundColor: theme.colors.surface,
-							borderColor: `${theme.colors.textSecondary}40`,
-							color: theme.colors.text,
-						}}
-						placeholder={t("imaging.impression")}
-					/>
-				</div>
-
-				<div className="flex gap-3 md:max-w-md md:mx-auto">
-					<button
-						type="button"
-						onClick={handleSave}
-						disabled={!formData.summary}
-						className="flex-1 rounded-xl p-4 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
-						style={{ backgroundColor: theme.colors.primary }}
-					>
-						{t("actions.save")}
-					</button>
-				</div>
-			</div>
+			<ImagingForm onSaved={handleSaved} onCancel={handleCancel} />
 		</div>
 	);
 }

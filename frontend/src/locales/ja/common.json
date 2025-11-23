@@ -8,6 +8,7 @@
 		"cancel": "キャンセル",
 		"edit": "編集",
 		"delete": "削除",
+		"remove": "削除",
 		"generateNew": "新しいリンクを生成",
 		"scanQR": "QRコードスキャン",
 		"scanBarcode": "バーコードスキャン",
@@ -374,6 +375,8 @@
 		"summary": "要約・所見",
 		"findings": "所見の詳細",
 		"impression": "診断的所見",
+		"imageFile": "画像ファイル",
+		"fileSizeLimit": "最大ファイルサイズ: 1MB（PNG、JPEG のみ）",
 		"types": {
 			"xray": "レントゲン",
 			"ct": "CT",
@@ -381,7 +384,20 @@
 			"ultrasound": "超音波",
 			"other": "その他"
 		},
-		"noReports": "画像レポートは登録されていません"
+		"noReports": "画像レポートは登録されていません",
+		"uploading": "画像データをアップロード中...",
+		"uploadError": "アップロードに失敗しました",
+		"encryptError": "暗号化に失敗しました",
+		"progress": {
+			"validating": "データを検証中...",
+			"encrypting": "暗号化中...",
+			"uploading": "Walrus にアップロード中..."
+		},
+		"errors": {
+			"FILE_TOO_LARGE": "ファイルサイズが1MBを超えています",
+			"INVALID_FILE_TYPE": "PNG と JPEG 形式の画像のみサポートされています",
+			"INVALID_FILE": "無効なファイル形式です"
+		}
 	},
 	"dashboard": {
 		"title": "ダッシュボード",

@@ -8,6 +8,7 @@
 		"cancel": "Cancel",
 		"edit": "Edit",
 		"delete": "Delete",
+		"remove": "Remove",
 		"generateNew": "Generate new link",
 		"scanQR": "Scan QR Code",
 		"scanBarcode": "Scan Barcode",
@@ -369,6 +370,8 @@
 		"summary": "Summary / Findings",
 		"findings": "Findings Details",
 		"impression": "Impression",
+		"imageFile": "Image File",
+		"fileSizeLimit": "Maximum file size: 1MB (PNG, JPEG only)",
 		"types": {
 			"xray": "X-ray",
 			"ct": "CT",
@@ -376,7 +379,20 @@
 			"ultrasound": "Ultrasound",
 			"other": "Other"
 		},
-		"noReports": "No imaging reports registered"
+		"noReports": "No imaging reports registered",
+		"uploading": "Uploading imaging data...",
+		"uploadError": "Upload failed",
+		"encryptError": "Encryption failed",
+		"progress": {
+			"validating": "Validating data...",
+			"encrypting": "Encrypting...",
+			"uploading": "Uploading to Walrus..."
+		},
+		"errors": {
+			"FILE_TOO_LARGE": "File size exceeds 1MB limit",
+			"INVALID_FILE_TYPE": "Only PNG and JPEG images are supported",
+			"INVALID_FILE": "Invalid file format"
+		}
 	},
 	"dashboard": {
 		"title": "Dashboard",

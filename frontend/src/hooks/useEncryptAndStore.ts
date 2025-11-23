@@ -51,6 +51,7 @@ import type {
 	ConditionsData,
 	DataType,
 	HealthData,
+	ImagingBinaryData,
 	ImagingMetaData,
 	LabResultsData,
 	MedicationsData,
@@ -78,6 +79,7 @@ export type HealthDataTypes =
 	| ConditionsData
 	| LabResultsData
 	| ImagingMetaData
+	| ImagingBinaryData
 	| SelfMetricsData;
 
 /**
