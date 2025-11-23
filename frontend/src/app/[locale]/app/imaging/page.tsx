@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { ImagingForm } from "@/components/forms/ImagingForm";
+import { ImagingImageViewer } from "@/components/ImagingImageViewer";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
@@ -110,7 +111,20 @@ export default function ImagingPage() {
 									borderColor: `${theme.colors.textSecondary}40`,
 								}}
 							>
-								<div className="flex items-start justify-between">
+								<div className="flex items-start gap-4">
+									{/* Image Thumbnail */}
+									{report.imageObjectUrl && (
+										<div className="flex-shrink-0">
+											<ImagingImageViewer
+												blobId={report.imageObjectUrl}
+												alt={`${t(`imaging.types.${report.type}`)} - ${report.bodyPart || ""}`}
+												mode="thumbnail"
+												className="w-32 h-32"
+											/>
+										</div>
+									)}
+
+									{/* Report Details */}
 									<div className="flex-1">
 										<div className="mb-2 flex items-center gap-2">
 											<div
