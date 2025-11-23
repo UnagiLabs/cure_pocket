@@ -22,7 +22,7 @@ export interface HealthData {
 	medications: Medication[];
 	conditions: Condition[];
 	lab_results: LabResult[];
-	imaging: ImagingStudy[];
+	imaging: ImagingStudyV2[];
 	allergies: Allergy[];
 }
 
@@ -76,11 +76,11 @@ export interface LabResultsData {
 }
 
 /**
- * Imaging study metadata
+ * Imaging study metadata (Data Schema v2.0.0)
  */
 export interface ImagingMetaData {
 	meta: MetaData;
-	imaging_meta: ImagingStudy[];
+	imaging_meta: ImagingStudyV2[];
 }
 
 /**
@@ -209,17 +209,53 @@ export interface LabItem {
 }
 
 // ==========================================
-// Imaging Studies (画像検査)
+// Imaging Studies (画像検査) - Data Schema v2.0.0
 // ==========================================
 
-export interface ImagingStudy {
-	id: string; // UUID v4
-	date: string; // Imaging date YYYY-MM-DD
-	modality: "CT" | "MR" | "US" | "XR" | "XA" | "OT"; // DICOM Modality Codes
-	body_site: LocalizedString; // Body part (e.g., "Chest", "Head")
-	summary: LocalizedString; // Radiologist report summary
-	abnormal_flag: boolean; // Whether abnormalities were found
-	dicom_blob_id?: string; // Future use: DICOM image data Walrus Blob ID
+/**
+ * DICOM instance blob reference
+ */
+export interface ImagingInstanceBlob {
+	sop_instance_uid?: string; // SOP Instance UID (推奨)
+	dicom_blob_id: string; // 必須: 実体Blob ID
+	frames?: number; // 任意: マルチフレーム枚数
+	sop_class?: string; // 任意: SOP Class UID
+}
+
+/**
+ * DICOM series information
+ */
+export interface ImagingSeries {
+	series_uid: string; // 必須: Series UID
+	description?: string; // 任意: シリーズ説明
+	modality: string; // 必須: DICOM Modality (CT, MR, US, CR, OT, etc.)
+	instance_blobs: ImagingInstanceBlob[]; // DICOMファイル単位の対応
+	zip_blob_id?: string; // 任意: シリーズをZIP化したBlob
+}
+
+/**
+ * Imaging report section (optional)
+ */
+export interface ImagingReportSection {
+	summary?: string; // 任意: 簡易レポート
+	language?: string; // 任意: レポート言語
+	findings?: string; // 任意: 所見
+	impression?: string; // 任意: 印象・結論
+}
+
+/**
+ * Imaging study metadata (Data Schema v2.0.0)
+ * One study = one JSON blob
+ */
+export interface ImagingStudyV2 {
+	study_uid: string; // 必須: Study UID
+	modality: string; // 必須: DICOM Modality
+	body_site: string; // 必須: 撮影部位
+	performed_at?: string; // 任意: 撮影日時 (ISO8601)
+	facility?: string; // 任意: 医療機関名
+	series: ImagingSeries[]; // 必須: 1スタディ内のシリーズ一覧
+	report?: ImagingReportSection; // 任意: レポート情報
+	schema_version: string; // 必須: "2.0.0"
 }
 
 // ==========================================

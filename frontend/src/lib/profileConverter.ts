@@ -25,7 +25,7 @@ import type {
 	LabResult as HealthDataLabResult,
 	Medication as HealthDataMedication,
 	ImagingMetaData,
-	ImagingStudy,
+	ImagingStudyV2,
 	LabResultsData,
 	LocalizedString,
 	MedicationsData,
@@ -283,26 +283,48 @@ function convertLabResults(
 }
 
 /**
- * Convert app imaging reports to HealthData ImagingStudy format
+ * Convert app imaging reports to HealthData ImagingStudyV2 format (Data Schema v2.0.0)
+ *
+ * Note: This conversion is for legacy HealthData interface support only.
+ * For actual imaging uploads, use createImagingMeta from imagingHelpers.ts
+ * which properly handles DICOM UIDs and blob IDs.
  *
  * @param imagingReports - Imaging report entries from app state
  * @param locale - Current locale for localization
- * @returns Array of HealthData ImagingStudy objects
+ * @returns Array of HealthData ImagingStudyV2 objects
  */
 function convertImagingStudies(
 	imagingReports: ImagingReport[],
 	locale = "en",
-): ImagingStudy[] {
-	return imagingReports.map((report) => ({
-		id: report.id,
-		date: report.examDate,
-		modality: mapImagingTypeToModality(report.type),
-		body_site: createLocalizedString(report.bodyPart || "Unknown", locale),
-		summary: createLocalizedString(report.summary, locale),
-		abnormal_flag:
-			report.impression?.toLowerCase().includes("abnormal") || false,
-		dicom_blob_id: undefined,
-	}));
+): ImagingStudyV2[] {
+	return imagingReports.map((report) => {
+		const modality = mapImagingTypeToModality(report.type);
+
+		return {
+			study_uid: `placeholder.${report.id}`, // Placeholder UID for legacy conversion
+			modality,
+			body_site: report.bodyPart || "Unknown",
+			performed_at: report.examDate
+				? new Date(report.examDate).toISOString()
+				: undefined,
+			facility: report.performedBy,
+			series: [
+				{
+					series_uid: `placeholder.${report.id}.series.1`,
+					description: `${report.type} - ${report.bodyPart || "Unknown"}`,
+					modality,
+					instance_blobs: [], // No actual blobs in legacy conversion
+				},
+			],
+			report: {
+				summary: report.summary,
+				language: locale,
+				findings: report.findings,
+				impression: report.impression,
+			},
+			schema_version: "2.0.0",
+		};
+	});
 }
 
 /**

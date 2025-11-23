@@ -377,7 +377,7 @@ export type {
 	AsyncStatus,
 	Condition,
 	HealthData,
-	ImagingStudy,
+	ImagingStudyV2,
 	LabItem,
 	LabResult as LabResultHealthData,
 	LocalizedString,

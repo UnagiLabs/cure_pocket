@@ -102,7 +102,7 @@ export default function AddImagingPage() {
 								updated_at: Date.now(),
 								generator: "CurePocket_Web_v1",
 							},
-							imaging_meta: [imagingMeta] as any, // Type assertion: data schema structure doesn't match ImagingStudy type
+							imaging_meta: [imagingMeta],
 						},
 						dataType: "imaging_meta",
 					},
