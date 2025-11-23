@@ -17,17 +17,25 @@ import { v4 as uuidv4 } from "uuid";
 import { DrugAutocomplete } from "@/components/DrugAutocomplete";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
+import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import { prescriptionToMedicationsData } from "@/lib/prescriptionConverter";
 import {
+	createMetaData,
+	prescriptionToMedicationsData,
+} from "@/lib/prescriptionConverter";
+import {
+	buildPatientAccessPTB,
 	calculateThreshold,
 	createSealClient,
+	decryptHealthData,
 	encryptHealthData,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { getDataEntryBlobIds, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { uploadToWalrus } from "@/lib/walrus";
+import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { Prescription, PrescriptionMedication } from "@/types";
+import type { Medication, MedicationsData } from "@/types/healthData";
 
 type InputMode = "image" | "manual";
 
@@ -74,6 +82,7 @@ export default function AddPrescriptionPage() {
 	const suiClient = useSuiClient();
 	const { passport } = usePassport();
 	const { updatePassportData, isUpdating } = useUpdatePassportData();
+	const { sessionKey } = useSessionKeyManager();
 
 	// 入力モード
 	const [inputMode, setInputMode] = useState<InputMode>("image");
@@ -238,7 +247,74 @@ export default function AddPrescriptionPage() {
 			);
 
 			// PrescriptionをMedicationsData (JSON形式) に変換
-			const medicationsData = prescriptionToMedicationsData(prescription);
+			const newMedicationsData = prescriptionToMedicationsData(prescription);
+
+			// 既存のmedicationsデータを読み込んでマージ
+			console.log("[AddMedication] Loading existing medications data...");
+			const existingBlobIds = await getDataEntryBlobIds(
+				passport.id,
+				"medications",
+			);
+
+			let existingMedications: Medication[] = [];
+			if (existingBlobIds.length > 0) {
+				console.log(
+					`[AddMedication] Found ${existingBlobIds.length} existing blob(s), loading latest...`,
+				);
+
+				// 最新のblobIdを取得
+				const latestBlobId = existingBlobIds[existingBlobIds.length - 1];
+
+				try {
+					// Walrusからダウンロード
+					const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
+
+					// SessionKeyチェック
+					if (!sessionKey) {
+						throw new Error(
+							"SessionKeyが見つかりません。再度ログインしてください。",
+						);
+					}
+
+					// PTBを準備
+					const txBytes = await buildPatientAccessPTB({
+						passportObjectId: passport.id,
+						registryObjectId: PASSPORT_REGISTRY_ID,
+						suiClient,
+						sealId: passport.sealId,
+					});
+
+					// Seal clientを作成
+					const sealClient = createSealClient(suiClient);
+
+					// 復号化
+					const decryptedData = await decryptHealthData({
+						encryptedData,
+						sealClient,
+						sessionKey,
+						txBytes,
+						sealId: passport.sealId,
+					});
+
+					const existingData = decryptedData as unknown as MedicationsData;
+					existingMedications = existingData.medications || [];
+					console.log(
+						`[AddMedication] Loaded ${existingMedications.length} existing medications`,
+					);
+				} catch (error) {
+					console.error("[AddMedication] Failed to load existing data:", error);
+					// 既存データの読み込みに失敗しても続行（新規データとして保存）
+				}
+			}
+
+			// 既存のmedications配列と新しいmedications配列をマージ
+			const medicationsData: MedicationsData = {
+				meta: createMetaData(),
+				medications: [
+					...existingMedications,
+					...newMedicationsData.medications,
+				],
+			};
 
 			// 暗号化前のデータを詳細に表示
 			console.log(
@@ -293,7 +369,7 @@ export default function AddPrescriptionPage() {
 				passportId: passport.id,
 				dataType: "medications",
 				blobIds: [walrusRef.blobId],
-				replace: false, // 追加モード（既存データに追加）
+				replace: existingBlobIds.length > 0, // 既存データがあれば置き換え、なければ新規追加
 			});
 
 			console.log("[AddMedication] Save complete!");

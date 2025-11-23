@@ -163,7 +163,7 @@ export function uint8ArrayToCsv(data: Uint8Array): string {
 /**
  * MetaDataを生成
  */
-function createMetaData(): MetaData {
+export function createMetaData(): MetaData {
 	return {
 		schema_version: "2.0.0",
 		updated_at: Date.now(),
