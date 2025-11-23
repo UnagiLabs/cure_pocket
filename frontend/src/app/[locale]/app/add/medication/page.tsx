@@ -17,25 +17,32 @@ import { v4 as uuidv4 } from "uuid";
 import { DrugAutocomplete } from "@/components/DrugAutocomplete";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
+import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import { prescriptionToMedicationsData } from "@/lib/prescriptionConverter";
 import {
+	createMetaData,
+	prescriptionToMedicationsData,
+} from "@/lib/prescriptionConverter";
+import {
+	buildPatientAccessPTB,
 	calculateThreshold,
 	createSealClient,
+	decryptHealthData,
 	encryptHealthData,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { getDataEntryBlobIds, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { uploadToWalrus } from "@/lib/walrus";
+import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { Prescription, PrescriptionMedication } from "@/types";
+import type { Medication, MedicationsData } from "@/types/healthData";
 
 type InputMode = "image" | "manual";
 
 /**
- * OCRモック関数
- * 実際のOCR実装時にこの関数を置き換える
+ * Gemini APIを使用したOCR処理
  */
-async function mockOCRProcess(): Promise<{
+async function performOCR(images: string[]): Promise<{
 	prescriptionDate: string;
 	clinic: string;
 	department?: string;
@@ -43,33 +50,20 @@ async function mockOCRProcess(): Promise<{
 	medications: Omit<PrescriptionMedication, "id">[];
 	symptoms?: string;
 }> {
-	// 1-2秒のディレイでリアルさを演出
-	await new Promise((resolve) => setTimeout(resolve, 1500));
+	const response = await fetch("/api/ocr/gemini", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ images }),
+	});
 
-	// ダミーの処方箋データ
-	return {
-		prescriptionDate: new Date().toISOString().split("T")[0],
-		clinic: "サンプル医院",
-		department: "内科",
-		doctorName: "山田太郎",
-		medications: [
-			{
-				drugName: "ロキソプロフェンナトリウム錠",
-				strength: "60mg",
-				dosage: "1日3回、食後",
-				quantity: "1錠",
-				duration: "7日分",
-			},
-			{
-				drugName: "レバミピド錠",
-				strength: "100mg",
-				dosage: "1日3回、食後",
-				quantity: "1錠",
-				duration: "7日分",
-			},
-		],
-		symptoms: "頭痛、発熱",
-	};
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || "OCR処理に失敗しました");
+	}
+
+	return await response.json();
 }
 
 /**
@@ -88,6 +82,7 @@ export default function AddPrescriptionPage() {
 	const suiClient = useSuiClient();
 	const { passport } = usePassport();
 	const { updatePassportData, isUpdating } = useUpdatePassportData();
+	const { sessionKey } = useSessionKeyManager();
 
 	// 入力モード
 	const [inputMode, setInputMode] = useState<InputMode>("image");
@@ -154,7 +149,7 @@ export default function AddPrescriptionPage() {
 
 		setIsOCRProcessing(true);
 		try {
-			const ocrResult = await mockOCRProcess();
+			const ocrResult = await performOCR(uploadedImages);
 
 			// OCR結果を自動入力
 			setPrescriptionDate(ocrResult.prescriptionDate);
@@ -252,7 +247,74 @@ export default function AddPrescriptionPage() {
 			);
 
 			// PrescriptionをMedicationsData (JSON形式) に変換
-			const medicationsData = prescriptionToMedicationsData(prescription);
+			const newMedicationsData = prescriptionToMedicationsData(prescription);
+
+			// 既存のmedicationsデータを読み込んでマージ
+			console.log("[AddMedication] Loading existing medications data...");
+			const existingBlobIds = await getDataEntryBlobIds(
+				passport.id,
+				"medications",
+			);
+
+			let existingMedications: Medication[] = [];
+			if (existingBlobIds.length > 0) {
+				console.log(
+					`[AddMedication] Found ${existingBlobIds.length} existing blob(s), loading latest...`,
+				);
+
+				// 最新のblobIdを取得
+				const latestBlobId = existingBlobIds[existingBlobIds.length - 1];
+
+				try {
+					// Walrusからダウンロード
+					const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
+
+					// SessionKeyチェック
+					if (!sessionKey) {
+						throw new Error(
+							"SessionKeyが見つかりません。再度ログインしてください。",
+						);
+					}
+
+					// PTBを準備
+					const txBytes = await buildPatientAccessPTB({
+						passportObjectId: passport.id,
+						registryObjectId: PASSPORT_REGISTRY_ID,
+						suiClient,
+						sealId: passport.sealId,
+					});
+
+					// Seal clientを作成
+					const sealClient = createSealClient(suiClient);
+
+					// 復号化
+					const decryptedData = await decryptHealthData({
+						encryptedData,
+						sealClient,
+						sessionKey,
+						txBytes,
+						sealId: passport.sealId,
+					});
+
+					const existingData = decryptedData as unknown as MedicationsData;
+					existingMedications = existingData.medications || [];
+					console.log(
+						`[AddMedication] Loaded ${existingMedications.length} existing medications`,
+					);
+				} catch (error) {
+					console.error("[AddMedication] Failed to load existing data:", error);
+					// 既存データの読み込みに失敗しても続行（新規データとして保存）
+				}
+			}
+
+			// 既存のmedications配列と新しいmedications配列をマージ
+			const medicationsData: MedicationsData = {
+				meta: createMetaData(),
+				medications: [
+					...existingMedications,
+					...newMedicationsData.medications,
+				],
+			};
 
 			// 暗号化前のデータを詳細に表示
 			console.log(
@@ -307,7 +369,7 @@ export default function AddPrescriptionPage() {
 				passportId: passport.id,
 				dataType: "medications",
 				blobIds: [walrusRef.blobId],
-				replace: false, // 追加モード（既存データに追加）
+				replace: existingBlobIds.length > 0, // 既存データがあれば置き換え、なければ新規追加
 			});
 
 			console.log("[AddMedication] Save complete!");
