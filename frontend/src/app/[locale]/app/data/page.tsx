@@ -352,7 +352,7 @@ export default function DataOverviewPage() {
 										{img.imageObjectUrl && (
 											<div className="flex-shrink-0">
 												<ImagingImageViewer
-													blobId={img.imageObjectUrl}
+													objectUrl={img.imageObjectUrl}
 													alt={`${img.type.toUpperCase()} - ${img.bodyPart || ""}`}
 													mode="thumbnail"
 													className="w-16 h-16"

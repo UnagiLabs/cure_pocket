@@ -160,7 +160,7 @@ export function ImagingGallery({
 					<div key={`${image.blobId}-${index}`} className="flex flex-col gap-2">
 						{/* Thumbnail */}
 						<ImagingImageViewer
-							blobId={image.blobId}
+							objectUrl={image.blobId}
 							alt={image.alt}
 							mode="thumbnail"
 							onClick={() => handleImageClick(index)}
@@ -342,7 +342,7 @@ function ImagingModal({
 				{/* Image */}
 				<div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
 					<ImagingImageViewer
-						blobId={image.blobId}
+						objectUrl={image.blobId}
 						alt={image.alt}
 						mode="full"
 						lazy={false}

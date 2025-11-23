@@ -432,7 +432,7 @@ export default function ImagingPage() {
 									{report.imageObjectUrl && (
 										<div className="flex-shrink-0">
 											<ImagingImageViewer
-												blobId={report.imageObjectUrl}
+												objectUrl={report.imageObjectUrl}
 												alt={`${t(`imaging.types.${report.type}`)} - ${report.bodyPart || ""}`}
 												mode="thumbnail"
 												className="w-32 h-32"
