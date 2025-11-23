@@ -1,9 +1,16 @@
 /**
  * 処方箋データの変換関数
- * Prescription ↔ medications CSV の相互変換
+ * Prescription ↔ MedicationsData (JSON) の相互変換
  */
 
+import { v4 as uuidv4 } from "uuid";
 import type { Prescription } from "@/types";
+import type {
+	LocalizedString,
+	Medication,
+	MedicationsData,
+	MetaData,
+} from "@/types/healthData";
 
 /**
  * CSV形式のmedications行
@@ -147,4 +154,78 @@ export function csvToUint8Array(csv: string): Uint8Array {
 export function uint8ArrayToCsv(data: Uint8Array): string {
 	const decoder = new TextDecoder("utf-8");
 	return decoder.decode(data);
+}
+
+// ==========================================
+// JSON形式での変換（推奨）
+// ==========================================
+
+/**
+ * MetaDataを生成
+ */
+function createMetaData(): MetaData {
+	return {
+		schema_version: "2.0.0",
+		updated_at: Date.now(),
+		generator: "CurePocket_Web_v1",
+	};
+}
+
+/**
+ * PrescriptionをMedicationsData (JSON形式) に変換
+ *
+ * @param prescription 処方箋データ
+ * @returns MedicationsData
+ */
+export function prescriptionToMedicationsData(
+	prescription: Prescription,
+): MedicationsData {
+	const medications: Medication[] = prescription.medications.map((med) => {
+		const { atcCode, rxnormCode } = mockDrugNameToCode(med.drugName);
+
+		// LocalizedStringを生成
+		const name: LocalizedString = {
+			en: med.drugName,
+			local: med.drugName,
+		};
+
+		return {
+			id: uuidv4(),
+			status: "active" as const,
+			codes: {
+				atc: atcCode,
+				rxnorm: rxnormCode,
+			},
+			name,
+			dosage: `${med.dosage} - ${med.quantity}${med.duration ? ` (${med.duration})` : ""}`,
+			start_date: prescription.prescriptionDate,
+			prescriber: prescription.doctorName
+				? `${prescription.doctorName} - ${prescription.clinic}`
+				: prescription.clinic,
+		};
+	});
+
+	return {
+		meta: createMetaData(),
+		medications,
+	};
+}
+
+/**
+ * MedicationsDataを表示用データに変換
+ *
+ * @param medicationsData MedicationsData
+ * @returns 表示用薬品データの配列
+ */
+export function medicationsDataToDisplayData(
+	medicationsData: MedicationsData,
+): DisplayMedication[] {
+	return medicationsData.medications.map((medication) => {
+		return {
+			dispensed_on: medication.start_date,
+			atc_code: medication.codes.atc || "",
+			rxnorm_code: medication.codes.rxnorm || "",
+			drugName: medication.name.local,
+		};
+	});
 }

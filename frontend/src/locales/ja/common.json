@@ -5,6 +5,7 @@
 		"connectWallet": "Connect Wallet",
 		"addMedication": "お薬を追加",
 		"save": "保存",
+		"saving": "保存中...",
 		"cancel": "キャンセル",
 		"edit": "編集",
 		"delete": "削除",

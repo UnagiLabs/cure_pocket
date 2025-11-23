@@ -10,8 +10,7 @@ import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import {
 	type DisplayMedication,
-	medicationsCsvToDisplayData,
-	uint8ArrayToCsv,
+	medicationsDataToDisplayData,
 } from "@/lib/prescriptionConverter";
 import {
 	buildPatientAccessPTB,
@@ -25,10 +24,11 @@ import {
 } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import { downloadFromWalrusByBlobId } from "@/lib/walrus";
+import type { MedicationsData } from "@/types/healthData";
 
 /**
  * 処方箋一覧ページ
- * Walrusから medications CSV データを読み込んで表示
+ * Walrusから medications データ(JSON形式) を読み込んで表示
  */
 export default function MedicationsPage() {
 	const t = useTranslations();
@@ -98,37 +98,80 @@ export default function MedicationsPage() {
 				sealId: passport.sealId,
 			});
 
-			// Step 3: 各Blobをダウンロード→復号化→CSVパース
+			// Step 3: 各Blobをダウンロード→復号化→JSON変換
 			const allMedications: DisplayMedication[] = [];
 
 			for (const blobId of medicationsBlobIds) {
 				console.log(`[Medications] Downloading blob: ${blobId}`);
 
-				// Walrusからダウンロード
-				const encryptedData = await downloadFromWalrusByBlobId(blobId);
+				try {
+					// Walrusからダウンロード
+					const encryptedData = await downloadFromWalrusByBlobId(blobId);
+					console.log(
+						`[Medications] Downloaded encrypted data size: ${encryptedData.byteLength} bytes`,
+					);
 
-				// Seal復号化
-				const decryptedData = await decryptHealthData({
-					encryptedData,
-					sealClient,
-					sessionKey,
-					txBytes,
-					sealId: passport.sealId,
-				});
+					// Seal復号化（JSON形式）
+					const decryptedData = await decryptHealthData({
+						encryptedData,
+						sealClient,
+						sessionKey,
+						txBytes,
+						sealId: passport.sealId,
+					});
 
-				// Uint8Array → CSV文字列
-				const csvString = uint8ArrayToCsv(
-					decryptedData as unknown as Uint8Array,
-				);
+					// 復号化結果の詳細をコンソールに表示
+					console.log(
+						"[Medications] ========== Decrypted Data Details ==========",
+					);
+					console.log("[Medications] Type:", typeof decryptedData);
+					console.log("[Medications] Is Array:", Array.isArray(decryptedData));
+					console.log("[Medications] Raw decryptedData:", decryptedData);
+					console.log(
+						"[Medications] JSON stringified:",
+						JSON.stringify(decryptedData, null, 2),
+					);
+					console.log("[Medications] Keys:", Object.keys(decryptedData || {}));
+					console.log(
+						"[Medications] ==========================================",
+					);
 
-				console.log(
-					`[Medications] CSV data: ${csvString.substring(0, 100)}...`,
-				);
+					// MedicationsDataとして型アサーション
+					const medicationsData = decryptedData as unknown as MedicationsData;
 
-				// CSV → 表示用データ
-				const displayData = medicationsCsvToDisplayData(csvString);
+					// データの存在確認とバリデーション
+					if (!medicationsData || typeof medicationsData !== "object") {
+						console.error("[Medications] Decrypted data is not an object");
+						continue;
+					}
 
-				allMedications.push(...displayData);
+					if (
+						!medicationsData.medications ||
+						!Array.isArray(medicationsData.medications)
+					) {
+						console.error(
+							"[Medications] Invalid data format - missing medications array:",
+							medicationsData,
+						);
+						continue; // スキップして次のBlobへ
+					}
+
+					console.log(
+						`[Medications] MedicationsData loaded:`,
+						medicationsData.medications.length,
+						"medications",
+					);
+
+					// MedicationsData → 表示用データ
+					const displayData = medicationsDataToDisplayData(medicationsData);
+
+					allMedications.push(...displayData);
+				} catch (blobError) {
+					console.error(
+						`[Medications] Failed to process blob ${blobId}:`,
+						blobError,
+					);
+				}
 			}
 
 			// 調剤日順にソート（新しい順）

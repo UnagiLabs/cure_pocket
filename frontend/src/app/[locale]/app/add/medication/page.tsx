@@ -18,10 +18,7 @@ import { DrugAutocomplete } from "@/components/DrugAutocomplete";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import {
-	csvToUint8Array,
-	prescriptionToMedicationsCsv,
-} from "@/lib/prescriptionConverter";
+import { prescriptionToMedicationsData } from "@/lib/prescriptionConverter";
 import {
 	calculateThreshold,
 	createSealClient,
@@ -95,6 +92,7 @@ export default function AddPrescriptionPage() {
 	// 入力モード
 	const [inputMode, setInputMode] = useState<InputMode>("image");
 	const [isOCRProcessing, setIsOCRProcessing] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
 
 	// 画像関連
 	const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -249,33 +247,55 @@ export default function AddPrescriptionPage() {
 				attachments: uploadedImages.length > 0 ? uploadedImages : undefined,
 			};
 
-			console.log("[AddMedication] Converting prescription to CSV...");
+			console.log(
+				"[AddMedication] Converting prescription to MedicationsData...",
+			);
 
-			// PrescriptionをCSVに変換
-			const medicationsCsv = prescriptionToMedicationsCsv(prescription);
-			const csvData = csvToUint8Array(medicationsCsv);
+			// PrescriptionをMedicationsData (JSON形式) に変換
+			const medicationsData = prescriptionToMedicationsData(prescription);
 
-			console.log("[AddMedication] CSV generated:", medicationsCsv);
+			// 暗号化前のデータを詳細に表示
+			console.log(
+				"[AddMedication] ========== MedicationsData Before Encryption ==========",
+			);
+			console.log("[AddMedication] Type:", typeof medicationsData);
+			console.log("[AddMedication] Raw medicationsData:", medicationsData);
+			console.log(
+				"[AddMedication] JSON stringified:",
+				JSON.stringify(medicationsData, null, 2),
+			);
+			console.log("[AddMedication] Keys:", Object.keys(medicationsData || {}));
+			console.log(
+				"[AddMedication] Medications count:",
+				medicationsData.medications?.length || 0,
+			);
+			console.log(
+				"[AddMedication] =============================================",
+			);
 
-			// Seal暗号化
-			console.log("[AddMedication] Encrypting data with Seal...");
+			// 直接暗号化・アップロード
+			console.log("[AddMedication] Encrypting and uploading to Walrus...");
+			setIsSaving(true);
+
+			// Seal clientを作成
 			const sealClient = createSealClient(suiClient);
 			const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
+			// MedicationsDataを暗号化
 			const { encryptedObject } = await encryptHealthData({
-				healthData: csvData as unknown as never, // CSVバイト配列を暗号化
+				healthData: medicationsData as unknown as never,
 				sealClient,
 				sealId: passport.sealId,
 				threshold,
 			});
 
 			console.log(
-				`[AddMedication] Encryption complete, size: ${encryptedObject.length} bytes`,
+				`[AddMedication] Encrypted data size: ${encryptedObject.byteLength} bytes`,
 			);
 
 			// Walrusにアップロード
-			console.log("[AddMedication] Uploading to Walrus...");
 			const walrusRef = await uploadToWalrus(encryptedObject);
+			setIsSaving(false);
 
 			console.log(
 				`[AddMedication] Upload complete, blobId: ${walrusRef.blobId}`,
@@ -885,13 +905,13 @@ export default function AddPrescriptionPage() {
 					<button
 						type="button"
 						onClick={handleSave}
-						disabled={isUpdating}
+						disabled={isSaving || isUpdating}
 						className="w-full rounded-xl py-4 font-medium text-white transition-all hover:scale-[1.02] active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
 						style={{
 							backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
 						}}
 					>
-						{isUpdating ? (
+						{isSaving || isUpdating ? (
 							<>
 								<Loader2 className="inline mr-2 animate-spin" size={18} />
 								{t("actions.saving")}
