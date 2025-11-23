@@ -54,6 +54,26 @@
 			"button": "Configurer le profil"
 		}
 	},
+	"dataOverview": {
+		"title": "Aperçu des données de santé",
+		"description": "Un tableau de bord unifié pour visualiser vos données de santé — profil de base, conditions, prescriptions, résultats de laboratoire, imagerie et signes vitaux — en un coup d'œil.",
+		"basicInfo": "Profil de base",
+		"conditions": "Conditions",
+		"prescriptions": "Prescriptions",
+		"empty": "Non défini",
+		"noConditions": "Aucune condition enregistrée",
+		"noLabs": "Aucun résultat de laboratoire enregistré",
+		"noImaging": "Aucune donnée d'imagerie enregistrée",
+		"noVitals": "Aucun enregistrement vital pour le moment",
+		"birthDate": "Date de naissance",
+		"allergies": "Allergies",
+		"none": "Aucun",
+		"chips": {
+			"conditions": "Conditions",
+			"prescriptions": "Prescriptions",
+			"vitals": "Signes vitaux"
+		}
+	},
 	"add": {
 		"title": "Ajouter un médicament",
 		"subtitle": "Choisissez comment ajouter",
@@ -110,6 +130,7 @@
 		"displayName": "Nom d'affichage",
 		"ageBand": "Tranche d'âge",
 		"country": "Pays",
+		"bloodType": "Groupe sanguin",
 		"allergies": "Allergies",
 		"profile": "Profil",
 		"dataExport": "Export de données",

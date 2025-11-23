@@ -65,6 +65,9 @@
 		"noLabs": "No lab results registered",
 		"noImaging": "No imaging data registered",
 		"noVitals": "No vital records yet",
+		"birthDate": "Birth Date",
+		"allergies": "Allergies",
+		"none": "None",
 		"chips": {
 			"conditions": "Conditions",
 			"prescriptions": "Prescriptions",
@@ -168,6 +171,7 @@
 		"displayName": "Display name",
 		"ageBand": "Age band",
 		"country": "Country",
+		"bloodType": "Blood Type",
 		"allergies": "Allergies",
 		"profile": "Profile",
 		"profileSettings": "Profile Settings",

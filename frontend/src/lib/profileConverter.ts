@@ -7,6 +7,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import type {
+	AgeBand,
 	Allergy,
 	ImagingReport,
 	LabResult,
@@ -35,54 +36,38 @@ import type {
 } from "@/types/healthData";
 
 /**
- * Convert AgeBand to approximate birth year
+ * Calculate age band from birth date
  *
- * @param ageBand - Age band string (e.g., "30s", "40s")
- * @returns Approximate birth year (middle of the age band)
+ * @param birthDate - Birth date in YYYY-MM-DD format
+ * @returns AgeBand or null if birthDate is invalid
  *
  * @example
  * ```typescript
- * ageBandToBirthYear("30s") // Returns current_year - 35
+ * calculateAgeBandFromDate("1990-01-15") // Returns "30-39"
+ * calculateAgeBandFromDate("2010-05-20") // Returns "0-17"
  * ```
  */
-function ageBandToBirthYear(
-	ageBand:
-		| "10s"
-		| "20s"
-		| "30s"
-		| "40s"
-		| "50s"
-		| "60s"
-		| "70s"
-		| "80plus"
-		| null,
-): number {
-	const currentYear = new Date().getFullYear();
+export function calculateAgeBandFromDate(birthDate: string): AgeBand | null {
+	if (!birthDate) return null;
 
-	if (!ageBand) {
-		return currentYear - 30; // Default to 30 years old
-	}
+	const birth = new Date(birthDate);
+	const today = new Date();
+	const age = today.getFullYear() - birth.getFullYear();
 
-	const ageMap: Record<string, number> = {
-		"10s": 15,
-		"20s": 25,
-		"30s": 35,
-		"40s": 45,
-		"50s": 55,
-		"60s": 65,
-		"70s": 75,
-		"80plus": 85,
-	};
+	// Adjust age if birthday hasn't occurred this year yet
+	const monthDiff = today.getMonth() - birth.getMonth();
+	const dayDiff = today.getDate() - birth.getDate();
+	const adjustedAge =
+		monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
 
-	const age = ageMap[ageBand] || 30;
-	return currentYear - age;
-}
-
-function getBirthYear(profile: PatientProfile): number {
-	if (profile.birthDate) {
-		return new Date(profile.birthDate).getFullYear();
-	}
-	return ageBandToBirthYear(profile.ageBand);
+	if (adjustedAge < 20) return "10s";
+	if (adjustedAge < 30) return "20s";
+	if (adjustedAge < 40) return "30s";
+	if (adjustedAge < 50) return "40s";
+	if (adjustedAge < 60) return "50s";
+	if (adjustedAge < 70) return "60s";
+	if (adjustedAge < 80) return "70s";
+	return "80plus";
 }
 
 /**
@@ -92,33 +77,25 @@ function getBirthYear(profile: PatientProfile): number {
  * @returns UserProfile for HealthData
  */
 function convertUserProfile(profile: PatientProfile): UserProfile {
-	const birthYear = getBirthYear(profile);
+	// Use full birth date (YYYY-MM-DD format)
+	const birthDate = profile.birthDate || "";
+
+	// Combine all allergies into a single string array
+	const allergies: string[] = [
+		...profile.drugAllergies.map((d) => d.name),
+		...profile.foodAllergies,
+	];
 
 	const userProfile: UserProfile = {
-		birth_year: birthYear,
+		birth_date: birthDate,
+		nationality: profile.country || "US",
 		gender:
 			profile.gender === "unknown"
 				? "other"
 				: (profile.gender as "male" | "female" | "other"),
-		country: profile.country || "US",
+		allergies: allergies,
+		blood_type: profile.bloodType || "Unknown",
 	};
-
-	// Add blood type if available
-	if (profile.bloodType && profile.bloodType !== "Unknown") {
-		userProfile.blood_type = profile.bloodType;
-	}
-
-	// Add biometrics if both height and weight are available
-	if (profile.heightCm && profile.weightKg) {
-		const heightM = profile.heightCm / 100;
-		const bmi = profile.weightKg / (heightM * heightM);
-
-		userProfile.biometrics = {
-			height_cm: profile.heightCm,
-			weight_kg: profile.weightKg,
-			bmi: Number.parseFloat(bmi.toFixed(1)),
-		};
-	}
 
 	return userProfile;
 }
@@ -348,29 +325,6 @@ function mapImagingTypeToModality(
 }
 
 /**
- * Convert birth year to age band
- *
- * @param birthYear - Birth year
- * @returns Age band string (e.g., "30s", "40s")
- */
-function birthYearToAgeBand(
-	birthYear: number,
-): "10s" | "20s" | "30s" | "40s" | "50s" | "60s" | "70s" | "80plus" | null {
-	const currentYear = new Date().getFullYear();
-	const age = currentYear - birthYear;
-
-	if (age < 10) return null;
-	if (age < 20) return "10s";
-	if (age < 30) return "20s";
-	if (age < 40) return "30s";
-	if (age < 50) return "40s";
-	if (age < 60) return "50s";
-	if (age < 70) return "60s";
-	if (age < 80) return "70s";
-	return "80plus";
-}
-
-/**
  * Convert HealthData back to PatientProfile format
  *
  * This function performs the reverse conversion from the encrypted HealthData
@@ -389,8 +343,8 @@ export function healthDataToPatientProfile(
 ): PatientProfile {
 	const { profile: userProfile, allergies, conditions } = healthData;
 
-	// Convert birth year to age band
-	const ageBand = birthYearToAgeBand(userProfile.birth_year);
+	// Convert birth date to age band
+	const ageBand = calculateAgeBandFromDate(userProfile.birth_date);
 
 	// Convert gender
 	const gender =
@@ -398,9 +352,9 @@ export function healthDataToPatientProfile(
 			? "unknown"
 			: (userProfile.gender as "male" | "female" | "unknown");
 
-	// Extract biometrics
-	const heightCm = userProfile.biometrics?.height_cm ?? undefined;
-	const weightKg = userProfile.biometrics?.weight_kg ?? undefined;
+	// biometrics is not in basic_profile (moved to self_metrics)
+	const heightCm = undefined;
+	const weightKg = undefined;
 	const bloodType = userProfile.blood_type;
 
 	// Separate drug and food allergies
@@ -443,7 +397,7 @@ export function healthDataToPatientProfile(
 		birthDate: null,
 		ageBand,
 		gender,
-		country: userProfile.country || null,
+		country: userProfile.nationality || null,
 		preferredLanguage: null, // Not stored in HealthData
 		heightCm,
 		weightKg,

@@ -54,6 +54,26 @@
 			"button": "Configurar perfil"
 		}
 	},
+	"dataOverview": {
+		"title": "Visão Geral dos Dados de Saúde",
+		"description": "Um painel unificado para visualizar seus dados de saúde — perfil básico, condições, prescrições, resultados laboratoriais, imagens e sinais vitais — em um relance.",
+		"basicInfo": "Perfil Básico",
+		"conditions": "Condições",
+		"prescriptions": "Prescrições",
+		"empty": "Não definido",
+		"noConditions": "Nenhuma condição registrada",
+		"noLabs": "Nenhum resultado laboratorial registrado",
+		"noImaging": "Nenhum dado de imagem registrado",
+		"noVitals": "Nenhum registro vital ainda",
+		"birthDate": "Data de Nascimento",
+		"allergies": "Alergias",
+		"none": "Nenhum",
+		"chips": {
+			"conditions": "Condições",
+			"prescriptions": "Prescrições",
+			"vitals": "Sinais Vitais"
+		}
+	},
 	"add": {
 		"title": "Adicionar medicamento",
 		"subtitle": "Escolha como adicionar",
@@ -110,6 +130,7 @@
 		"displayName": "Nome de exibição",
 		"ageBand": "Faixa etária",
 		"country": "País",
+		"bloodType": "Tipo Sanguíneo",
 		"allergies": "Alergias",
 		"profile": "Perfil",
 		"dataExport": "Exportar dados",

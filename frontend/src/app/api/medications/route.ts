@@ -318,9 +318,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				generator: "CurePocket_API_v1",
 			},
 			profile: {
-				birth_year: 0,
+				birth_date: "1900-01-01",
+				nationality: passport.countryCode,
 				gender: "other",
-				country: passport.countryCode,
+				allergies: [],
+				blood_type: "Unknown",
 			},
 			medications: body.medications,
 			conditions: [],

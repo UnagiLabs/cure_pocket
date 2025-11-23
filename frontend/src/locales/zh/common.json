@@ -54,6 +54,26 @@
 			"button": "设置个人资料"
 		}
 	},
+	"dataOverview": {
+		"title": "健康数据概览",
+		"description": "统一的仪表板，一目了然地查看您的健康数据——基本资料、病症、处方、实验室结果、影像和生命体征。",
+		"basicInfo": "基本资料",
+		"conditions": "病症",
+		"prescriptions": "处方",
+		"empty": "未设置",
+		"noConditions": "未注册病症",
+		"noLabs": "未注册实验室结果",
+		"noImaging": "未注册影像数据",
+		"noVitals": "尚无生命体征记录",
+		"birthDate": "出生日期",
+		"allergies": "过敏",
+		"none": "无",
+		"chips": {
+			"conditions": "病症",
+			"prescriptions": "处方",
+			"vitals": "生命体征"
+		}
+	},
 	"add": {
 		"title": "添加药物",
 		"subtitle": "选择添加方式",
@@ -110,6 +130,7 @@
 		"displayName": "显示名称",
 		"ageBand": "年龄段",
 		"country": "国家",
+		"bloodType": "血型",
 		"allergies": "过敏史",
 		"profile": "个人资料",
 		"dataExport": "数据导出",

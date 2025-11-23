@@ -144,15 +144,11 @@ export interface LocalizedString {
 // ==========================================
 
 export interface UserProfile {
-	birth_year: number; // For age calculation (privacy: year only, not full DOB)
+	birth_date: string; // YYYY-MM-DD format (full date of birth)
+	nationality: string; // ISO 3166-1 alpha-2 (e.g., "JP", "US")
 	gender: "male" | "female" | "other";
-	country: string; // ISO 3166-1 alpha-2 (e.g., "JP", "US")
-	blood_type?: string; // e.g., "A+", "O-", "Unknown"
-	biometrics?: {
-		height_cm: number;
-		weight_kg: number;
-		bmi: number; // Auto-calculated from height/weight
-	};
+	allergies: string[]; // List of allergen names (food, drug, environmental)
+	blood_type: string; // Required field: e.g., "A+", "O-", "Unknown"
 }
 
 // ==========================================
