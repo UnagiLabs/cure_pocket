@@ -263,17 +263,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							height={40}
 							className="rounded-xl shadow-md cursor-pointer hover:scale-105 transition-transform"
 						/>
-						<div>
-							<p
-								className="text-xs"
-								style={{ color: theme.colors.textSecondary }}
-							>
-								{t("home.greetingShort")}
-							</p>
-							<h1
-								className="text-lg font-bold leading-tight"
-								style={{ color: theme.colors.text }}
-							>
+						<div className="sr-only">
+							<p>{t("home.greetingShort")}</p>
+							<h1>
 								{walletAddress
 									? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
 									: t("home.guest")}
