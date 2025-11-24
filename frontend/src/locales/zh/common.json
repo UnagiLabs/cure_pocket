@@ -58,7 +58,7 @@
 	},
 	"dataOverview": {
 		"title": "健康数据概览",
-		"description": "统一的仪表板，一目了然地查看您的健康数据——基本资料、病症、处方、实验室结果、影像和生命体征。",
+		"description": "统一的仪表板,一目了然地查看您的健康数据——基本资料、病症、处方、实验室结果、影像和生命体征。",
 		"basicInfo": "基本资料",
 		"conditions": "病症",
 		"prescriptions": "处方",
@@ -70,6 +70,11 @@
 		"birthDate": "出生日期",
 		"allergies": "过敏",
 		"none": "无",
+		"loadingImaging": "加载影像数据中...",
+		"loadingLabs": "加载检验结果中...",
+		"loadingVitals": "加载生命体征中...",
+		"loadingMedications": "加载药物数据中...",
+		"loadingConditions": "加载疾病信息中...",
 		"chips": {
 			"conditions": "病症",
 			"prescriptions": "处方",
