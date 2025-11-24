@@ -333,7 +333,8 @@ function validateLabResults(healthData: HealthData): void {
 }
 
 /**
- * Validate imaging data
+ * Validate imaging data (Data Schema v2.0.0)
+ * Note: This validates the deprecated HealthData.imaging field which now uses ImagingStudyV2[]
  */
 function validateImaging(healthData: HealthData): void {
 	if (!Array.isArray(healthData.imaging)) {
@@ -344,25 +345,19 @@ function validateImaging(healthData: HealthData): void {
 		);
 	}
 
-	// Validate each imaging study
-	for (const [index, imaging] of healthData.imaging.entries()) {
-		if (!imaging.id) {
+	// Validate each imaging study using v2.0.0 format
+	for (const [index, study] of healthData.imaging.entries()) {
+		// Required: study_uid
+		if (!study.study_uid) {
 			throw new HealthDataValidationError(
-				`Imaging study at index ${index} is missing ID`,
-				`imaging[${index}].id`,
+				`Imaging study at index ${index} is missing study_uid`,
+				`imaging[${index}].study_uid`,
 				"imaging_meta",
 			);
 		}
 
-		if (!imaging.date) {
-			throw new HealthDataValidationError(
-				`Imaging study at index ${index} is missing date`,
-				`imaging[${index}].date`,
-				"imaging_meta",
-			);
-		}
-
-		if (!imaging.modality) {
+		// Required: modality
+		if (!study.modality) {
 			throw new HealthDataValidationError(
 				`Imaging study at index ${index} is missing modality`,
 				`imaging[${index}].modality`,
@@ -370,12 +365,29 @@ function validateImaging(healthData: HealthData): void {
 			);
 		}
 
-		// Validate DICOM modality codes
-		const validModalities = ["CT", "MR", "US", "XR", "XA", "OT"];
-		if (!validModalities.includes(imaging.modality)) {
+		// Required: body_site
+		if (!study.body_site) {
 			throw new HealthDataValidationError(
-				`Invalid DICOM modality at index ${index}: ${imaging.modality}. Expected one of: ${validModalities.join(", ")}`,
-				`imaging[${index}].modality`,
+				`Imaging study at index ${index} is missing body_site`,
+				`imaging[${index}].body_site`,
+				"imaging_meta",
+			);
+		}
+
+		// Required: series (must be non-empty array)
+		if (!Array.isArray(study.series) || study.series.length === 0) {
+			throw new HealthDataValidationError(
+				`Imaging study at index ${index} is missing series array or it is empty`,
+				`imaging[${index}].series`,
+				"imaging_meta",
+			);
+		}
+
+		// Required: schema_version
+		if (!study.schema_version) {
+			throw new HealthDataValidationError(
+				`Imaging study at index ${index} is missing schema_version`,
+				`imaging[${index}].schema_version`,
 				"imaging_meta",
 			);
 		}
@@ -636,9 +648,10 @@ export function validateLabResultsData(data: LabResultsData): void {
 }
 
 /**
- * Validate ImagingMetaData
+ * Validate ImagingMetaData (Data Schema v2.0.0)
  */
 export function validateImagingMetaData(data: ImagingMetaData): void {
+	// Validate meta
 	if (!data.meta?.schema_version) {
 		throw new HealthDataValidationError(
 			"Schema version is required",
@@ -647,6 +660,7 @@ export function validateImagingMetaData(data: ImagingMetaData): void {
 		);
 	}
 
+	// Validate imaging_meta is array
 	if (!Array.isArray(data.imaging_meta)) {
 		throw new HealthDataValidationError(
 			"Imaging metadata must be an array",
@@ -655,24 +669,19 @@ export function validateImagingMetaData(data: ImagingMetaData): void {
 		);
 	}
 
-	for (const [index, imaging] of data.imaging_meta.entries()) {
-		if (!imaging.id) {
+	// Validate each study
+	for (const [index, study] of data.imaging_meta.entries()) {
+		// Required: study_uid
+		if (!study.study_uid) {
 			throw new HealthDataValidationError(
-				`Imaging study at index ${index} is missing ID`,
-				`imaging_meta[${index}].id`,
+				`Imaging study at index ${index} is missing study_uid`,
+				`imaging_meta[${index}].study_uid`,
 				"imaging_meta",
 			);
 		}
 
-		if (!imaging.date) {
-			throw new HealthDataValidationError(
-				`Imaging study at index ${index} is missing date`,
-				`imaging_meta[${index}].date`,
-				"imaging_meta",
-			);
-		}
-
-		if (!imaging.modality) {
+		// Required: modality
+		if (!study.modality) {
 			throw new HealthDataValidationError(
 				`Imaging study at index ${index} is missing modality`,
 				`imaging_meta[${index}].modality`,
@@ -680,11 +689,74 @@ export function validateImagingMetaData(data: ImagingMetaData): void {
 			);
 		}
 
-		const validModalities = ["CT", "MR", "US", "XR", "XA", "OT"];
-		if (!validModalities.includes(imaging.modality)) {
+		// Required: body_site
+		if (!study.body_site) {
 			throw new HealthDataValidationError(
-				`Invalid DICOM modality at index ${index}: ${imaging.modality}. Expected one of: ${validModalities.join(", ")}`,
-				`imaging_meta[${index}].modality`,
+				`Imaging study at index ${index} is missing body_site`,
+				`imaging_meta[${index}].body_site`,
+				"imaging_meta",
+			);
+		}
+
+		// Required: series (must be non-empty array)
+		if (!Array.isArray(study.series) || study.series.length === 0) {
+			throw new HealthDataValidationError(
+				`Imaging study at index ${index} must have at least one series`,
+				`imaging_meta[${index}].series`,
+				"imaging_meta",
+			);
+		}
+
+		// Validate each series
+		for (const [seriesIndex, series] of study.series.entries()) {
+			// Required: series_uid
+			if (!series.series_uid) {
+				throw new HealthDataValidationError(
+					`Series at index ${seriesIndex} in study ${index} is missing series_uid`,
+					`imaging_meta[${index}].series[${seriesIndex}].series_uid`,
+					"imaging_meta",
+				);
+			}
+
+			// Required: modality
+			if (!series.modality) {
+				throw new HealthDataValidationError(
+					`Series at index ${seriesIndex} in study ${index} is missing modality`,
+					`imaging_meta[${index}].series[${seriesIndex}].modality`,
+					"imaging_meta",
+				);
+			}
+
+			// Required: instance_blobs (must be non-empty array)
+			if (
+				!Array.isArray(series.instance_blobs) ||
+				series.instance_blobs.length === 0
+			) {
+				throw new HealthDataValidationError(
+					`Series at index ${seriesIndex} in study ${index} must have at least one instance blob`,
+					`imaging_meta[${index}].series[${seriesIndex}].instance_blobs`,
+					"imaging_meta",
+				);
+			}
+
+			// Validate each instance blob
+			for (const [blobIndex, blob] of series.instance_blobs.entries()) {
+				// Required: dicom_blob_id
+				if (!blob.dicom_blob_id) {
+					throw new HealthDataValidationError(
+						`Instance blob at index ${blobIndex} in series ${seriesIndex} of study ${index} is missing dicom_blob_id`,
+						`imaging_meta[${index}].series[${seriesIndex}].instance_blobs[${blobIndex}].dicom_blob_id`,
+						"imaging_meta",
+					);
+				}
+			}
+		}
+
+		// Required: schema_version
+		if (!study.schema_version) {
+			throw new HealthDataValidationError(
+				`Imaging study at index ${index} is missing schema_version`,
+				`imaging_meta[${index}].schema_version`,
 				"imaging_meta",
 			);
 		}

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
+import { ImagingImageViewer } from "@/components/ImagingImageViewer";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
@@ -344,10 +345,23 @@ export default function DataOverviewPage() {
 								{imagingReports.slice(0, 3).map((img) => (
 									<div
 										key={img.id}
-										className="flex items-start justify-between rounded-lg border px-3 py-2 text-xs lg:text-sm"
+										className="flex items-start gap-3 rounded-lg border px-3 py-2 text-xs lg:text-sm"
 										style={{ borderColor: `${theme.colors.textSecondary}20` }}
 									>
-										<div>
+										{/* Image Thumbnail */}
+										{img.imageObjectUrl && (
+											<div className="flex-shrink-0">
+												<ImagingImageViewer
+													objectUrl={img.imageObjectUrl}
+													alt={`${img.type.toUpperCase()} - ${img.bodyPart || ""}`}
+													mode="thumbnail"
+													className="w-16 h-16"
+												/>
+											</div>
+										)}
+
+										{/* Image Info */}
+										<div className="flex-1 min-w-0">
 											<p
 												className="font-medium"
 												style={{ color: theme.colors.text }}
@@ -360,15 +374,15 @@ export default function DataOverviewPage() {
 											>
 												{formatDate(img.examDate)}
 											</p>
+											{img.findings && (
+												<p
+													className="mt-1 text-[11px] lg:text-xs line-clamp-2"
+													style={{ color: theme.colors.textSecondary }}
+												>
+													{img.findings}
+												</p>
+											)}
 										</div>
-										{img.findings && (
-											<p
-												className="ml-3 max-w-[9rem] text-[11px] lg:text-xs line-clamp-2"
-												style={{ color: theme.colors.textSecondary }}
-											>
-												{img.findings}
-											</p>
-										)}
 									</div>
 								))}
 							</div>

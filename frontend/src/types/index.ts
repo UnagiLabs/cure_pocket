@@ -154,6 +154,9 @@ export interface ImagingReport {
 	impression?: string; // 診断的所見
 	// 将来的には画像ファイルへの参照を追加
 	imageUrl?: string; // 画像ファイルのURL（将来的に実装）
+	imageFile?: File; // アップロード用の画像ファイル
+	imageObjectUrl?: string; // 復号化された画像のObjectURL（表示用）
+	imageLoadError?: string; // 画像読み込みエラーメッセージ
 
 	// Backend-linked metadata
 	suiObjectId?: string; // ImagingEntry object ID
@@ -376,7 +379,7 @@ export type {
 	AsyncStatus,
 	Condition,
 	HealthData,
-	ImagingStudy,
+	ImagingStudyV2,
 	LabItem,
 	LabResult as LabResultHealthData,
 	LocalizedString,

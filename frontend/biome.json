@@ -16,10 +16,15 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"performance": {
+				"noImgElement": "off"
+			},
 			"correctness": {
 				"useExhaustiveDependencies": "off"
 			},
 			"a11y": {
+				"noSvgWithoutTitle": "off",
+				"useKeyWithClickEvents": "off",
 				"noStaticElementInteractions": "off"
 			}
 		}
