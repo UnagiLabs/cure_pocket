@@ -164,7 +164,7 @@
 		"description": "緊急時に医療従事者とお薬情報を共有",
 		"generateQR": "QRコード生成",
 		"generating": "生成中...",
-		"validFor": "有効期限: {{duration}}",
+		"validFor": "有効期限: {duration}",
 		"downloadPDF": "PDFダウンロード",
 		"printCard": "印刷用カード生成",
 		"currentMedications": "服用薬一覧",
