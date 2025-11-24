@@ -1,7 +1,14 @@
 "use client";
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { Activity, Bell, Calendar, FileText, Plus, User } from "lucide-react";
+import {
+	Activity,
+	Bell,
+	Calendar,
+	FileText,
+	Plus,
+	Settings,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -215,7 +222,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 									: theme.colors.text,
 						}}
 					>
-						<User size={20} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
+						<Settings
+							size={20}
+							strokeWidth={activeTab === "profile" ? 2.5 : 2}
+						/>
 						<span className="font-medium">{t("tabs.profile")}</span>
 					</button>
 
@@ -412,7 +422,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 									activeTab === "profile" ? theme.colors.primary : "#94a3b8",
 							}}
 						>
-							<User size={24} strokeWidth={activeTab === "profile" ? 2.5 : 2} />
+							<Settings
+								size={24}
+								strokeWidth={activeTab === "profile" ? 2.5 : 2}
+							/>
 							<span className="text-[10px] font-bold">{t("tabs.profile")}</span>
 						</button>
 					</div>
