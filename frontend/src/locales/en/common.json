@@ -5,6 +5,7 @@
 		"connectWallet": "Connect Wallet",
 		"addMedication": "Add medication",
 		"save": "Save",
+		"saving": "Saving...",
 		"cancel": "Cancel",
 		"edit": "Edit",
 		"delete": "Delete",
@@ -138,6 +139,15 @@
 		"notesPlaceholder": "e.g., Do not take on empty stomach",
 		"photoAttachmentComingSoon": "Photo attachment (coming soon)",
 		"attachments": "attachments",
+		"inputFromImage": "Input from Image",
+		"manualInput": "Manual Input",
+		"uploadOrTakePhoto": "Upload or Take Photo",
+		"dragDropImages": "Drag & Drop Images",
+		"clickToUpload": "Click to Upload",
+		"uploadedImages": "Uploaded Images",
+		"attachedImages": "Attached Images",
+		"runOCR": "Run OCR",
+		"ocrProcessing": "Processing OCR...",
 		"validation": {
 			"clinicRequired": "Please enter medical facility name",
 			"medicationRequired": "Please enter at least one medication name"
