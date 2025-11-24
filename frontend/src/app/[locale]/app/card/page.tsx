@@ -3,6 +3,7 @@
 import {
 	useCurrentAccount,
 	useSignAndExecuteTransaction,
+	useSuiClient,
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { sha3_256 } from "@noble/hashes/sha3";
@@ -24,11 +25,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
-import {
-	getSuiClient,
-	PACKAGE_ID,
-	PASSPORT_REGISTRY_ID,
-} from "@/lib/suiClient";
+import { PACKAGE_ID, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 
 /**
@@ -48,6 +45,7 @@ export default function EmergencyCardPage() {
 		walletAddress,
 	} = useApp();
 	const { passport } = usePassport();
+	const suiClient = useSuiClient();
 	const currentAccount = useCurrentAccount();
 	const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
 	const theme = getTheme(settings.theme);
@@ -137,10 +135,12 @@ export default function EmergencyCardPage() {
 				transaction: tx,
 			});
 
-			// 4) Fetch effects/objectChanges to locate ConsentToken ID
-			const txResult = await getSuiClient().getTransactionBlock({
+			const txResult = await suiClient.waitForTransaction({
 				digest: execResult.digest,
-				options: { showEffects: true, showObjectChanges: true },
+				options: {
+					showEffects: true,
+					showObjectChanges: true,
+				},
 			});
 
 			const tokenId = extractConsentTokenId(txResult) || "";
