@@ -94,17 +94,24 @@ export function DiseaseSelect({
 							<li key={`${condition.label}-${condition.code ?? ""}`}>
 								<button
 									type="button"
-									onClick={() =>
+									onClick={() => {
+										// Get the translated name for saving
+										const translatedName = t(
+											`conditionNames.${condition.label}`,
+											{
+												defaultValue: condition.label,
+											},
+										);
 										onSelect({
-											label: condition.label,
+											label: translatedName,
 											icd10Code: condition.code,
-										})
-									}
+										});
+									}}
 									className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left hover:bg-gray-100"
 								>
 									<span>
 										{t(`conditionNames.${condition.label}`, {
-											fallback: condition.label,
+											defaultValue: condition.label,
 										})}
 									</span>
 									{condition.code && (
