@@ -31,6 +31,8 @@ import {
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { HealthData, Medication } from "@/types/healthData";
 
+export const runtime = "edge";
+
 // ==========================================
 // Environment Configuration
 // ==========================================

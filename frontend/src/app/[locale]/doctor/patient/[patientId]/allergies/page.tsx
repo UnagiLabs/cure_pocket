@@ -132,16 +132,16 @@ export default function DoctorAllergiesPage({ params }: AllergiesPageProps) {
 					<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
 						<ShieldAlert size={20} className="text-red-600" />
 					</div>
-			<h1
-				className="text-2xl font-bold"
-				style={{ color: doctorTheme.text }}
-			>
-				{t("doctor.drugAllergies", { default: "Drug Allergies" })}
-			</h1>
-			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
-				ID: {patientId}
-			</p>
-		</div>
+					<h1
+						className="text-2xl font-bold"
+						style={{ color: doctorTheme.text }}
+					>
+						{t("doctor.drugAllergies", { default: "Drug Allergies" })}
+					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
+				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.allergyWarning", {
 						default:

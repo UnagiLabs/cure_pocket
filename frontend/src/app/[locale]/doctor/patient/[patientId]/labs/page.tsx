@@ -143,16 +143,16 @@ export default function DoctorLabsPage({ params }: LabsPageProps) {
 					>
 						<Activity size={20} style={{ color: doctorTheme.primary }} />
 					</div>
-			<h1
-				className="text-2xl font-bold"
-				style={{ color: doctorTheme.text }}
-			>
-				{t("home.labResults", { default: "Lab Results" })}
-			</h1>
-			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
-				ID: {patientId}
-			</p>
-		</div>
+					<h1
+						className="text-2xl font-bold"
+						style={{ color: doctorTheme.text }}
+					>
+						{t("home.labResults", { default: "Lab Results" })}
+					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
+				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.labHistory", {
 						default: "Patient's laboratory test results and trends",

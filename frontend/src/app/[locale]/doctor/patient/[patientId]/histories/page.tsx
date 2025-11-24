@@ -137,16 +137,16 @@ export default function DoctorHistoriesPage({ params }: HistoriesPageProps) {
 					>
 						<Heart size={20} style={{ color: doctorTheme.primary }} />
 					</div>
-			<h1
-				className="text-2xl font-bold"
-				style={{ color: doctorTheme.text }}
-			>
-				{t("dataOverview.conditions", { default: "Medical History" })}
-			</h1>
-			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
-				ID: {patientId}
-			</p>
-		</div>
+					<h1
+						className="text-2xl font-bold"
+						style={{ color: doctorTheme.text }}
+					>
+						{t("dataOverview.conditions", { default: "Medical History" })}
+					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
+				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.medicalHistory", {
 						default: "Patient's conditions, surgeries, and procedures",

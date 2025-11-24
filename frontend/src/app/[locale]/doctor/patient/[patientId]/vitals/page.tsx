@@ -170,16 +170,16 @@ export default function DoctorVitalsPage({ params }: VitalsPageProps) {
 					>
 						<Activity size={20} style={{ color: doctorTheme.primary }} />
 					</div>
-			<h1
-				className="text-2xl font-bold"
-				style={{ color: doctorTheme.text }}
-			>
-				{t("home.todayVitals", { default: "Vital Signs" })}
-			</h1>
-			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
-				ID: {patientId}
-			</p>
-		</div>
+					<h1
+						className="text-2xl font-bold"
+						style={{ color: doctorTheme.text }}
+					>
+						{t("home.todayVitals", { default: "Vital Signs" })}
+					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
+				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.vitalHistory", {
 						default: "Patient's vital signs monitoring records",
