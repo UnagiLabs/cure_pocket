@@ -21,8 +21,8 @@ import {
 	Scan,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { QRCodeCanvas } from "qrcode.react";
-import { useState } from "react";
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
 import { PACKAGE_ID, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
@@ -63,6 +63,36 @@ export default function EmergencyCardPage() {
 			| "vitals"
 		)[]
 	>(["medications", "allergies"]);
+	const [qrImageUrl, setQrImageUrl] = useState("");
+
+	useEffect(() => {
+		if (!consentUrl) {
+			setQrImageUrl("");
+			return;
+		}
+
+		let isMounted = true;
+		QRCode.toDataURL(consentUrl, {
+			margin: 1,
+			width: 176,
+			color: {
+				dark: theme.colors.primary,
+				light: theme.colors.surface,
+			},
+		})
+			.then((url: string) => {
+				if (isMounted) {
+					setQrImageUrl(url);
+				}
+			})
+			.catch((error: unknown) => {
+				console.error("Failed to render QR code", error);
+			});
+
+		return () => {
+			isMounted = false;
+		};
+	}, [consentUrl, theme.colors.primary, theme.colors.surface]);
 
 	const activeMedications = medications.filter((m) => m.status === "active");
 	const importantHistories = medicalHistories.filter(
@@ -281,12 +311,19 @@ export default function EmergencyCardPage() {
 						{consentUrl ? (
 							<>
 								<div className="mb-2 flex h-32 w-32 items-center justify-center rounded-lg border-4 border-gray-300 bg-white p-2 md:h-48 md:w-48">
-									<QRCodeCanvas
-										value={consentUrl}
-										size={176}
-										level="M"
-										includeMargin
-									/>
+									{qrImageUrl ? (
+										<img
+											src={qrImageUrl}
+											alt={t("card.scanToView")}
+											className="h-full w-full rounded-lg object-cover"
+										/>
+									) : (
+										<div className="flex h-full w-full items-center justify-center">
+											<span className="text-xs font-medium text-gray-400">
+												{t("card.scanToView")}
+											</span>
+										</div>
+									)}
 								</div>
 								<p
 									className="text-sm"
