@@ -2,7 +2,7 @@
 
 import { Calendar, MapPin, Pill, User } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 const doctorTheme = {
 	primary: "#2563EB",
@@ -13,12 +13,13 @@ const doctorTheme = {
 };
 
 interface MedicationsPageProps {
-	params: { patientId: string };
+	params: Promise<{ patientId: string }>;
 }
 
 export default function DoctorMedicationsPage({
-	params: _params,
+	params,
 }: MedicationsPageProps) {
+	const { patientId } = use(params);
 	const t = useTranslations();
 	const locale = useLocale();
 
@@ -120,6 +121,9 @@ export default function DoctorMedicationsPage({
 					>
 						{t("dataOverview.prescriptions", { default: "Prescriptions" })}
 					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
 				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.prescriptionHistory", {

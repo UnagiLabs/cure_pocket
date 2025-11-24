@@ -2,7 +2,7 @@
 
 import { Calendar, FileText, Image as ImageIcon, MapPin } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 const doctorTheme = {
 	primary: "#2563EB",
@@ -13,12 +13,11 @@ const doctorTheme = {
 };
 
 interface ImagingPageProps {
-	params: { patientId: string };
+	params: Promise<{ patientId: string }>;
 }
 
-export default function DoctorImagingPage({
-	params: _params,
-}: ImagingPageProps) {
+export default function DoctorImagingPage({ params }: ImagingPageProps) {
+	const { patientId } = use(params);
 	const t = useTranslations();
 	const locale = useLocale();
 
@@ -138,6 +137,9 @@ export default function DoctorImagingPage({
 					>
 						{t("home.imagingData", { default: "Imaging Reports" })}
 					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
 				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.imagingHistory", {

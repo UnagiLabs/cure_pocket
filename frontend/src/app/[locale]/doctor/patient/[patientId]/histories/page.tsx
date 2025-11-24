@@ -2,7 +2,7 @@
 
 import { Clock, Heart, Stethoscope } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 const doctorTheme = {
 	primary: "#2563EB",
@@ -13,12 +13,11 @@ const doctorTheme = {
 };
 
 interface HistoriesPageProps {
-	params: { patientId: string };
+	params: Promise<{ patientId: string }>;
 }
 
-export default function DoctorHistoriesPage({
-	params: _params,
-}: HistoriesPageProps) {
+export default function DoctorHistoriesPage({ params }: HistoriesPageProps) {
+	const { patientId } = use(params);
 	const t = useTranslations();
 	const locale = useLocale();
 
@@ -144,6 +143,9 @@ export default function DoctorHistoriesPage({
 					>
 						{t("dataOverview.conditions", { default: "Medical History" })}
 					</h1>
+					<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+						ID: {patientId}
+					</p>
 				</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.medicalHistory", {

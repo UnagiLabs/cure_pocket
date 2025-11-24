@@ -4,13 +4,15 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build",
+		"build": "next build --webpack",
 		"start": "next start",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"typecheck": "tsc --noEmit",
 		"check": "npm run lint:fix && npm run typecheck",
-		"validate": "npm run lint && npm run typecheck"
+		"validate": "npm run lint && npm run typecheck",
+        "pages:build": "bunx @cloudflare/next-on-pages",
+        "pages:preview": "bunx @cloudflare/next-on-pages && bunx wrangler pages dev .vercel/output/static"
 	},
 	"dependencies": {
 		"@google/generative-ai": "^0.24.1",
