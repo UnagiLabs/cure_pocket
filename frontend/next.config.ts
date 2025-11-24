@@ -4,8 +4,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-    output: "export",
-
 	/* config options here */
 	// Rechartsなどのライブラリがevalを使用する可能性があるため、開発モードでのCSP警告を緩和
 	experimental: {
