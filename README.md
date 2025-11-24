@@ -81,20 +81,25 @@ The system consists of three core layers: **Sui (Identity & Logic)**, **Walrus (
 
 ```mermaid
 graph TD
-    User["User (Patient/Doctor)"] -->|UI Interaction| Frontend["Next.js App"]
-    
-    subgraph "🔐 Security & Storage Layer"
-        Frontend -->|Encrypt/Decrypt| Seal["Seal Service"]
-        Frontend -->|Store/Fetch Encrypted Blob| Walrus["Walrus Storage"]
-        Seal -.->|Key Management| User
+    User["User (Patient/Doctor)"] <-->|UI Interaction| Frontend["CurePocket<br>(Next.js App)"]
+
+    subgraph "🛡️ Privacy & Storage Pipeline"
+        direction TB
+        Frontend <-->|"1. Encrypt / Decrypt"| Seal["🔐 Seal (Key Server)"]
+        Seal <-->|"2. Store / Fetch Encrypted Blob"| Walrus["🦭 Walrus (Storage)"]
     end
 
     subgraph "⛓️ On-Chain Layer (Sui)"
-        Frontend -->|Transaction| Sui["Sui Blockchain"]
-        Sui -->|Ownership| SBT["Medical Passport SBT"]
-        SBT -->|Reference| DF["Dynamic Fields"]
-        DF -.->|Link to| Walrus
+        Frontend <-->|"4. Sync Blob IDs"| Sui["💧 Sui Blockchain"]
+        Sui --- SBT["Medical Passport SBT"]
     end
+
+    %% Access Control Flow
+    Seal -.->|"3. Verify Access Rights (Smart Contract)"| Sui
+
+    %% Styling
+    style Seal fill:#ff9f89,stroke:#333,stroke-width:2px,color:black
+    style Walrus fill:#26c2d6,stroke:#333,stroke-width:2px,color:black
 ````
 
 ### Data Flow
