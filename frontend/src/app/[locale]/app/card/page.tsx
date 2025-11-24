@@ -52,7 +52,6 @@ export default function EmergencyCardPage() {
 	const [consentUrl, setConsentUrl] = useState("");
 	const [expiresAt, setExpiresAt] = useState("");
 	const [durationLabel, setDurationLabel] = useState("");
-	const [secret, setSecret] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedCategories, setSelectedCategories] = useState<
 		(
@@ -107,7 +106,6 @@ export default function EmergencyCardPage() {
 		setIsGenerating(true);
 		try {
 			const newSecret = generateSecret();
-			setSecret(newSecret);
 
 			// 1) secret_hash
 			const secretBytes = new TextEncoder().encode(newSecret);
@@ -322,19 +320,6 @@ export default function EmergencyCardPage() {
 					>
 						<Clock className="mr-1 h-4 w-4" />
 						{t("card.validFor", { duration: durationLabel || "24h" })}
-					</div>
-				)}
-
-				{secret && (
-					<div className="mb-2 rounded-lg bg-gray-100 px-3 py-2 text-center text-xs text-gray-700">
-						<span className="font-semibold">合言葉: </span>
-						{secret}
-					</div>
-				)}
-
-				{consentUrl && (
-					<div className="mb-2 rounded-lg bg-gray-50 px-3 py-2 text-center text-[11px] text-gray-600 break-all">
-						{consentUrl}
 					</div>
 				)}
 
