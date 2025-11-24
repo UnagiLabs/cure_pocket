@@ -86,6 +86,9 @@ export interface CreateConsentTokenPayload {
 export interface CreateConsentTokenResponse {
 	consentUrl: string; // doctor view URL
 	expiresAt: string; // ISO date
+	tokenId?: string;
+	categories?: string[];
+	durationHours?: number;
 }
 
 export const apiClient = {

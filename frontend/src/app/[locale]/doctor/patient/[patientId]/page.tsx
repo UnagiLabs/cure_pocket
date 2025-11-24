@@ -1,294 +1,255 @@
 "use client";
 
-import {
-	Activity,
-	AlertCircle,
-	FileText,
-	Heart,
-	Image as ImageIcon,
-	Pill,
-	ShieldAlert,
-	Stethoscope,
-} from "lucide-react";
+import jsQR from "jsqr";
+import { Loader2, Lock, QrCode, ShieldAlert, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
+import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
+import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import { getDataTypeLabel, getMockData } from "@/lib/mockData";
+import { getDataEntryBlobIds } from "@/lib/suiClient";
 import type { DataScope } from "@/types/doctor";
 
-// 医師向けテーマカラー
-const doctorTheme = {
-	primary: "#2563EB",
-	secondary: "#3B82F6",
-	accent: "#60A5FA",
-	background: "#F8FAFC",
-	surface: "#FFFFFF",
-	text: "#0F172A",
-	textSecondary: "#64748B",
-};
+type FetchState = "idle" | "loading" | "success" | "error";
+
+const SUPPORTED_SCOPES: DataScope[] = [
+	"basic_profile",
+	"medications",
+	"allergies",
+	"conditions",
+	"lab_results",
+	"imaging_reports",
+	"vital_signs",
+];
 
 interface DoctorPatientPageProps {
 	params: Promise<{ patientId: string }>;
 }
 
 export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
-	const t = useTranslations();
-	const router = useRouter();
-	const locale = useLocale();
 	const { patientId } = use(params);
+	const t = useTranslations();
+	const locale = useLocale();
+	const router = useRouter();
 
-	// TODO: バックエンド実装後、実際のデータ取得に置き換え
-	// 現在はモックデータで表示
-	const [allowedScopes] = useState<DataScope[]>([
-		"basic_profile",
-		"medications",
-		"allergies",
-		"conditions",
-		"lab_results",
-		"vital_signs",
-	]);
+	const {
+		decryptWithConsent,
+		stage,
+		error: consentError,
+		reset,
+	} = useConsentDecrypt();
 
-	// モックデータ
-	const mockProfile = {
-		birthDate: "1985-03-15",
-		ageBand: "30s" as const,
-		gender: "male" as const,
-		country: "JP",
-		bloodType: "A+" as const,
-		foodAllergies: ["Peanuts", "Shellfish"],
-	};
+	const {
+		sessionKey,
+		isValid: sessionKeyValid,
+		generateSessionKey,
+		isLoading: isSessionKeyLoading,
+		error: sessionKeyError,
+	} = useSessionKeyManager();
 
-	const mockPrescriptions = [
-		{
-			id: "1",
-			prescriptionDate: "2024-11-15",
-			clinic: "Tokyo General Hospital",
-			department: "Internal Medicine",
-			medications: [
-				{
-					id: "m1",
-					drugName: "Amlodipine",
-					strength: "5mg",
-					dosage: "Once daily",
-					quantity: "1 tablet",
-				},
-				{
-					id: "m2",
-					drugName: "Metformin",
-					strength: "500mg",
-					dosage: "Twice daily",
-					quantity: "1 tablet",
-				},
-			],
-		},
-		{
-			id: "2",
-			prescriptionDate: "2024-10-20",
-			clinic: "City Clinic",
-			medications: [
-				{
-					id: "m3",
-					drugName: "Lisinopril",
-					strength: "10mg",
-					dosage: "Once daily",
-					quantity: "1 tablet",
-				},
-			],
-		},
-	];
+	const [consentTokenId, setConsentTokenId] = useState("");
+	const [secret, setSecret] = useState("");
+	const [dataType, setDataType] = useState<DataScope>("medications");
+	const [fetchState, setFetchState] = useState<FetchState>("idle");
+	const [results, setResults] = useState<
+		Array<{ blobId: string; data: unknown }>
+	>([]);
+	const [fetchMessage, setFetchMessage] = useState<string | null>(null);
+	const [qrScopes, setQrScopes] = useState<DataScope[]>([]);
+	const [isScanning, setIsScanning] = useState(false);
+	const [useMockData, setUseMockData] = useState(true);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const mockAllergies = [
-		{
-			id: "a1",
-			substance: "Penicillin",
-			severity: "severe" as const,
-			symptoms: "Rash, difficulty breathing",
-			onsetDate: "2010-05-20",
-		},
-		{
-			id: "a2",
-			substance: "Aspirin",
-			severity: "moderate" as const,
-			symptoms: "Stomach upset",
-		},
-	];
+	const isBusy =
+		fetchState === "loading" ||
+		stage === "fetching" ||
+		stage === "decrypting" ||
+		stage === "building_ptb" ||
+		isSessionKeyLoading;
 
-	const mockHistories = [
-		{
-			id: "h1",
-			type: "condition" as const,
-			diagnosis: "Hypertension",
-			diagnosisDate: "2020-03-10",
-			status: "chronic" as const,
-		},
-		{
-			id: "h2",
-			type: "condition" as const,
-			diagnosis: "Type 2 Diabetes",
-			diagnosisDate: "2021-07-15",
-			status: "active" as const,
-		},
-		{
-			id: "h3",
-			type: "surgery" as const,
-			diagnosis: "Appendectomy",
-			diagnosisDate: "2015-08-20",
-			status: "resolved" as const,
-		},
-	];
+	useEffect(() => {
+		// Auto-create a session key if none is valid
+		if (!sessionKeyValid && !isSessionKeyLoading) {
+			void generateSessionKey();
+		}
+	}, [sessionKeyValid, isSessionKeyLoading, generateSessionKey]);
 
-	const mockLabResults = [
-		{
-			id: "l1",
-			testName: "HbA1c",
-			value: "6.8",
-			unit: "%",
-			referenceRange: "4.0-5.6",
-			testDate: "2024-11-10",
-			category: "Blood Test",
-		},
-		{
-			id: "l2",
-			testName: "Total Cholesterol",
-			value: "195",
-			unit: "mg/dL",
-			referenceRange: "<200",
-			testDate: "2024-11-10",
-		},
-		{
-			id: "l3",
-			testName: "Blood Pressure",
-			value: "138/88",
-			unit: "mmHg",
-			referenceRange: "<120/80",
-			testDate: "2024-11-15",
-		},
-	];
-
-	const mockImagingReports = [
-		{
-			id: "i1",
-			type: "xray" as const,
-			bodyPart: "Chest",
-			examDate: "2024-09-25",
-			performedBy: "Tokyo Imaging Center",
-			summary: "Normal chest X-ray",
-			findings: "No acute cardiopulmonary abnormality",
-		},
-	];
-
-	const mockVitalSigns = [
-		{
-			id: "v1",
-			type: "blood-pressure" as const,
-			recordedAt: "2024-11-20T08:30:00",
-			systolic: 135,
-			diastolic: 85,
-			unit: "mmHg",
-		},
-		{
-			id: "v2",
-			type: "blood-glucose" as const,
-			recordedAt: "2024-11-20T08:30:00",
-			value: 128,
-			unit: "mg/dL",
-		},
-		{
-			id: "v3",
-			type: "weight" as const,
-			recordedAt: "2024-11-20T08:30:00",
-			value: 72.5,
-			unit: "kg",
-		},
-	];
-
-	const summary = useMemo(
+	const scopeLabel = useMemo(
 		() => ({
-			conditions: mockHistories.length,
-			prescriptions: mockPrescriptions.length,
-			labs: mockLabResults.length,
-			imaging: mockImagingReports.length,
-			vitals: mockVitalSigns.length,
-			allergies: mockAllergies.length,
+			basic_profile: t("dataOverview.basicInfo", { default: "Basic Profile" }),
+			medications: t("dataOverview.chips.prescriptions", {
+				default: "Medications",
+			}),
+			allergies: t("doctor.drugAllergies", { default: "Allergies" }),
+			conditions: t("dataOverview.chips.conditions", { default: "Conditions" }),
+			lab_results: t("home.labData", { default: "Lab Results" }),
+			imaging_reports: t("home.imagingData", { default: "Imaging" }),
+			vital_signs: t("home.todayVitals", { default: "Vital Signs" }),
 		}),
-		[
-			mockAllergies.length,
-			mockHistories.length,
-			mockImagingReports.length,
-			mockVitalSigns.length,
-		],
+		[t],
 	);
 
-	const formatDate = (value: string | null | undefined) => {
-		if (!value) return "-";
-		const date = new Date(value);
-		if (Number.isNaN(date.getTime())) return "-";
-		return date.toLocaleDateString(locale, {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		});
+	const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		setIsScanning(true);
+		setFetchMessage(null);
+
+		try {
+			const imageUrl = URL.createObjectURL(file);
+			const img = new Image();
+
+			img.onload = () => {
+				const canvas = document.createElement("canvas");
+				const ctx = canvas.getContext("2d");
+				if (!ctx) {
+					setFetchMessage("Canvas コンテキストを取得できませんでした");
+					setIsScanning(false);
+					return;
+				}
+
+				canvas.width = img.width;
+				canvas.height = img.height;
+				ctx.drawImage(img, 0, 0);
+
+				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+				const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+				URL.revokeObjectURL(imageUrl);
+
+				if (code) {
+					try {
+						// Base64デコード
+						const decoded = atob(
+							code.data.replace(/-/g, "+").replace(/_/g, "/"),
+						);
+						const payload = JSON.parse(decoded);
+
+						// フォームに自動入力
+						if (payload.token) setConsentTokenId(payload.token);
+						if (payload.secret) setSecret(payload.secret);
+						if (payload.scope && Array.isArray(payload.scope)) {
+							setQrScopes(payload.scope);
+						}
+
+						setFetchMessage("✅ QRコードの読み取りに成功しました！");
+					} catch (err) {
+						console.error("QR decode error:", err);
+						setFetchMessage("QRコードのデコードに失敗しました");
+					}
+				} else {
+					setFetchMessage("QRコードが見つかりませんでした");
+				}
+
+				setIsScanning(false);
+			};
+
+			img.onerror = () => {
+				URL.revokeObjectURL(imageUrl);
+				setFetchMessage("画像の読み込みに失敗しました");
+				setIsScanning(false);
+			};
+
+			img.src = imageUrl;
+		} catch (err) {
+			console.error("QR upload error:", err);
+			setFetchMessage("QRコードの処理中にエラーが発生しました");
+			setIsScanning(false);
+		}
 	};
 
-	const isScopeAllowed = (scope: DataScope) => allowedScopes.includes(scope);
+	const handleFetch = async () => {
+		reset();
+		setFetchMessage(null);
+		setResults([]);
 
-	// スコープが許可されていないカード用のコンポーネント
-	const LockedCard = ({
-		title,
-		accentColor,
-		icon,
-	}: {
-		title: string;
-		accentColor: string;
-		icon?: React.ReactNode;
-	}) => (
-		<SectionCard title={title} accentColor={accentColor} icon={icon}>
-			<div className="flex flex-col items-center justify-center py-8 text-center">
-				<div
-					className="mb-3 flex h-16 w-16 items-center justify-center rounded-full"
-					style={{ backgroundColor: `${accentColor}10` }}
-				>
-					<ShieldAlert size={32} style={{ color: accentColor, opacity: 0.5 }} />
-				</div>
-				<p
-					className="text-sm font-medium mb-1"
-					style={{ color: doctorTheme.textSecondary }}
-				>
-					{t("doctor.accessRestricted", {
-						default: "Access Restricted",
-					})}
-				</p>
-				<p
-					className="text-xs"
-					style={{ color: doctorTheme.textSecondary, opacity: 0.7 }}
-				>
-					{t("doctor.noPermission", {
-						default: "You don't have permission to view this data",
-					})}
-				</p>
-			</div>
-		</SectionCard>
-	);
+		if (!consentTokenId || !secret) {
+			setFetchMessage("ConsentToken ID と合言葉を入力してください");
+			return;
+		}
+
+		// モックデータを使用する場合
+		if (useMockData) {
+			setFetchState("loading");
+			// 擬似的な読み込み時間
+			setTimeout(() => {
+				const scopesToFetch = qrScopes.length > 0 ? qrScopes : [dataType];
+				const mockDataResults = getMockData(scopesToFetch as never);
+
+				const formattedResults = Object.entries(mockDataResults).map(
+					([key, data]) => ({
+						blobId: `mock-${key}-${Date.now()}`,
+						data,
+						category: key,
+					}),
+				);
+
+				setResults(formattedResults as never);
+				setFetchState("success");
+				setFetchMessage(
+					`✅ モックデータを取得しました（${scopesToFetch.map((s) => getDataTypeLabel(s as never)).join(", ")}）`,
+				);
+			}, 1000);
+			return;
+		}
+
+		// 実際のブロックチェーン連携（既存の実装）
+		if (!sessionKey || !sessionKeyValid) {
+			setFetchMessage("SessionKey を生成中です。再試行してください。");
+			await generateSessionKey();
+			return;
+		}
+
+		setFetchState("loading");
+		try {
+			const blobIds = await getDataEntryBlobIds(patientId, dataType);
+			if (blobIds.length === 0) {
+				setFetchMessage(
+					`${scopeLabel[dataType] || dataType}: Blob が登録されていません`,
+				);
+				setFetchState("idle");
+				return;
+			}
+
+			const decrypted: Array<{ blobId: string; data: unknown }> = [];
+			for (const blobId of blobIds) {
+				const res = await decryptWithConsent({
+					blobId,
+					passportId: patientId,
+					consentTokenId,
+					dataType,
+					secret,
+					sessionKey,
+				});
+				decrypted.push(res);
+			}
+
+			setResults(decrypted);
+			setFetchState("success");
+		} catch (err) {
+			console.error("[DoctorPage] Fetch failed", err);
+			setFetchMessage(
+				err instanceof Error ? err.message : "取得に失敗しました",
+			);
+			setFetchState("error");
+		}
+	};
+
+	const handleViewAll = () => {
+		router.push(`/${locale}/doctor/patient/${patientId}/all`);
+	};
 
 	return (
 		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 space-y-8">
-			{/* Hero / Header */}
-			<section
-				className="relative overflow-hidden rounded-2xl border shadow-sm"
-				style={{
-					backgroundImage: `linear-gradient(120deg, ${doctorTheme.primary}, ${doctorTheme.secondary})`,
-					borderColor: `${doctorTheme.textSecondary}30`,
-				}}
-			>
-				<div className="absolute inset-0 opacity-10">
-					<div className="absolute -left-24 -top-24 h-48 w-48 rounded-full bg-white" />
-					<div className="absolute right-0 -bottom-24 h-64 w-64 rounded-full bg-white" />
-				</div>
-				<div className="relative z-10 px-5 py-5 lg:px-8 lg:py-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+			<section className="rounded-2xl border bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-sm">
+				<div className="px-5 py-5 lg:px-8 lg:py-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 					<div className="space-y-2">
-						<p className="text-xs font-semibold uppercase tracking-wide text-white/70">
+						<p className="text-xs font-semibold uppercase tracking-wide text-white/80">
 							{t("doctor.medicalRecord", { default: "Medical Record" })}
 						</p>
-						<h1 className="text-2xl lg:text-3xl font-bold text-white">
+						<h1 className="text-2xl lg:text-3xl font-bold">
 							{t("doctor.patientInformation", {
 								default: "Patient Information",
 							})}
@@ -296,564 +257,256 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 						<p className="text-sm text-white/80 max-w-xl">
 							{t("doctor.viewDescription", {
 								default:
-									"Viewing shared medical data. Access is limited to authorized scopes only.",
+									"Decrypt shared medical data with ConsentToken and secret.",
 							})}
 						</p>
 					</div>
-					<div className="flex flex-wrap gap-3 lg:gap-4">
-						<SummaryChip
-							icon={<ShieldAlert className="h-3.5 w-3.5" />}
-							label={t("doctor.allergies", { default: "Allergies" })}
-							value={summary.allergies}
-							isAlert
-						/>
-						<SummaryChip
-							icon={<Stethoscope className="h-3.5 w-3.5" />}
-							label={t("dataOverview.chips.conditions", {
-								default: "Conditions",
-							})}
-							value={summary.conditions}
-						/>
-						<SummaryChip
-							icon={<Pill className="h-3.5 w-3.5" />}
-							label={t("dataOverview.chips.prescriptions", {
-								default: "Prescriptions",
-							})}
-							value={summary.prescriptions}
-						/>
-					</div>
+					<button
+						type="button"
+						onClick={handleViewAll}
+						className="text-xs font-semibold bg-white/15 hover:bg-white/25 transition rounded-full px-4 py-2 border border-white/30"
+					>
+						View all data types
+					</button>
 				</div>
 			</section>
 
-			{/* 2-column layout on desktop */}
-			<div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
-				{/* Left column: basic + allergies + conditions + prescriptions */}
-				<div className="space-y-6 lg:col-span-3">
-					{isScopeAllowed("basic_profile") ? (
-						<SectionCard
-							title={t("dataOverview.basicInfo", { default: "Basic Profile" })}
-							accentColor={doctorTheme.primary}
-						>
-							<div className="grid grid-cols-2 gap-3 text-xs lg:text-sm">
-								<InfoRow
-									label={t("dataOverview.birthDate", { default: "Birth Date" })}
-									value={mockProfile.birthDate || "-"}
-								/>
-								<InfoRow
-									label={t("settings.ageBand", { default: "Age band" })}
-									value={mockProfile.ageBand || "-"}
-								/>
-								<InfoRow
-									label={t("settings.country", { default: "Nationality" })}
-									value={mockProfile.country || "-"}
-								/>
-								<InfoRow
-									label={t("settings.bloodType", { default: "Blood Type" })}
-									value={mockProfile.bloodType || "-"}
-								/>
-								<InfoRow
-									label={t("dataOverview.allergies", {
-										default: "Food Allergies",
-									})}
-									value={
-										mockProfile.foodAllergies &&
-										mockProfile.foodAllergies.length > 0
-											? mockProfile.foodAllergies.join(", ")
-											: t("dataOverview.none", { default: "None" })
-									}
-								/>
-							</div>
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("dataOverview.basicInfo", { default: "Basic Profile" })}
-							accentColor={doctorTheme.primary}
-						/>
-					)}
-
-					{isScopeAllowed("allergies") ? (
-						<SectionCard
-							title={t("doctor.drugAllergies", { default: "Drug Allergies" })}
-							accentColor="#EF4444"
-							icon={<AlertCircle className="h-4 w-4 text-[#EF4444]" />}
-							onClick={() =>
-								router.push(`/${locale}/doctor/patient/${patientId}/allergies`)
-							}
-						>
-							{summary.allergies === 0 ? (
-								<EmptyState
-									label={t("doctor.noAllergies", {
-										default: "No drug allergies recorded",
-									})}
-								/>
-							) : (
-								<ul className="space-y-2">
-									{mockAllergies.slice(0, 3).map((allergy) => (
-										<li
-											key={allergy.id}
-											className="flex items-start justify-between gap-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs lg:text-sm"
-										>
-											<div className="space-y-0.5">
-												<p className="font-medium text-red-900">
-													{allergy.substance}
-												</p>
-												{allergy.symptoms && (
-													<p className="text-[11px] lg:text-xs text-red-700">
-														{allergy.symptoms}
-													</p>
-												)}
-											</div>
-											<span
-												className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-													allergy.severity === "severe"
-														? "bg-red-100 text-red-800"
-														: allergy.severity === "moderate"
-															? "bg-orange-100 text-orange-800"
-															: "bg-yellow-100 text-yellow-800"
-												}`}
-											>
-												{allergy.severity}
-											</span>
-										</li>
-									))}
-								</ul>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("doctor.drugAllergies", { default: "Drug Allergies" })}
-							accentColor="#EF4444"
-							icon={<AlertCircle className="h-4 w-4 text-[#EF4444]" />}
-						/>
-					)}
-
-					{isScopeAllowed("conditions") ? (
-						<SectionCard
-							title={t("dataOverview.conditions", { default: "Conditions" })}
-							accentColor="#F97373"
-							icon={<Heart className="h-4 w-4 text-[#F97373]" />}
-							onClick={() =>
-								router.push(`/${locale}/doctor/patient/${patientId}/histories`)
-							}
-						>
-							{summary.conditions === 0 ? (
-								<EmptyState
-									label={t("dataOverview.noConditions", {
-										default: "No conditions registered",
-									})}
-								/>
-							) : (
-								<ul className="space-y-2">
-									{mockHistories.slice(0, 3).map((history) => (
-										<li
-											key={history.id}
-											className="flex items-start justify-between gap-3 rounded-lg bg-black/5 px-3 py-2 text-xs lg:text-sm"
-										>
-											<div className="space-y-0.5">
-												<p
-													className="font-medium"
-													style={{ color: doctorTheme.text }}
-												>
-													{history.diagnosis}
-												</p>
-												<p
-													className="text-[11px] lg:text-xs"
-													style={{ color: doctorTheme.textSecondary }}
-												>
-													{formatDate(history.diagnosisDate)}
-												</p>
-											</div>
-											{history.status && (
-												<span className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-medium">
-													{history.status}
-												</span>
-											)}
-										</li>
-									))}
-								</ul>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("dataOverview.conditions", { default: "Conditions" })}
-							accentColor="#F97373"
-							icon={<Heart className="h-4 w-4 text-[#F97373]" />}
-						/>
-					)}
-
-					{isScopeAllowed("medications") ? (
-						<SectionCard
-							title={t("dataOverview.prescriptions", {
-								default: "Prescriptions",
-							})}
-							accentColor="#6366F1"
-							icon={<FileText className="h-4 w-4 text-[#6366F1]" />}
-							onClick={() =>
-								router.push(
-									`/${locale}/doctor/patient/${patientId}/medications`,
-								)
-							}
-						>
-							{summary.prescriptions === 0 ? (
-								<EmptyState
-									label={t("medications.noPrescriptions", {
-										default: "No prescriptions recorded",
-									})}
-								/>
-							) : (
-								<div className="space-y-3">
-									{mockPrescriptions.slice(0, 3).map((p) => (
-										<div
-											key={p.id}
-											className="rounded-lg border px-3 py-2.5 text-xs lg:text-sm"
-											style={{ borderColor: `${doctorTheme.textSecondary}20` }}
-										>
-											<div className="flex items-start justify-between gap-2 mb-1.5">
-												<div>
-													<p
-														className="font-medium"
-														style={{ color: doctorTheme.text }}
-													>
-														{p.clinic}
-													</p>
-													<p
-														className="text-[11px] lg:text-xs"
-														style={{ color: doctorTheme.textSecondary }}
-													>
-														{formatDate(p.prescriptionDate)}
-													</p>
-												</div>
-												{p.department && (
-													<span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600">
-														{p.department}
-													</span>
-												)}
-											</div>
-											<p
-												className="text-[11px] lg:text-xs"
-												style={{ color: doctorTheme.textSecondary }}
-											>
-												{p.medications
-													.slice(0, 2)
-													.map((m) => m.drugName)
-													.join(" / ")}
-												{p.medications.length > 2 && " …"}
-											</p>
-										</div>
-									))}
-								</div>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("dataOverview.prescriptions", {
-								default: "Prescriptions",
-							})}
-							accentColor="#6366F1"
-							icon={<FileText className="h-4 w-4 text-[#6366F1]" />}
-						/>
-					)}
-				</div>
-
-				{/* Right column: labs + imaging + vitals */}
-				<div className="space-y-6 lg:col-span-2">
-					{isScopeAllowed("lab_results") ? (
-						<SectionCard
-							title={t("home.labResults", { default: "Lab Results" })}
-							accentColor="#0EA5E9"
-							onClick={() =>
-								router.push(`/${locale}/doctor/patient/${patientId}/labs`)
-							}
-						>
-							{summary.labs === 0 ? (
-								<EmptyState
-									label={t("dataOverview.noLabs", {
-										default: "No lab results registered",
-									})}
-								/>
-							) : (
-								<ul className="space-y-2 text-xs lg:text-sm">
-									{mockLabResults.slice(0, 4).map((lab) => (
-										<li
-											key={lab.id}
-											className="flex items-center justify-between rounded-lg bg-black/5 px-3 py-1.5"
-										>
-											<div>
-												<p
-													className="font-medium"
-													style={{ color: doctorTheme.text }}
-												>
-													{lab.testName}
-												</p>
-												<p
-													className="text-[11px] lg:text-xs"
-													style={{ color: doctorTheme.textSecondary }}
-												>
-													{formatDate(lab.testDate)}
-												</p>
-											</div>
-											<div className="text-right">
-												<p
-													className="text-sm font-semibold"
-													style={{ color: doctorTheme.text }}
-												>
-													{lab.value} {lab.unit}
-												</p>
-												{lab.referenceRange && (
-													<p
-														className="text-[10px]"
-														style={{ color: doctorTheme.textSecondary }}
-													>
-														{lab.referenceRange}
-													</p>
-												)}
-											</div>
-										</li>
-									))}
-								</ul>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("home.labResults", { default: "Lab Results" })}
-							accentColor="#0EA5E9"
-						/>
-					)}
-
-					{isScopeAllowed("imaging_reports") ? (
-						<SectionCard
-							title={t("home.imagingData", { default: "Imaging Data" })}
-							accentColor="#FB923C"
-							icon={<ImageIcon className="h-4 w-4 text-[#FB923C]" />}
-							onClick={() =>
-								router.push(`/${locale}/doctor/patient/${patientId}/imaging`)
-							}
-						>
-							{summary.imaging === 0 ? (
-								<EmptyState
-									label={t("dataOverview.noImaging", {
-										default: "No imaging data registered",
-									})}
-								/>
-							) : (
-								<div className="space-y-2">
-									{mockImagingReports.slice(0, 3).map((img) => (
-										<div
-											key={img.id}
-											className="flex items-start justify-between rounded-lg border px-3 py-2 text-xs lg:text-sm"
-											style={{ borderColor: `${doctorTheme.textSecondary}20` }}
-										>
-											<div>
-												<p
-													className="font-medium"
-													style={{ color: doctorTheme.text }}
-												>
-													{img.type.toUpperCase()} · {img.bodyPart}
-												</p>
-												<p
-													className="text-[11px] lg:text-xs"
-													style={{ color: doctorTheme.textSecondary }}
-												>
-													{formatDate(img.examDate)}
-												</p>
-											</div>
-											{img.findings && (
-												<p
-													className="ml-3 max-w-[9rem] text-[11px] lg:text-xs line-clamp-2"
-													style={{ color: doctorTheme.textSecondary }}
-												>
-													{img.findings}
-												</p>
-											)}
-										</div>
-									))}
-								</div>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("home.imagingData", { default: "Imaging Data" })}
-							accentColor="#FB923C"
-							icon={<ImageIcon className="h-4 w-4 text-[#FB923C]" />}
-						/>
-					)}
-
-					{isScopeAllowed("vital_signs") ? (
-						<SectionCard
-							title={t("home.todayVitals", { default: "Vital Signs" })}
-							accentColor="#22C55E"
-							icon={<Activity className="h-4 w-4 text-[#22C55E]" />}
-							onClick={() =>
-								router.push(`/${locale}/doctor/patient/${patientId}/vitals`)
-							}
-						>
-							{summary.vitals === 0 ? (
-								<EmptyState
-									label={t("dataOverview.noVitals", {
-										default: "No vital records yet",
-									})}
-								/>
-							) : (
-								<div className="grid grid-cols-2 gap-3 text-xs lg:text-sm">
-									{mockVitalSigns.slice(0, 3).map((vital) => (
-										<div
-											key={vital.id}
-											className="rounded-lg bg-black/5 px-3 py-2 flex flex-col gap-0.5"
-										>
-											<p
-												className="font-medium"
-												style={{ color: doctorTheme.text }}
-											>
-												{vital.type}
-											</p>
-											<p className="text-sm font-semibold">
-												{vital.value ?? `${vital.systolic}/${vital.diastolic}`}{" "}
-												<span
-													className="text-[11px]"
-													style={{ color: doctorTheme.textSecondary }}
-												>
-													{vital.unit}
-												</span>
-											</p>
-											<p
-												className="text-[10px]"
-												style={{ color: doctorTheme.textSecondary }}
-											>
-												{formatDate(vital.recordedAt)}
-											</p>
-										</div>
-									))}
-								</div>
-							)}
-						</SectionCard>
-					) : (
-						<LockedCard
-							title={t("home.todayVitals", { default: "Vital Signs" })}
-							accentColor="#22C55E"
-							icon={<Activity className="h-4 w-4 text-[#22C55E]" />}
-						/>
-					)}
-				</div>
-			</div>
-		</div>
-	);
-}
-
-interface SummaryChipProps {
-	icon: React.ReactNode;
-	label: string;
-	value: number;
-	isAlert?: boolean;
-}
-
-function SummaryChip({ icon, label, value, isAlert }: SummaryChipProps) {
-	return (
-		<div
-			className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-white backdrop-blur-sm ${
-				isAlert ? "bg-red-500/20 border border-red-300/30" : "bg-white/15"
-			}`}
-		>
-			<div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
-				{icon}
-			</div>
-			<div className="flex items-baseline gap-1">
-				<span className="text-sm font-semibold">{value}</span>
-				<span className="text-[11px] opacity-80">{label}</span>
-			</div>
-		</div>
-	);
-}
-
-interface SectionCardProps {
-	title: string;
-	accentColor: string;
-	icon?: React.ReactNode;
-	onClick?: () => void;
-	children: React.ReactNode;
-}
-
-function SectionCard({
-	title,
-	accentColor,
-	icon,
-	onClick,
-	children,
-}: SectionCardProps) {
-	const handleClick = () => {
-		if (onClick) onClick();
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" || e.key === " ") {
-			e.preventDefault();
-			if (onClick) onClick();
-		}
-	};
-
-	return (
-		<div
-			className={`rounded-2xl border bg-white/70 p-4 lg:p-5 shadow-sm backdrop-blur-sm ${
-				onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""
-			}`}
-			style={{ borderColor: `${accentColor}30` }}
-			onClick={handleClick}
-			onKeyDown={handleKeyDown}
-			role={onClick ? "button" : undefined}
-			tabIndex={onClick ? 0 : undefined}
-		>
-			<div className="mb-3 flex items-center justify-between gap-3">
-				<div className="flex items-center gap-2">
-					<div
-						className="flex h-7 w-7 items-center justify-center rounded-full"
-						style={{ backgroundColor: `${accentColor}20` }}
-					>
-						{icon ?? (
-							<FileText className="h-4 w-4" style={{ color: accentColor }} />
-						)}
+			<section className="rounded-2xl border bg-white p-4 lg:p-5 shadow-sm space-y-4">
+				{/* QRコードアップロード */}
+				<div className="flex flex-col sm:flex-row gap-3 items-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
+					<QrCode className="h-6 w-6 text-blue-600 flex-shrink-0" />
+					<div className="flex-1 text-sm text-blue-900">
+						<p className="font-semibold">患者のQRコードをスキャン</p>
+						<p className="text-xs text-blue-700">
+							患者から受け取ったQRコード画像をアップロードしてください
+						</p>
 					</div>
-					<h2
-						className="text-xs font-semibold uppercase tracking-wide"
-						style={{ color: accentColor }}
-					>
-						{title}
-					</h2>
-				</div>
-				{onClick && (
+					<input
+						type="file"
+						ref={fileInputRef}
+						onChange={handleQRUpload}
+						accept="image/*"
+						className="hidden"
+					/>
 					<button
 						type="button"
-						className="text-[11px] font-medium text-gray-500 hover:text-gray-800"
+						onClick={() => fileInputRef.current?.click()}
+						disabled={isScanning}
+						className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 whitespace-nowrap"
 					>
-						View All
+						{isScanning ? (
+							<>
+								<Loader2 className="h-4 w-4 animate-spin" />
+								読み取り中...
+							</>
+						) : (
+							<>
+								<Upload className="h-4 w-4" />
+								QRコードをアップロード
+							</>
+						)}
 					</button>
+				</div>
+
+				{/* モックデータ切り替え */}
+				<div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+					<input
+						type="checkbox"
+						id="useMockData"
+						checked={useMockData}
+						onChange={(e) => setUseMockData(e.target.checked)}
+						className="h-4 w-4 rounded border-amber-300"
+					/>
+					<label
+						htmlFor="useMockData"
+						className="text-sm text-amber-900 cursor-pointer"
+					>
+						<span className="font-semibold">デモモード: </span>
+						モックデータを表示（ブロックチェーン連携なし）
+					</label>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<label className="space-y-1 text-sm text-gray-700">
+						<span className="font-semibold">ConsentToken Object ID</span>
+						<input
+							value={consentTokenId}
+							onChange={(e) => setConsentTokenId(e.target.value)}
+							className="w-full rounded border px-3 py-2 text-sm"
+							placeholder="0x..."
+						/>
+					</label>
+
+					<label className="space-y-1 text-sm text-gray-700">
+						<span className="font-semibold">合言葉 (secret)</span>
+						<input
+							value={secret}
+							onChange={(e) => setSecret(e.target.value)}
+							className="w-full rounded border px-3 py-2 text-sm"
+							placeholder="患者から共有された秘密文字列"
+							type="password"
+						/>
+					</label>
+				</div>
+
+				{/* QRコードからスキャンされたスコープの表示 */}
+				{qrScopes.length > 0 && (
+					<div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+						<p className="text-sm text-green-900">
+							<span className="font-semibold">QRスコープ: </span>
+							{qrScopes.map((s) => getDataTypeLabel(s as never)).join(", ")}
+						</p>
+					</div>
 				)}
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+					<label className="space-y-1 text-sm text-gray-700">
+						<span className="font-semibold">データ種別</span>
+						<select
+							value={dataType}
+							onChange={(e) => setDataType(e.target.value as DataScope)}
+							className="w-full rounded border px-3 py-2 text-sm"
+						>
+							{SUPPORTED_SCOPES.map((scope) => (
+								<option key={scope} value={scope}>
+									{scopeLabel[scope] || scope}
+								</option>
+							))}
+						</select>
+					</label>
+
+					<div className="flex gap-2 md:col-span-2 justify-end">
+						<button
+							type="button"
+							onClick={generateSessionKey}
+							disabled={isBusy}
+							className="rounded border px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100"
+						>
+							{isSessionKeyLoading
+								? "SessionKey生成中..."
+								: sessionKeyValid
+									? "SessionKey再生成"
+									: "SessionKey生成"}
+						</button>
+						<button
+							type="button"
+							onClick={handleFetch}
+							disabled={isBusy}
+							className="rounded bg-blue-600 text-white px-4 py-2 text-sm font-semibold hover:bg-blue-700 disabled:opacity-60"
+						>
+							{isBusy ? (
+								<span className="inline-flex items-center gap-2">
+									<Loader2 className="h-4 w-4 animate-spin" />
+									{t("doctor.loading", { default: "Loading..." })}
+								</span>
+							) : (
+								t("doctor.fetchData", { default: "Fetch data" })
+							)}
+						</button>
+					</div>
+				</div>
+
+				{sessionKeyError && (
+					<AlertCard
+						title="SessionKey エラー"
+						message={sessionKeyError}
+						intent="warning"
+					/>
+				)}
+				{consentError && (
+					<AlertCard title="復号エラー" message={consentError} intent="error" />
+				)}
+				{fetchMessage && (
+					<AlertCard title="結果" message={fetchMessage} intent="info" />
+				)}
+			</section>
+
+			<section className="space-y-4">
+				<header className="flex items-center gap-2">
+					<h2 className="text-lg font-semibold">
+						{scopeLabel[dataType] || dataType}
+					</h2>
+					{fetchState === "loading" && (
+						<Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+					)}
+				</header>
+
+				{results.length === 0 && fetchState === "idle" && (
+					<div className="rounded-xl border border-dashed bg-gray-50 px-4 py-6 text-sm text-gray-600 flex items-center gap-2">
+						<Lock className="h-4 w-4 text-gray-400" />
+						<span>
+							患者から共有された ConsentToken
+							と合言葉を入力してデータを取得します。
+						</span>
+					</div>
+				)}
+
+				{results.length > 0 && (
+					<div className="space-y-3">
+						{results.map((item) => {
+							const typedItem = item as {
+								blobId: string;
+								data: unknown;
+								category?: string;
+							};
+							return (
+								<div
+									key={typedItem.blobId}
+									className="rounded-xl border bg-white p-4 shadow-sm"
+								>
+									{typedItem.category && (
+										<div className="mb-3 pb-2 border-b">
+											<h3 className="text-base font-semibold text-gray-900">
+												{getDataTypeLabel(typedItem.category as never)}
+											</h3>
+										</div>
+									)}
+									<p className="text-xs text-gray-500 mb-2">
+										Blob: {typedItem.blobId}
+									</p>
+									<pre className="rounded bg-gray-900 text-gray-100 text-xs p-3 overflow-auto max-h-96">
+										{JSON.stringify(typedItem.data, null, 2)}
+									</pre>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</section>
+		</div>
+	);
+}
+
+function AlertCard({
+	title,
+	message,
+	intent = "info",
+}: {
+	title: string;
+	message: string;
+	intent?: "info" | "warning" | "error";
+}) {
+	const color =
+		intent === "error"
+			? "text-red-700 bg-red-50 border-red-200"
+			: intent === "warning"
+				? "text-amber-700 bg-amber-50 border-amber-200"
+				: "text-blue-700 bg-blue-50 border-blue-200";
+
+	const Icon =
+		intent === "error"
+			? ShieldAlert
+			: intent === "warning"
+				? ShieldAlert
+				: Lock;
+
+	return (
+		<div className={`rounded-xl border ${color} px-3 py-2 text-sm flex gap-2`}>
+			<Icon className="h-4 w-4 mt-0.5" />
+			<div>
+				<p className="font-semibold">{title}</p>
+				<p className="text-sm">{message}</p>
 			</div>
-			{children}
-		</div>
-	);
-}
-
-interface InfoRowProps {
-	label: string;
-	value: string;
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
-	return (
-		<div className="space-y-0.5">
-			<p className="text-[11px] font-medium text-gray-500">{label}</p>
-			<p className="text-xs lg:text-sm font-medium text-gray-900">{value}</p>
-		</div>
-	);
-}
-
-interface EmptyStateProps {
-	label: string;
-}
-
-function EmptyState({ label }: EmptyStateProps) {
-	return (
-		<div className="flex items-center justify-center rounded-lg bg-gray-50 px-3 py-4 text-xs lg:text-sm text-gray-500">
-			<span>{label}</span>
 		</div>
 	);
 }
