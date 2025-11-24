@@ -70,7 +70,6 @@ export function usePassport(): PassportStatus & { refresh: () => void } {
 	});
 	const [refresh_trigger, set_refresh_trigger] = useState(0);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: refresh_trigger で手動リフレッシュを行うため依存に含める
 	useEffect(() => {
 		/**
 		 * パスポート状態を取得する非同期関数

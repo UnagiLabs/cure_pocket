@@ -355,14 +355,14 @@ export default function HomePage() {
 			</section>
 
 			{/* Recent Updates Timeline */}
-			{recentUpdates.length > 0 && (
-				<section>
-					<SectionTitle
-						action
-						onActionClick={() => router.push(`/${locale}/app/add`)}
-					>
-						{t("home.recentRecords")}
-					</SectionTitle>
+			<section>
+				<SectionTitle
+					action
+					onActionClick={() => router.push(`/${locale}/app/add`)}
+				>
+					{t("home.recentRecords")}
+				</SectionTitle>
+				{recentUpdates.length > 0 ? (
 					<div className="relative pl-4 border-l-2 border-slate-100 ml-2 space-y-6">
 						{recentUpdates.map((update, index) => {
 							return (
@@ -395,8 +395,12 @@ export default function HomePage() {
 							);
 						})}
 					</div>
-				</section>
-			)}
+				) : (
+					<GlassCard className="text-center py-12">
+						<p className="text-slate-400 text-sm">データが登録されていません</p>
+					</GlassCard>
+				)}
+			</section>
 
 			<style jsx global>{`
 				.scrollbar-hide::-webkit-scrollbar {
