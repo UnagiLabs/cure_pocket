@@ -9,6 +9,7 @@ import {
 	Plus,
 	Settings,
 } from "lucide-react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -89,14 +90,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					style={{ borderColor: `${theme.colors.textSecondary}20` }}
 				>
 					<div className="flex items-center gap-3">
-						<div
-							className="w-12 h-12 rounded-xl bg-gradient-to-tr flex items-center justify-center text-white shadow-lg"
-							style={{
-								backgroundImage: `linear-gradient(to top right, ${theme.colors.primary}, ${theme.colors.secondary})`,
-							}}
-						>
-							<Activity size={24} strokeWidth={2.5} />
-						</div>
+						<Image
+							src="/icon.png"
+							alt="CurePocket"
+							width={48}
+							height={48}
+							className="rounded-xl shadow-lg"
+						/>
 						<div>
 							<h1
 								className="text-lg font-bold"
@@ -256,19 +256,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					style={{ backgroundColor: theme.colors.background }}
 				>
 					<div className="flex items-center gap-3">
-						<div
-							className="w-10 h-10 rounded-full bg-gradient-to-tr flex items-center justify-center text-white shadow-md cursor-pointer hover:scale-105 transition-transform"
-							style={{
-								backgroundImage:
-									theme.id === "midnight-travel"
-										? `linear-gradient(to top right, ${theme.colors.primary}, #0F172A)`
-										: `linear-gradient(to top right, #1A365D, #2c5282)`,
-							}}
-						>
-							<span className="font-bold text-sm">
-								{walletAddress ? walletAddress.slice(0, 2).toUpperCase() : "U"}
-							</span>
-						</div>
+						<Image
+							src="/icon.png"
+							alt="CurePocket"
+							width={40}
+							height={40}
+							className="rounded-xl shadow-md cursor-pointer hover:scale-105 transition-transform"
+						/>
 						<div>
 							<p
 								className="text-xs"
