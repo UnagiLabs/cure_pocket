@@ -281,7 +281,6 @@
 		"active": "服用中",
 		"stopped": "中止"
 	},
-<<<<<<< HEAD
 	"allergies": {
 		"title": "アレルギー",
 		"add": "アレルギーを追加",
@@ -292,6 +291,9 @@
 		"onsetDate": "発症日",
 		"diagnosedBy": "診断した医療機関",
 		"notes": "メモ",
+		"severe": "重症",
+		"moderate": "中等度",
+		"mild": "軽度",
 		"severities": {
 			"mild": "軽度",
 			"moderate": "中等度",
@@ -307,6 +309,7 @@
 		"type": "タイプ",
 		"diagnosis": "診断名・手術名",
 		"diagnosisDate": "診断日・手術日",
+		"resolvedDate": "治癒日",
 		"diagnosedBy": "診断した医療機関",
 		"description": "詳細説明",
 		"status": "状態",
@@ -331,6 +334,7 @@
 		"testName": "検査名",
 		"value": "検査値",
 		"unit": "単位",
+		"reference": "基準値",
 		"referenceRange": "基準範囲",
 		"testDate": "検査日",
 		"testedBy": "検査機関",
@@ -386,6 +390,8 @@
 		"summary": "要約・所見",
 		"findings": "所見の詳細",
 		"impression": "診断的所見",
+		"images": "画像",
+		"viewImage": "画像を表示",
 		"imageFile": "画像ファイル",
 		"fileSizeLimit": "最大ファイルサイズ: 1MB（PNG、JPEG のみ）",
 		"types": {
@@ -410,8 +416,6 @@
 			"INVALID_FILE": "無効なファイル形式です"
 		}
 	},
-=======
->>>>>>> origin/main
 	"dashboard": {
 		"title": "ダッシュボード",
 		"summary": {
@@ -781,36 +785,6 @@
 				}
 			}
 		}
-	},
-	"allergies": {
-		"severe": "重症",
-		"moderate": "中等度",
-		"mild": "軽度",
-		"symptoms": "症状",
-		"onsetDate": "発症日",
-		"diagnosedBy": "診断機関",
-		"notes": "備考",
-		"add": "追加"
-	},
-	"histories": {
-		"diagnosisDate": "診断日",
-		"resolvedDate": "治癒日",
-		"diagnosedBy": "診断機関",
-		"description": "説明",
-		"notes": "備考",
-		"add": "病歴を追加"
-	},
-	"imaging": {
-		"summary": "概要",
-		"findings": "所見",
-		"impression": "診断",
-		"images": "画像",
-		"viewImage": "画像を表示",
-		"add": "画像検査を追加"
-	},
-	"labs": {
-		"reference": "基準値",
-		"add": "検査値を追加"
 	},
 	"doctor": {
 		"patientView": "患者情報閲覧",
