@@ -81,18 +81,18 @@ The system consists of three core layers: **Sui (Identity & Logic)**, **Walrus (
 
 ```mermaid
 graph TD
-    User[User (Patient/Doctor)] -->|UI Interaction| Frontend[Next.js App]
+    User["User (Patient/Doctor)"] -->|UI Interaction| Frontend["Next.js App"]
     
     subgraph "🔐 Security & Storage Layer"
-        Frontend -->|Encrypt/Decrypt| Seal[Seal Service]
-        Frontend -->|Store/Fetch Encrypted Blob| Walrus[Walrus Storage]
+        Frontend -->|Encrypt/Decrypt| Seal["Seal Service"]
+        Frontend -->|Store/Fetch Encrypted Blob| Walrus["Walrus Storage"]
         Seal -.->|Key Management| User
     end
 
     subgraph "⛓️ On-Chain Layer (Sui)"
-        Frontend -->|Transaction| Sui[Sui Blockchain]
-        Sui -->|Ownership| SBT[Medical Passport SBT]
-        SBT -->|Reference| DF[Dynamic Fields]
+        Frontend -->|Transaction| Sui["Sui Blockchain"]
+        Sui -->|Ownership| SBT["Medical Passport SBT"]
+        SBT -->|Reference| DF["Dynamic Fields"]
         DF -.->|Link to| Walrus
     end
 ````
