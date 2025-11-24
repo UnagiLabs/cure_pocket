@@ -1,12 +1,14 @@
 "use client";
 
-import { Loader2, Lock, ShieldAlert } from "lucide-react";
+import jsQR from "jsqr";
+import { Loader2, Lock, ShieldAlert, Upload, QrCode } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { getDataEntryBlobIds } from "@/lib/suiClient";
+import { getMockData, getDataTypeLabel } from "@/lib/mockData";
 import type { DataScope } from "@/types/doctor";
 
 type FetchState = "idle" | "loading" | "success" | "error";
@@ -54,6 +56,10 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		Array<{ blobId: string; data: unknown }>
 	>([]);
 	const [fetchMessage, setFetchMessage] = useState<string | null>(null);
+	const [qrScopes, setQrScopes] = useState<DataScope[]>([]);
+	const [isScanning, setIsScanning] = useState(false);
+	const [useMockData, setUseMockData] = useState(true);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const isBusy =
 		fetchState === "loading" ||
@@ -84,6 +90,76 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		[t],
 	);
 
+	const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		setIsScanning(true);
+		setFetchMessage(null);
+
+		try {
+			const imageUrl = URL.createObjectURL(file);
+			const img = new Image();
+
+			img.onload = () => {
+				const canvas = document.createElement("canvas");
+				const ctx = canvas.getContext("2d");
+				if (!ctx) {
+					setFetchMessage("Canvas コンテキストを取得できませんでした");
+					setIsScanning(false);
+					return;
+				}
+
+				canvas.width = img.width;
+				canvas.height = img.height;
+				ctx.drawImage(img, 0, 0);
+
+				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+				const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+				URL.revokeObjectURL(imageUrl);
+
+				if (code) {
+					try {
+						// Base64デコード
+						const decoded = atob(
+							code.data.replace(/-/g, "+").replace(/_/g, "/"),
+						);
+						const payload = JSON.parse(decoded);
+
+						// フォームに自動入力
+						if (payload.token) setConsentTokenId(payload.token);
+						if (payload.secret) setSecret(payload.secret);
+						if (payload.scope && Array.isArray(payload.scope)) {
+							setQrScopes(payload.scope);
+						}
+
+						setFetchMessage("✅ QRコードの読み取りに成功しました！");
+					} catch (err) {
+						console.error("QR decode error:", err);
+						setFetchMessage("QRコードのデコードに失敗しました");
+					}
+				} else {
+					setFetchMessage("QRコードが見つかりませんでした");
+				}
+
+				setIsScanning(false);
+			};
+
+			img.onerror = () => {
+				URL.revokeObjectURL(imageUrl);
+				setFetchMessage("画像の読み込みに失敗しました");
+				setIsScanning(false);
+			};
+
+			img.src = imageUrl;
+		} catch (err) {
+			console.error("QR upload error:", err);
+			setFetchMessage("QRコードの処理中にエラーが発生しました");
+			setIsScanning(false);
+		}
+	};
+
 	const handleFetch = async () => {
 		reset();
 		setFetchMessage(null);
@@ -94,6 +170,33 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			return;
 		}
 
+		// モックデータを使用する場合
+		if (useMockData) {
+			setFetchState("loading");
+			// 擬似的な読み込み時間
+			setTimeout(() => {
+				const scopesToFetch =
+					qrScopes.length > 0 ? qrScopes : [dataType];
+				const mockDataResults = getMockData(scopesToFetch as never);
+
+				const formattedResults = Object.entries(mockDataResults).map(
+					([key, data]) => ({
+						blobId: `mock-${key}-${Date.now()}`,
+						data,
+						category: key,
+					}),
+				);
+
+				setResults(formattedResults as never);
+				setFetchState("success");
+				setFetchMessage(
+					`✅ モックデータを取得しました（${scopesToFetch.map((s) => getDataTypeLabel(s as never)).join(", ")}）`,
+				);
+			}, 1000);
+			return;
+		}
+
+		// 実際のブロックチェーン連携（既存の実装）
 		if (!sessionKey || !sessionKeyValid) {
 			setFetchMessage("SessionKey を生成中です。再試行してください。");
 			await generateSessionKey();
@@ -170,6 +273,60 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			</section>
 
 			<section className="rounded-2xl border bg-white p-4 lg:p-5 shadow-sm space-y-4">
+				{/* QRコードアップロード */}
+				<div className="flex flex-col sm:flex-row gap-3 items-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
+					<QrCode className="h-6 w-6 text-blue-600 flex-shrink-0" />
+					<div className="flex-1 text-sm text-blue-900">
+						<p className="font-semibold">患者のQRコードをスキャン</p>
+						<p className="text-xs text-blue-700">
+							患者から受け取ったQRコード画像をアップロードしてください
+						</p>
+					</div>
+					<input
+						type="file"
+						ref={fileInputRef}
+						onChange={handleQRUpload}
+						accept="image/*"
+						className="hidden"
+					/>
+					<button
+						type="button"
+						onClick={() => fileInputRef.current?.click()}
+						disabled={isScanning}
+						className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 whitespace-nowrap"
+					>
+						{isScanning ? (
+							<>
+								<Loader2 className="h-4 w-4 animate-spin" />
+								読み取り中...
+							</>
+						) : (
+							<>
+								<Upload className="h-4 w-4" />
+								QRコードをアップロード
+							</>
+						)}
+					</button>
+				</div>
+
+				{/* モックデータ切り替え */}
+				<div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+					<input
+						type="checkbox"
+						id="useMockData"
+						checked={useMockData}
+						onChange={(e) => setUseMockData(e.target.checked)}
+						className="h-4 w-4 rounded border-amber-300"
+					/>
+					<label
+						htmlFor="useMockData"
+						className="text-sm text-amber-900 cursor-pointer"
+					>
+						<span className="font-semibold">デモモード: </span>
+						モックデータを表示（ブロックチェーン連携なし）
+					</label>
+				</div>
+
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<label className="space-y-1 text-sm text-gray-700">
 						<span className="font-semibold">ConsentToken Object ID</span>
@@ -192,6 +349,16 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 						/>
 					</label>
 				</div>
+
+				{/* QRコードからスキャンされたスコープの表示 */}
+				{qrScopes.length > 0 && (
+					<div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+						<p className="text-sm text-green-900">
+							<span className="font-semibold">QRスコープ: </span>
+							{qrScopes.map((s) => getDataTypeLabel(s as never)).join(", ")}
+						</p>
+					</div>
+				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 					<label className="space-y-1 text-sm text-gray-700">
@@ -277,19 +444,33 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 
 				{results.length > 0 && (
 					<div className="space-y-3">
-						{results.map((item) => (
-							<div
-								key={item.blobId}
-								className="rounded-xl border bg-white p-4 shadow-sm"
-							>
-								<p className="text-xs text-gray-500 mb-2">
-									Blob: {item.blobId}
-								</p>
-								<pre className="rounded bg-gray-900 text-gray-100 text-xs p-3 overflow-auto">
-									{JSON.stringify(item.data, null, 2)}
-								</pre>
-							</div>
-						))}
+						{results.map((item) => {
+							const typedItem = item as {
+								blobId: string;
+								data: unknown;
+								category?: string;
+							};
+							return (
+								<div
+									key={typedItem.blobId}
+									className="rounded-xl border bg-white p-4 shadow-sm"
+								>
+									{typedItem.category && (
+										<div className="mb-3 pb-2 border-b">
+											<h3 className="text-base font-semibold text-gray-900">
+												{getDataTypeLabel(typedItem.category as never)}
+											</h3>
+										</div>
+									)}
+									<p className="text-xs text-gray-500 mb-2">
+										Blob: {typedItem.blobId}
+									</p>
+									<pre className="rounded bg-gray-900 text-gray-100 text-xs p-3 overflow-auto max-h-96">
+										{JSON.stringify(typedItem.data, null, 2)}
+									</pre>
+								</div>
+							);
+						})}
 					</div>
 				)}
 			</section>
