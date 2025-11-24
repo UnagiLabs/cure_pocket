@@ -280,119 +280,6 @@
 		"active": "服用中",
 		"stopped": "中止"
 	},
-	"allergies": {
-		"title": "アレルギー",
-		"add": "アレルギーを追加",
-		"description": "薬や食べ物などのアレルギーを記録します。",
-		"substance": "アレルギー物質",
-		"severity": "重症度",
-		"symptoms": "症状",
-		"onsetDate": "発症日",
-		"diagnosedBy": "診断した医療機関",
-		"notes": "メモ",
-		"severities": {
-			"mild": "軽度",
-			"moderate": "中等度",
-			"severe": "重度",
-			"life-threatening": "生命に関わる"
-		},
-		"noAllergies": "アレルギーは登録されていません"
-	},
-	"histories": {
-		"title": "病歴",
-		"add": "病歴を追加",
-		"pageDescription": "既往歴や手術歴などの重要な病歴をまとめておきます。",
-		"type": "タイプ",
-		"diagnosis": "診断名・手術名",
-		"diagnosisDate": "診断日・手術日",
-		"diagnosedBy": "診断した医療機関",
-		"description": "詳細説明",
-		"status": "状態",
-		"notes": "メモ",
-		"types": {
-			"condition": "基礎疾患",
-			"surgery": "手術歴",
-			"procedure": "処置歴",
-			"other": "その他"
-		},
-		"statuses": {
-			"active": "進行中",
-			"resolved": "治癒",
-			"chronic": "慢性"
-		},
-		"noHistories": "病歴は登録されていません"
-	},
-	"labs": {
-		"title": "検査値",
-		"add": "検査値を追加",
-		"description": "血液検査などの検査値を記録して推移を確認できます。",
-		"testName": "検査名",
-		"value": "検査値",
-		"unit": "単位",
-		"referenceRange": "基準範囲",
-		"testDate": "検査日",
-		"testedBy": "検査機関",
-		"category": "カテゴリー",
-		"notes": "メモ",
-		"noResults": "検査値は登録されていません",
-		"allCategories": "すべて",
-		"selectTest": "検査項目を選択してください",
-		"valuePlaceholder": "値を入力してください",
-		"validation": {
-			"required": "検査項目と値を入力してください",
-			"noValues": "少なくとも1つ以上の検査値を入力してください。"
-		},
-		"categories": {
-			"CBC": "血算",
-			"electrolyte": "電解質",
-			"renal": "腎機能",
-			"glucose": "糖代謝",
-			"liver": "肝機能",
-			"inflammation": "炎症",
-			"endocrine": "内分泌",
-			"urine": "尿定性"
-		},
-		"groups": {
-			"cbc": "CBC（血算）",
-			"electrolyteRenal": "電解質・腎機能",
-			"liver": "肝機能",
-			"lipid": "脂質",
-			"glucose": "血糖・HbA1c",
-			"optional": "オプション項目"
-		},
-		"resultSummaryTitle": "検査値のざっくり判定（プロトタイプ）",
-		"result": {
-			"headerTest": "項目",
-			"headerValue": "入力値",
-			"headerReference": "参考基準値",
-			"headerStatus": "判定",
-			"low": "低い（参考値未満）",
-			"normal": "基準範囲内",
-			"high": "高い（参考値超過）",
-			"notEntered": "未入力"
-		},
-		"disclaimer": "※この判定はあくまで参考情報であり、診断や治療方針を決めるものではありません。必ず医師などの医療専門職による評価を受けてください。"
-	},
-	"imaging": {
-		"title": "画像レポート",
-		"add": "画像レポートを追加",
-		"description": "レントゲンやCTなどの画像検査レポートを保存します。",
-		"type": "画像タイプ",
-		"bodyPart": "検査部位",
-		"examDate": "検査実施日",
-		"performedBy": "実施機関",
-		"summary": "要約・所見",
-		"findings": "所見の詳細",
-		"impression": "診断的所見",
-		"types": {
-			"xray": "レントゲン",
-			"ct": "CT",
-			"mri": "MRI",
-			"ultrasound": "超音波",
-			"other": "その他"
-		},
-		"noReports": "画像レポートは登録されていません"
-	},
 	"dashboard": {
 		"title": "ダッシュボード",
 		"summary": {
@@ -762,5 +649,66 @@
 				}
 			}
 		}
+	},
+	"allergies": {
+		"severe": "重症",
+		"moderate": "中等度",
+		"mild": "軽度",
+		"symptoms": "症状",
+		"onsetDate": "発症日",
+		"diagnosedBy": "診断機関",
+		"notes": "備考"
+	},
+	"histories": {
+		"diagnosisDate": "診断日",
+		"resolvedDate": "治癒日",
+		"diagnosedBy": "診断機関",
+		"description": "説明",
+		"notes": "備考"
+	},
+	"imaging": {
+		"summary": "概要",
+		"findings": "所見",
+		"impression": "診断",
+		"images": "画像",
+		"viewImage": "画像を表示"
+	},
+	"labs": {
+		"reference": "基準値"
+	},
+	"prescriptions": {
+		"symptoms": "症状/診断",
+		"strength": "強度",
+		"quantity": "数量",
+		"dosage": "用法",
+		"duration": "期間",
+		"notes": "備考"
+	},
+	"doctor": {
+		"patientView": "患者情報閲覧",
+		"patientId": "患者ID",
+		"badge": "医師ビュー",
+		"medicalRecord": "診療記録",
+		"patientInformation": "患者情報",
+		"viewDescription": "共有された医療データを閲覧しています。アクセスは許可されたスコープのみに制限されています。",
+		"allergies": "アレルギー",
+		"drugAllergies": "薬剤アレルギー",
+		"noAllergies": "薬剤アレルギーの記録はありません",
+		"prescriptionHistory": "患者の処方履歴と現在の服薬情報",
+		"labHistory": "患者の検査結果とトレンド",
+		"tests": "項目",
+		"medicalHistory": "患者の疾患、手術、処置の履歴",
+		"vitalHistory": "患者のバイタルサイン測定記録",
+		"allergyWarning": "重要情報 - 処方前に必ず確認してください",
+		"severeAllergies": "重症アレルギーを検出",
+		"severeAllergyWarning": "この患者は重症の薬剤アレルギーがあります。処方時は細心の注意を払ってください。",
+		"imagingHistory": "患者の画像検査履歴",
+		"confidentialNotice": "この情報は守秘義務があり、医療プライバシー法により保護されています。",
+		"encryptedConnection": "暗号化接続",
+		"accessRestricted": "アクセス制限",
+		"noPermission": "このデータを閲覧する権限がありません"
+	},
+	"common": {
+		"back": "戻る"
 	}
 }
