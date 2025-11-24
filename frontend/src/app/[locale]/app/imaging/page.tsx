@@ -2,10 +2,9 @@
 
 import { useSuiClient } from "@mysten/dapp-kit";
 import { Loader2, Plus, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ImagingForm } from "@/components/forms/ImagingForm";
 import { ImagingImageViewer } from "@/components/ImagingImageViewer";
 import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
@@ -52,13 +51,12 @@ function mapModalityToType(
 
 /**
  * 画像レポート一覧ページ
- * 登録された画像レポートを一覧表示し、同一画面で追加も行う
+ * 登録された画像レポートを一覧表示する（追加は別ページに遷移）
  */
 export default function ImagingPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const searchParams = useSearchParams();
 	const { imagingReports, settings } = useApp();
 	const theme = getTheme(settings.theme);
 	const suiClient = useSuiClient();
@@ -72,17 +70,12 @@ export default function ImagingPage() {
 	} = useSessionKeyManager();
 
 	// State
-	const [isAddOpen, setIsAddOpen] = useState(false);
 	const [walrusReports, setWalrusReports] = useState<ImagingReport[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [previewReport, setPreviewReport] = useState<ImagingReport | null>(
 		null,
 	);
-
-	useEffect(() => {
-		setIsAddOpen(searchParams.get("mode") === "add");
-	}, [searchParams]);
 
 	// Walrusからデータを読み込む
 	const loadImagingFromWalrus = useCallback(async () => {
@@ -382,19 +375,8 @@ export default function ImagingPage() {
 		});
 	}, [imagingReports, walrusReports]);
 
-	const openAdd = () => {
-		setIsAddOpen(true);
-		const params = new URLSearchParams(searchParams.toString());
-		params.set("mode", "add");
-		router.replace(`/${locale}/app/imaging?${params.toString()}`);
-	};
-
-	const closeAdd = () => {
-		setIsAddOpen(false);
-		const params = new URLSearchParams(searchParams.toString());
-		params.delete("mode");
-		const query = params.toString();
-		router.replace(`/${locale}/app/imaging${query ? `?${query}` : ""}`);
+	const goToAddPage = () => {
+		router.push(`/${locale}/app/add/imaging`);
 	};
 
 	const openPreview = (report: ImagingReport) => setPreviewReport(report);
@@ -429,7 +411,7 @@ export default function ImagingPage() {
 				</div>
 				<button
 					type="button"
-					onClick={openAdd}
+					onClick={goToAddPage}
 					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
@@ -685,40 +667,6 @@ export default function ImagingPage() {
 							</div>
 						</div>
 					</div>
-				</div>
-			)}
-
-			{/* Add Imaging Form (inline panel) */}
-			{isAddOpen && (
-				<div
-					className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t bg-white p-4 shadow-lg md:static md:rounded-xl md:border md:p-6"
-					style={{
-						backgroundColor: theme.colors.background,
-						borderColor: `${theme.colors.textSecondary}20`,
-					}}
-				>
-					<div className="mb-4 flex items-center justify-between">
-						<h2
-							className="text-lg font-bold md:text-xl"
-							style={{ color: theme.colors.text }}
-						>
-							{t("imaging.add")}
-						</h2>
-						<button
-							type="button"
-							onClick={closeAdd}
-							className="rounded-full p-2"
-							style={{ color: theme.colors.textSecondary }}
-						>
-							<X className="h-5 w-5" />
-						</button>
-					</div>
-					<ImagingForm
-						onSaved={() => {
-							closeAdd();
-						}}
-						onCancel={closeAdd}
-					/>
 				</div>
 			)}
 		</div>
