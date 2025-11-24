@@ -183,14 +183,40 @@ export default function ImagingPage() {
 						const firstInstance = firstSeries?.instance_blobs[0];
 						const binaryBlobId = firstInstance?.dicom_blob_id;
 
+						// デバッグ: データ構造を確認
+						console.log("[Imaging] Study data:", {
+							studyUid: study.study_uid,
+							modality: study.modality,
+							bodySite: study.body_site,
+							seriesCount: study.series.length,
+							firstSeries: firstSeries
+								? {
+										seriesUid: firstSeries.series_uid,
+										instanceCount: firstSeries.instance_blobs.length,
+									}
+								: null,
+							firstInstance: firstInstance
+								? {
+										sopInstanceUid: firstInstance.sop_instance_uid,
+										dicomBlobId: firstInstance.dicom_blob_id,
+									}
+								: null,
+							binaryBlobId,
+						});
+
 						if (!binaryBlobId) {
-							console.warn("[Imaging] No binary blob ID found for study");
+							console.warn("[Imaging] ⚠️ No binary blob ID found for study");
 							continue;
 						}
 
 						// 画像のObjectURLを生成
 						let imageObjectUrl: string | undefined;
+						let imageLoadError: string | undefined;
+
 						try {
+							console.log(
+								`[Imaging] 🔄 Attempting to decrypt image: ${binaryBlobId}`,
+							);
 							imageObjectUrl = await decryptAndDisplayImage({
 								blobId: binaryBlobId,
 								sealId: passport.sealId,
@@ -198,13 +224,36 @@ export default function ImagingPage() {
 								passportId: passport.id,
 								suiClient,
 							});
-							console.log(`[Imaging] Generated ObjectURL for ${binaryBlobId}`);
-						} catch (imgError) {
-							console.error(
-								`[Imaging] Failed to decrypt image ${binaryBlobId}:`,
-								imgError,
+							console.log(
+								`[Imaging] ✅ Successfully generated ObjectURL: ${imageObjectUrl}`,
 							);
+						} catch (imgError) {
+							const errorMsg =
+								imgError instanceof Error ? imgError.message : "Unknown error";
+							console.error(
+								`[Imaging] ❌ Failed to decrypt image ${binaryBlobId}:`,
+								{
+									error: errorMsg,
+									stack: imgError instanceof Error ? imgError.stack : undefined,
+									type:
+										imgError instanceof Error
+											? imgError.constructor.name
+											: typeof imgError,
+								},
+							);
+							imageLoadError = `画像の読み込みに失敗: ${errorMsg}`;
 						}
+
+						// デバッグ: 最終状態を確認
+						console.log("[Imaging] Final state:", {
+							studyUid: study.study_uid,
+							hasObjectUrl: !!imageObjectUrl,
+							objectUrl: imageObjectUrl,
+							objectUrlType: typeof imageObjectUrl,
+							objectUrlLength: imageObjectUrl?.length,
+							hasError: !!imageLoadError,
+							error: imageLoadError,
+						});
 
 						// ImagingReport形式に変換
 						const report: ImagingReport = {
@@ -219,9 +268,20 @@ export default function ImagingPage() {
 							findings: study.report?.findings,
 							impression: study.report?.impression,
 							imageObjectUrl,
+							imageLoadError,
 							walrusBlobId: binaryBlobId,
 							suiObjectId: metaBlobId,
 						};
+
+						console.log("[Imaging] Created report:", {
+							id: report.id,
+							type: report.type,
+							hasImageUrl: !!report.imageObjectUrl,
+							imageObjectUrl: report.imageObjectUrl,
+							imageObjectUrlLength: report.imageObjectUrl?.length,
+							hasError: !!report.imageLoadError,
+							imageLoadError: report.imageLoadError,
+						});
 
 						allReports.push(report);
 					}
@@ -242,6 +302,17 @@ export default function ImagingPage() {
 
 			setWalrusReports(sortedReports);
 			console.log(`[Imaging] Loaded ${sortedReports.length} imaging report(s)`);
+			console.log(
+				"[Imaging] All loaded reports:",
+				sortedReports.map((r) => ({
+					id: r.id,
+					hasImage: !!r.imageObjectUrl,
+					imageUrl: r.imageObjectUrl,
+					imageUrlLength: r.imageObjectUrl?.length,
+					hasError: !!r.imageLoadError,
+					error: r.imageLoadError,
+				})),
+			);
 		} catch (err) {
 			console.error("[Imaging] Failed to load data:", err);
 			setError(
@@ -286,7 +357,21 @@ export default function ImagingPage() {
 
 	// Walrusデータとローカルデータを統合してソート
 	const sortedReports = useMemo(() => {
-		const combined = [...imagingReports, ...walrusReports];
+		// IDで重複を削除し、Walrusデータを優先
+		const reportMap = new Map<string, ImagingReport>();
+
+		// まずローカルデータを追加
+		for (const report of imagingReports) {
+			reportMap.set(report.id, report);
+		}
+
+		// Walrusデータで上書き（Walrusのデータを優先）
+		for (const report of walrusReports) {
+			reportMap.set(report.id, report);
+		}
+
+		// Map から配列に変換してソート
+		const combined = Array.from(reportMap.values());
 		return combined.sort((a, b) => {
 			const dateA = new Date(a.examDate).getTime();
 			const dateB = new Date(b.examDate).getTime();
@@ -429,16 +514,59 @@ export default function ImagingPage() {
 							>
 								<div className="flex items-start gap-4">
 									{/* Image Thumbnail */}
-									{report.imageObjectUrl && (
-										<div className="flex-shrink-0">
+									<div className="flex-shrink-0">
+										{report.imageObjectUrl ? (
 											<ImagingImageViewer
 												objectUrl={report.imageObjectUrl}
 												alt={`${t(`imaging.types.${report.type}`)} - ${report.bodyPart || ""}`}
 												mode="thumbnail"
 												className="w-32 h-32"
 											/>
-										</div>
-									)}
+										) : report.imageLoadError ? (
+											<div
+												className="w-32 h-32 rounded-xl border-2 border-red-300 bg-red-50 flex flex-col items-center justify-center p-2"
+												title={report.imageLoadError}
+											>
+												<svg
+													className="w-10 h-10 text-red-500 mb-1"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+													aria-hidden="true"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+													/>
+												</svg>
+												<span className="text-xs text-red-600 text-center">
+													画像エラー
+												</span>
+											</div>
+										) : (
+											<div className="w-32 h-32 rounded-xl border-2 border-gray-300 bg-gray-50 flex flex-col items-center justify-center p-2">
+												<svg
+													className="w-10 h-10 text-gray-400 mb-1"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+													aria-hidden="true"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+													/>
+												</svg>
+												<span className="text-xs text-gray-500 text-center">
+													画像なし
+												</span>
+											</div>
+										)}
+									</div>
 
 									{/* Report Details */}
 									<div className="flex-1">

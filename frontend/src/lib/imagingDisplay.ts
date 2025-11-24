@@ -30,17 +30,14 @@
 
 import type { SessionKey } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
+import { decryptImagingBinary } from "@/lib/imagingBinary";
 import {
 	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
 } from "@/lib/seal";
 import { downloadFromWalrusByBlobId } from "@/lib/walrus";
-import type {
-	ImagingBinaryData,
-	ImagingMetaData,
-	ImagingStudyV2,
-} from "@/types/healthData";
+import type { ImagingMetaData, ImagingStudyV2 } from "@/types/healthData";
 
 // ==========================================
 // Type Definitions
@@ -150,63 +147,20 @@ export async function decryptAndDisplayImage(
 		params;
 
 	try {
-		// Get registry ID from environment if not provided
-		const effectiveRegistryId =
-			registryId || process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID;
+		console.log(
+			`[ImagingDisplay] Fetching binary blob via dedicated imaging route: ${blobId}`,
+		);
 
-		if (!effectiveRegistryId) {
-			throw new ImagingError(
-				ImagingErrorType.INVALID_DATA_FORMAT,
-				"PassportRegistry ID not configured",
-			);
-		}
-
-		// Step 1: Download encrypted binary from Walrus
-		console.log(`[ImagingDisplay] Fetching binary blob: ${blobId}...`);
-
-		const encryptedData = await downloadFromWalrusByBlobId(blobId);
-
-		console.log(`[ImagingDisplay] Downloaded ${encryptedData.length} bytes`);
-
-		// Step 2: Build PTB for access control
-		console.log("[ImagingDisplay] Building PTB for access control...");
-
-		const txBytes = await buildPatientAccessPTB({
-			passportObjectId: passportId,
-			registryObjectId: effectiveRegistryId,
-			suiClient,
+		const { contentType, objectUrl } = await decryptImagingBinary({
+			blobId,
 			sealId,
-		});
-
-		// Step 3: Decrypt with Seal
-		console.log("[ImagingDisplay] Decrypting with Seal...");
-
-		const sealClient = createSealClient(suiClient);
-
-		const decryptedData = await decryptHealthData({
-			encryptedData,
-			sealClient,
 			sessionKey,
-			txBytes,
-			sealId,
+			passportId,
+			suiClient,
+			registryId,
 		});
 
-		// Step 4: Extract imaging binary data
-		const binaryData = decryptedData as unknown as ImagingBinaryData;
-
-		if (!binaryData.imaging_binary) {
-			throw new ImagingError(
-				ImagingErrorType.INVALID_DATA_FORMAT,
-				"Decrypted data is not imaging binary format",
-			);
-		}
-
-		const { content_type, data } = binaryData.imaging_binary;
-
-		// Step 5: Create Object URL from ArrayBuffer
-		const objectUrl = createImageObjectUrl(data, content_type);
-
-		console.log(`[ImagingDisplay] Image ready for display (${content_type})`);
+		console.log(`[ImagingDisplay] Image ready for display (${contentType})`);
 
 		return objectUrl;
 	} catch (error) {
@@ -340,10 +294,7 @@ export async function loadImagingDataPair(params: {
 		console.log("[ImagingDisplay] Loading imaging data pair...");
 
 		// Load metadata and binary in parallel
-		const [metaEncrypted, binaryEncrypted] = await Promise.all([
-			downloadFromWalrusByBlobId(metaBlobId),
-			downloadFromWalrusByBlobId(binaryBlobId),
-		]);
+		const metaEncrypted = await downloadFromWalrusByBlobId(metaBlobId);
 
 		// Build PTB for access control
 		const txBytes = await buildPatientAccessPTB({
@@ -355,23 +306,24 @@ export async function loadImagingDataPair(params: {
 
 		const sealClient = createSealClient(suiClient);
 
-		// Decrypt both in parallel
-		const [metaDecrypted, binaryDecrypted] = await Promise.all([
-			decryptHealthData({
-				encryptedData: metaEncrypted,
-				sealClient,
-				sessionKey,
-				txBytes,
-				sealId,
-			}),
-			decryptHealthData({
-				encryptedData: binaryEncrypted,
-				sealClient,
-				sessionKey,
-				txBytes,
-				sealId,
-			}),
-		]);
+		// Decrypt meta JSON
+		const metaDecrypted = await decryptHealthData({
+			encryptedData: metaEncrypted,
+			sealClient,
+			sessionKey,
+			txBytes,
+			sealId,
+		});
+
+		// Decrypt binary via dedicated imaging route
+		const binaryDecrypted = await decryptImagingBinary({
+			blobId: binaryBlobId,
+			sealId,
+			sessionKey,
+			passportId,
+			suiClient,
+			registryId,
+		});
 
 		// Extract metadata
 		const metaData = metaDecrypted as unknown as ImagingMetaData;
@@ -384,28 +336,16 @@ export async function loadImagingDataPair(params: {
 		}
 
 		// Extract binary data
-		const binaryData = binaryDecrypted as unknown as ImagingBinaryData;
-
-		if (!binaryData.imaging_binary) {
-			throw new ImagingError(
-				ImagingErrorType.INVALID_DATA_FORMAT,
-				"No imaging binary data found",
-			);
-		}
-
-		const { content_type, data } = binaryData.imaging_binary;
-
-		// Create Object URL
-		const objectUrl = createImageObjectUrl(data, content_type);
+		const { contentType, data, objectUrl } = binaryDecrypted;
 
 		console.log("[ImagingDisplay] Imaging data pair loaded successfully");
 
 		return {
 			meta: metaData.imaging_meta[0], // Return first study
 			binary: {
-				contentType: content_type,
-				data: data,
-				objectUrl: objectUrl,
+				contentType,
+				data,
+				objectUrl,
 			},
 		};
 	} catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -9,12 +9,10 @@ import { useApp } from "@/contexts/AppContext";
 import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import {
-	createImagingBinary,
-	createImagingMeta,
-	generateDicomUIDs,
-} from "@/lib/imagingHelpers";
+import { encryptAndStoreImagingBinary } from "@/lib/imagingBinary";
+import { createImagingMeta, generateDicomUIDs } from "@/lib/imagingHelpers";
 import { generateSealId } from "@/lib/sealIdGenerator";
+import { getDataEntryBlobIds } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import type { ImagingReport } from "@/types";
 
@@ -26,6 +24,7 @@ export default function AddImagingPage() {
 	const router = useRouter();
 	const locale = useLocale();
 	const currentAccount = useCurrentAccount();
+	const suiClient = useSuiClient();
 	const { settings } = useApp();
 	const { passport } = usePassport();
 	const theme = getTheme(settings.theme);
@@ -62,32 +61,14 @@ export default function AddImagingPage() {
 			// Generate DICOM UIDs
 			const dicomUIDs = generateDicomUIDs();
 
-			// Create imaging_binary first (to get the file data)
-			const imagingBinary = await createImagingBinary(report.imageFile);
-
-			// Upload imaging_binary to get blob ID
-			const binaryResults = await encryptAndStoreMultiple(
-				[
-					{
-						data: {
-							meta: {
-								schema_version: "2.0.0",
-								updated_at: Date.now(),
-								generator: "CurePocket_Web_v1",
-							},
-							imaging_binary: imagingBinary,
-						},
-						dataType: "imaging_binary",
-					},
-				],
+			// imaging_binary を専用ルートで暗号化・アップロード
+			const binaryResult = await encryptAndStoreImagingBinary({
+				file: report.imageFile,
 				sealId,
-			);
+				suiClient,
+			});
 
-			if (!binaryResults || binaryResults.length === 0) {
-				throw new Error("Failed to upload imaging_binary");
-			}
-
-			const binaryBlobId = binaryResults[0].blobId;
+			const binaryBlobId = binaryResult.blobId;
 
 			// Create imaging_meta with the blob ID
 			const imagingMeta = createImagingMeta(report, binaryBlobId, dicomUIDs);
@@ -116,19 +97,33 @@ export default function AddImagingPage() {
 
 			const metaBlobId = metaResults[0].blobId;
 
-			// Update passport with imaging_meta
+			// Check if data entries already exist to determine mode (add or replace)
+			const existingMetaBlobs = await getDataEntryBlobIds(
+				passport.id,
+				"imaging_meta",
+			);
+			const existingBinaryBlobs = await getDataEntryBlobIds(
+				passport.id,
+				"imaging_binary",
+			);
+
+			// Use replace mode if data already exists, add mode if not
+			const shouldReplaceMetadata = existingMetaBlobs.length > 0;
+			const shouldReplaceBinary = existingBinaryBlobs.length > 0;
+
+			// Update passport with imaging_meta and imaging_binary
 			await updateMultiplePassportData({
 				passportId: passport.id,
 				dataEntries: [
 					{
 						dataType: "imaging_meta",
 						blobIds: [metaBlobId],
-						replace: false,
+						replace: shouldReplaceMetadata,
 					},
 					{
 						dataType: "imaging_binary",
 						blobIds: [binaryBlobId],
-						replace: false,
+						replace: shouldReplaceBinary,
 					},
 				],
 			});

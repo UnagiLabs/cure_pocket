@@ -156,6 +156,7 @@ export interface ImagingReport {
 	imageUrl?: string; // 画像ファイルのURL（将来的に実装）
 	imageFile?: File; // アップロード用の画像ファイル
 	imageObjectUrl?: string; // 復号化された画像のObjectURL（表示用）
+	imageLoadError?: string; // 画像読み込みエラーメッセージ
 
 	// Backend-linked metadata
 	suiObjectId?: string; // ImagingEntry object ID
