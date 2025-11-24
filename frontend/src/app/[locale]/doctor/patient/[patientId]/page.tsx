@@ -1,14 +1,14 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Loader2, Lock, ShieldAlert, Upload, QrCode } from "lucide-react";
+import { Loader2, Lock, QrCode, ShieldAlert, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import { getDataTypeLabel, getMockData } from "@/lib/mockData";
 import { getDataEntryBlobIds } from "@/lib/suiClient";
-import { getMockData, getDataTypeLabel } from "@/lib/mockData";
 import type { DataScope } from "@/types/doctor";
 
 type FetchState = "idle" | "loading" | "success" | "error";
@@ -175,8 +175,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			setFetchState("loading");
 			// 擬似的な読み込み時間
 			setTimeout(() => {
-				const scopesToFetch =
-					qrScopes.length > 0 ? qrScopes : [dataType];
+				const scopesToFetch = qrScopes.length > 0 ? qrScopes : [dataType];
 				const mockDataResults = getMockData(scopesToFetch as never);
 
 				const formattedResults = Object.entries(mockDataResults).map(

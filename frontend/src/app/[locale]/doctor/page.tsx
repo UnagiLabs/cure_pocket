@@ -1,9 +1,15 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Loader2, Upload, QrCode, Stethoscope, CheckCircle2 } from "lucide-react";
+import {
+	CheckCircle2,
+	Loader2,
+	QrCode,
+	Stethoscope,
+	Upload,
+} from "lucide-react";
 import { useRef, useState } from "react";
-import { getMockData, getDataTypeLabel, type DataType } from "@/lib/mockData";
+import { type DataType, getDataTypeLabel, getMockData } from "@/lib/mockData";
 
 interface QRPayload {
 	v?: number;
@@ -18,7 +24,10 @@ export default function DoctorPage() {
 	const [isScanning, setIsScanning] = useState(false);
 	const [qrData, setQrData] = useState<QRPayload | null>(null);
 	const [results, setResults] = useState<Record<string, unknown> | null>(null);
-	const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
+	const [message, setMessage] = useState<{
+		type: "info" | "error" | "success";
+		text: string;
+	} | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +46,10 @@ export default function DoctorPage() {
 				const canvas = document.createElement("canvas");
 				const ctx = canvas.getContext("2d");
 				if (!ctx) {
-					setMessage({ type: "error", text: "Canvas コンテキストを取得できませんでした" });
+					setMessage({
+						type: "error",
+						text: "Canvas コンテキストを取得できませんでした",
+					});
 					setIsScanning(false);
 					return;
 				}
@@ -54,11 +66,16 @@ export default function DoctorPage() {
 				if (code) {
 					try {
 						// Base64デコード
-						const decoded = atob(code.data.replace(/-/g, "+").replace(/_/g, "/"));
+						const decoded = atob(
+							code.data.replace(/-/g, "+").replace(/_/g, "/"),
+						);
 						const payload: QRPayload = JSON.parse(decoded);
 
 						setQrData(payload);
-						setMessage({ type: "success", text: "QRコードの読み取りに成功しました" });
+						setMessage({
+							type: "success",
+							text: "QRコードの読み取りに成功しました",
+						});
 
 						// モックデータを自動取得
 						if (payload.scope && payload.scope.length > 0) {
@@ -67,7 +84,10 @@ export default function DoctorPage() {
 						}
 					} catch (err) {
 						console.error("QR decode error:", err);
-						setMessage({ type: "error", text: "QRコードのデコードに失敗しました" });
+						setMessage({
+							type: "error",
+							text: "QRコードのデコードに失敗しました",
+						});
 					}
 				} else {
 					setMessage({ type: "error", text: "QRコードが見つかりませんでした" });
@@ -85,7 +105,10 @@ export default function DoctorPage() {
 			img.src = imageUrl;
 		} catch (err) {
 			console.error("QR upload error:", err);
-			setMessage({ type: "error", text: "QRコードの処理中にエラーが発生しました" });
+			setMessage({
+				type: "error",
+				text: "QRコードの処理中にエラーが発生しました",
+			});
 			setIsScanning(false);
 		}
 
@@ -101,9 +124,7 @@ export default function DoctorPage() {
 					<div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-2">
 						<Stethoscope className="h-8 w-8 text-blue-600" />
 					</div>
-					<h1 className="text-3xl font-bold text-gray-900">
-						医師用データ閲覧
-					</h1>
+					<h1 className="text-3xl font-bold text-gray-900">医師用データ閲覧</h1>
 					<p className="text-gray-600 max-w-2xl mx-auto">
 						患者から共有されたQRコードをアップロードして、医療データを閲覧します
 					</p>
@@ -165,7 +186,9 @@ export default function DoctorPage() {
 								}`}
 							>
 								<div className="flex items-center gap-2">
-									{message.type === "success" && <CheckCircle2 className="h-5 w-5" />}
+									{message.type === "success" && (
+										<CheckCircle2 className="h-5 w-5" />
+									)}
 									<p className="font-medium">{message.text}</p>
 								</div>
 							</div>
@@ -205,9 +228,7 @@ export default function DoctorPage() {
 				{/* データ表示エリア */}
 				{results && (
 					<div className="space-y-4">
-						<h2 className="text-2xl font-bold text-gray-900">
-							患者データ
-						</h2>
+						<h2 className="text-2xl font-bold text-gray-900">患者データ</h2>
 						{Object.entries(results).map(([category, data]) => (
 							<div
 								key={category}

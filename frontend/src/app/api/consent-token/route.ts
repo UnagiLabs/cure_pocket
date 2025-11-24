@@ -1,5 +1,6 @@
-import { randomBytes } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
+
+export const runtime = "edge";
 
 interface RequestBody {
 	walletAddress: string;
@@ -28,7 +29,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 		const expiresAt = new Date(Date.now() + durationHours * 60 * 60 * 1000);
 
 		// Random, URL-safe token id
-		const tokenId = randomBytes(16).toString("base64url");
+		const array = new Uint8Array(16);
+		crypto.getRandomValues(array);
+		const tokenId = btoa(String.fromCharCode(...array))
+			.replace(/\+/g, "-")
+			.replace(/\//g, "_")
+			.replace(/=+$/, "");
 		const consentUrl = buildConsentUrl(tokenId);
 
 		return NextResponse.json({
