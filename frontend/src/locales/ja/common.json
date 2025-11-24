@@ -676,14 +676,6 @@
 	"labs": {
 		"reference": "基準値"
 	},
-	"prescriptions": {
-		"symptoms": "症状/診断",
-		"strength": "強度",
-		"quantity": "数量",
-		"dosage": "用法",
-		"duration": "期間",
-		"notes": "備考"
-	},
 	"doctor": {
 		"patientView": "患者情報閲覧",
 		"patientId": "患者ID",

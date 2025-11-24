@@ -333,13 +333,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
 				</div>
 
 				{/* Main Content Container */}
-				<main className="flex-1 overflow-y-auto lg:h-auto">
+				<main className="flex-1 overflow-y-auto lg:h-auto pb-24 lg:pb-0">
 					<div className="lg:max-w-7xl lg:mx-auto">{children}</div>
 				</main>
 
 				{/* Mobile Bottom Navigation */}
 				<nav
-					className="lg:hidden absolute bottom-0 w-full border-t pb-6 pt-2 px-6 z-40 transition-colors duration-500 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]"
+					className="lg:hidden fixed bottom-0 left-0 right-0 w-full border-t pb-6 pt-2 px-6 z-40 transition-colors duration-500 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]"
 					style={{
 						backgroundColor: `${theme.colors.surface}e6`,
 						backdropFilter: "blur(10px)",
