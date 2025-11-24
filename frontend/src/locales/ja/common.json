@@ -657,7 +657,8 @@
 		"symptoms": "症状",
 		"onsetDate": "発症日",
 		"diagnosedBy": "診断機関",
-		"notes": "備考"
+		"notes": "備考",
+		"add": "追加"
 	},
 	"histories": {
 		"diagnosisDate": "診断日",
