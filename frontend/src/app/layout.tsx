@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 		"Privacy-preserving medication management powered by Sui and Walrus",
 };
 
+// Cloudflare Pages Functions では Edge Runtime で動作させる
+export const runtime = "edge";
+
 export default function RootLayout({
 	children,
 }: Readonly<{
