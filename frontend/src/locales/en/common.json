@@ -96,7 +96,11 @@
 		"startDate": "Start Date",
 		"endDate": "End Date (optional)",
 		"reason": "Reason",
-		"vitalsDescription": "Record your vital signs"
+		"vitalsDescription": "Record your vital signs",
+		"bloodPressureAdd": "Record blood pressure",
+		"bloodGlucoseAdd": "Record blood glucose",
+		"temperatureAdd": "Record body temperature",
+		"weightAdd": "Record weight"
 	},
 	"medications": {
 		"title": "Your Medications",
