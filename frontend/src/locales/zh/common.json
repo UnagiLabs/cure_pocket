@@ -9,6 +9,7 @@
 		"cancel": "取消",
 		"edit": "编辑",
 		"delete": "删除",
+		"remove": "移除",
 		"generateNew": "生成新链接",
 		"scanQR": "扫描二维码",
 		"scanBarcode": "扫描条形码",
@@ -21,7 +22,7 @@
 		"card": "卡片",
 		"records": "记录",
 		"data": "数据",
-		"profile": "我的",
+		"profile": "设置",
 		"settings": "设置",
 		"medications": "药物",
 		"emergency": "紧急",
@@ -280,6 +281,8 @@
 		"summary": "摘要/发现",
 		"findings": "发现详情",
 		"impression": "印象",
+		"imageFile": "图像文件",
+		"fileSizeLimit": "最大文件大小：1MB（仅限 PNG、JPEG）",
 		"types": {
 			"xray": "X光",
 			"ct": "CT",
@@ -287,7 +290,20 @@
 			"ultrasound": "超声",
 			"other": "其他"
 		},
-		"noReports": "未注册影像报告"
+		"noReports": "未注册影像报告",
+		"uploading": "正在上传影像数据...",
+		"uploadError": "上传失败",
+		"encryptError": "加密失败",
+		"progress": {
+			"validating": "正在验证数据...",
+			"encrypting": "正在加密...",
+			"uploading": "正在上传到 Walrus..."
+		},
+		"errors": {
+			"FILE_TOO_LARGE": "文件大小超过 1MB 限制",
+			"INVALID_FILE_TYPE": "仅支持 PNG 和 JPEG 图像",
+			"INVALID_FILE": "文件格式无效"
+		}
 	},
 	"dashboard": {
 		"title": "仪表板",
@@ -574,5 +590,8 @@
 				}
 			}
 		}
+	},
+	"common": {
+		"download": "下载"
 	}
 }

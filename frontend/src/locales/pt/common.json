@@ -9,6 +9,7 @@
 		"cancel": "Cancelar",
 		"edit": "Editar",
 		"delete": "Excluir",
+		"remove": "Remover",
 		"generateNew": "Gerar novo link",
 		"scanQR": "Escanear código QR",
 		"scanBarcode": "Escanear código de barras",
@@ -21,7 +22,7 @@
 		"card": "Cartão",
 		"records": "Registros",
 		"data": "Dados",
-		"profile": "Perfil",
+		"profile": "Configurações",
 		"settings": "Configurações",
 		"medications": "Medicamentos",
 		"emergency": "Emergência",
@@ -280,6 +281,8 @@
 		"summary": "Resumo / Achados",
 		"findings": "Detalhes dos achados",
 		"impression": "Impressão",
+		"imageFile": "Arquivo de imagem",
+		"fileSizeLimit": "Tamanho máximo do arquivo: 1 MB (apenas PNG, JPEG)",
 		"types": {
 			"xray": "Raio-X",
 			"ct": "CT",
@@ -287,7 +290,20 @@
 			"ultrasound": "Ultrassom",
 			"other": "Outro"
 		},
-		"noReports": "Nenhum relatório de imagem registrado"
+		"noReports": "Nenhum relatório de imagem registrado",
+		"uploading": "Carregando dados de imagem...",
+		"uploadError": "Falha no upload",
+		"encryptError": "Falha na criptografia",
+		"progress": {
+			"validating": "Validando dados...",
+			"encrypting": "Criptografando...",
+			"uploading": "Carregando para Walrus..."
+		},
+		"errors": {
+			"FILE_TOO_LARGE": "O tamanho do arquivo excede o limite de 1 MB",
+			"INVALID_FILE_TYPE": "Apenas imagens PNG e JPEG são suportadas",
+			"INVALID_FILE": "Formato de arquivo inválido"
+		}
 	},
 	"dashboard": {
 		"title": "Painel",
@@ -574,5 +590,8 @@
 				}
 			}
 		}
+	},
+	"common": {
+		"download": "Baixar"
 	}
 }

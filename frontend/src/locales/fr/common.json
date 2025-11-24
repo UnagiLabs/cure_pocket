@@ -9,6 +9,7 @@
 		"cancel": "Annuler",
 		"edit": "Modifier",
 		"delete": "Supprimer",
+		"remove": "Retirer",
 		"generateNew": "Générer un nouveau lien",
 		"scanQR": "Scanner le code QR",
 		"scanBarcode": "Scanner le code-barres",
@@ -21,7 +22,7 @@
 		"card": "Carte",
 		"records": "Enregistrements",
 		"data": "Données",
-		"profile": "Profil",
+		"profile": "Paramètres",
 		"settings": "Paramètres",
 		"medications": "Médicaments",
 		"emergency": "Urgence",
@@ -280,6 +281,8 @@
 		"summary": "Résumé / Constatations",
 		"findings": "Détails des constatations",
 		"impression": "Impression",
+		"imageFile": "Fichier image",
+		"fileSizeLimit": "Taille maximale du fichier : 1 Mo (PNG, JPEG uniquement)",
 		"types": {
 			"xray": "Radiographie",
 			"ct": "CT",
@@ -287,7 +290,20 @@
 			"ultrasound": "Échographie",
 			"other": "Autre"
 		},
-		"noReports": "Aucun rapport d'imagerie enregistré"
+		"noReports": "Aucun rapport d'imagerie enregistré",
+		"uploading": "Téléchargement des données d'imagerie...",
+		"uploadError": "Échec du téléchargement",
+		"encryptError": "Échec du chiffrement",
+		"progress": {
+			"validating": "Validation des données...",
+			"encrypting": "Chiffrement...",
+			"uploading": "Téléchargement vers Walrus..."
+		},
+		"errors": {
+			"FILE_TOO_LARGE": "La taille du fichier dépasse la limite de 1 Mo",
+			"INVALID_FILE_TYPE": "Seules les images PNG et JPEG sont prises en charge",
+			"INVALID_FILE": "Format de fichier invalide"
+		}
 	},
 	"dashboard": {
 		"title": "Tableau de bord",
@@ -574,5 +590,8 @@
 				}
 			}
 		}
+	},
+	"common": {
+		"download": "Télécharger"
 	}
 }

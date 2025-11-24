@@ -4,6 +4,11 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
+import {
+	createImagePreview,
+	formatFileSize,
+	validateImageFile,
+} from "@/lib/imagingHelpers";
 import { getTheme } from "@/lib/themes";
 import type { ImagingReport, ImagingType } from "@/types";
 
@@ -27,8 +32,50 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 		impression: "",
 	});
 
+	// File upload state
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [filePreview, setFilePreview] = useState<string | null>(null);
+	const [fileError, setFileError] = useState<string | null>(null);
+
 	const handleInputChange = (field: string, value: string | ImagingType) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
+	};
+
+	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) {
+			return;
+		}
+
+		// Validate file
+		const validation = validateImageFile(file);
+		if (!validation.valid) {
+			setFileError(validation.error || "INVALID_FILE");
+			setSelectedFile(null);
+			setFilePreview(null);
+			return;
+		}
+
+		// Clear errors
+		setFileError(null);
+
+		// Set file
+		setSelectedFile(file);
+
+		// Create preview
+		try {
+			const preview = await createImagePreview(file);
+			setFilePreview(preview);
+		} catch (error) {
+			console.error("Failed to create preview:", error);
+			setFilePreview(null);
+		}
+	};
+
+	const handleFileRemove = () => {
+		setSelectedFile(null);
+		setFilePreview(null);
+		setFileError(null);
 	};
 
 	const handleSave = () => {
@@ -41,6 +88,7 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 			summary: formData.summary,
 			findings: formData.findings || undefined,
 			impression: formData.impression || undefined,
+			imageFile: selectedFile || undefined,
 		};
 
 		addImagingReport(report);
@@ -215,6 +263,103 @@ export function ImagingForm({ onSaved, onCancel }: ImagingFormProps) {
 					}}
 					placeholder={t("imaging.impression")}
 				/>
+			</div>
+
+			{/* File Upload Section */}
+			<div>
+				<label
+					htmlFor="field8-8"
+					className="mb-1 block text-sm font-medium"
+					style={{ color: theme.colors.text }}
+				>
+					{t("imaging.imageFile")}
+				</label>
+				<div className="space-y-3">
+					<input
+						id="field8-8"
+						type="file"
+						accept="image/png,image/jpeg,image/jpg"
+						onChange={handleFileSelect}
+						className="w-full rounded-lg border p-3"
+						style={{
+							backgroundColor: theme.colors.surface,
+							borderColor: `${theme.colors.textSecondary}40`,
+							color: theme.colors.text,
+						}}
+					/>
+
+					{/* File Size Limit Info */}
+					<p className="text-xs" style={{ color: theme.colors.textSecondary }}>
+						{t("imaging.fileSizeLimit")}
+					</p>
+
+					{/* File Error */}
+					{fileError && (
+						<div
+							className="rounded-lg border p-3"
+							style={{
+								backgroundColor: "#fee2e2",
+								borderColor: "#ef4444",
+								color: "#991b1b",
+							}}
+						>
+							{t(`imaging.errors.${fileError}`)}
+						</div>
+					)}
+
+					{/* File Preview */}
+					{selectedFile && !fileError && (
+						<div
+							className="rounded-lg border p-4 space-y-3"
+							style={{
+								backgroundColor: theme.colors.surface,
+								borderColor: `${theme.colors.textSecondary}40`,
+							}}
+						>
+							<div className="flex items-center justify-between">
+								<div>
+									<p
+										className="font-medium"
+										style={{ color: theme.colors.text }}
+									>
+										{selectedFile.name}
+									</p>
+									<p
+										className="text-sm"
+										style={{ color: theme.colors.textSecondary }}
+									>
+										{formatFileSize(selectedFile.size)}
+									</p>
+								</div>
+								<button
+									type="button"
+									onClick={handleFileRemove}
+									className="rounded-lg px-3 py-1 text-sm font-medium transition-colors"
+									style={{
+										backgroundColor: `${theme.colors.textSecondary}20`,
+										color: theme.colors.text,
+									}}
+								>
+									{t("actions.remove")}
+								</button>
+							</div>
+
+							{/* Image Preview */}
+							{filePreview && (
+								<div className="mt-3">
+									<img
+										src={filePreview}
+										alt="Preview"
+										className="max-h-48 w-auto rounded-lg border"
+										style={{
+											borderColor: `${theme.colors.textSecondary}40`,
+										}}
+									/>
+								</div>
+							)}
+						</div>
+					)}
+				</div>
 			</div>
 
 			<div className="flex gap-3 md:max-w-md md:mx-auto">
