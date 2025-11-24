@@ -1,6 +1,12 @@
 "use client";
 
 import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { sha3_256 } from "@noble/hashes/sha3";
+import {
 	Activity,
 	AlertCircle,
 	AlertTriangle,
@@ -14,9 +20,15 @@ import {
 	Scan,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { apiClient } from "@/lib/apiClient";
+import { usePassport } from "@/hooks/usePassport";
+import {
+	getSuiClient,
+	PACKAGE_ID,
+	PASSPORT_REGISTRY_ID,
+} from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 
 /**
@@ -35,10 +47,14 @@ export default function EmergencyCardPage() {
 		settings,
 		walletAddress,
 	} = useApp();
+	const { passport } = usePassport();
+	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
 	const theme = getTheme(settings.theme);
 	const [consentUrl, setConsentUrl] = useState("");
 	const [expiresAt, setExpiresAt] = useState("");
 	const [durationLabel, setDurationLabel] = useState("");
+	const [secret, setSecret] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedCategories, setSelectedCategories] = useState<
 		(
@@ -77,16 +93,72 @@ export default function EmergencyCardPage() {
 
 	const handleGenerateQR = async () => {
 		if (!walletAddress) return;
+		if (!passport) {
+			console.error("No passport found");
+			return;
+		}
+		if (!currentAccount) {
+			console.error("Wallet not connected");
+			return;
+		}
+		if (!PACKAGE_ID || !PASSPORT_REGISTRY_ID) {
+			console.error("Package ID or registry ID is not configured");
+			return;
+		}
 
 		setIsGenerating(true);
 		try {
-			const response = await apiClient.createConsentToken({
-				walletAddress,
-				categories: selectedCategories,
+			const newSecret = generateSecret();
+			setSecret(newSecret);
+
+			// 1) secret_hash
+			const secretBytes = new TextEncoder().encode(newSecret);
+			const secretHash = sha3_256(secretBytes);
+
+			// 2) duration (ms) - 24h default
+			const durationMs = 24 * 60 * 60 * 1000;
+			const expiresAtIso = new Date(Date.now() + durationMs).toISOString();
+
+			// 3) Build PTB for create_consent_token
+			const tx = new Transaction();
+			tx.moveCall({
+				target: `${PACKAGE_ID}::accessor::create_consent_token`,
+				arguments: [
+					tx.object(passport.id),
+					tx.object(PASSPORT_REGISTRY_ID),
+					tx.pure.vector("u8", Array.from(secretHash)),
+					tx.pure.vector("string", selectedCategories),
+					tx.pure.u64(durationMs),
+					tx.object("0x6"), // Clock
+				],
 			});
-			setConsentUrl(response.consentUrl);
-			setExpiresAt(response.expiresAt);
-			setDurationLabel(formatDuration(response.expiresAt));
+
+			const execResult = await signAndExecute({
+				transaction: tx,
+			});
+
+			// 4) Fetch effects/objectChanges to locate ConsentToken ID
+			const txResult = await getSuiClient().getTransactionBlock({
+				digest: execResult.digest,
+				options: { showEffects: true, showObjectChanges: true },
+			});
+
+			const tokenId = extractConsentTokenId(txResult) || "";
+			if (!tokenId) {
+				console.warn("ConsentToken ID not found in effects");
+			}
+
+			const payload = buildQrPayload({
+				tokenId,
+				passportId: passport.id,
+				secret: newSecret,
+				scopes: selectedCategories,
+				expiresAt: expiresAtIso,
+			});
+
+			setConsentUrl(payload);
+			setExpiresAt(expiresAtIso);
+			setDurationLabel(formatDuration(expiresAtIso));
 		} catch (error) {
 			console.error("Failed to generate consent token:", error);
 			// Fallback to mock for now
@@ -210,8 +282,13 @@ export default function EmergencyCardPage() {
 					<div className="text-center">
 						{consentUrl ? (
 							<>
-								<div className="mb-2 flex h-32 w-32 items-center justify-center rounded-lg border-4 border-gray-300 bg-white md:h-48 md:w-48">
-									<QrCode className="h-24 w-24 text-gray-600 md:h-36 md:w-36" />
+								<div className="mb-2 flex h-32 w-32 items-center justify-center rounded-lg border-4 border-gray-300 bg-white p-2 md:h-48 md:w-48">
+									<QRCodeCanvas
+										value={consentUrl}
+										size={176}
+										level="M"
+										includeMargin
+									/>
 								</div>
 								<p
 									className="text-sm"
@@ -245,6 +322,19 @@ export default function EmergencyCardPage() {
 					>
 						<Clock className="mr-1 h-4 w-4" />
 						{t("card.validFor", { duration: durationLabel || "24h" })}
+					</div>
+				)}
+
+				{secret && (
+					<div className="mb-2 rounded-lg bg-gray-100 px-3 py-2 text-center text-xs text-gray-700">
+						<span className="font-semibold">合言葉: </span>
+						{secret}
+					</div>
+				)}
+
+				{consentUrl && (
+					<div className="mb-2 rounded-lg bg-gray-50 px-3 py-2 text-center text-[11px] text-gray-600 break-all">
+						{consentUrl}
 					</div>
 				)}
 
@@ -461,4 +551,68 @@ function formatDuration(expiresAtIso: string): string {
 		return `${days}日`;
 	}
 	return `${hours}時間`;
+}
+
+function generateSecret(): string {
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	const base64 = btoa(String.fromCharCode(...bytes));
+	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function buildQrPayload(params: {
+	tokenId: string;
+	passportId: string;
+	secret: string;
+	scopes: string[];
+	expiresAt: string;
+}): string {
+	const payload = {
+		v: 1,
+		token: params.tokenId,
+		passport: params.passportId,
+		secret: params.secret,
+		scope: params.scopes,
+		exp: params.expiresAt,
+	};
+
+	const json = JSON.stringify(payload);
+	const base64 = btoa(unescape(encodeURIComponent(json)));
+	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function extractConsentTokenId(result: {
+	effects?: {
+		created?: Array<{ reference?: { objectId?: string } | null }>;
+	} | null;
+	objectChanges?: Array<{
+		type?: string;
+		objectId?: string;
+		objectType?: string;
+	}> | null;
+}): string | undefined {
+	// Prefer objectChanges if available
+	const objectChanges = (result.objectChanges ?? []) as Array<{
+		type?: string;
+		objectId?: string;
+		objectType?: string;
+	}>;
+
+	const createdFromChanges = objectChanges.find(
+		(c) =>
+			c.type === "created" &&
+			typeof c.objectId === "string" &&
+			typeof c.objectType === "string" &&
+			c.objectType.includes("consent_token::ConsentToken"),
+	);
+	if (createdFromChanges?.objectId) return createdFromChanges.objectId;
+
+	// Fallback to effects.created
+	const created = (result.effects?.created ?? []) as Array<{
+		reference?: { objectId?: string } | null;
+	}>;
+	for (const item of created) {
+		const objectId = item.reference?.objectId;
+		if (objectId) return objectId;
+	}
+	return undefined;
 }

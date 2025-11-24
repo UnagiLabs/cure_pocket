@@ -29,7 +29,7 @@ const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 /**
  * Smart contract addresses
  */
-const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
+export const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 export const PASSPORT_REGISTRY_ID =
 	process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID || "";
 
