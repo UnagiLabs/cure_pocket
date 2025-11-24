@@ -2,7 +2,7 @@
 
 import { Activity, Heart, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 const doctorTheme = {
 	primary: "#2563EB",
@@ -13,10 +13,11 @@ const doctorTheme = {
 };
 
 interface VitalsPageProps {
-	params: { patientId: string };
+	params: Promise<{ patientId: string }>;
 }
 
-export default function DoctorVitalsPage({ params: _params }: VitalsPageProps) {
+export default function DoctorVitalsPage({ params }: VitalsPageProps) {
+	const { patientId } = use(params);
 	const t = useTranslations();
 	const locale = useLocale();
 
@@ -169,13 +170,16 @@ export default function DoctorVitalsPage({ params: _params }: VitalsPageProps) {
 					>
 						<Activity size={20} style={{ color: doctorTheme.primary }} />
 					</div>
-					<h1
-						className="text-2xl font-bold"
-						style={{ color: doctorTheme.text }}
-					>
-						{t("home.todayVitals", { default: "Vital Signs" })}
-					</h1>
-				</div>
+			<h1
+				className="text-2xl font-bold"
+				style={{ color: doctorTheme.text }}
+			>
+				{t("home.todayVitals", { default: "Vital Signs" })}
+			</h1>
+			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+				ID: {patientId}
+			</p>
+		</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.vitalHistory", {
 						default: "Patient's vital signs monitoring records",

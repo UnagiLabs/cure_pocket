@@ -2,7 +2,7 @@
 
 import { Activity, AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 const doctorTheme = {
 	primary: "#2563EB",
@@ -13,10 +13,11 @@ const doctorTheme = {
 };
 
 interface LabsPageProps {
-	params: { patientId: string };
+	params: Promise<{ patientId: string }>;
 }
 
-export default function DoctorLabsPage({ params: _params }: LabsPageProps) {
+export default function DoctorLabsPage({ params }: LabsPageProps) {
+	const { patientId } = use(params);
 	const t = useTranslations();
 	const locale = useLocale();
 
@@ -142,13 +143,16 @@ export default function DoctorLabsPage({ params: _params }: LabsPageProps) {
 					>
 						<Activity size={20} style={{ color: doctorTheme.primary }} />
 					</div>
-					<h1
-						className="text-2xl font-bold"
-						style={{ color: doctorTheme.text }}
-					>
-						{t("home.labResults", { default: "Lab Results" })}
-					</h1>
-				</div>
+			<h1
+				className="text-2xl font-bold"
+				style={{ color: doctorTheme.text }}
+			>
+				{t("home.labResults", { default: "Lab Results" })}
+			</h1>
+			<p className="text-xs" style={{ color: doctorTheme.textSecondary }}>
+				ID: {patientId}
+			</p>
+		</div>
 				<p className="text-sm" style={{ color: doctorTheme.textSecondary }}>
 					{t("doctor.labHistory", {
 						default: "Patient's laboratory test results and trends",
