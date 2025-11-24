@@ -76,6 +76,9 @@ export default function ImagingPage() {
 	const [walrusReports, setWalrusReports] = useState<ImagingReport[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [previewReport, setPreviewReport] = useState<ImagingReport | null>(
+		null,
+	);
 
 	useEffect(() => {
 		setIsAddOpen(searchParams.get("mode") === "add");
@@ -394,6 +397,18 @@ export default function ImagingPage() {
 		router.replace(`/${locale}/app/imaging${query ? `?${query}` : ""}`);
 	};
 
+	const openPreview = (report: ImagingReport) => setPreviewReport(report);
+	const closePreview = () => setPreviewReport(null);
+	const downloadImage = (report: ImagingReport) => {
+		if (!report.imageObjectUrl) return;
+		const link = document.createElement("a");
+		link.href = report.imageObjectUrl;
+		link.download = `${report.id || "imaging"}.png`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
 	return (
 		<div className="p-4 md:p-6 space-y-6">
 			{/* Header */}
@@ -520,7 +535,8 @@ export default function ImagingPage() {
 												objectUrl={report.imageObjectUrl}
 												alt={`${t(`imaging.types.${report.type}`)} - ${report.bodyPart || ""}`}
 												mode="thumbnail"
-												className="w-32 h-32"
+												className="w-32 h-32 cursor-pointer"
+												onClick={() => openPreview(report)}
 											/>
 										) : report.imageLoadError ? (
 											<div
@@ -630,6 +646,45 @@ export default function ImagingPage() {
 							</div>
 						);
 					})}
+				</div>
+			)}
+
+			{previewReport?.imageObjectUrl && (
+				<div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
+					<div className="relative w-full max-w-4xl rounded-2xl bg-white shadow-xl">
+						<button
+							type="button"
+							onClick={closePreview}
+							className="absolute right-4 top-4 rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+							aria-label="close preview"
+						>
+							<X className="h-5 w-5" />
+						</button>
+						<div className="p-6 flex flex-col gap-4">
+							<div className="flex items-center justify-between gap-4">
+								<h3
+									className="text-lg font-semibold"
+									style={{ color: theme.colors.text }}
+								>
+									{previewReport.summary || t("imaging.title")}
+								</h3>
+								<button
+									type="button"
+									onClick={() => downloadImage(previewReport)}
+									className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+								>
+									{t("common.download") ?? "ダウンロード"}
+								</button>
+							</div>
+							<div className="max-h-[70vh] overflow-auto flex justify-center">
+								<img
+									src={previewReport.imageObjectUrl}
+									alt={previewReport.summary || "imaging"}
+									className="max-h-[65vh] w-auto rounded-xl"
+								/>
+							</div>
+						</div>
+					</div>
 				</div>
 			)}
 

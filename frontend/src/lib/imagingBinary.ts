@@ -1,9 +1,11 @@
 /**
  * Imaging Binary Encryption/Decryption Helpers
  *
- * imaging_binary だけをバイナリ安全に暗号化/復号する専用ルート。
- * - 汎用の encryptHealthData(JSON) を通さず、バイナリを Base64 包装して暗号化
- * - 他の機能から再利用できるよう lib として切り出し
+ * Base64 ではなく生の Uint8Array を Seal で暗号化し、Walrus に保存する。
+ * MIME type だけを先頭にバイト列で埋め込む独自エンベロープ形式:
+ * [0-3]   uint32 big-endian = mime length (bytes)
+ * [4-..]  mime utf8 bytes
+ * [..]    raw image bytes
  */
 
 import type { SessionKey } from "@mysten/seal";
@@ -19,35 +21,31 @@ import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 
-/**
- * File/Blob → Uint8Array
- */
+function encodeEnvelope(mime: string, payload: Uint8Array): Uint8Array {
+	const mimeBytes = new TextEncoder().encode(
+		mime || "application/octet-stream",
+	);
+	const header = new Uint8Array(4 + mimeBytes.length + payload.length);
+	const view = new DataView(header.buffer);
+	view.setUint32(0, mimeBytes.length, false); // big-endian
+	header.set(mimeBytes, 4);
+	header.set(payload, 4 + mimeBytes.length);
+	return header;
+}
+
+function decodeEnvelope(bytes: Uint8Array): { mime: string; data: Uint8Array } {
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+	const mimeLen = view.getUint32(0, false);
+	const mimeStart = 4;
+	const mimeEnd = mimeStart + mimeLen;
+	const mime = new TextDecoder().decode(bytes.slice(mimeStart, mimeEnd));
+	const data = bytes.slice(mimeEnd);
+	return { mime, data };
+}
+
 async function fileToUint8(file: Blob): Promise<Uint8Array> {
 	const buf = await file.arrayBuffer();
 	return new Uint8Array(buf);
-}
-
-function uint8ToBase64(bytes: Uint8Array): string {
-	if (typeof Buffer !== "undefined") {
-		return Buffer.from(bytes).toString("base64");
-	}
-	let binary = "";
-	for (const b of bytes) {
-		binary += String.fromCharCode(b);
-	}
-	return btoa(binary);
-}
-
-function base64ToUint8(base64: string): Uint8Array {
-	if (typeof Buffer !== "undefined") {
-		return new Uint8Array(Buffer.from(base64, "base64"));
-	}
-	const binary = atob(base64);
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-	return bytes;
 }
 
 type EncryptBinaryParams = {
@@ -56,9 +54,6 @@ type EncryptBinaryParams = {
 	suiClient: SuiClient;
 };
 
-/**
- * imaging_binary を暗号化して Walrus へアップロード
- */
 export async function encryptAndStoreImagingBinary({
 	file,
 	sealId,
@@ -69,10 +64,10 @@ export async function encryptAndStoreImagingBinary({
 	size: number;
 }> {
 	const bytes = await fileToUint8(file);
-	const envelope = {
-		content_type: file.type || "application/octet-stream",
-		data_base64: uint8ToBase64(bytes),
-	};
+	const envelope = encodeEnvelope(
+		file.type || "application/octet-stream",
+		bytes,
+	);
 
 	const sealClient = createSealClient(suiClient);
 	const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
@@ -81,14 +76,14 @@ export async function encryptAndStoreImagingBinary({
 		threshold,
 		packageId: PACKAGE_ID,
 		id: sealId,
-		data: new TextEncoder().encode(JSON.stringify(envelope)),
+		data: envelope,
 	});
 
 	const walrusRef = await uploadToWalrus(encryptedObject);
 
 	return {
 		blobId: walrusRef.blobId,
-		contentType: envelope.content_type,
+		contentType: file.type || "application/octet-stream",
 		size: bytes.length,
 	};
 }
@@ -102,9 +97,6 @@ type DecryptBinaryParams = {
 	registryId?: string;
 };
 
-/**
- * imaging_binary を復号して Uint8Array と ObjectURL を返す
- */
 export async function decryptImagingBinary({
 	blobId,
 	sealId,
@@ -139,16 +131,12 @@ export async function decryptImagingBinary({
 		txBytes,
 	});
 
-	const envelope = JSON.parse(new TextDecoder().decode(decryptedBytes)) as {
-		content_type: string;
-		data_base64: string;
-	};
-
-	const data = base64ToUint8(envelope.data_base64);
-	const arrayBuffer = new Uint8Array(data).buffer;
+	const { mime, data } = decodeEnvelope(new Uint8Array(decryptedBytes));
+	const cloned = data.slice();
+	const arrayBuffer = cloned.buffer as ArrayBuffer;
 	const objectUrl = URL.createObjectURL(
-		new Blob([arrayBuffer], { type: envelope.content_type }),
+		new Blob([arrayBuffer], { type: mime }),
 	);
 
-	return { contentType: envelope.content_type, data: arrayBuffer, objectUrl };
+	return { contentType: mime, data: arrayBuffer, objectUrl };
 }

@@ -772,5 +772,8 @@
 				}
 			}
 		}
+	},
+	"common": {
+		"download": "Download"
 	}
 }
