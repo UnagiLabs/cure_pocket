@@ -163,7 +163,7 @@
 		"description": "緊急時に医療従事者とお薬情報を共有",
 		"generateQR": "QRコード生成",
 		"generating": "生成中...",
-		"validFor": "有効期限: {{duration}}",
+		"validFor": "有効期限: {duration}",
 		"downloadPDF": "PDFダウンロード",
 		"printCard": "印刷用カード生成",
 		"currentMedications": "服用薬一覧",
@@ -651,14 +651,22 @@
 		}
 	},
 	"allergies": {
-		"severe": "重症",
-		"moderate": "中等度",
-		"mild": "軽度",
+		"title": "アレルギー",
+		"add": "アレルギーを追加",
+		"description": "薬剤・食物などのアレルギーを記録します。",
+		"substance": "アレルゲン",
+		"severity": "重症度",
 		"symptoms": "症状",
 		"onsetDate": "発症日",
 		"diagnosedBy": "診断機関",
 		"notes": "備考",
-		"add": "追加"
+		"severities": {
+			"mild": "軽度",
+			"moderate": "中等度",
+			"severe": "重症",
+			"life-threatening": "生命を脅かす"
+		},
+		"noAllergies": "アレルギーは登録されていません"
 	},
 	"histories": {
 		"diagnosisDate": "診断日",

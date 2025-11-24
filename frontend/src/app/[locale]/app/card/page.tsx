@@ -38,6 +38,7 @@ export default function EmergencyCardPage() {
 	const theme = getTheme(settings.theme);
 	const [consentUrl, setConsentUrl] = useState("");
 	const [expiresAt, setExpiresAt] = useState("");
+	const [durationLabel, setDurationLabel] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedCategories, setSelectedCategories] = useState<
 		(
@@ -85,6 +86,7 @@ export default function EmergencyCardPage() {
 			});
 			setConsentUrl(response.consentUrl);
 			setExpiresAt(response.expiresAt);
+			setDurationLabel(formatDuration(response.expiresAt));
 		} catch (error) {
 			console.error("Failed to generate consent token:", error);
 			// Fallback to mock for now
@@ -94,6 +96,7 @@ export default function EmergencyCardPage() {
 			).toISOString();
 			setConsentUrl(mockUrl);
 			setExpiresAt(mockExpires);
+			setDurationLabel("24時間");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -241,7 +244,7 @@ export default function EmergencyCardPage() {
 						style={{ color: theme.colors.textSecondary }}
 					>
 						<Clock className="mr-1 h-4 w-4" />
-						{t("card.validFor", { duration: "24時間" })}
+						{t("card.validFor", { duration: durationLabel || "24h" })}
 					</div>
 				)}
 
@@ -445,4 +448,17 @@ export default function EmergencyCardPage() {
 			</div>
 		</div>
 	);
+}
+
+function formatDuration(expiresAtIso: string): string {
+	const expires = new Date(expiresAtIso).getTime();
+	if (Number.isNaN(expires)) return "";
+	const diffMs = expires - Date.now();
+	if (diffMs <= 0) return "";
+	const hours = Math.round(diffMs / (1000 * 60 * 60));
+	if (hours >= 24) {
+		const days = Math.round(hours / 24);
+		return `${days}日`;
+	}
+	return `${hours}時間`;
 }

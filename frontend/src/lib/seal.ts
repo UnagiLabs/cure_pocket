@@ -17,6 +17,7 @@ import { fromHex } from "@mysten/bcs";
 import { EncryptedObject, SealClient, SessionKey } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
+import { normalizeSuiAddress } from "@mysten/sui/utils";
 import type { HealthData } from "@/types/healthData";
 
 // ==========================================
@@ -60,6 +61,7 @@ const DEFAULT_SESSION_TTL_MIN = 10;
  * Package ID for access control policies
  */
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
+const CLOCK_OBJECT_ID = "0x6";
 
 /**
  * Sui network for key server lookup
@@ -283,6 +285,84 @@ export async function decryptHealthData(params: {
 }
 
 /**
+ * Build SealAuthPayload bytes for consent-based access
+ *
+ * Layout (BCS):
+ *  - vector<u8> secret
+ *  - address target_passport_id
+ *  - vector<u8> requested_scope (UTF-8)
+ */
+export function buildSealAuthPayloadBytes(params: {
+	secret: string;
+	passportId: string;
+	dataType: string;
+}): Uint8Array {
+	const secretBytes = new TextEncoder().encode(params.secret);
+	const scopeBytes = new TextEncoder().encode(params.dataType);
+	const passportBytes = fromHex(normalizeSuiAddress(params.passportId));
+
+	const encodeVecU8 = (bytes: Uint8Array): Uint8Array => {
+		const len = bytes.length;
+		const uleb = encodeUleb128(len);
+		return concatBytes(uleb, bytes);
+	};
+
+	return concatBytes(
+		encodeVecU8(secretBytes),
+		passportBytes,
+		encodeVecU8(scopeBytes),
+	);
+}
+
+/**
+ * Build PTB for consent-based access (seal_approve_consent)
+ *
+ * @param params - PTB parameters
+ * @returns Transaction bytes for Seal verification
+ */
+export async function buildConsentAccessPTB(params: {
+	passportObjectId: string; // MedicalPassport object ID
+	consentTokenObjectId: string;
+	dataType: string; // Data type being accessed (e.g., "medications")
+	payload: Uint8Array; // BCS-encoded SealAuthPayload
+	suiClient: SuiClient;
+}): Promise<Uint8Array> {
+	const {
+		passportObjectId,
+		consentTokenObjectId,
+		dataType,
+		suiClient,
+		payload,
+	} = params;
+
+	if (!PACKAGE_ID) {
+		throw new Error("NEXT_PUBLIC_PACKAGE_ID not configured");
+	}
+
+	const tx = new Transaction();
+
+	// Call seal_approve_consent(id, consent_token, passport, data_type, clock)
+	tx.moveCall({
+		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
+		arguments: [
+			tx.pure.vector("u8", Array.from(payload)), // SealAuthPayload
+			tx.object(consentTokenObjectId), // ConsentToken
+			tx.object(passportObjectId), // MedicalPassport
+			tx.pure.string(dataType), // data_type
+			tx.object(CLOCK_OBJECT_ID), // Clock
+		],
+	});
+
+	// Build transaction bytes with onlyTransactionKind: true
+	const txBytes = await tx.build({
+		client: suiClient,
+		onlyTransactionKind: true,
+	});
+
+	return txBytes;
+}
+
+/**
  * Build PTB for patient-only access (seal_approve_patient_only)
  *
  * Official API requirement:
@@ -324,50 +404,6 @@ export async function buildPatientAccessPTB(params: {
 }
 
 /**
- * Build PTB for consent-based access (seal_approve_consent)
- *
- * @param params - PTB parameters
- * @returns Transaction bytes for Seal verification
- */
-export async function buildConsentAccessPTB(params: {
-	passportObjectId: string; // MedicalPassport object ID
-	consentTokenObjectId: string;
-	dataType: string; // Data type being accessed (e.g., "medications")
-	suiClient: SuiClient;
-	sealId: string;
-}): Promise<Uint8Array> {
-	const {
-		passportObjectId,
-		consentTokenObjectId,
-		dataType,
-		suiClient,
-		sealId,
-	} = params;
-
-	const tx = new Transaction();
-
-	// Call seal_approve_consent(id, consent_token, passport, data_type, clock)
-	tx.moveCall({
-		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
-		arguments: [
-			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
-			tx.object(consentTokenObjectId), // ConsentToken
-			tx.object(passportObjectId), // MedicalPassport
-			tx.pure.string(dataType), // data_type
-			tx.object("0x6"), // Clock object
-		],
-	});
-
-	// Build transaction bytes with onlyTransactionKind: true
-	const txBytes = await tx.build({
-		client: suiClient,
-		onlyTransactionKind: true,
-	});
-
-	return txBytes;
-}
-
-/**
  * Helper: Sign SessionKey with wallet
  *
  * This is a client-side operation that should be done in the frontend.
@@ -388,4 +424,33 @@ export async function signSessionKey(
 	const message = sessionKey.getPersonalMessage();
 	const { signature } = await signPersonalMessage(message);
 	await sessionKey.setPersonalMessageSignature(signature);
+}
+
+// ==========================================
+// Internal helpers
+// ==========================================
+
+function encodeUleb128(value: number): Uint8Array {
+	const bytes: number[] = [];
+	let val = value >>> 0;
+	do {
+		let byte = val & 0x7f;
+		val >>>= 7;
+		if (val !== 0) {
+			byte |= 0x80;
+		}
+		bytes.push(byte);
+	} while (val !== 0);
+	return new Uint8Array(bytes);
+}
+
+function concatBytes(...arrays: Uint8Array[]): Uint8Array {
+	const total = arrays.reduce((sum, arr) => sum + arr.length, 0);
+	const result = new Uint8Array(total);
+	let offset = 0;
+	for (const arr of arrays) {
+		result.set(arr, offset);
+		offset += arr.length;
+	}
+	return result;
 }

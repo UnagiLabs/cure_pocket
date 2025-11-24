@@ -113,7 +113,7 @@
 		"subtitle": "紧急医疗信息",
 		"description": "在紧急情况下与医疗提供者分享您的药物信息",
 		"generateQR": "生成二维码",
-		"validFor": "有效期：{{duration}}",
+		"validFor": "有效期：{duration}",
 		"downloadPDF": "下载PDF",
 		"printCard": "打印卡片",
 		"currentMedications": "当前用药",

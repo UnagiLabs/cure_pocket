@@ -158,7 +158,7 @@
 		"subtitle": "Emergency medical information",
 		"description": "Share your medication information with healthcare providers in emergencies",
 		"generateQR": "Generate QR Code",
-		"validFor": "Valid for: {{duration}}",
+		"validFor": "Valid for: {duration}",
 		"downloadPDF": "Download PDF",
 		"printCard": "Print Card",
 		"currentMedications": "Current Medications",

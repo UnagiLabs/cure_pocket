@@ -113,7 +113,7 @@
 		"subtitle": "Informações médicas de emergência",
 		"description": "Compartilhe suas informações de medicamentos com profissionais de saúde em emergências",
 		"generateQR": "Gerar código QR",
-		"validFor": "Válido por: {{duration}}",
+		"validFor": "Válido por: {duration}",
 		"downloadPDF": "Baixar PDF",
 		"printCard": "Imprimir cartão",
 		"currentMedications": "Medicamentos atuais",
