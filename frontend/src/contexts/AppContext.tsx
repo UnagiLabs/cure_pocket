@@ -33,9 +33,29 @@ import type {
 	UserSettings,
 	VitalSign,
 } from "@/types";
-import type { BasicProfileData, ConditionsData } from "@/types/healthData";
+import type {
+	BasicProfileData,
+	ConditionsData,
+	ImagingStudyV2,
+	LabResultsData,
+	MedicationsData,
+	SelfMetricsData,
+} from "@/types/healthData";
+
+/**
+ * Loading states for different data types
+ */
+interface LoadingStates {
+	basic_profile: boolean;
+	conditions: boolean;
+	medications: boolean;
+	lab_results: boolean;
+	vitals: boolean;
+	imaging: boolean;
+}
 
 interface AppContextType extends AppState {
+	loadingStates: LoadingStates;
 	setWalletAddress: (address: string | null) => void;
 	setMedications: (medications: Medication[]) => void;
 	addMedication: (medication: Medication) => void;
@@ -93,6 +113,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const [profile, setProfile] = useState<PatientProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 
+	// Loading states for individual data types
+	const [loadingStates, setLoadingStates] = useState<LoadingStates>({
+		basic_profile: false,
+		conditions: false,
+		medications: false,
+		lab_results: false,
+		vitals: false,
+		imaging: false,
+	});
+
 	// Passport and session key hooks
 	const { passport, has_passport, loading: passportLoading } = usePassport();
 	const {
@@ -106,7 +136,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 	// Restore settings from localStorage on mount
 	useEffect(() => {
-		// Restore settings from localStorage
 		const savedSettings = localStorage.getItem("userSettings");
 		if (savedSettings) {
 			try {
@@ -124,35 +153,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 	// Initialize profile data from encrypted storage
 	useEffect(() => {
-		/**
-		 * Load and decrypt profile data from Walrus storage
-		 */
 		async function initializeProfileData() {
-			// Skip if no wallet connected
-			if (!currentAccount?.address) {
+			if (!currentAccount?.address || passportLoading) {
 				return;
 			}
 
-			// Skip if still loading passport
-			if (passportLoading) {
-				return;
-			}
-
-			// Skip if no passport
 			if (!has_passport || !passport) {
 				console.log("[AppContext] No passport found, skipping data load");
 				return;
 			}
 
-			// TODO: Dynamic Fields対応
-			// 現在はseal_idの存在のみチェック
-			// 将来的にはDynamic Fieldsから各data_typeのblob_idsを取得する必要がある
 			if (!passport.sealId) {
 				console.log("[AppContext] Passport has no seal_id, skipping data load");
 				return;
 			}
 
-			// Skip if profile already loaded
 			if (profile !== null) {
 				return;
 			}
@@ -163,15 +178,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				console.log("[AppContext] Initializing profile data from passport...");
 
 				// Step 1: Ensure SessionKey is valid
-				console.log("[AppContext] Checking SessionKey...");
 				if (!sessionKey || !sessionKeyValid) {
 					console.log("[AppContext] Generating new SessionKey...");
 					await generateSessionKey();
-					return; // useEffect will re-run after sessionKey is created
+					return;
 				}
 
-				// Step 2: Load basic_profile data from Dynamic Fields
-				console.log("[AppContext] Loading basic_profile data...");
+				// Step 2: Setup decryption infrastructure
+				const suiClient = getSuiClient();
+				const txBytes = await buildPatientAccessPTB({
+					passportObjectId: passport.id,
+					registryObjectId: PASSPORT_REGISTRY_ID,
+					suiClient,
+					sealId: passport.sealId,
+				});
+				const sealClient = createSealClient(suiClient);
+
+				// Step 3: Load basic_profile (required)
+				setLoadingStates((prev) => ({ ...prev, basic_profile: true }));
 				const basicProfileBlobIds = await getDataEntryBlobIds(
 					passport.id,
 					"basic_profile",
@@ -182,31 +206,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 						"[AppContext] No basic_profile data found, user needs to complete profile setup",
 					);
 					setIsLoading(false);
+					setLoadingStates((prev) => ({ ...prev, basic_profile: false }));
 					return;
 				}
 
-				// Use the latest blob (last element in array)
 				const latestBlobId =
 					basicProfileBlobIds[basicProfileBlobIds.length - 1];
-				console.log(
-					"[AppContext] Downloading basic_profile blob:",
-					latestBlobId,
-				);
-
-				// Step 3: Download encrypted data from Walrus
 				const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
-
-				// Step 4: Build transaction bytes for decryption
-				const suiClient = getSuiClient();
-				const txBytes = await buildPatientAccessPTB({
-					passportObjectId: passport.id,
-					registryObjectId: PASSPORT_REGISTRY_ID,
-					suiClient,
-					sealId: passport.sealId,
-				});
-
-				// Step 5: Create Seal client and decrypt
-				const sealClient = createSealClient(suiClient);
 				const decryptedData = await decryptHealthData({
 					encryptedData,
 					sealClient,
@@ -215,25 +221,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					sealId: passport.sealId,
 				});
 
-				// Step 6: Convert BasicProfileData to PatientProfile
 				const basicProfileData = decryptedData as BasicProfileData;
-
-				// DEBUG: Log decrypted data from Walrus
-				console.log("=== WALRUS DECRYPTED DATA ===");
-				console.log(
-					"Full decrypted data:",
-					JSON.stringify(decryptedData, null, 2),
-				);
-				console.log(
-					"Profile data:",
-					JSON.stringify(basicProfileData.profile, null, 2),
-				);
-				console.log("============================");
-
-				// Manual conversion from BasicProfileData to PatientProfile
-				// Use birth_date from the new schema
 				const birthDate = basicProfileData.profile.birth_date || null;
-				// Calculate ageBand from birth_date
 				const calculatedAgeBand = birthDate
 					? calculateAgeBandFromDate(birthDate)
 					: null;
@@ -250,7 +239,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									| "unknown"),
 					country: basicProfileData.profile.nationality || null,
 					preferredLanguage: null,
-					// heightCm and weightKg are not in basic_profile (moved to self_metrics)
 					heightCm: undefined,
 					weightKg: undefined,
 					bloodType: basicProfileData.profile
@@ -258,7 +246,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					smokingStatus: "unknown",
 					alcoholUse: "unknown",
 					exercise: "unknown",
-					// allergies is now a string[] in the schema
 					drugAllergies: [],
 					foodAllergies: basicProfileData.profile.allergies || [],
 					hasAnaphylaxisHistory: false,
@@ -275,17 +262,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					},
 				};
 
-				// DEBUG: Log converted PatientProfile
-				console.log("=== CONVERTED PATIENT PROFILE ===");
-				console.log(
-					"Converted profile:",
-					JSON.stringify(decryptedProfile, null, 2),
-				);
-				console.log("================================");
-
 				setProfile(decryptedProfile);
 
-				// Set allergies from basic_profile (allergies is now string[])
 				if (
 					basicProfileData.profile.allergies &&
 					basicProfileData.profile.allergies.length > 0
@@ -303,71 +281,331 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					setAllergies(convertedAllergies);
 				}
 
+				setLoadingStates((prev) => ({ ...prev, basic_profile: false }));
 				console.log("[AppContext] Profile loaded successfully");
 
-				// Step 7: Load conditions data (optional - may not exist)
-				try {
-					const conditionsBlobIds = await getDataEntryBlobIds(
-						passport.id,
-						"conditions",
-					);
+				// Step 4: Load additional data types in parallel
+				const dataLoadPromises = [
+					// Load conditions
+					(async () => {
+						setLoadingStates((prev) => ({ ...prev, conditions: true }));
+						try {
+							const conditionsBlobIds = await getDataEntryBlobIds(
+								passport.id,
+								"conditions",
+							);
 
-					if (conditionsBlobIds.length > 0) {
-						const latestConditionsBlobId =
-							conditionsBlobIds[conditionsBlobIds.length - 1];
-						console.log(
-							"[AppContext] Downloading conditions blob:",
-							latestConditionsBlobId,
-						);
+							if (conditionsBlobIds.length > 0) {
+								const latestConditionsBlobId =
+									conditionsBlobIds[conditionsBlobIds.length - 1];
+								const encryptedConditionsData =
+									await downloadFromWalrusByBlobId(latestConditionsBlobId);
+								const decryptedConditionsData = await decryptHealthData({
+									encryptedData: encryptedConditionsData,
+									sealClient,
+									sessionKey,
+									txBytes,
+									sealId: passport.sealId,
+								});
 
-						const encryptedConditionsData = await downloadFromWalrusByBlobId(
-							latestConditionsBlobId,
-						);
-						const decryptedConditionsData = await decryptHealthData({
-							encryptedData: encryptedConditionsData,
-							sealClient,
-							sessionKey,
-							txBytes,
-							sealId: passport.sealId,
-						});
+								const conditionsData =
+									decryptedConditionsData as ConditionsData;
+								const medicalHistories: MedicalHistory[] =
+									conditionsData.conditions.map((condition) => ({
+										id: condition.id,
+										type: "condition" as const,
+										diagnosis: condition.name.en,
+										diagnosisDate: condition.onset_date || "",
+										status:
+											condition.status === "resolved"
+												? ("resolved" as const)
+												: ("chronic" as const),
+										description: condition.note || "",
+										icd10Code: condition.codes.icd10,
+										resolvedDate:
+											condition.status === "resolved"
+												? condition.note?.match(
+														/完治日: (\d{4}-\d{2}-\d{2})/,
+													)?.[1]
+												: undefined,
+										notes: condition.note || "",
+									}));
 
-						const conditionsData = decryptedConditionsData as ConditionsData;
+								setMedicalHistories(medicalHistories);
+								console.log("[AppContext] Conditions loaded successfully");
+							}
+						} catch (error) {
+							console.log(
+								"[AppContext] No conditions data or failed to load:",
+								error,
+							);
+						} finally {
+							setLoadingStates((prev) => ({ ...prev, conditions: false }));
+						}
+					})(),
 
-						// Convert Condition[] to MedicalHistory[]
-						const medicalHistories: MedicalHistory[] =
-							conditionsData.conditions.map((condition) => ({
-								id: condition.id,
-								type: "condition" as const,
-								diagnosis: condition.name.en,
-								diagnosisDate: condition.onset_date || "",
-								status:
-									condition.status === "resolved"
-										? ("resolved" as const)
-										: ("chronic" as const),
-								description: condition.note || "",
-								icd10Code: condition.codes.icd10,
-								resolvedDate:
-									condition.status === "resolved"
-										? condition.note?.match(/完治日: (\d{4}-\d{2}-\d{2})/)?.[1]
-										: undefined,
-								notes: condition.note || "",
-							}));
+					// Load medications
+					(async () => {
+						setLoadingStates((prev) => ({ ...prev, medications: true }));
+						try {
+							const medicationsBlobIds = await getDataEntryBlobIds(
+								passport.id,
+								"medications",
+							);
 
-						setMedicalHistories(medicalHistories);
+							if (medicationsBlobIds.length > 0) {
+								const latestMedicationsBlobId =
+									medicationsBlobIds[medicationsBlobIds.length - 1];
+								const encryptedMedicationsData =
+									await downloadFromWalrusByBlobId(latestMedicationsBlobId);
+								const decryptedMedicationsData = await decryptHealthData({
+									encryptedData: encryptedMedicationsData,
+									sealClient,
+									sessionKey,
+									txBytes,
+									sealId: passport.sealId,
+								});
 
-						console.log("[AppContext] Conditions loaded successfully");
-					}
-				} catch (conditionsError) {
-					console.log(
-						"[AppContext] No conditions data found or failed to load:",
-						conditionsError,
-					);
-					// This is not critical - user may not have entered conditions yet
-				}
+								const medicationsData =
+									decryptedMedicationsData as MedicationsData;
+								const convertedMedications: Medication[] =
+									medicationsData.medications.map((med) => ({
+										id: med.id,
+										name: med.name.en,
+										genericName: med.name.local,
+										strength: undefined,
+										form: undefined,
+										dose: med.dosage,
+										frequency: undefined,
+										timing: undefined,
+										startDate: med.start_date,
+										endDate: med.end_date,
+										reason: undefined,
+										clinic: med.prescriber,
+										warning: undefined,
+										status: med.status === "active" ? "active" : "stopped",
+									}));
+
+								setMedications(convertedMedications);
+								console.log("[AppContext] Medications loaded successfully");
+							}
+						} catch (error) {
+							console.log(
+								"[AppContext] No medications data or failed to load:",
+								error,
+							);
+						} finally {
+							setLoadingStates((prev) => ({ ...prev, medications: false }));
+						}
+					})(),
+
+					// Load lab_results
+					(async () => {
+						setLoadingStates((prev) => ({ ...prev, lab_results: true }));
+						try {
+							const labResultsBlobIds = await getDataEntryBlobIds(
+								passport.id,
+								"lab_results",
+							);
+
+							if (labResultsBlobIds.length > 0) {
+								const latestLabResultsBlobId =
+									labResultsBlobIds[labResultsBlobIds.length - 1];
+								const encryptedLabResultsData =
+									await downloadFromWalrusByBlobId(latestLabResultsBlobId);
+								const decryptedLabResultsData = await decryptHealthData({
+									encryptedData: encryptedLabResultsData,
+									sealClient,
+									sessionKey,
+									txBytes,
+									sealId: passport.sealId,
+								});
+
+								const labResultsData =
+									decryptedLabResultsData as LabResultsData;
+								const convertedLabResults: LabResult[] = [];
+
+								for (const labResult of labResultsData.lab_results) {
+									for (const item of labResult.items) {
+										convertedLabResults.push({
+											id: `${labResult.id}-${item.codes.loinc || Math.random()}`,
+											testName: item.name.en,
+											value: item.value.toString(),
+											unit: item.unit,
+											referenceRange:
+												item.range_low !== undefined &&
+												item.range_high !== undefined
+													? `${item.range_low}-${item.range_high}`
+													: undefined,
+											testDate: labResult.date,
+											testedBy: undefined,
+											category: labResult.category,
+											notes: undefined,
+										});
+									}
+								}
+
+								setLabResults(convertedLabResults);
+								console.log("[AppContext] Lab results loaded successfully");
+							}
+						} catch (error) {
+							console.log(
+								"[AppContext] No lab results data or failed to load:",
+								error,
+							);
+						} finally {
+							setLoadingStates((prev) => ({ ...prev, lab_results: false }));
+						}
+					})(),
+
+					// Load self_metrics (vitals)
+					(async () => {
+						setLoadingStates((prev) => ({ ...prev, vitals: true }));
+						try {
+							const vitalsBlobIds = await getDataEntryBlobIds(
+								passport.id,
+								"self_metrics",
+							);
+
+							if (vitalsBlobIds.length > 0) {
+								const latestVitalsBlobId =
+									vitalsBlobIds[vitalsBlobIds.length - 1];
+								const encryptedVitalsData =
+									await downloadFromWalrusByBlobId(latestVitalsBlobId);
+								const decryptedVitalsData = await decryptHealthData({
+									encryptedData: encryptedVitalsData,
+									sealClient,
+									sessionKey,
+									txBytes,
+									sealId: passport.sealId,
+								});
+
+								const vitalsData =
+									decryptedVitalsData as unknown as SelfMetricsData;
+								const convertedVitals: VitalSign[] =
+									vitalsData.self_metrics.map((metric) => {
+										// Convert metric_type to VitalSignType
+										let type: VitalSign["type"] = "heart-rate";
+										if (metric.metric_type === "blood_pressure") {
+											type = "blood-pressure";
+										} else if (metric.metric_type === "heart_rate") {
+											type = "heart-rate";
+										} else if (metric.metric_type === "blood_glucose") {
+											type = "blood-glucose";
+										} else if (metric.metric_type === "temperature") {
+											type = "temperature";
+										} else if (metric.metric_type === "weight") {
+											type = "weight";
+										}
+
+										return {
+											id: metric.id,
+											type: type,
+											recordedAt: metric.recorded_at,
+											systolic: metric.systolic,
+											diastolic: metric.diastolic,
+											value: metric.value,
+											unit: metric.unit,
+											notes: metric.notes,
+										};
+									});
+
+								setVitalSigns(convertedVitals);
+								console.log("[AppContext] Vitals loaded successfully");
+							}
+						} catch (error) {
+							console.log(
+								"[AppContext] No vitals data or failed to load:",
+								error,
+							);
+						} finally {
+							setLoadingStates((prev) => ({ ...prev, vitals: false }));
+						}
+					})(),
+
+					// Load imaging
+					(async () => {
+						setLoadingStates((prev) => ({ ...prev, imaging: true }));
+						try {
+							const imagingBlobIds = await getDataEntryBlobIds(
+								passport.id,
+								"imaging_meta",
+							);
+
+							if (imagingBlobIds.length > 0) {
+								const latestImagingBlobId =
+									imagingBlobIds[imagingBlobIds.length - 1];
+								const encryptedImagingData =
+									await downloadFromWalrusByBlobId(latestImagingBlobId);
+								const decryptedImagingData = await decryptHealthData({
+									encryptedData: encryptedImagingData,
+									sealClient,
+									sessionKey,
+									txBytes,
+									sealId: passport.sealId,
+								});
+
+								// Cast to ImagingMetaData which contains imaging_meta: ImagingStudyV2[]
+								const imagingMetaData = decryptedImagingData as unknown as {
+									meta: unknown;
+									imaging_meta: ImagingStudyV2[];
+								};
+
+								const convertedImaging: ImagingReport[] =
+									imagingMetaData.imaging_meta.map((study) => {
+										// Convert modality to ImagingType
+										let type: ImagingReport["type"] = "other";
+										const modalityLower = study.modality.toLowerCase();
+										if (modalityLower.includes("ct")) {
+											type = "ct";
+										} else if (
+											modalityLower.includes("mr") ||
+											modalityLower.includes("mri")
+										) {
+											type = "mri";
+										} else if (
+											modalityLower.includes("us") ||
+											modalityLower.includes("ultrasound")
+										) {
+											type = "ultrasound";
+										} else if (
+											modalityLower.includes("cr") ||
+											modalityLower.includes("xr") ||
+											modalityLower.includes("xray")
+										) {
+											type = "xray";
+										}
+
+										return {
+											id: study.study_uid,
+											type: type,
+											bodyPart: study.body_site,
+											examDate: study.performed_at || "",
+											performedBy: study.facility,
+											summary: study.report?.summary || "",
+											findings: study.report?.findings,
+											impression: study.report?.impression,
+										};
+									});
+
+								setImagingReports(convertedImaging);
+								console.log("[AppContext] Imaging loaded successfully");
+							}
+						} catch (error) {
+							console.log(
+								"[AppContext] No imaging data or failed to load:",
+								error,
+							);
+						} finally {
+							setLoadingStates((prev) => ({ ...prev, imaging: false }));
+						}
+					})(),
+				];
+
+				await Promise.allSettled(dataLoadPromises);
+				console.log("[AppContext] All data loading completed");
 			} catch (error) {
 				console.error("[AppContext] Failed to initialize profile data:", error);
-				// Don't block the app on decryption failure
-				// User can still use the app and save new data
 			} finally {
 				setIsLoading(false);
 			}
@@ -385,9 +623,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		generateSessionKey,
 	]);
 
-	// setWalletAddressはdApp Kitが管理するため、空実装（後方互換性のため）
+	// setWalletAddressはdApp Kitが管理するため、空実装
 	const setWalletAddress = (_address: string | null) => {
-		// dApp Kitが自動的に管理するため、何もしない
 		console.warn(
 			"setWalletAddress is deprecated. Wallet address is managed by dApp Kit.",
 		);
@@ -407,7 +644,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setMedications((prev) => prev.filter((med) => med.id !== id));
 	};
 
-	// Allergy CRUD operations
 	const addAllergy = (allergy: Allergy) => {
 		setAllergies((prev) => [...prev, allergy]);
 	};
@@ -424,7 +660,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setAllergies((prev) => prev.filter((allergy) => allergy.id !== id));
 	};
 
-	// MedicalHistory CRUD operations
 	const addMedicalHistory = (history: MedicalHistory) => {
 		setMedicalHistories((prev) => [...prev, history]);
 	};
@@ -444,7 +679,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setMedicalHistories((prev) => prev.filter((history) => history.id !== id));
 	};
 
-	// LabResult CRUD operations
 	const addLabResult = (result: LabResult) => {
 		setLabResults((prev) => [...prev, result]);
 	};
@@ -461,7 +695,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setLabResults((prev) => prev.filter((result) => result.id !== id));
 	};
 
-	// ImagingReport CRUD operations
 	const addImagingReport = (report: ImagingReport) => {
 		setImagingReports((prev) => [...prev, report]);
 	};
@@ -478,7 +711,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setImagingReports((prev) => prev.filter((report) => report.id !== id));
 	};
 
-	// VitalSign CRUD operations
 	const addVitalSign = (vitalSign: VitalSign) => {
 		setVitalSigns((prev) => [...prev, vitalSign]);
 	};
@@ -500,7 +732,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const updateProfile = (updates: Partial<PatientProfile>) => {
 		setProfile((prev) => {
 			if (!prev) {
-				// 初期プロフィールを作成
 				const defaultProfile: PatientProfile = {
 					birthDate: null,
 					ageBand: null,
@@ -541,7 +772,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 			value={{
 				walletAddress,
 				medications,
-				prescriptions: [], // 空配列（後方互換性のため残す）
+				prescriptions: [],
 				allergies,
 				medicalHistories,
 				labResults,
@@ -550,6 +781,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				settings,
 				profile,
 				isLoading,
+				loadingStates,
 				setWalletAddress,
 				setMedications,
 				addMedication,

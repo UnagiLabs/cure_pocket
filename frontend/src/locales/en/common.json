@@ -70,6 +70,11 @@
 		"birthDate": "Birth Date",
 		"allergies": "Allergies",
 		"none": "None",
+		"loadingImaging": "Loading imaging data...",
+		"loadingLabs": "Loading lab results...",
+		"loadingVitals": "Loading vital signs...",
+		"loadingMedications": "Loading medications...",
+		"loadingConditions": "Loading conditions...",
 		"chips": {
 			"conditions": "Conditions",
 			"prescriptions": "Prescriptions",

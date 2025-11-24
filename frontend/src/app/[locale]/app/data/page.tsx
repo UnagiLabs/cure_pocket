@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import { ImagingImageViewer } from "@/components/ImagingImageViewer";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
@@ -27,6 +28,7 @@ export default function DataOverviewPage() {
 		imagingReports,
 		vitalSigns,
 		settings,
+		loadingStates,
 	} = useApp();
 	const theme = getTheme(settings.theme);
 
@@ -173,7 +175,16 @@ export default function DataOverviewPage() {
 						icon={<Heart className="h-4 w-4 text-[#F97373]" />}
 						onClickEdit={() => router.push(`/${locale}/app/histories`)}
 					>
-						{summary.conditions === 0 ? (
+						{loadingStates.conditions ? (
+							<div className="py-8">
+								<LoadingSpinner
+									size="md"
+									message={t("dataOverview.loadingConditions", {
+										default: "Loading conditions...",
+									})}
+								/>
+							</div>
+						) : summary.conditions === 0 ? (
 							<EmptyState
 								label={t("dataOverview.noConditions", {
 									default: "No conditions registered",
@@ -220,7 +231,16 @@ export default function DataOverviewPage() {
 						icon={<FileText className="h-4 w-4 text-[#6366F1]" />}
 						onClickEdit={() => router.push(`/${locale}/app/medications`)}
 					>
-						{summary.prescriptions === 0 ? (
+						{loadingStates.medications ? (
+							<div className="py-8">
+								<LoadingSpinner
+									size="md"
+									message={t("dataOverview.loadingMedications", {
+										default: "Loading medications...",
+									})}
+								/>
+							</div>
+						) : summary.prescriptions === 0 ? (
 							<EmptyState
 								label={t("medications.noPrescriptions")}
 								actionLabel={t("medications.addFirstPrescription")}
@@ -279,7 +299,16 @@ export default function DataOverviewPage() {
 						accentColor="#0EA5E9"
 						onClickEdit={() => router.push(`/${locale}/app/labs`)}
 					>
-						{summary.labs === 0 ? (
+						{loadingStates.lab_results ? (
+							<div className="py-8">
+								<LoadingSpinner
+									size="md"
+									message={t("dataOverview.loadingLabs", {
+										default: "Loading lab results...",
+									})}
+								/>
+							</div>
+						) : summary.labs === 0 ? (
 							<EmptyState
 								label={t("dataOverview.noLabs", {
 									default: "No lab results registered",
@@ -334,7 +363,16 @@ export default function DataOverviewPage() {
 						icon={<ImageIcon className="h-4 w-4 text-[#FB923C]" />}
 						onClickEdit={() => router.push(`/${locale}/app/imaging`)}
 					>
-						{summary.imaging === 0 ? (
+						{loadingStates.imaging ? (
+							<div className="py-8">
+								<LoadingSpinner
+									size="md"
+									message={t("dataOverview.loadingImaging", {
+										default: "Loading imaging data...",
+									})}
+								/>
+							</div>
+						) : summary.imaging === 0 ? (
 							<EmptyState
 								label={t("dataOverview.noImaging", {
 									default: "No imaging data registered",
@@ -395,7 +433,16 @@ export default function DataOverviewPage() {
 						icon={<Activity className="h-4 w-4 text-[#22C55E]" />}
 						onClickEdit={() => router.push(`/${locale}/app/vitals`)}
 					>
-						{summary.vitals === 0 ? (
+						{loadingStates.vitals ? (
+							<div className="py-8">
+								<LoadingSpinner
+									size="md"
+									message={t("dataOverview.loadingVitals", {
+										default: "Loading vital signs...",
+									})}
+								/>
+							</div>
+						) : summary.vitals === 0 ? (
 							<EmptyState
 								label={t("dataOverview.noVitals", {
 									default: "No vital records yet",

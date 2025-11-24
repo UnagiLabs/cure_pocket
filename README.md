@@ -1,297 +1,136 @@
+<div align="center">
+  <img src="./Presentation/images/logo.png" alt="CurePocket Logo" width="200" />
+  <h1>🌍💊 CurePocket</h1>
+  <h3>Your Global Health Passport on Sui / 世界中どこでも使えるヘルスパスポート</h3>
 
-# 🌍💊 CurePocket – グローバル・ヘルスパスポート
+  <p>
+    <strong>Secure. Private. Portable.</strong><br>
+    Built with 💧 <strong>Sui</strong> | 🦭 <strong>Walrus</strong> | 🔐 <strong>Seal</strong>
+  </p>
 
-CurePocket（キュアポケット）は、  
-**薬・検査値・レントゲン画像・手術歴・アレルギー・病歴** などの情報を  
-ひとつにまとめて持ち歩ける、**個人用ヘルスパスポート**です。
+  <p>
+    <a href="#-about-the-project">About</a> •
+    <a href="#-key-features">Features</a> •
+    <a href="#-try-demo">Try Demo</a> •
+    <a href="#-architecture">Architecture</a> •
+    <a href="#-team">Team</a>
+  </p>
 
-- 世界中どこにいても、自分の健康情報を自分で管理  
-- すべてのデータは暗号化して Walrus に保存  
-- Seal で暗号鍵とアクセス権を制御  
-- Sui のオブジェクトモデルと SBT で「この人のヘルスパスポート」を表現  
-- Connect Sui Wallet だけで利用開始（メールアドレス登録不要）  
-- Seal によるアクセス制御で、患者本人のみが医療データを復号可能  
-- 医療者に見せたいときだけ、限定的な閲覧権限（QR・リンク）を発行  
-- 匿名化した統計データを研究・企業に提供し、その価値をユーザーへ還元（Opt-in）
-
-> CurePocket =  
-> **「世界中どこでも使える、あなた専用の暗号化ヘルスパスポート」**
-
----
-
-## 1. Problem（課題）
-
-現実の医療現場では、健康情報はバラバラに分散しています。
-
-- 紙のお薬手帳、検査結果の紙、紹介状、退院サマリー  
-- 病院ごとの電子カルテ  
-- レントゲンやCT画像は別システム、別病院だと見えないことも多い  
-- 患者本人の記憶やメモに依存している部分も大きい  
-
-その結果：
-
-- **「お薬手帳ないです」** という患者が多く、正確な服薬歴がわからない  
-- 病院と薬局で同じ話を何度もさせられ、患者のストレスが大きい  
-- 副作用や相互作用を判断するのに、  
-  薬の情報だけでなく **病歴・検査値・画像・手術歴** が必要だが、  
-  それらが一か所にまとまっていない  
-- 海外旅行中や出張先で急病になったとき、  
-  「これまでの医療情報」を現地の医師にうまく伝えられない  
-
-さらに、匿名化した健康データは：
-
-- 副作用検出（ファーマコビジランス）  
-- 新薬・医療機器の開発  
-- 公衆衛生・疫学研究  
-
-などで非常に価値がありますが、  
-**その価値が患者自身に還元される仕組みはほとんどありません。**
+  <a href="https://cure-pocket.pages.dev">
+    <img src="./Presentation/images/demo.png" alt="CurePocket Demo App" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+  </a>
+</div>
 
 ---
 
-## 2. Vision（ビジョン）
+## 📖 About The Project
 
-CurePocket が目指すのは、次のような世界です：
+### 🇬🇧 English
+**CurePocket** is a privacy-first personal health passport designed to solve the fragmentation of medical data.
+Born from the real-world experience of a **practicing pharmacist**, it addresses critical issues like forgotten medication history, lost lab results, and the inability to share health data across borders.
 
-- すべての人が **ヘルスパスポート（Health Passport）** を持ち、
-  世界中どこにいても、自分の健康情報を自分の手で提示できる
-- 薬・検査値・レントゲン画像・手術歴・アレルギー・持病などが  
-  すべて **ひとつのポケットに整理されている**
-- 患者が「誰に」「どの情報を」「どの期間だけ」見せるかをコントロールできる  
-- 医師・薬剤師・医療従事者は、患者の同意があるときだけ  
-  必要な情報にアクセスできる
-- 匿名化されたヘルスデータは研究・産業に活かされ、  
-  その価値の一部が **患者に還元される**
-- データ形式は HL7 FHIR や ATC/RxNorm 等の国際標準と整合し、  
-  国や医療機関をまたいだ連携がしやすい
+By leveraging **Sui** for ownership, **Walrus** for decentralized storage, and **Seal** for encryption, CurePocket empowers patients to own their health data and share it securely—only when they want to.
 
-> **CurePocket = 患者自身が主役の、分散型ヘルスデータ基盤**
+### 🇯🇵 日本語
+**CurePocket（キュアポケット）** は、医療データの分断を解消するために設計された、プライバシーファーストの個人用ヘルスパスポートです。
+**現役薬剤師**の実体験から生まれたこのプロジェクトは、「お薬手帳の持参忘れ」「検査結果の紛失」「海外渡航時の医療情報共有の難しさ」といった現場の課題を解決します。
+
+**Sui** による所有権管理、**Walrus** による分散ストレージ、**Seal** による暗号化技術を組み合わせることで、患者自身が自分の健康データを管理し、必要な相手にのみ安全に共有できる世界を実現します。
 
 ---
 
-## 3. Solution Overview（解決策の概要）
+## ✨ Key Features
 
-CurePocket は、**ヘルスパスポート + 分散型ストレージ + スマートコントラクト** を組み合わせた Web3 アプリケーションです。
+### 🔐 Privacy & Security (プライバシーとセキュリティ)
+- **Patient-Owned Encryption:** All medical data (Prescriptions, X-rays, Lab results) is encrypted using **Seal**. Only the patient holds the decryption keys.
+  - 全ての医療データは **Seal** で暗号化されます。復号鍵を持つのは患者本人だけです。
+- **Decentralized Storage:** Large files like MRI/CT scans are stored on **Walrus**, ensuring data permanence and privacy without centralized servers.
+  - MRIやCTなどの大容量ファイルは **Walrus** に保存され、サーバーレスで永続性と秘匿性を確保します。
 
-### ユーザーができること
+### 📱 Mobile-First Experience (モバイルファースト体験)
+- **Pocket-Sized Health:** Access your entire medical history from a smartphone. Simple UI designed for non-tech-savvy patients.
+  - スマホひとつで全ての病歴にアクセス。ITに詳しくない患者さんでも使える直感的なデザインです。
+- **AI-Powered OCR:** Instantly digitize paper prescriptions and lab reports using the camera.
+  - カメラで撮影するだけで、紙の処方箋や検査結果を **AI OCR** が自動でデジタル化します。
+- **QR Code Sharing:** Share temporary access to doctors instantly via QR code (e.g., in emergencies or travel).
+  - 緊急時や旅行先でも、QRコードを見せるだけで医師に一時的なアクセス権を付与できます。
 
-- Connect Sui Wallet でログイン（ウォレットアドレスが自分のパスポートIDになる）
-- 以下の情報を自分のヘルスパスポートに追加：
-  - 薬（処方薬 / 市販薬 / サプリ / 漢方）
-  - アレルギー
-  - 基礎疾患・既往歴・手術歴
-  - 検査値（血液検査など）
-  - 画像レポート（レントゲン・CT・MRI などの要約、将来的には実画像）
-- パスポート（SBT）は **`seal_id`・`country_code` と、統計データ提供可否の bool（例：`analytics_opt_in`）のみを保持**
-- 薬・検査値・画像・病歴など各データの **Blob ID をダイナミックフィールドで複数管理**
-- 医師・薬剤師などに見せたいときだけ：
-  - データ種ごとに Seal で暗号・復号を実行
-  - データ種単位で一時復号鍵を Seal から発行し共有
-
-### 技術的な構成
-
-- すべての個人データは暗号化して **Walrus** に保存  
-- 暗号鍵の管理とアクセス権限の付与は **Seal**  
-- Sui 上には（実装済み）：
-  - `MedicalPassport`（1人に1つのSBT、譲渡不可）  
-  - `PassportRegistry`（1ウォレット1枚制約を管理する共有オブジェクト）  
-  - Sealアクセス制御（`seal_accessor`モジュール）  
-- Sui 上には（将来実装予定）：
-  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry` など  
-  - `ConsentToken`（閲覧権）  
-  - `AnalyticsPool`（データ経済用のプール）
-- フロントエンドは Next.js（モバイルフレンドリー）で実装し、  
-  多言語（日本語・英語・中国語・フランス語・ポルトガル語など）に対応予定
+### 🆔 Sui Medical Passport (Sui メディカルパスポート)
+- **SBT Identity:** A Soulbound Token (SBT) on Sui acts as your immutable health identity.
+  - Sui上の譲渡不可トークン（SBT）が、改ざん不可能な医療IDとして機能します。
+- **Interoperability:** Built with global standards (FHIR/ATC) in mind for cross-border usage.
+  - 国際標準（FHIR/ATC）を意識した設計で、国境を超えたデータ連携を目指します。
 
 ---
 
-## 4. Why Walrus / Why Seal / Why Sui
+## 🚀 Try Demo
 
-### Walrus を使う理由
+Experience the live application directly in your browser.
+ブラウザですぐに動作するデモをお試しいただけます。
 
-- 暗号化された JSON や画像などの **大容量データを永続的に保存** できる
-- Quilt 機能で、薬歴や検査値を **追記していく形** の履歴管理がしやすい
-- コンテンツアドレス（Blob ID）により、  
-  「どのバージョンのデータを使って統計を取ったか」が検証可能
+### 👉 **[https://cure-pocket.pages.dev](https://cure-pocket.pages.dev)**
 
-### Seal を使う理由
-
-- 健康情報は極めてセンシティブなため、  
-  **暗号鍵の管理とアクセス制御が最重要**
-- Seal を使うことで：
-  - 患者ごとの暗号鍵を安全に管理  
-  - **患者本人のみが復号可能**（実装済み：`seal_approve_patient_only`）  
-  - 医師・薬剤師・研究者への **一時的な復号権限** を発行（将来実装予定）  
-  - 「誰が・いつ・どのデータにアクセスできるか」をコードで定義
-
-### Sui を使う理由
-
-- オブジェクト指向のモデルがヘルスパスポートと相性が良い：
-  - `MedicalPassport`（唯一のパスポート、実装済み。`seal_id`・`country_code`・`analytics_opt_in` を保持し、医療データ参照はダイナミックフィールド）  
-  - `PassportRegistry`（1ウォレット1枚制約、実装済み）  
-  - Sealアクセス制御（実装済み）  
-  - `MedicationEntry` / `LabEntry` / `ImagingEntry` / `HistoryEntry`（将来実装予定。Walrus Blob への参照をパスポートのダイナミックフィールドで管理）  
-  - `ConsentToken`（閲覧権、将来実装予定）  
-  - `AnalyticsPool` / `RewardShare`（データ経済、将来実装予定）
-- 所有権・譲渡不可（SBT）・アクセス権のロジックを  
-  L1レベルで安全に扱える
-- 高速・低レイテンシで、QRを見せてすぐ情報にアクセスする  
-  といった体験とも相性が良い
+> **Note:** Requires a Sui Wallet connection.<br>
+> **注意:** ご利用にはSui Walletの接続が必要です。
 
 ---
 
-## 5. Architecture（構成）
+## 🏗 Architecture
 
-テキストによる高レベル構成図：
+The system consists of three core layers: **Sui (Identity & Logic)**, **Walrus (Storage)**, and **Seal (Encryption)**.
 
-```
+```mermaid
+graph TD
+    User["User (Patient/Doctor)"] <-->|UI Interaction| Frontend["CurePocket<br>(Next.js App)"]
 
-[ User (Browser / Mobile) ]
-|
-v
-Next.js Frontend
-|
-v
-CurePocket API (Server)
-|
--
+    subgraph "🛡️ Privacy & Storage Pipeline"
+        direction TB
+        Frontend <-->|"1. Encrypt / Decrypt"| Seal["🔐 Seal (Key Server)"]
+        Seal <-->|"2. Store / Fetch Encrypted Blob"| Walrus["🦭 Walrus (Storage)"]
+    end
 
-|            |             |
-v            v             v
-Sui        Walrus          Seal
-(on-chain   (encrypted      (key & access
-objects)    blobs)          control)
+    subgraph "⛓️ On-Chain Layer (Sui)"
+        Frontend <-->|"4. Sync Blob IDs"| Sui["💧 Sui Blockchain"]
+        Sui --- SBT["Medical Passport SBT"]
+    end
 
-```
+    %% Access Control Flow
+    Seal -.->|"3. Verify Access Rights (Smart Contract)"| Sui
 
-### 役割
+    %% Styling
+    style Seal fill:#ff9f89,stroke:#333,stroke-width:2px,color:black
+    style Walrus fill:#26c2d6,stroke:#333,stroke-width:2px,color:black
+````
 
-- **Frontend (Next.js)**
-  - モバイルフレンドリーな UI
-  - Connect Wallet
-  - 多言語対応（日本語/英語/中国語/フランス語/ポルトガル語 など）
-  - データ種ごとに Seal を用いた暗号・復号を実行（フロントで種別を識別）
+### Data Flow
 
-- **Sui**（実装済み）
-  - `MedicalPassport`：ユーザーのヘルスパスポートを示す譲渡不可トークン（SBT）。`seal_id`・`country_code`・統計データ提供可否の bool（`analytics_opt_in`）を保持し、データ参照はダイナミックフィールドに格納  
-  - `PassportRegistry`：1ウォレット1枚制約を管理する共有オブジェクト  
-  - `seal_accessor`：Sealキーサーバーからの復号リクエストに対するアクセス制御  
-  - `admin`：管理者によるパスポート移行機能
+1.  **Upload:** User uploads data (e.g., X-ray). -\> Encrypted by **Seal**. -\> Stored on **Walrus**.
+2.  **Registry:** The Blob ID from Walrus is registered to the user's **Sui SBT** as a dynamic field.
+3.  **Share:** User generates a temporary decryption key via Seal and shares it (QR/Link) with the doctor.
 
-- **Sui**（将来実装予定）
-  - 各種 `*Entry`：薬・検査・画像・病歴などへの参照（Walrus Blob へのポインタのみ、パスポート配下のダイナミックフィールドで管理）  
-  - `ConsentToken`：一時的な閲覧権限  
-  - `AnalyticsPool`：データ利用報酬の分配ロジック
+-----
 
-- **Walrus**
-  - 暗号化済みの JSON / PDF / 画像データの保存
-  - Blob ID を通じて Sui オブジェクトから参照される
+## 🛠 Tech Stack
 
-- **Seal**
-  - 暗号鍵管理（患者ごと、カテゴリーごと）  
-  - **患者本人のみが復号可能**（実装済み：`seal_approve_patient_only`）  
-  - `ConsentToken` に応じた復号権の付与・失効（将来実装予定）
+| Category | Technology | Usage |
+|---|---|---|
+| **Blockchain** | **Sui (Move)** | SBT, Access Control, Dynamic Fields |
+| **Storage** | **Walrus** | Encrypted Medical Data (JSON, Images, PDF) |
+| **Security** | **Seal** | TEE-based Key Management & Encryption |
+| **Frontend** | **Next.js / TypeScript** | Mobile-first PWA, Wallet Integration |
+| **AI** | **Google Gemini / OCR** | Prescription & Lab Result digitization |
 
----
+-----
 
-## 6. Data Privacy Model（データプライバシーモデル）
+## 👥 Team Unagi Labs
 
-CurePocket は、データを **2つのレイヤー** に分けて扱います。
+We are a team of builders bridging the gap between **Healthcare** and **Web3**.
 
-### 6.1 Care Layer（診療・安全性のためのレイヤー）
+  - **Shizuku** (Lead / Pharmacist): Product Design, Medical Domain Expert.
+  - **Butasan** (Lead Engineer): Sui Move, System Architecture, Security.
 
-- 含まれる情報：
-  - 薬・アレルギー・病歴・手術歴
-  - 検査値
-  - 画像レポート など
-- アクセスできるのは：
-  - 本人
-  - 本人が `ConsentToken` を発行した医師・薬剤師・医療者
-- 保存：
-  - すべて暗号化され Walrus に保存  
-  - Sui には Blob ID と最小限のメタデータのみ
-- 特徴：
-  - ここにあるデータは **外部の研究・企業に直接は共有されない**
+-----
 
-### 6.2 Analytics Layer（匿名統計・データ経済のレイヤー）
-
-- 含まれる情報：
-  - 年齢帯（例：20代）
-  - 国・地域
-  - 薬クラス（ATCコード）
-  - 検査値の分布（統計値のみ）
-  - 既往歴や手術歴の有無（集計レベル）
-- 個人を特定できないように **完全に匿名化・集計されたデータのみ**
-- 研究機関・企業がデータパッケージとして購入可能
-- 収益の一部は `AnalyticsPool` を通じて  
-  ユーザーへ報酬（トークンなど）として還元
-
----
-
-## 7. Demo Flow（デモフロー）
-
-ハッカソン用のデモでは、以下のシナリオを想定しています：
-
-1. ユーザーがブラウザで CurePocket を開く  
-2. `Connect Sui Wallet` ボタンからウォレット接続  
-3. 初回アクセス時（実装済み）：
-   - `MedicalPassport` SBT をミント（譲渡不可、1ウォレット1枚制約）
-   - Seal で暗号鍵を生成し、Seal ID を取得
-   - パスポートには `seal_id`、`country_code`、統計データ提供可否フラグ（`analytics_opt_in`）のみを設定
-   - データはカテゴリーごとに暗号化して Walrus に保存し、得た Blob ID をパスポート配下のダイナミックフィールドとして登録
-4. ユーザーが医療データを復号（実装済み）：
-   - Sealキーサーバーに復号リクエストを送信
-   - Sealキーサーバーが `.dry_run_transaction_block` で `seal_approve_patient_only` を実行
-   - パスポート所有者のみが復号可能（`PassportRegistry`で所有権検証）
-   - 復号はデータ種ごとに実行し、対象 Blob ID を指定
-5. ユーザーが薬情報を追加（将来実装予定）：
-   - フロントで入力（MVPではフォーム入力）
-   - FHIR風 JSON を生成し、暗号化して Walrus に保存
-   - Blob ID を用いて Sui 上で `MedicationEntry` を作成し、パスポートのダイナミックフィールドに登録
-6. 医療者への一時閲覧権限付与（将来実装予定）：
-   - データ種ごとに Seal で一時復号鍵を発行し、`ConsentToken` と組み合わせて期間限定アクセスを許可
-7. Analytics のデモ（MVPではモック、将来実装予定）：
-   - 匿名化された統計ダッシュボードを表示
-   - 「データが使われるとユーザーに報酬が還元される」フローを説明
-
----
-
-## 8. Future Work（今後の発展）
-
-- FHIR 準拠の完全なデータモデル  
-- ATC / RxNorm / 各国の薬コードへの対応
-- 医療機関・薬局システムからの **Push 連携**
-  - 患者が自分で入力しなくても、処方や検査結果が自動で届く
-- 本物のレントゲン・CT・MRI 画像（DICOM）の Walrus 保存と閲覧ビュー
-- 副作用シグナル検出や服薬アドヒアランス分析
-- zkLogin（Google / Apple など）による非クリプトユーザー向けログイン
-- 各国規制（GDPR / HIPAA 等）への準拠と法的整理
-- 患者団体・研究機関・製薬企業とのコラボレーション
-
----
-
-## 9. Team（チーム）
-
-**Shizuku – リード / プロダクトデザイン / 薬剤師**  
-- 薬剤師としての実務経験（服薬指導・安全性・重複投薬確認など）を活かし、医学的な正確性とユーザー体験を両立  
-- CurePocket のプロダクトビジョン、UI/UX、ユーザーフロー全体を設計  
-- 「世界中どこでも使えるヘルスパスポート」というコンセプトを牽引  
-- 医療現場のニーズと分散型技術の橋渡しを担当
-
-**Butasan – バックエンド / スマートコントラクト / セキュリティエンジニア**  
-- Sui スマートコントラクトの実装を担当
-- バックエンドロジック、Walrus・Seal との連携、システムアーキテクチャ全般を構築  
-- 暗号化フロー、データ整合性、セキュリティ設計を重視  
-- グローバルかつ安全なヘルスデータ基盤を支えるコアエンジニア
-
----
-
-## 10. Tech Stack（技術スタック・MVP）
-
-- Frontend: Next.js + TypeScript（モバイルフレンドリーな Web アプリ）
-- i18n: 日本語 / 英語 / 中国語 / フランス語 / ポルトガル語 対応予定
-- Blockchain: Sui（オブジェクトモデル・SBT・ConsentToken・AnalyticsPool）
-- Storage: Walrus（暗号化されたヘルスデータの保存）
-- Key & Access: Seal（暗号鍵管理・アクセス制御）
-- Auth (MVP): Connect Sui Wallet  
-  - 将来的には zkLogin（Google/Apple など）対応予定
+\<div align="center"\>
+\<p\>Made with ❤️ for a healthier decentralized world.\</p\>
+\</div\>
