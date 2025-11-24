@@ -665,17 +665,20 @@
 		"resolvedDate": "治癒日",
 		"diagnosedBy": "診断機関",
 		"description": "説明",
-		"notes": "備考"
+		"notes": "備考",
+		"add": "病歴を追加"
 	},
 	"imaging": {
 		"summary": "概要",
 		"findings": "所見",
 		"impression": "診断",
 		"images": "画像",
-		"viewImage": "画像を表示"
+		"viewImage": "画像を表示",
+		"add": "画像検査を追加"
 	},
 	"labs": {
-		"reference": "基準値"
+		"reference": "基準値",
+		"add": "検査値を追加"
 	},
 	"doctor": {
 		"patientView": "患者情報閲覧",
