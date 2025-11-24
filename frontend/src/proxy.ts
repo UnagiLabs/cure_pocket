@@ -1,6 +1,8 @@
 import createMiddleware from "next-intl/middleware";
 import { defaultLocale, locales } from "./i18n/config";
 
+export const runtime = "edge";
+
 export default createMiddleware({
 	locales,
 	defaultLocale,
