@@ -773,7 +773,32 @@
 			}
 		}
 	},
+	"doctor": {
+		"patientView": "Patient View",
+		"patientId": "Patient ID",
+		"badge": "Doctor View",
+		"medicalRecord": "Medical Record",
+		"patientInformation": "Patient Information",
+		"viewDescription": "Viewing shared medical data. Access is limited to authorized scopes only.",
+		"allergies": "Allergies",
+		"drugAllergies": "Drug Allergies",
+		"noAllergies": "No drug allergies recorded",
+		"prescriptionHistory": "Patient's prescription history and current medications",
+		"labHistory": "Patient's laboratory test results and trends",
+		"tests": "tests",
+		"medicalHistory": "Patient's conditions, surgeries, and procedures",
+		"vitalHistory": "Patient's vital signs monitoring records",
+		"allergyWarning": "Critical information - Review before prescribing any medication",
+		"severeAllergies": "Severe Allergies Detected",
+		"severeAllergyWarning": "This patient has severe drug allergies. Exercise extreme caution when prescribing medications.",
+		"imagingHistory": "Patient's radiology and imaging examination history",
+		"confidentialNotice": "This information is confidential and protected by medical privacy laws.",
+		"encryptedConnection": "Encrypted Connection",
+		"accessRestricted": "Access Restricted",
+		"noPermission": "You don't have permission to view this data"
+	},
 	"common": {
-		"download": "Download"
+		"download": "Download",
+		"back": "Back"
 	}
 }

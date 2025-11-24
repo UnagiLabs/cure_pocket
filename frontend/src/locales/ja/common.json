@@ -281,6 +281,7 @@
 		"active": "服用中",
 		"stopped": "中止"
 	},
+<<<<<<< HEAD
 	"allergies": {
 		"title": "アレルギー",
 		"add": "アレルギーを追加",
@@ -409,6 +410,8 @@
 			"INVALID_FILE": "無効なファイル形式です"
 		}
 	},
+=======
+>>>>>>> origin/main
 	"dashboard": {
 		"title": "ダッシュボード",
 		"summary": {
@@ -779,7 +782,62 @@
 			}
 		}
 	},
+	"allergies": {
+		"severe": "重症",
+		"moderate": "中等度",
+		"mild": "軽度",
+		"symptoms": "症状",
+		"onsetDate": "発症日",
+		"diagnosedBy": "診断機関",
+		"notes": "備考",
+		"add": "追加"
+	},
+	"histories": {
+		"diagnosisDate": "診断日",
+		"resolvedDate": "治癒日",
+		"diagnosedBy": "診断機関",
+		"description": "説明",
+		"notes": "備考",
+		"add": "病歴を追加"
+	},
+	"imaging": {
+		"summary": "概要",
+		"findings": "所見",
+		"impression": "診断",
+		"images": "画像",
+		"viewImage": "画像を表示",
+		"add": "画像検査を追加"
+	},
+	"labs": {
+		"reference": "基準値",
+		"add": "検査値を追加"
+	},
+	"doctor": {
+		"patientView": "患者情報閲覧",
+		"patientId": "患者ID",
+		"badge": "医師ビュー",
+		"medicalRecord": "診療記録",
+		"patientInformation": "患者情報",
+		"viewDescription": "共有された医療データを閲覧しています。アクセスは許可されたスコープのみに制限されています。",
+		"allergies": "アレルギー",
+		"drugAllergies": "薬剤アレルギー",
+		"noAllergies": "薬剤アレルギーの記録はありません",
+		"prescriptionHistory": "患者の処方履歴と現在の服薬情報",
+		"labHistory": "患者の検査結果とトレンド",
+		"tests": "項目",
+		"medicalHistory": "患者の疾患、手術、処置の履歴",
+		"vitalHistory": "患者のバイタルサイン測定記録",
+		"allergyWarning": "重要情報 - 処方前に必ず確認してください",
+		"severeAllergies": "重症アレルギーを検出",
+		"severeAllergyWarning": "この患者は重症の薬剤アレルギーがあります。処方時は細心の注意を払ってください。",
+		"imagingHistory": "患者の画像検査履歴",
+		"confidentialNotice": "この情報は守秘義務があり、医療プライバシー法により保護されています。",
+		"encryptedConnection": "暗号化接続",
+		"accessRestricted": "アクセス制限",
+		"noPermission": "このデータを閲覧する権限がありません"
+	},
 	"common": {
-		"download": "ダウンロード"
+		"download": "ダウンロード",
+		"back": "戻る"
 	}
 }

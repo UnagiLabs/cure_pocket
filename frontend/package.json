@@ -13,6 +13,7 @@
 		"validate": "npm run lint && npm run typecheck"
 	},
 	"dependencies": {
+		"@google/generative-ai": "^0.24.1",
 		"@hookform/resolvers": "^5.2.2",
 		"@mysten/dapp-kit": "^0.19.9",
 		"@mysten/seal": "^0.9.4",
