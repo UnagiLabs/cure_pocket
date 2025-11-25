@@ -57,16 +57,24 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
+            let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"lab_results");
+            let entry_seal_id = string::utf8(b"entry-seal-001");
             let blobs = sample_blob_ids();
-            accessor::add_data_entry(&mut passport, key, blobs);
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, blobs, &clk);
 
-            let stored = accessor::get_data_entry(&passport, key);
+            let entry = accessor::get_data_entry(&passport, key);
+            let stored = accessor::get_entry_blob_ids(entry);
             assert!(vector::length(stored) == 2, 0);
             assert!(*vector::borrow(stored, 0) == string::utf8(b"blob_a"), 1);
             assert!(*vector::borrow(stored, 1) == string::utf8(b"blob_b"), 2);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
+            // Verify seal_id is stored correctly
+            let stored_seal_id = accessor::get_entry_seal_id(entry);
+            assert!(*stored_seal_id == string::utf8(b"entry-seal-001"), 3);
+
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
@@ -85,17 +93,33 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
+            let mut clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"basic_profile");
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            let entry_seal_id = string::utf8(b"entry-seal-001");
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
+
+            // Advance clock to verify updated_at changes
+            clock::increment_for_testing(&mut clk, 1000);
 
             let new_blobs = vector[string::utf8(b"new_blob")];
-            accessor::replace_data_entry(&mut passport, key, new_blobs);
+            let new_seal_id = string::utf8(b"entry-seal-002");
+            accessor::replace_data_entry(&mut passport, key, new_seal_id, new_blobs, &clk);
 
-            let stored = accessor::get_data_entry(&passport, key);
+            let entry = accessor::get_data_entry(&passport, key);
+            let stored = accessor::get_entry_blob_ids(entry);
             assert!(vector::length(stored) == 1, 0);
             assert!(*vector::borrow(stored, 0) == string::utf8(b"new_blob"), 1);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
+            // Verify seal_id was updated
+            let stored_seal_id = accessor::get_entry_seal_id(entry);
+            assert!(*stored_seal_id == string::utf8(b"entry-seal-002"), 2);
+
+            // Verify updated_at is 1000ms (after clock increment)
+            let updated_at = accessor::get_entry_updated_at(entry);
+            assert!(updated_at == 1000, 3);
+
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
@@ -115,12 +139,15 @@ module cure_pocket::medical_passport_tests {
                 ctx,
             );
 
+            let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"medications");
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            let entry_seal_id = string::utf8(b"entry-seal-001");
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
             // 2回目は同じキーで登録しようとすると abort
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);

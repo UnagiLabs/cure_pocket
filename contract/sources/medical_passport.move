@@ -13,6 +13,7 @@
 module cure_pocket::medical_passport;
 
 use std::string::{Self, String};
+use sui::clock::Clock;
 use sui::display;
 use sui::dynamic_field as df;
 use sui::package::Publisher;
@@ -58,6 +59,22 @@ public struct MedicalPassport has key {
 /// - 特定のパスポートの所有者確認: address -> object::ID から取得したパスポートIDと比較
 public struct PassportRegistry has key {
     id: object::UID,
+}
+
+/// データエントリ構造体
+///
+/// ## 設計
+/// - 各データ型（basic_profile, medications など）に対して個別の暗号化キーを持つ
+/// - Walrus Blob ID と更新タイムスタンプを含む
+///
+/// ## フィールド
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
+/// - `blob_ids`: Walrus Blob ID の配列
+/// - `updated_at`: 最終更新時刻（Unix timestamp ms）
+public struct EntryData has store, drop {
+    seal_id: String,
+    blob_ids: vector<String>,
+    updated_at: u64,
 }
 
 // ============================================================
@@ -165,6 +182,9 @@ const E_DATA_ENTRY_NOT_FOUND: u64 = 12;
 /// 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 const E_INVALID_DATA_TYPE: u64 = 13;
 
+/// データエントリの Seal ID が空
+const E_EMPTY_ENTRY_SEAL_ID: u64 = 14;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -218,6 +238,11 @@ public(package) fun e_registry_not_found(): u64 {
 /// E_NOT_OWNER_FOR_MIGRATION エラーコードを取得
 public(package) fun e_not_owner_for_migration(): u64 {
     E_NOT_OWNER_FOR_MIGRATION
+}
+
+/// E_EMPTY_ENTRY_SEAL_ID エラーコードを取得
+public(package) fun e_empty_entry_seal_id(): u64 {
+    E_EMPTY_ENTRY_SEAL_ID
 }
 
 // ============================================================
@@ -402,107 +427,166 @@ fun is_valid_data_type(data_type: &String): bool {
 /// ## 用途
 /// - 医療データ種（例: `basic_profile`, `medications` など）ごとの Blob ID 配列を登録
 /// - データ種キー未登録の場合のみ追加（重複登録はabort）
+/// - 各データ種に個別の Seal ID を設定可能
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: データ種キー（文字列）
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
 /// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
+/// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
 public(package) fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: String,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
+    assert!(!string::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         !df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_ALREADY_EXISTS
     );
 
-    df::add(&mut passport.id, data_type, blob_ids);
+    let entry = EntryData {
+        seal_id,
+        blob_ids,
+        updated_at: sui::clock::timestamp_ms(clock),
+    };
+
+    df::add(&mut passport.id, data_type, entry);
 }
 
-/// 既存のデータ種に紐づく Blob ID 配列を丸ごと置き換える
+/// 既存のデータ種に紐づく EntryData を丸ごと置き換える
 ///
 /// ## 用途
 /// - 最新データへの差し替え
-/// - 古い Blob を全て無効化し、新しい配列に置換
+/// - Seal ID、Blob ID、タイムスタンプを全て更新
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
+/// - `seal_id`: 新しい Seal 暗号化 ID
 /// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
+/// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: String,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
+    assert!(!string::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    let entry_ref = df::borrow_mut<String, vector<String>>(&mut passport.id, data_type);
-    *entry_ref = blob_ids;
+    let entry_ref = df::borrow_mut<String, EntryData>(&mut passport.id, data_type);
+    *entry_ref = EntryData {
+        seal_id,
+        blob_ids,
+        updated_at: sui::clock::timestamp_ms(clock),
+    };
 }
 
-/// 指定データ種の Blob ID 配列を取得
+/// 指定データ種の EntryData を取得
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への参照
 /// - `data_type`: 取得するデータ種キー（文字列）
 ///
 /// ## 返り値
-/// - `&vector<String>`: 登録済み Blob ID 配列への参照
+/// - `&EntryData`: 登録済み EntryData への参照
 ///
 /// ## Aborts
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun get_data_entry(
     passport: &MedicalPassport,
     data_type: String
-): &vector<String> {
+): &EntryData {
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::borrow<String, vector<String>>(&passport.id, data_type)
+    df::borrow<String, EntryData>(&passport.id, data_type)
 }
 
-/// 指定データ種の Blob ID 配列を削除し、値を返す
+/// 指定データ種の EntryData を削除し、値を返す
 ///
 /// ## 用途
 /// - データ種ごとに参照をリセットする
 /// - パスポート削除や移行前のクリーンアップ
+///
+/// ## 返り値
+/// - `EntryData`: 削除された EntryData
 ///
 /// ## Aborts
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun remove_data_entry(
     passport: &mut MedicalPassport,
     data_type: String
-): vector<String> {
+): EntryData {
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::remove<String, vector<String>>(&mut passport.id, data_type)
+    df::remove<String, EntryData>(&mut passport.id, data_type)
+}
+
+/// EntryData から Seal ID を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Seal ID への参照
+public(package) fun get_entry_seal_id(entry: &EntryData): &String {
+    &entry.seal_id
+}
+
+/// EntryData から Blob ID 配列を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Blob ID 配列への参照
+public(package) fun get_entry_blob_ids(entry: &EntryData): &vector<String> {
+    &entry.blob_ids
+}
+
+/// EntryData から更新時刻を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - 更新時刻（Unix timestamp ms）
+public(package) fun get_entry_updated_at(entry: &EntryData): u64 {
+    entry.updated_at
 }
 
 // ============================================================

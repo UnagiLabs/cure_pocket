@@ -135,47 +135,108 @@ public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
 ///
 /// ## 用途
 /// - `basic_profile` / `medications` / `lab_results` などデータ種ごとのBlob参照を登録
+/// - 各データ種に個別の Seal ID を設定可能
 /// - 既に同じキーが存在する場合はabort
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassportへの可変参照
 /// - `data_type`: データ種キー（文字列）
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
 /// - `blob_ids`: Walrus Blob IDの配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: String,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
-    medical_passport::add_data_entry(passport, data_type, blob_ids)
+    medical_passport::add_data_entry(passport, data_type, seal_id, blob_ids, clock)
 }
 
-/// 既存データ種の Blob ID 配列を丸ごと置き換える
+/// 既存データ種の EntryData を丸ごと置き換える
 ///
 /// ## 用途
 /// - 最新データへの差し替え
-/// - 古いBlob参照を全て無効化し、新しい配列で上書き
+/// - Seal ID、Blob ID、タイムスタンプを全て更新
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportへの可変参照
+/// - `data_type`: 置き換えるデータ種キー（文字列）
+/// - `seal_id`: 新しい Seal 暗号化 ID
+/// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: String,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
-    medical_passport::replace_data_entry(passport, data_type, blob_ids)
+    medical_passport::replace_data_entry(passport, data_type, seal_id, blob_ids, clock)
 }
 
-/// データ種の Blob ID 配列を取得
+/// データ種の EntryData を取得
+///
+/// ## パラメータ
+/// - `passport`: MedicalPassportへの参照
+/// - `data_type`: 取得するデータ種キー（文字列）
+///
+/// ## 返り値
+/// - `&medical_passport::EntryData`: 登録済み EntryData への参照
 public fun get_data_entry(
     passport: &MedicalPassport,
     data_type: String
-): &vector<String> {
+): &medical_passport::EntryData {
     medical_passport::get_data_entry(passport, data_type)
 }
 
-/// データ種の Blob ID 配列を削除し、値を返す
+/// EntryData から Seal ID を取得（ヘルパー関数）
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Seal ID への参照
+public fun get_entry_seal_id(entry: &medical_passport::EntryData): &String {
+    medical_passport::get_entry_seal_id(entry)
+}
+
+/// EntryData から Blob ID 配列を取得（ヘルパー関数）
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Blob ID 配列への参照
+public fun get_entry_blob_ids(entry: &medical_passport::EntryData): &vector<String> {
+    medical_passport::get_entry_blob_ids(entry)
+}
+
+/// EntryData から更新時刻を取得（ヘルパー関数）
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - 更新時刻（Unix timestamp ms）
+public fun get_entry_updated_at(entry: &medical_passport::EntryData): u64 {
+    medical_passport::get_entry_updated_at(entry)
+}
+
+/// データ種の EntryData を削除
+///
+/// ## 用途
+/// - データ種ごとに参照をリセットする
+/// - パスポート削除や移行前のクリーンアップ
+///
+/// ## 注意
+/// - entry関数のため戻り値はなし（EntryDataはdrop可能）
 entry fun remove_data_entry(
     passport: &mut MedicalPassport,
     data_type: String
-): vector<String> {
-    medical_passport::remove_data_entry(passport, data_type)
+) {
+    let _ = medical_passport::remove_data_entry(passport, data_type);
 }
 
 /// 指定アドレスが既にパスポートを所持しているか確認
