@@ -178,28 +178,6 @@ export async function createSessionKey(options: {
 }
 
 /**
- * Generate seal_id from passport object ID
- *
- * seal_id is the identity suffix used in Seal's IBE model.
- * Format: [packageId][seal_id]
- *
- * @param passportObjectId - MedicalPassport Sui object ID
- * @returns seal_id as Uint8Array
- */
-export async function generateSealId(
-	passportObjectId: string,
-): Promise<string> {
-	// Use SHA-256 to generate deterministic seal_id
-	const encoder = new TextEncoder();
-	const data = encoder.encode(passportObjectId);
-	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-
-	return Array.from(new Uint8Array(hashBuffer))
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
-}
-
-/**
  * Encrypt health data using Seal's threshold IBE
  *
  * Official API flow:

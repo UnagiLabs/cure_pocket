@@ -21,6 +21,7 @@ import {
 	decryptHealthData,
 	encryptHealthData,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { parseSessionKeyFromHeader } from "@/lib/sessionKey";
 import {
 	getDataEntryBlobIds,
@@ -164,7 +165,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		const passport = await getMedicalPassport(passportId);
+		// Generate seal_id for medications data type
+		const medicationsSealId = await generateSealId(address, "medications");
 
 		// 4. Get blob_ids from Dynamic Fields
 		const blobIds = await getDataEntryBlobIds(passportId, "medications");
@@ -191,7 +193,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 					passportObjectId: passportId,
 					registryObjectId: PASSPORT_REGISTRY_ID,
 					suiClient,
-					sealId: passport.sealId,
+					sealId: medicationsSealId,
 				});
 
 				// 7. Decrypt with Seal
@@ -200,7 +202,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 					sealClient,
 					sessionKey,
 					txBytes,
-					sealId: passport.sealId,
+					sealId: medicationsSealId,
 				});
 
 				// 8. Merge medications
@@ -312,6 +314,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 		const passport = await getMedicalPassport(passportId);
 
+		// Generate seal_id for medications data type
+		const medicationsSealId = await generateSealId(body.address, "medications");
+
 		// 4. Construct HealthData object
 		const healthData: HealthData = {
 			meta: {
@@ -338,7 +343,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		const { encryptedObject } = await encryptHealthData({
 			healthData,
 			sealClient,
-			sealId: passport.sealId,
+			sealId: medicationsSealId,
 		});
 
 		// 6. Upload to Walrus

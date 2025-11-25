@@ -39,10 +39,12 @@ export const PASSPORT_REGISTRY_ID =
 
 /**
  * MedicalPassport object structure from Move contract
+ * Note: seal_id exists in the contract but is no longer used by frontend
+ * (seal_id is now dynamically generated per dataType using generateSealId)
  */
 interface MedicalPassportObject {
 	id: string; // Sui object ID
-	seal_id: string;
+	seal_id: string; // Deprecated: kept for contract compatibility, not used
 	country_code: string;
 	analytics_opt_in: boolean;
 }
@@ -113,9 +115,10 @@ export async function getMedicalPassport(
 
 		const fields = content.fields as unknown as MedicalPassportObject;
 
+		// Note: fields.seal_id is intentionally ignored
+		// seal_id is now dynamically generated per dataType using generateSealId(address, dataType)
 		return {
 			id: response.data.objectId,
-			sealId: fields.seal_id,
 			countryCode: fields.country_code,
 			analyticsOptIn: fields.analytics_opt_in,
 		};

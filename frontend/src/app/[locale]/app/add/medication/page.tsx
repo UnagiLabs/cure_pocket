@@ -1,6 +1,6 @@
 "use client";
 
-import { useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import {
 	Camera,
 	Image as ImageIcon,
@@ -31,6 +31,7 @@ import {
 	encryptHealthData,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { getDataEntryBlobIds, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
@@ -80,6 +81,7 @@ export default function AddPrescriptionPage() {
 
 	// Walrus関連フック
 	const suiClient = useSuiClient();
+	const currentAccount = useCurrentAccount();
 	const { passport } = usePassport();
 	const { updatePassportData, isUpdating } = useUpdatePassportData();
 	const { sessionKey } = useSessionKeyManager();
@@ -219,7 +221,21 @@ export default function AddPrescriptionPage() {
 			return;
 		}
 
+		// ウォレットアドレス確認
+		if (!currentAccount?.address) {
+			alert("ウォレットが接続されていません。");
+			return;
+		}
+
 		try {
+			// seal_id を生成（medications タイプ用）
+			const medicationsSealId = await generateSealId(
+				currentAccount.address,
+				"medications",
+			);
+			console.log(
+				`[AddMedication] Generated seal_id for medications: ${medicationsSealId.substring(0, 16)}...`,
+			);
 			// 処方箋オブジェクトを作成
 			const prescription: Prescription = {
 				id: uuidv4(),
@@ -281,7 +297,7 @@ export default function AddPrescriptionPage() {
 						passportObjectId: passport.id,
 						registryObjectId: PASSPORT_REGISTRY_ID,
 						suiClient,
-						sealId: passport.sealId,
+						sealId: medicationsSealId,
 					});
 
 					// Seal clientを作成
@@ -293,7 +309,7 @@ export default function AddPrescriptionPage() {
 						sealClient,
 						sessionKey,
 						txBytes,
-						sealId: passport.sealId,
+						sealId: medicationsSealId,
 					});
 
 					const existingData = decryptedData as unknown as MedicationsData;
@@ -347,7 +363,7 @@ export default function AddPrescriptionPage() {
 			const { encryptedObject } = await encryptHealthData({
 				healthData: medicationsData as unknown as never,
 				sealClient,
-				sealId: passport.sealId,
+				sealId: medicationsSealId,
 				threshold,
 			});
 

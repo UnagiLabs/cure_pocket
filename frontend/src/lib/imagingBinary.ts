@@ -148,3 +148,47 @@ export async function decryptImagingBinary({
 
 	return { contentType: mime, data: arrayBuffer, objectUrl };
 }
+
+/**
+ * Internal helper for decrypting imaging binary
+ * Called from useDecryptAndFetch hook - does NOT download from Walrus
+ * (Walrus download is handled by the hook)
+ *
+ * @param params - Decryption parameters with already-downloaded encrypted data
+ * @returns Decrypted image with content type and object URL
+ */
+type DecryptBinaryInternalParams = {
+	encryptedData: Uint8Array;
+	sealId: string;
+	sessionKey: SessionKey;
+	txBytes: Uint8Array;
+	suiClient: SuiClient;
+};
+
+export async function decryptImagingBinaryInternal({
+	encryptedData,
+	sessionKey,
+	txBytes,
+	suiClient,
+}: DecryptBinaryInternalParams): Promise<{
+	contentType: string;
+	data: ArrayBuffer;
+	objectUrl: string;
+}> {
+	const sealClient = createSealClient(suiClient);
+
+	const decryptedBytes = await sealClient.decrypt({
+		data: encryptedData,
+		sessionKey,
+		txBytes,
+	});
+
+	const { mime, data } = decodeEnvelope(new Uint8Array(decryptedBytes));
+	const cloned = data.slice();
+	const arrayBuffer = cloned.buffer as ArrayBuffer;
+	const objectUrl = URL.createObjectURL(
+		new Blob([arrayBuffer], { type: mime }),
+	);
+
+	return { contentType: mime, data: arrayBuffer, objectUrl };
+}

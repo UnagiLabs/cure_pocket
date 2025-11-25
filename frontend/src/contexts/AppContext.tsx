@@ -16,6 +16,7 @@ import {
 	createSealClient,
 	decryptHealthData,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import {
 	getDataEntryBlobIds,
 	getSuiClient,
@@ -170,11 +171,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				return;
 			}
 
-			if (!passport.sealId) {
-				console.log("[AppContext] Passport has no seal_id, skipping data load");
-				setIsLoadingProfile(false);
-				return;
-			}
+			// Note: seal_id is no longer stored in passport
+			// It's dynamically generated per dataType using generateSealId(address, dataType)
 
 			// Skip if already generating SessionKey
 			if (isGeneratingSessionKey) {
@@ -218,16 +216,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 				// Step 2: Setup decryption infrastructure
 				const suiClient = getSuiClient();
-				const txBytes = await buildPatientAccessPTB({
-					passportObjectId: passport.id,
-					registryObjectId: PASSPORT_REGISTRY_ID,
-					suiClient,
-					sealId: passport.sealId,
-				});
 				const sealClient = createSealClient(suiClient);
 
 				// Step 3: Load basic_profile (required)
+				// Generate seal_id for basic_profile dataType
 				setLoadingStates((prev) => ({ ...prev, basic_profile: true }));
+				const basicProfileSealId = await generateSealId(
+					currentAccount.address,
+					"basic_profile",
+				);
+				console.log(
+					`[AppContext] Generated seal_id for basic_profile: ${basicProfileSealId.substring(0, 16)}...`,
+				);
+
+				const basicProfileTxBytes = await buildPatientAccessPTB({
+					passportObjectId: passport.id,
+					registryObjectId: PASSPORT_REGISTRY_ID,
+					suiClient,
+					sealId: basicProfileSealId,
+				});
+
 				const basicProfileBlobIds = await getDataEntryBlobIds(
 					passport.id,
 					"basic_profile",
@@ -249,8 +257,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					encryptedData,
 					sealClient,
 					sessionKey,
-					txBytes,
-					sealId: passport.sealId,
+					txBytes: basicProfileTxBytes,
+					sealId: basicProfileSealId,
 				});
 
 				const basicProfileData = decryptedData as BasicProfileData;
@@ -317,6 +325,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				console.log("[AppContext] Profile loaded successfully");
 
 				// Step 4: Load additional data types in parallel
+				// Each data type uses its own seal_id generated from address + dataType
 				const dataLoadPromises = [
 					// Load conditions
 					(async () => {
@@ -328,6 +337,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 							);
 
 							if (conditionsBlobIds.length > 0) {
+								// Generate seal_id for conditions
+								const conditionsSealId = await generateSealId(
+									currentAccount.address,
+									"conditions",
+								);
+								const conditionsTxBytes = await buildPatientAccessPTB({
+									passportObjectId: passport.id,
+									registryObjectId: PASSPORT_REGISTRY_ID,
+									suiClient,
+									sealId: conditionsSealId,
+								});
+
 								const latestConditionsBlobId =
 									conditionsBlobIds[conditionsBlobIds.length - 1];
 								const encryptedConditionsData =
@@ -336,8 +357,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									encryptedData: encryptedConditionsData,
 									sealClient,
 									sessionKey,
-									txBytes,
-									sealId: passport.sealId,
+									txBytes: conditionsTxBytes,
+									sealId: conditionsSealId,
 								});
 
 								const conditionsData =
@@ -386,6 +407,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 							);
 
 							if (medicationsBlobIds.length > 0) {
+								// Generate seal_id for medications
+								const medicationsSealId = await generateSealId(
+									currentAccount.address,
+									"medications",
+								);
+								const medicationsTxBytes = await buildPatientAccessPTB({
+									passportObjectId: passport.id,
+									registryObjectId: PASSPORT_REGISTRY_ID,
+									suiClient,
+									sealId: medicationsSealId,
+								});
+
 								const latestMedicationsBlobId =
 									medicationsBlobIds[medicationsBlobIds.length - 1];
 								const encryptedMedicationsData =
@@ -394,8 +427,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									encryptedData: encryptedMedicationsData,
 									sealClient,
 									sessionKey,
-									txBytes,
-									sealId: passport.sealId,
+									txBytes: medicationsTxBytes,
+									sealId: medicationsSealId,
 								});
 
 								const medicationsData =
@@ -441,6 +474,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 							);
 
 							if (labResultsBlobIds.length > 0) {
+								// Generate seal_id for lab_results
+								const labResultsSealId = await generateSealId(
+									currentAccount.address,
+									"lab_results",
+								);
+								const labResultsTxBytes = await buildPatientAccessPTB({
+									passportObjectId: passport.id,
+									registryObjectId: PASSPORT_REGISTRY_ID,
+									suiClient,
+									sealId: labResultsSealId,
+								});
+
 								const latestLabResultsBlobId =
 									labResultsBlobIds[labResultsBlobIds.length - 1];
 								const encryptedLabResultsData =
@@ -449,8 +494,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									encryptedData: encryptedLabResultsData,
 									sealClient,
 									sessionKey,
-									txBytes,
-									sealId: passport.sealId,
+									txBytes: labResultsTxBytes,
+									sealId: labResultsSealId,
 								});
 
 								const labResultsData =
@@ -500,6 +545,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 							);
 
 							if (vitalsBlobIds.length > 0) {
+								// Generate seal_id for self_metrics
+								const selfMetricsSealId = await generateSealId(
+									currentAccount.address,
+									"self_metrics",
+								);
+								const selfMetricsTxBytes = await buildPatientAccessPTB({
+									passportObjectId: passport.id,
+									registryObjectId: PASSPORT_REGISTRY_ID,
+									suiClient,
+									sealId: selfMetricsSealId,
+								});
+
 								const latestVitalsBlobId =
 									vitalsBlobIds[vitalsBlobIds.length - 1];
 								const encryptedVitalsData =
@@ -508,8 +565,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									encryptedData: encryptedVitalsData,
 									sealClient,
 									sessionKey,
-									txBytes,
-									sealId: passport.sealId,
+									txBytes: selfMetricsTxBytes,
+									sealId: selfMetricsSealId,
 								});
 
 								const vitalsData =
@@ -565,6 +622,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 							);
 
 							if (imagingBlobIds.length > 0) {
+								// Generate seal_id for imaging_meta
+								const imagingMetaSealId = await generateSealId(
+									currentAccount.address,
+									"imaging_meta",
+								);
+								const imagingMetaTxBytes = await buildPatientAccessPTB({
+									passportObjectId: passport.id,
+									registryObjectId: PASSPORT_REGISTRY_ID,
+									suiClient,
+									sealId: imagingMetaSealId,
+								});
+
 								const latestImagingBlobId =
 									imagingBlobIds[imagingBlobIds.length - 1];
 								const encryptedImagingData =
@@ -573,8 +642,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									encryptedData: encryptedImagingData,
 									sealClient,
 									sessionKey,
-									txBytes,
-									sealId: passport.sealId,
+									txBytes: imagingMetaTxBytes,
+									sealId: imagingMetaSealId,
 								});
 
 								// Cast to ImagingMetaData which contains imaging_meta: ImagingStudyV2[]
