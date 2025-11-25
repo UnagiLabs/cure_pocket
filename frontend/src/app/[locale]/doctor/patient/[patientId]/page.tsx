@@ -8,8 +8,8 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { getDataTypeLabel, getMockData } from "@/lib/mockData";
-import { getDataEntryBlobIds } from "@/lib/suiClient";
-import type { DataScope } from "@/types/doctor";
+import { getDataEntry } from "@/lib/suiClient";
+import { type DataScope, toContractDataType } from "@/types/doctor";
 
 type FetchState = "idle" | "loading" | "success" | "error";
 
@@ -204,8 +204,12 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 
 		setFetchState("loading");
 		try {
-			const blobIds = await getDataEntryBlobIds(patientId, dataType);
-			if (blobIds.length === 0) {
+			// DataScope（UI用）をコントラクトのdataTypeに変換
+			const contractDataType = toContractDataType(dataType);
+
+			// EntryData（seal_id + blob_ids）をDFから取得
+			const entryData = await getDataEntry(patientId, contractDataType);
+			if (!entryData || entryData.blobIds.length === 0) {
 				setFetchMessage(
 					`${scopeLabel[dataType] || dataType}: Blob が登録されていません`,
 				);
@@ -213,13 +217,19 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				return;
 			}
 
+			const { sealId, blobIds } = entryData;
+			console.log(
+				`[DoctorPage] Retrieved seal_id from DF: ${sealId.substring(0, 16)}...`,
+			);
+
 			const decrypted: Array<{ blobId: string; data: unknown }> = [];
 			for (const blobId of blobIds) {
 				const res = await decryptWithConsent({
 					blobId,
+					sealId, // DFから取得したseal_idを渡す
 					passportId: patientId,
 					consentTokenId,
-					dataType,
+					dataType: contractDataType,
 					secret,
 					sessionKey,
 				});

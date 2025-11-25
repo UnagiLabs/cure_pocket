@@ -45,6 +45,10 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useState } from "react";
 import { generateSealId } from "@/lib/sealIdGenerator";
+import type { DataType } from "@/types/healthData";
+
+// Re-export DataType for backward compatibility
+export type { DataType };
 
 /**
  * Package ID from environment
@@ -61,18 +65,6 @@ function getPackageId(): string {
  * Sui Clock object ID (shared system object)
  */
 const SUI_CLOCK_OBJECT_ID = "0x6";
-
-/**
- * Data types for medical records
- */
-export type DataType =
-	| "basic_profile"
-	| "medications"
-	| "allergies"
-	| "histories"
-	| "lab_results"
-	| "imaging"
-	| "vitals";
 
 /**
  * Update parameters for Dynamic Fields

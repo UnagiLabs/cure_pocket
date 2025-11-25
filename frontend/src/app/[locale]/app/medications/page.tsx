@@ -12,7 +12,7 @@ import {
 	type DisplayMedication,
 	medicationsDataToDisplayData,
 } from "@/lib/prescriptionConverter";
-import { getDataEntryBlobIds } from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import type { MedicationsData } from "@/types/healthData";
 
@@ -36,8 +36,8 @@ export default function MedicationsPage() {
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
 
-	// Unified decrypt hook (seal_id auto-generated)
-	const { decrypt, isDecrypting } = useDecryptAndFetch();
+	// Unified decrypt hook (seal_id retrieved from SBT Dynamic Fields)
+	const { decryptWithSealId, isDecrypting } = useDecryptAndFetch();
 
 	// State
 	const [medications, setMedications] = useState<DisplayMedication[]>([]);
@@ -65,35 +65,33 @@ export default function MedicationsPage() {
 		try {
 			console.log("[Medications] Loading medications from Walrus...");
 
-			// Step 1: パスポートからmedications Blob IDsを取得
-			const medicationsBlobIds = await getDataEntryBlobIds(
-				passport.id,
-				"medications",
-			);
+			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			const entryData = await getDataEntry(passport.id, "medications");
 
-			if (medicationsBlobIds.length === 0) {
+			if (!entryData || entryData.blobIds.length === 0) {
 				console.log("[Medications] No medications data found");
 				setMedications([]);
 				setIsLoading(false);
 				return;
 			}
 
+			const { sealId, blobIds } = entryData;
 			console.log(
-				`[Medications] Found ${medicationsBlobIds.length} medications blob(s)`,
+				`[Medications] Found ${blobIds.length} medications blob(s), seal_id: ${sealId.substring(0, 16)}...`,
 			);
 
 			// Step 2: 各Blobをダウンロード→復号化→JSON変換
-			// useDecryptAndFetch が seal_id を自動生成（address + "medications"）
+			// seal_id はDFから取得した値を使用
 			const allMedications: DisplayMedication[] = [];
 
-			for (const blobId of medicationsBlobIds) {
+			for (const blobId of blobIds) {
 				console.log(`[Medications] Downloading and decrypting blob: ${blobId}`);
 
 				try {
-					// 新しい統合復号フックを使用
-					// seal_id は内部で generateSealId(address, "medications") により自動生成
-					const decryptedData = await decrypt({
+					// DFから取得したseal_idを使用して復号化
+					const decryptedData = await decryptWithSealId({
 						blobId,
+						sealId,
 						dataType: "medications",
 						sessionKey,
 						passportId: passport.id,
@@ -178,7 +176,7 @@ export default function MedicationsPage() {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		decrypt,
+		decryptWithSealId,
 	]);
 
 	// パスポート・SessionKey準備完了後にデータ読み込み

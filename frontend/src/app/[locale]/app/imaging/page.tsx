@@ -9,7 +9,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { getDataEntryBlobIds } from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import type { ImagingReport } from "@/types";
 import type { ImagingMetaData } from "@/types/healthData";
@@ -58,8 +58,8 @@ export default function ImagingPage() {
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
 
-	// Unified decrypt hook (seal_id auto-generated)
-	const { decrypt, isDecrypting } = useDecryptAndFetch();
+	// Unified decrypt hook (seal_id retrieved from SBT Dynamic Fields)
+	const { decryptWithSealId, isDecrypting } = useDecryptAndFetch();
 
 	// State
 	const [walrusReports, setWalrusReports] = useState<ImagingReport[]>([]);
@@ -90,23 +90,31 @@ export default function ImagingPage() {
 		try {
 			console.log("[Imaging] Loading imaging data from Walrus...");
 
-			// Step 1: パスポートからimaging_meta Blob IDsを取得
-			const metaBlobIds = await getDataEntryBlobIds(
-				passport.id,
-				"imaging_meta",
-			);
+			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			const metaEntryData = await getDataEntry(passport.id, "imaging_meta");
+			const binaryEntryData = await getDataEntry(passport.id, "imaging_binary");
 
-			if (metaBlobIds.length === 0) {
-				console.log("[Imaging] No imaging data found");
+			if (!metaEntryData || metaEntryData.blobIds.length === 0) {
+				console.log("[Imaging] No imaging meta data found");
 				setWalrusReports([]);
 				setIsLoading(false);
 				return;
 			}
 
-			console.log(`[Imaging] Found ${metaBlobIds.length} imaging_meta blob(s)`);
+			const { sealId: metaSealId, blobIds: metaBlobIds } = metaEntryData;
+			const binarySealId = binaryEntryData?.sealId;
+
+			console.log(
+				`[Imaging] Found ${metaBlobIds.length} imaging_meta blob(s), meta_seal_id: ${metaSealId.substring(0, 16)}...`,
+			);
+			if (binarySealId) {
+				console.log(
+					`[Imaging] Binary seal_id: ${binarySealId.substring(0, 16)}...`,
+				);
+			}
 
 			// Step 2: 各Blobをダウンロード→復号化→ObjectURL生成
-			// useDecryptAndFetch が seal_id を自動生成
+			// seal_id はDFから取得した値を使用
 			const allReports: ImagingReport[] = [];
 
 			for (const metaBlobId of metaBlobIds) {
@@ -115,10 +123,10 @@ export default function ImagingPage() {
 				);
 
 				try {
-					// メタデータを復号化
-					// seal_id は内部で generateSealId(address, "imaging_meta") により自動生成
-					const decryptedMeta = await decrypt({
+					// メタデータを復号化（DFから取得したseal_idを使用）
+					const decryptedMeta = await decryptWithSealId({
 						blobId: metaBlobId,
+						sealId: metaSealId,
 						dataType: "imaging_meta",
 						sessionKey,
 						passportId: passport.id,
@@ -193,10 +201,13 @@ export default function ImagingPage() {
 							console.log(
 								`[Imaging] 🔄 Attempting to decrypt image: ${binaryBlobId}`,
 							);
-							// 画像バイナリを復号化
-							// seal_id は内部で generateSealId(address, "imaging_binary") により自動生成
-							const imagingBinary = await decrypt({
+							// 画像バイナリを復号化（DFから取得したseal_idを使用）
+							if (!binarySealId) {
+								throw new Error("Binary seal_id not found in EntryData");
+							}
+							const imagingBinary = await decryptWithSealId({
 								blobId: binaryBlobId,
+								sealId: binarySealId,
 								dataType: "imaging_binary",
 								sessionKey,
 								passportId: passport.id,
@@ -305,7 +316,7 @@ export default function ImagingPage() {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		decrypt,
+		decryptWithSealId,
 	]);
 
 	// パスポート・SessionKey準備完了後にデータ読み込み

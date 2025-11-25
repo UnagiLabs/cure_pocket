@@ -1,15 +1,32 @@
 /**
  * モックデータ定義
  * DEMO動画用のサンプル医療データ
+ *
+ * 注意: このDataTypeはUI表示用のカテゴリーIDです。
+ * コントラクトで使用するdataTypeは @/types/healthData からimportしてください。
+ * UI→Contract マッピング:
+ *   - medications → "medications"
+ *   - allergies → "basic_profile" (アレルギーはbasic_profileに含まれる)
+ *   - histories → "conditions"
+ *   - labs → "lab_results"
+ *   - imaging → "imaging_meta"
+ *   - vitals → "self_metrics"
  */
 
-export type DataType =
+/**
+ * UI表示用のカテゴリーID
+ * @deprecated コントラクト連携時は DataType from "@/types/healthData" を使用
+ */
+export type MockDataType =
 	| "medications"
 	| "allergies"
 	| "histories"
 	| "labs"
 	| "imaging"
 	| "vitals";
+
+// Backward compatibility alias
+export type DataType = MockDataType;
 
 export interface Medication {
 	name: string;

@@ -2,6 +2,7 @@
  * 医師向け患者情報閲覧の型定義
  */
 
+import type { DataType as ContractDataType } from "./healthData";
 import type {
 	Allergy,
 	ImagingReport,
@@ -23,6 +24,32 @@ export type DataScope =
 	| "lab_results" // 検査値
 	| "imaging_reports" // 画像レポート
 	| "vital_signs"; // バイタルサイン
+
+/**
+ * DataScope（UI用）からコントラクトのdataTypeへのマッピング
+ *
+ * UI上のスコープ名とコントラクトで有効なdataType文字列の対応関係を定義。
+ * コントラクトで有効なdataType:
+ *   "basic_profile", "medications", "conditions", "lab_results",
+ *   "imaging_meta", "imaging_binary", "self_metrics"
+ */
+export const dataScopeToContractDataType: Record<DataScope, ContractDataType> =
+	{
+		basic_profile: "basic_profile",
+		medications: "medications",
+		allergies: "basic_profile", // アレルギーはbasic_profileに含まれる
+		conditions: "conditions",
+		lab_results: "lab_results",
+		imaging_reports: "imaging_meta",
+		vital_signs: "self_metrics",
+	};
+
+/**
+ * DataScopeをコントラクトのdataTypeに変換
+ */
+export function toContractDataType(scope: DataScope): ContractDataType {
+	return dataScopeToContractDataType[scope];
+}
 
 /**
  * 医師向け患者情報ビュー

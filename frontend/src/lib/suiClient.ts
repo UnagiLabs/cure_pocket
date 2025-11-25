@@ -285,34 +285,49 @@ export async function getAllPassports(
  * @returns Transaction block ready for signing
  */
 /**
- * Get blob IDs for a specific data type from MedicalPassport Dynamic Fields
+ * EntryData structure from MedicalPassport Dynamic Fields
+ * Contains seal_id and blob_ids for a specific data type
+ */
+export interface EntryData {
+	/** Seal ID used for encryption (for decryption verification) */
+	sealId: string;
+	/** Array of Walrus blob IDs */
+	blobIds: string[];
+	/** Last updated timestamp (ms since epoch) */
+	updatedAt: number;
+}
+
+/**
+ * Get EntryData (seal_id + blob_ids) for a specific data type from MedicalPassport Dynamic Fields
  *
  * This queries the Dynamic Field associated with a specific data type
- * (e.g., "medications", "basic_profile") and returns the array of blob IDs.
+ * (e.g., "medications", "basic_profile") and returns the full EntryData including seal_id.
  *
  * Flow:
  * 1. Query Dynamic Field with data type as key (String type)
- * 2. Extract blob_ids array from field value (vector<String>)
- * 3. Return blob IDs for Walrus download
+ * 2. Extract seal_id and blob_ids from field value (EntryData struct)
+ * 3. Return EntryData for decryption
  *
  * @param passportObjectId - MedicalPassport Sui object ID
  * @param dataType - Data type key (e.g., "medications", "basic_profile")
- * @returns Array of blob IDs, or empty array if data type not found
- * @throws Error if query fails (except for "not found" which returns empty array)
+ * @returns EntryData with sealId and blobIds, or null if data type not found
+ * @throws Error if query fails (except for "not found" which returns null)
  *
  * @example
  * ```typescript
- * const blobIds = await getDataEntryBlobIds(passportId, "medications");
- * for (const blobId of blobIds) {
- *   const encryptedData = await downloadFromWalrusByBlobId(blobId);
- *   // ... decrypt and process
+ * const entry = await getDataEntry(passportId, "medications");
+ * if (entry) {
+ *   for (const blobId of entry.blobIds) {
+ *     const encryptedData = await downloadFromWalrusByBlobId(blobId);
+ *     // Use entry.sealId for decryption
+ *   }
  * }
  * ```
  */
-export async function getDataEntryBlobIds(
+export async function getDataEntry(
 	passportObjectId: string,
 	dataType: string,
-): Promise<string[]> {
+): Promise<EntryData | null> {
 	const client = getSuiClient();
 
 	try {
@@ -330,7 +345,7 @@ export async function getDataEntryBlobIds(
 
 		if (!response.data) {
 			// Data type not found - this is normal for uninitialized fields
-			return [];
+			return null;
 		}
 
 		// Extract blob_ids from Dynamic Field value
@@ -345,7 +360,7 @@ export async function getDataEntryBlobIds(
 
 		// Debug: Log the actual structure to understand the response format
 		console.log(
-			"[getDataEntryBlobIds] Raw fields structure:",
+			"[getDataEntry] Raw fields structure:",
 			JSON.stringify(rawFields, null, 2),
 		);
 
@@ -355,49 +370,79 @@ export async function getDataEntryBlobIds(
 			blob_ids?: string[];
 			updated_at?: string | number;
 		};
-		let entryData: EntryDataShape | undefined;
+		let entryDataRaw: EntryDataShape | undefined;
 
 		if (rawFields.value && typeof rawFields.value === "object") {
 			const value = rawFields.value as Record<string, unknown>;
 
 			// Pattern 1: value.fields contains EntryData (nested structure)
 			if ("fields" in value && typeof value.fields === "object") {
-				entryData = value.fields as EntryDataShape;
-				console.log(
-					"[getDataEntryBlobIds] Using nested structure (value.fields)",
-				);
+				entryDataRaw = value.fields as EntryDataShape;
+				console.log("[getDataEntry] Using nested structure (value.fields)");
 			}
 			// Pattern 2: value directly contains EntryData fields
 			else if ("blob_ids" in value) {
-				entryData = value as EntryDataShape;
-				console.log("[getDataEntryBlobIds] Using direct structure (value)");
+				entryDataRaw = value as EntryDataShape;
+				console.log("[getDataEntry] Using direct structure (value)");
 			}
 		}
 
-		// Validate blob_ids extraction
-		if (!entryData?.blob_ids || !Array.isArray(entryData.blob_ids)) {
+		// Validate extraction
+		if (!entryDataRaw?.blob_ids || !Array.isArray(entryDataRaw.blob_ids)) {
 			console.error(
-				"[getDataEntryBlobIds] Failed to extract blob_ids. Full structure:",
+				"[getDataEntry] Failed to extract blob_ids. Full structure:",
 				JSON.stringify(content.fields, null, 2),
 			);
 			throw new Error("Invalid EntryData structure: blob_ids not found");
 		}
 
-		return entryData.blob_ids;
+		if (!entryDataRaw?.seal_id || typeof entryDataRaw.seal_id !== "string") {
+			console.error(
+				"[getDataEntry] Failed to extract seal_id. Full structure:",
+				JSON.stringify(content.fields, null, 2),
+			);
+			throw new Error("Invalid EntryData structure: seal_id not found");
+		}
+
+		return {
+			sealId: entryDataRaw.seal_id,
+			blobIds: entryDataRaw.blob_ids,
+			updatedAt:
+				typeof entryDataRaw.updated_at === "string"
+					? Number.parseInt(entryDataRaw.updated_at, 10)
+					: (entryDataRaw.updated_at ?? 0),
+		};
 	} catch (error) {
-		// If error is "Dynamic field not found", return empty array
+		// If error is "Dynamic field not found", return null
 		if (
 			error instanceof Error &&
 			error.message.includes("Dynamic field not found")
 		) {
-			return [];
+			return null;
 		}
 
 		if (error instanceof Error) {
-			throw new Error(`Failed to get data entry blob IDs: ${error.message}`);
+			throw new Error(`Failed to get data entry: ${error.message}`);
 		}
-		throw new Error("Failed to get data entry blob IDs: Unknown error");
+		throw new Error("Failed to get data entry: Unknown error");
 	}
+}
+
+/**
+ * Get blob IDs for a specific data type from MedicalPassport Dynamic Fields
+ *
+ * @deprecated Use getDataEntry() instead to also get seal_id for decryption
+ *
+ * @param passportObjectId - MedicalPassport Sui object ID
+ * @param dataType - Data type key (e.g., "medications", "basic_profile")
+ * @returns Array of blob IDs, or empty array if data type not found
+ */
+export async function getDataEntryBlobIds(
+	passportObjectId: string,
+	dataType: string,
+): Promise<string[]> {
+	const entry = await getDataEntry(passportObjectId, dataType);
+	return entry?.blobIds ?? [];
 }
 
 export function buildUpdateDataEntryTransaction(params: {
