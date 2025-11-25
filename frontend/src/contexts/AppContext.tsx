@@ -56,6 +56,8 @@ interface LoadingStates {
 
 interface AppContextType extends AppState {
 	loadingStates: LoadingStates;
+	isLoadingProfile: boolean;
+	refetchProfile: () => Promise<void>;
 	setWalletAddress: (address: string | null) => void;
 	setMedications: (medications: Medication[]) => void;
 	addMedication: (medication: Medication) => void;
@@ -112,6 +114,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 	const [profile, setProfile] = useState<PatientProfile | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+	const [isGeneratingSessionKey, setIsGeneratingSessionKey] = useState(false);
 
 	// Loading states for individual data types
 	const [loadingStates, setLoadingStates] = useState<LoadingStates>({
@@ -154,35 +158,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
 	// Initialize profile data from encrypted storage
 	useEffect(() => {
 		async function initializeProfileData() {
+			// Early return conditions
 			if (!currentAccount?.address || passportLoading) {
+				setIsLoadingProfile(false);
 				return;
 			}
 
 			if (!has_passport || !passport) {
 				console.log("[AppContext] No passport found, skipping data load");
+				setIsLoadingProfile(false);
 				return;
 			}
 
 			if (!passport.sealId) {
 				console.log("[AppContext] Passport has no seal_id, skipping data load");
+				setIsLoadingProfile(false);
 				return;
 			}
 
+			// Skip if already generating SessionKey
+			if (isGeneratingSessionKey) {
+				console.log(
+					"[AppContext] SessionKey generation in progress, waiting...",
+				);
+				return;
+			}
+
+			// Step 1: Ensure SessionKey is valid
+			if (!sessionKey || !sessionKeyValid) {
+				console.log("[AppContext] SessionKey invalid, generating new one...");
+				setIsLoadingProfile(true);
+				setIsGeneratingSessionKey(true);
+				try {
+					await generateSessionKey();
+					console.log(
+						"[AppContext] SessionKey generation completed, will retry profile load",
+					);
+				} catch (error) {
+					console.error("[AppContext] SessionKey generation failed:", error);
+					setIsLoadingProfile(false);
+				} finally {
+					setIsGeneratingSessionKey(false);
+				}
+				// Don't continue - the effect will re-run when sessionKey changes
+				return;
+			}
+
+			// Skip if profile already loaded
 			if (profile !== null) {
+				setIsLoadingProfile(false);
 				return;
 			}
 
 			setIsLoading(true);
+			setIsLoadingProfile(true);
 
 			try {
 				console.log("[AppContext] Initializing profile data from passport...");
-
-				// Step 1: Ensure SessionKey is valid
-				if (!sessionKey || !sessionKeyValid) {
-					console.log("[AppContext] Generating new SessionKey...");
-					await generateSessionKey();
-					return;
-				}
 
 				// Step 2: Setup decryption infrastructure
 				const suiClient = getSuiClient();
@@ -606,8 +638,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				console.log("[AppContext] All data loading completed");
 			} catch (error) {
 				console.error("[AppContext] Failed to initialize profile data:", error);
+				setIsLoadingProfile(false);
 			} finally {
 				setIsLoading(false);
+				setIsLoadingProfile(false);
 			}
 		}
 
@@ -621,6 +655,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
+		isGeneratingSessionKey,
 	]);
 
 	// setWalletAddressはdApp Kitが管理するため、空実装
@@ -767,6 +802,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 		setIsLoading(loading);
 	};
 
+	const refetchProfile = async () => {
+		console.log("[AppContext] Manual profile refetch requested");
+		// Reset profile state to trigger reload
+		setProfile(null);
+		setIsLoadingProfile(true);
+	};
+
 	return (
 		<AppContext.Provider
 			value={{
@@ -781,7 +823,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				settings,
 				profile,
 				isLoading,
+				isLoadingProfile,
 				loadingStates,
+				refetchProfile,
 				setWalletAddress,
 				setMedications,
 				addMedication,
