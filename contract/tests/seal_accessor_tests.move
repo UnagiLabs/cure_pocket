@@ -6,6 +6,7 @@ module cure_pocket::seal_accessor_tests {
     use std::string::{Self as string, String};
 
     use cure_pocket::accessor;
+    use cure_pocket::seal_accessor;
     use cure_pocket::medical_passport::{Self as medical_passport, MedicalPassport, PassportRegistry};
     use cure_pocket::cure_pocket::Self;
 
@@ -117,7 +118,7 @@ module cure_pocket::seal_accessor_tests {
 
     /// seal_idが不一致の場合にE_INVALID_SEAL_ID(103)でabort
     #[test]
-    #[expected_failure(abort_code = 103)]
+    #[expected_failure(abort_code = seal_accessor::E_INVALID_SEAL_ID)]
     fun seal_approve_rejects_invalid_seal_id() {
         let mut scenario = ts::begin(USER1);
         {

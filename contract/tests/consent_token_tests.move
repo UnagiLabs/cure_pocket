@@ -531,7 +531,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -618,7 +618,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -721,7 +721,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -808,7 +808,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -897,7 +897,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -984,7 +984,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -1340,7 +1340,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
@@ -1430,7 +1430,7 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
 
