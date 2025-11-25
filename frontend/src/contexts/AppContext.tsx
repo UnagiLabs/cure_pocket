@@ -234,6 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					registryObjectId: PASSPORT_REGISTRY_ID,
 					suiClient,
 					sealId: basicProfileSealId,
+					dataType: "basic_profile",
 				});
 
 				const basicProfileBlobIds = await getDataEntryBlobIds(
@@ -347,6 +348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									registryObjectId: PASSPORT_REGISTRY_ID,
 									suiClient,
 									sealId: conditionsSealId,
+									dataType: "conditions",
 								});
 
 								const latestConditionsBlobId =
@@ -417,6 +419,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									registryObjectId: PASSPORT_REGISTRY_ID,
 									suiClient,
 									sealId: medicationsSealId,
+									dataType: "medications",
 								});
 
 								const latestMedicationsBlobId =
@@ -484,6 +487,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									registryObjectId: PASSPORT_REGISTRY_ID,
 									suiClient,
 									sealId: labResultsSealId,
+									dataType: "lab_results",
 								});
 
 								const latestLabResultsBlobId =
@@ -555,6 +559,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									registryObjectId: PASSPORT_REGISTRY_ID,
 									suiClient,
 									sealId: selfMetricsSealId,
+									dataType: "self_metrics",
 								});
 
 								const latestVitalsBlobId =
@@ -632,6 +637,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									registryObjectId: PASSPORT_REGISTRY_ID,
 									suiClient,
 									sealId: imagingMetaSealId,
+									dataType: "imaging_meta",
 								});
 
 								const latestImagingBlobId =

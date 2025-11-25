@@ -219,6 +219,7 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 					registryObjectId: effectiveRegistryId,
 					suiClient,
 					sealId,
+					dataType,
 				});
 
 				console.log("[DecryptAndFetch] PTB built successfully");

@@ -339,13 +339,21 @@ export async function getDataEntryBlobIds(
 			throw new Error("Invalid dynamic field structure");
 		}
 
-		// Dynamic Field value is vector<String> (blob_ids array)
-		const fields = content.fields as { name: unknown; value: string[] };
-		if (!fields.value || !Array.isArray(fields.value)) {
-			throw new Error("Dynamic field value is not an array");
+		// Dynamic Field value is EntryData struct: { seal_id, blob_ids, updated_at }
+		interface EntryDataFields {
+			seal_id: string;
+			blob_ids: string[];
+			updated_at: string;
+		}
+		const fields = content.fields as unknown as {
+			name: unknown;
+			value: EntryDataFields;
+		};
+		if (!fields.value?.blob_ids || !Array.isArray(fields.value.blob_ids)) {
+			throw new Error("Invalid EntryData structure: blob_ids not found");
 		}
 
-		return fields.value;
+		return fields.value.blob_ids;
 	} catch (error) {
 		// If error is "Dynamic field not found", return empty array
 		if (

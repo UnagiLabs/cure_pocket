@@ -356,12 +356,14 @@ export async function buildPatientAccessPTB(params: {
 	registryObjectId: string;
 	suiClient: SuiClient;
 	sealId: string;
+	dataType: string;
 }): Promise<Uint8Array> {
-	const { passportObjectId, registryObjectId, suiClient, sealId } = params;
+	const { passportObjectId, registryObjectId, suiClient, sealId, dataType } =
+		params;
 
 	const tx = new Transaction();
 
-	// Call seal_approve_patient_only(id, passport, registry)
+	// Call seal_approve_patient_only(id, passport, registry, data_type)
 	// First argument is the identity (seal_id), excluding package ID prefix
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
@@ -369,6 +371,7 @@ export async function buildPatientAccessPTB(params: {
 			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
 			tx.object(passportObjectId),
 			tx.object(registryObjectId),
+			tx.pure.string(dataType), // Data type for scope-based access
 		],
 	});
 

@@ -129,6 +129,7 @@ export async function decryptImagingBinary({
 		registryObjectId: effectiveRegistryId,
 		suiClient,
 		sealId,
+		dataType: "imaging_binary",
 	});
 
 	const sealClient = createSealClient(suiClient);

@@ -298,6 +298,7 @@ export default function AddPrescriptionPage() {
 						registryObjectId: PASSPORT_REGISTRY_ID,
 						suiClient,
 						sealId: medicationsSealId,
+						dataType: "medications",
 					});
 
 					// Seal clientを作成

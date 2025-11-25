@@ -194,6 +194,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 					registryObjectId: PASSPORT_REGISTRY_ID,
 					suiClient,
 					sealId: medicationsSealId,
+					dataType: "medications",
 				});
 
 				// 7. Decrypt with Seal
