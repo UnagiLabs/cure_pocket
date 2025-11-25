@@ -11,8 +11,8 @@
  * - Support for multiple blob IDs per data type
  *
  * ## Contract Functions
- * - `add_data_entry(passport, data_type, blob_ids)`
- * - `replace_data_entry(passport, data_type, blob_ids)`
+ * - `add_data_entry(passport, data_type, seal_id, blob_ids, clock)`
+ * - `replace_data_entry(passport, data_type, seal_id, blob_ids, clock)`
  *
  * ## Usage
  * ```typescript
@@ -37,9 +37,14 @@
  */
 "use client";
 
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useState } from "react";
+import { generateSealId } from "@/lib/sealIdGenerator";
 
 /**
  * Package ID from environment
@@ -51,6 +56,11 @@ function getPackageId(): string {
 	}
 	return packageId;
 }
+
+/**
+ * Sui Clock object ID (shared system object)
+ */
+const SUI_CLOCK_OBJECT_ID = "0x6";
 
 /**
  * Data types for medical records
@@ -117,6 +127,7 @@ export interface UseUpdatePassportDataReturn {
  */
 export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	const suiClient = useSuiClient();
+	const currentAccount = useCurrentAccount();
 	const { mutateAsync: signAndExecuteTransaction } =
 		useSignAndExecuteTransaction();
 
@@ -131,6 +142,11 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 		async (params: UpdatePassportParams) => {
 			const { passportId, dataType, blobIds, replace = false } = params;
 
+			// Validate: wallet must be connected
+			if (!currentAccount?.address) {
+				throw new Error("Wallet not connected");
+			}
+
 			// Validate: blob IDs must be provided
 			if (!blobIds || blobIds.length === 0) {
 				throw new Error("At least one blob ID must be provided");
@@ -143,9 +159,13 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 			try {
 				const packageId = getPackageId();
 
+				// Generate seal_id from wallet address and data type
+				const sealId = await generateSealId(currentAccount.address, dataType);
+
 				console.log("[UpdatePassport] Preparing transaction...");
 				console.log(`  Passport ID: ${passportId}`);
 				console.log(`  Data Type: ${dataType}`);
+				console.log(`  Seal ID: ${sealId}`);
 				console.log(`  Blob IDs: ${blobIds.join(", ")}`);
 				console.log(`  Mode: ${replace ? "replace" : "add"}`);
 
@@ -159,7 +179,9 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 					arguments: [
 						tx.object(passportId), // passport
 						tx.pure.string(dataType), // data_type
+						tx.pure.string(sealId), // seal_id
 						tx.pure.vector("string", blobIds), // blob_ids (vector<String>)
+						tx.object(SUI_CLOCK_OBJECT_ID), // clock
 					],
 				});
 
@@ -195,7 +217,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[signAndExecuteTransaction, suiClient],
+		[currentAccount, signAndExecuteTransaction, suiClient],
 	);
 
 	/**
@@ -204,6 +226,11 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	const updateMultiplePassportData = useCallback(
 		async (params: UpdateMultiplePassportParams) => {
 			const { passportId, dataEntries } = params;
+
+			// Validate: wallet must be connected
+			if (!currentAccount?.address) {
+				throw new Error("Wallet not connected");
+			}
 
 			// Validate: at least one data entry must be provided
 			if (!dataEntries || dataEntries.length === 0) {
@@ -239,6 +266,11 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				const tx = new Transaction();
 
 				for (const entry of dataEntries) {
+					// Generate seal_id for each data type
+					const sealId = await generateSealId(
+						currentAccount.address,
+						entry.dataType,
+					);
 					const functionName = entry.replace
 						? "replace_data_entry"
 						: "add_data_entry";
@@ -247,7 +279,9 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 						arguments: [
 							tx.object(passportId), // passport
 							tx.pure.string(entry.dataType), // data_type
+							tx.pure.string(sealId), // seal_id
 							tx.pure.vector("string", entry.blobIds), // blob_ids (vector<String>)
+							tx.object(SUI_CLOCK_OBJECT_ID), // clock
 						],
 					});
 				}
@@ -288,7 +322,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[signAndExecuteTransaction, suiClient],
+		[currentAccount, signAndExecuteTransaction, suiClient],
 	);
 
 	return {

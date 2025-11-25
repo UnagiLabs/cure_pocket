@@ -365,6 +365,7 @@ export async function getDataEntryBlobIds(
 export function buildUpdateDataEntryTransaction(params: {
 	passportObjectId: string;
 	dataType: string; // データ種別 (e.g., "basic_profile", "medications")
+	sealId: string; // Seal ID for encryption
 	blobIds: string[]; // Blob IDの配列
 	replace?: boolean; // true: replace_data_entry, false: add_data_entry
 }): {
@@ -381,7 +382,12 @@ export function buildUpdateDataEntryTransaction(params: {
 		packageId: PACKAGE_ID,
 		module: "accessor",
 		function: params.replace ? "replace_data_entry" : "add_data_entry",
-		arguments: [params.passportObjectId, params.dataType, params.blobIds],
+		arguments: [
+			params.passportObjectId,
+			params.dataType,
+			params.sealId,
+			params.blobIds,
+		],
 	};
 }
 
