@@ -51,8 +51,8 @@ export default function PassportPage() {
 				throw new Error("ウォレットが接続されていません");
 			}
 
-			// ウォレットアドレスから決定論的にseal_idを生成
-			const seal_id = await generateSealId(walletAddress);
+			// ウォレットアドレスから決定論的にseal_idを生成（パスポート用のデフォルトスコープ）
+			const seal_id = await generateSealId(walletAddress, "basic_profile");
 			console.log(`[Mint] Generated seal_id: ${seal_id.substring(0, 16)}...`);
 
 			// パスポートをmint

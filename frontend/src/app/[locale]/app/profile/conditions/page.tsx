@@ -19,7 +19,6 @@ import {
 	historiesToConditions,
 	profileToBasicProfile,
 } from "@/lib/profileConverter";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
 import type { AgeBand, MedicalHistory, PatientProfile } from "@/types";
 
@@ -236,12 +235,8 @@ export default function ConditionsPage() {
 				});
 			}
 
-			// Step 2: 並列暗号化とアップロード
-			const sealId = await generateSealId(currentAccount.address);
-			const encryptionResults = await encryptAndStoreMultiple(
-				dataItems,
-				sealId,
-			);
+			// Step 2: 並列暗号化とアップロード（seal_idはフック内で自動生成）
+			const encryptionResults = await encryptAndStoreMultiple(dataItems);
 
 			// Step 3: 各データ型のオンチェーン存在チェック
 			const dataEntries = await Promise.all(

@@ -16,6 +16,7 @@ import {
 	createSealClient,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 
@@ -50,19 +51,26 @@ async function fileToUint8(file: Blob): Promise<Uint8Array> {
 
 type EncryptBinaryParams = {
 	file: File | Blob;
-	sealId: string;
+	address: string;
 	suiClient: SuiClient;
 };
 
+/**
+ * Encrypt image binary and store in Walrus
+ * seal_id is automatically generated from address with "imaging_binary" scope
+ */
 export async function encryptAndStoreImagingBinary({
 	file,
-	sealId,
+	address,
 	suiClient,
 }: EncryptBinaryParams): Promise<{
 	blobId: string;
 	contentType: string;
 	size: number;
 }> {
+	// Generate scoped seal_id for imaging_binary
+	const sealId = await generateSealId(address, "imaging_binary");
+
 	const bytes = await fileToUint8(file);
 	const envelope = encodeEnvelope(
 		file.type || "application/octet-stream",

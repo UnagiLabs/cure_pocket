@@ -2,6 +2,7 @@
  * useEncryptAndStore Hook
  *
  * Encrypts HealthData with Seal and uploads to Walrus storage.
+ * Provides a unified interface for both JSON and binary (image) encryption.
  *
  * ## Features
  * - HealthData validation before encryption
@@ -9,32 +10,44 @@
  * - Automatic upload to Walrus decentralized storage
  * - Progress tracking for multi-step operation
  * - Error handling with detailed status
+ * - Automatic seal_id generation per data type (scoped encryption)
  *
  * ## Encryption Flow
  * 1. Validate HealthData against schema
- * 2. Generate seal_id from wallet address
+ * 2. Generate seal_id from wallet address and data type (scoped)
  * 3. Encrypt HealthData with Seal (2-of-n threshold)
  * 4. Upload encrypted blob to Walrus
  * 5. Return walrus_blob_id and seal_id for on-chain storage
  *
  * ## Usage
  * ```typescript
- * const { encryptAndStore, isEncrypting, progress, error } = useEncryptAndStore();
+ * const { encryptAndStore, encryptAndStoreMultiple, encryptImage } = useEncryptAndStore();
  *
- * const result = await encryptAndStore(healthData, sealId, "medications");
- * console.log(result.blobId, result.dataType, result.sealId);
+ * // JSON data encryption
+ * const result = await encryptAndStore(healthData, "medications");
+ *
+ * // Multiple data types encryption (each with unique seal_id)
+ * const results = await encryptAndStoreMultiple([
+ *   { data: profileData, dataType: "basic_profile" },
+ *   { data: medicationsData, dataType: "medications" }
+ * ]);
+ *
+ * // Image encryption
+ * const imageResult = await encryptImage(imageFile);
  * ```
  */
 "use client";
 
-import { useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useCallback, useState } from "react";
+import { encryptAndStoreImagingBinary } from "@/lib/imagingBinary";
 import {
 	calculateThreshold,
 	createSealClient,
 	encryptHealthData,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import {
 	HealthDataValidationError,
 	validateBasicProfileData,
@@ -97,20 +110,32 @@ export interface EncryptionResult {
 }
 
 /**
+ * Image encryption result
+ */
+export interface ImageEncryptionResult {
+	/** Walrus blob ID */
+	blobId: string;
+	/** Content type (MIME type) */
+	contentType: string;
+	/** Original file size in bytes */
+	size: number;
+}
+
+/**
  * Hook return type
  */
 export interface UseEncryptAndStoreReturn {
-	/** Encrypt HealthData and upload to Walrus */
+	/** Encrypt HealthData and upload to Walrus (seal_id auto-generated per dataType) */
 	encryptAndStore: (
 		healthData: HealthData,
-		sealId: string,
 		dataType: string,
 	) => Promise<EncryptionResult>;
-	/** Encrypt multiple HealthData items and upload to Walrus in parallel */
+	/** Encrypt multiple HealthData items with unique seal_id per dataType */
 	encryptAndStoreMultiple: (
 		dataItems: Array<{ data: HealthDataTypes; dataType: DataType }>,
-		sealId: string,
 	) => Promise<EncryptionResult[]>;
+	/** Encrypt image file and upload to Walrus (seal_id auto-generated for "imaging_binary") */
+	encryptImage: (file: File) => Promise<ImageEncryptionResult>;
 	/** Decrypt multiple blob IDs and return the data */
 	decryptMultiple: (
 		blobIds: Array<{ dataType: DataType; blobId: string }>,
@@ -133,23 +158,29 @@ export interface UseEncryptAndStoreReturn {
  */
 export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 	const suiClient = useSuiClient();
+	const currentAccount = useCurrentAccount();
 
 	const [progress, setProgress] = useState<EncryptionProgress>("idle");
 	const [error, setError] = useState<string | null>(null);
 
 	/**
 	 * Encrypt HealthData and upload to Walrus
+	 * seal_id is automatically generated from wallet address and dataType
 	 */
 	const encryptAndStore = useCallback(
 		async (
 			healthData: HealthData,
-			sealId: string,
 			dataType: string,
 		): Promise<EncryptionResult> => {
 			setProgress("validating");
 			setError(null);
 
 			try {
+				// Step 0: Check wallet connection
+				if (!currentAccount?.address) {
+					throw new Error("Wallet not connected");
+				}
+
 				// Step 1: Validate HealthData before encryption
 				console.log(
 					`[EncryptAndStore] Validating HealthData for type: ${dataType}...`,
@@ -181,18 +212,25 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					"[EncryptAndStore] Validation passed, proceeding with encryption...",
 				);
 
-				// Step 2: Create Seal client
+				// Step 2: Generate scoped seal_id from wallet address and dataType
+				setProgress("generating_seal_id");
+				const sealId = await generateSealId(currentAccount.address, dataType);
+				console.log(
+					`[EncryptAndStore] Generated seal_id for ${dataType}: ${sealId.substring(0, 16)}...`,
+				);
+
+				// Step 3: Create Seal client
 				setProgress("encrypting");
 				const sealClient = createSealClient(suiClient);
 
-				// Step 3: Calculate threshold based on number of key servers
+				// Step 4: Calculate threshold based on number of key servers
 				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
 				console.log(
 					`[EncryptAndStore] Encrypting HealthData with Seal (threshold: ${threshold}, servers: ${SEAL_KEY_SERVERS.length})...`,
 				);
 
-				// Step 4: Encrypt HealthData
+				// Step 5: Encrypt HealthData
 				const { encryptedObject, backupKey } = await encryptHealthData({
 					healthData,
 					sealClient,
@@ -204,7 +242,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					`[EncryptAndStore] Encryption complete, size: ${encryptedObject.length} bytes`,
 				);
 
-				// Step 5: Upload to Walrus
+				// Step 6: Upload to Walrus
 				setProgress("uploading");
 				console.log("[EncryptAndStore] Uploading to Walrus...");
 
@@ -214,7 +252,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					`[EncryptAndStore] Upload complete, blobId: ${walrusRef.blobId}`,
 				);
 
-				// Step 6: Return result
+				// Step 7: Return result
 				setProgress("completed");
 
 				return {
@@ -236,7 +274,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[suiClient],
+		[suiClient, currentAccount],
 	);
 
 	/**
@@ -250,12 +288,16 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 	const encryptAndStoreMultiple = useCallback(
 		async (
 			dataItems: Array<{ data: HealthDataTypes; dataType: DataType }>,
-			sealId: string,
 		): Promise<EncryptionResult[]> => {
 			setProgress("validating");
 			setError(null);
 
 			try {
+				// Step 0: Check wallet connection
+				if (!currentAccount?.address) {
+					throw new Error("Wallet not connected");
+				}
+
 				// Step 1: Validate all data items
 				console.log(
 					`[EncryptAndStoreMultiple] Validating ${dataItems.length} data items...`,
@@ -317,23 +359,36 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					"[EncryptAndStoreMultiple] All validations passed, proceeding with batch encryption...",
 				);
 
-				// Step 2: Create Seal client
+				// Step 2: Generate unique seal_id for each item based on its dataType
+				setProgress("generating_seal_id");
+				const itemsWithSealId = await Promise.all(
+					dataItems.map(async (item) => ({
+						...item,
+						sealId: await generateSealId(currentAccount.address, item.dataType),
+					})),
+				);
+
+				console.log(
+					`[EncryptAndStoreMultiple] Generated ${itemsWithSealId.length} unique seal_ids for each dataType`,
+				);
+
+				// Step 3: Create Seal client
 				setProgress("encrypting");
 				const sealClient = createSealClient(suiClient);
 
-				// Step 3: Calculate threshold
+				// Step 4: Calculate threshold
 				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
 				console.log(
 					`[EncryptAndStoreMultiple] Batch encrypting ${dataItems.length} items with Seal (threshold: ${threshold})...`,
 				);
 
-				// Step 4: Encrypt all items in parallel
-				const encryptionPromises = dataItems.map(async (item) => {
+				// Step 5: Encrypt all items in parallel (each with its own seal_id)
+				const encryptionPromises = itemsWithSealId.map(async (item) => {
 					const { encryptedObject, backupKey } = await encryptHealthData({
 						healthData: item.data,
 						sealClient,
-						sealId,
+						sealId: item.sealId,
 						threshold,
 					});
 
@@ -341,7 +396,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 						`[EncryptAndStoreMultiple] Encrypted ${item.dataType}, size: ${encryptedObject.length} bytes`,
 					);
 
-					// Step 5: Upload to Walrus
+					// Step 6: Upload to Walrus
 					const walrusRef = await uploadToWalrus(encryptedObject);
 
 					console.log(
@@ -351,12 +406,12 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 					return {
 						blobId: walrusRef.blobId,
 						dataType: item.dataType,
-						sealId,
+						sealId: item.sealId,
 						backupKey,
 					};
 				});
 
-				// Step 6: Wait for all uploads to complete
+				// Step 7: Wait for all uploads to complete
 				setProgress("uploading");
 				const results = await Promise.all(encryptionPromises);
 
@@ -379,7 +434,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[suiClient],
+		[suiClient, currentAccount],
 	);
 
 	const decryptMultiple = useCallback(
@@ -452,9 +507,41 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 		[],
 	);
 
+	/**
+	 * Encrypt image file and upload to Walrus
+	 * seal_id is automatically generated with "imaging_binary" scope
+	 */
+	const encryptImage = useCallback(
+		async (
+			file: File,
+		): Promise<{ blobId: string; contentType: string; size: number }> => {
+			if (!currentAccount?.address) {
+				throw new Error("Wallet not connected");
+			}
+
+			console.log(
+				`[EncryptImage] Encrypting image file: ${file.name}, size: ${file.size} bytes`,
+			);
+
+			const result = await encryptAndStoreImagingBinary({
+				file,
+				address: currentAccount.address,
+				suiClient,
+			});
+
+			console.log(
+				`[EncryptImage] Image encrypted and uploaded, blobId: ${result.blobId}`,
+			);
+
+			return result;
+		},
+		[suiClient, currentAccount],
+	);
+
 	return {
 		encryptAndStore,
 		encryptAndStoreMultiple,
+		encryptImage,
 		decryptMultiple,
 		isEncrypting:
 			progress !== "idle" && progress !== "completed" && progress !== "error",
