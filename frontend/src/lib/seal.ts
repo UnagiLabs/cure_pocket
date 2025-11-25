@@ -238,28 +238,86 @@ export async function decryptHealthData(params: {
 }): Promise<HealthData> {
 	const { encryptedData, sealClient, sessionKey, txBytes, sealId } = params;
 
+	console.log("[decryptHealthData] Starting decryption...");
+	console.log(
+		`[decryptHealthData] sealId: ${sealId ? sealId.substring(0, 20) + "..." : "not provided"}`,
+	);
+	console.log(`[decryptHealthData] encryptedData length: ${encryptedData.length}`);
+
 	// Optional sanity check: ensure the encrypted object matches expected id
 	if (sealId) {
-		const parsed = EncryptedObject.parse(encryptedData);
-		const normalize = (value: string) =>
-			value.startsWith("0x") ? value.slice(2) : value;
-		if (normalize(parsed.id) !== normalize(sealId)) {
-			throw new Error("Encrypted object seal_id mismatch");
+		try {
+			const parsed = EncryptedObject.parse(encryptedData);
+			console.log(`[decryptHealthData] parsed.id: ${parsed.id}`);
+
+			const normalize = (value: string): string => {
+				if (!value) return "";
+				let normalized = value.startsWith("0x") ? value.slice(2) : value;
+				normalized = normalized.toLowerCase();
+				return normalized;
+			};
+
+			const normalizedParsedId = normalize(parsed.id);
+			const normalizedSealId = normalize(sealId);
+			console.log(
+				`[decryptHealthData] normalized parsed.id: ${normalizedParsedId.substring(0, 20)}...`,
+			);
+			console.log(
+				`[decryptHealthData] normalized sealId: ${normalizedSealId.substring(0, 20)}...`,
+			);
+
+			if (normalizedParsedId !== normalizedSealId) {
+				console.error("[decryptHealthData] seal_id MISMATCH!");
+				throw new Error(
+					`Encrypted object seal_id mismatch: parsed=${normalizedParsedId.substring(0, 20)}, expected=${normalizedSealId.substring(0, 20)}`,
+				);
+			}
+			console.log("[decryptHealthData] seal_id match verified");
+		} catch (parseError) {
+			console.error(
+				"[decryptHealthData] EncryptedObject.parse or validation failed:",
+				parseError,
+			);
+			throw parseError;
 		}
 	}
 
 	// Decrypt with Seal
-	const decryptedBytes = await sealClient.decrypt({
-		data: encryptedData,
-		sessionKey,
-		txBytes,
-	});
+	try {
+		console.log("[decryptHealthData] Calling sealClient.decrypt...");
+		console.log("[decryptHealthData] sessionKey expired:", sessionKey.isExpired());
+		console.log("[decryptHealthData] txBytes length:", txBytes.length);
 
-	// Parse JSON
-	const json = new TextDecoder().decode(decryptedBytes);
-	const healthData = JSON.parse(json) as HealthData;
+		const decryptedBytes = await sealClient.decrypt({
+			data: encryptedData,
+			sessionKey,
+			txBytes,
+		});
+		console.log(
+			`[decryptHealthData] Decrypted ${decryptedBytes.length} bytes successfully`,
+		);
 
-	return healthData;
+		// Parse JSON
+		const json = new TextDecoder().decode(decryptedBytes);
+		const healthData = JSON.parse(json) as HealthData;
+		console.log("[decryptHealthData] Successfully parsed health data");
+
+		return healthData;
+	} catch (decryptError) {
+		console.error("[decryptHealthData] decrypt failed:", decryptError);
+		console.error("[decryptHealthData] error type:", typeof decryptError);
+		console.error(
+			"[decryptHealthData] error constructor:",
+			(decryptError as Error)?.constructor?.name,
+		);
+		// If error is undefined, wrap it with a descriptive message
+		if (decryptError === undefined) {
+			throw new Error(
+				"Seal SDK decrypt() rejected with undefined. Check network tab for key server response.",
+			);
+		}
+		throw decryptError;
+	}
 }
 
 /**
@@ -364,11 +422,13 @@ export async function buildPatientAccessPTB(params: {
 	const tx = new Transaction();
 
 	// Call seal_approve_patient_only(id, passport, registry, data_type)
-	// First argument is the identity (seal_id), excluding package ID prefix
+	// First argument is the identity (seal_id) as UTF-8 bytes
+	// Note: sealId is a hex string that must be passed as UTF-8 bytes (not hex-decoded)
+	// because the contract compares it with stored seal_id using std::string::utf8()
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
 		arguments: [
-			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
+			tx.pure.vector("u8", Array.from(new TextEncoder().encode(sealId))), // UTF-8 encoded string
 			tx.object(passportObjectId),
 			tx.object(registryObjectId),
 			tx.pure.string(dataType), // Data type for scope-based access

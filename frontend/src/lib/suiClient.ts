@@ -340,20 +340,50 @@ export async function getDataEntryBlobIds(
 		}
 
 		// Dynamic Field value is EntryData struct: { seal_id, blob_ids, updated_at }
-		interface EntryDataFields {
-			seal_id: string;
-			blob_ids: string[];
-			updated_at: string;
-		}
-		const fields = content.fields as unknown as {
-			name: unknown;
-			value: EntryDataFields;
+		// Note: Sui SDK may return different structures depending on version
+		const rawFields = content.fields as Record<string, unknown>;
+
+		// Debug: Log the actual structure to understand the response format
+		console.log(
+			"[getDataEntryBlobIds] Raw fields structure:",
+			JSON.stringify(rawFields, null, 2),
+		);
+
+		// Extract EntryData from multiple possible structures
+		type EntryDataShape = {
+			seal_id?: string;
+			blob_ids?: string[];
+			updated_at?: string | number;
 		};
-		if (!fields.value?.blob_ids || !Array.isArray(fields.value.blob_ids)) {
+		let entryData: EntryDataShape | undefined;
+
+		if (rawFields.value && typeof rawFields.value === "object") {
+			const value = rawFields.value as Record<string, unknown>;
+
+			// Pattern 1: value.fields contains EntryData (nested structure)
+			if ("fields" in value && typeof value.fields === "object") {
+				entryData = value.fields as EntryDataShape;
+				console.log(
+					"[getDataEntryBlobIds] Using nested structure (value.fields)",
+				);
+			}
+			// Pattern 2: value directly contains EntryData fields
+			else if ("blob_ids" in value) {
+				entryData = value as EntryDataShape;
+				console.log("[getDataEntryBlobIds] Using direct structure (value)");
+			}
+		}
+
+		// Validate blob_ids extraction
+		if (!entryData?.blob_ids || !Array.isArray(entryData.blob_ids)) {
+			console.error(
+				"[getDataEntryBlobIds] Failed to extract blob_ids. Full structure:",
+				JSON.stringify(content.fields, null, 2),
+			);
 			throw new Error("Invalid EntryData structure: blob_ids not found");
 		}
 
-		return fields.value.blob_ids;
+		return entryData.blob_ids;
 	} catch (error) {
 		// If error is "Dynamic field not found", return empty array
 		if (

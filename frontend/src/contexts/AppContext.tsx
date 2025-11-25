@@ -712,7 +712,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				await Promise.allSettled(dataLoadPromises);
 				console.log("[AppContext] All data loading completed");
 			} catch (error) {
-				console.error("[AppContext] Failed to initialize profile data:", error);
+				// Handle undefined errors gracefully
+				const errorMessage =
+					error instanceof Error
+						? error.message
+						: error !== undefined
+							? String(error)
+							: "Unknown error (undefined)";
+				console.error(
+					"[AppContext] Failed to initialize profile data:",
+					errorMessage,
+				);
+				console.error("[AppContext] Error object:", error);
+				console.error("[AppContext] Error type:", typeof error);
 				setIsLoadingProfile(false);
 			} finally {
 				setIsLoading(false);
