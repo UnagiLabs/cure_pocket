@@ -35,7 +35,7 @@ module cure_pocket::consent_token_tests {
     // テストヘルパー: 標準的なスコープを生成
     fun create_test_scopes(): vector<String> {
         let mut scopes = vector::empty<String>();
-        vector::push_back(&mut scopes, string::utf8(b"medication"));
+        vector::push_back(&mut scopes, string::utf8(b"medications"));
         vector::push_back(&mut scopes, string::utf8(b"lab_results"));
         scopes
     }
@@ -46,6 +46,20 @@ module cure_pocket::consent_token_tests {
         let country_code = string::utf8(b"JP");
         let analytics_opt_in = true;
         medical_passport::create_passport_internal(seal_id, country_code, analytics_opt_in, ctx)
+    }
+
+    // テストヘルパー: EntryData用のseal_idを生成
+    fun create_test_entry_seal_id(): String {
+        string::utf8(b"test-entry-seal-id-for-medication")
+    }
+
+    // テストヘルパー: EntryDataを追加
+    fun add_test_entry_data(passport: &mut MedicalPassport, clock: &clock::Clock) {
+        let data_type = string::utf8(b"medications");
+        let entry_seal_id = create_test_entry_seal_id();
+        let mut blob_ids = vector::empty<String>();
+        vector::push_back(&mut blob_ids, string::utf8(b"test-blob-id"));
+        medical_passport::add_data_entry(passport, data_type, entry_seal_id, blob_ids, clock);
     }
 
     // ============================================================
@@ -517,9 +531,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -548,18 +566,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -596,9 +618,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -640,18 +666,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -691,9 +721,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -723,18 +757,22 @@ module cure_pocket::consent_token_tests {
             let secret = create_test_secret();
             let wrong_passport_id = object::id_from_address(@0xB2); // 異なるID
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&wrong_passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -770,9 +808,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -801,18 +843,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let wrong_secret = vector[99u8, 98u8, 97u8]; // 異なるsecret
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&wrong_secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&wrong_secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -851,9 +897,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -882,18 +932,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -930,9 +984,13 @@ module cure_pocket::consent_token_tests {
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
@@ -974,18 +1032,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication");
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications");
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -1261,7 +1323,7 @@ module cure_pocket::consent_token_tests {
     /// Test 20: スコープ外アクセスが拒否されるべき
     ///
     /// 仕様:
-    /// - ConsentTokenを作成（スコープ: ["medication"]のみ）
+    /// - ConsentTokenを作成（スコープ: ["medications"]のみ）
     /// - seal_approve_consent()でrequested_scope = "lab_results"を指定
     /// - E_SCOPE_NOT_ALLOWEDでabortされるべき
     #[test]
@@ -1274,18 +1336,26 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medication"]のみ）
+        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medications"]のみ）
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // lab_results用のEntryDataを追加（テスト対象のスコープ外アクセス用）
+            let data_type = string::utf8(b"lab_results");
+            let entry_seal_id = string::utf8(b"test-seal-id-for-lab-results");
+            let mut blob_ids = vector::empty<String>();
+            vector::push_back(&mut blob_ids, string::utf8(b"test-blob-id"));
+            medical_passport::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
             let mut scopes = vector::empty<String>();
-            vector::push_back(&mut scopes, string::utf8(b"medication")); // medicationのみ
+            vector::push_back(&mut scopes, string::utf8(b"medications")); // medicationsのみ
             let duration_ms = 86400000u64;
 
             let token = consent_token::create_consent_internal(
@@ -1310,18 +1380,22 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            // bcs::peel_vec_u8、bcs::peel_address、bcs::peel_stringの順序でシリアライズ
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // lab_results用のseal_idをUTF-8バイトとして取得
+            let entry_seal_id = string::utf8(b"test-seal-id-for-lab-results");
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
+            vector::append(&mut auth_payload, passport_bytes);
             let requested_scope = string::utf8(b"lab_results"); // スコープ外
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,
@@ -1340,8 +1414,8 @@ module cure_pocket::consent_token_tests {
     /// Test 21: スコープ内アクセスが許可される（既存の動作確認）
     ///
     /// 仕様:
-    /// - ConsentTokenを作成（スコープ: ["medication", "lab_results"]）
-    /// - seal_approve_consent()でrequested_scope = "medication"を指定
+    /// - ConsentTokenを作成（スコープ: ["medications", "lab_results"]）
+    /// - seal_approve_consent()でrequested_scope = "medications"を指定
     /// - abortしないことを確認（正常系）
     #[test]
     fun test_seal_approve_consent_scope_allowed() {
@@ -1352,17 +1426,21 @@ module cure_pocket::consent_token_tests {
             cure_pocket::init_for_testing(ts::ctx(&mut scenario));
         };
 
-        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medication", "lab_results"]）
+        // User1がMedicalPassportとConsentTokenを作成（スコープ: ["medications", "lab_results"]）
         let passport_id;
         ts::next_tx(&mut scenario, USER1);
         {
-            let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-            let passport = create_test_passport(ts::ctx(&mut scenario));
+            let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+            let mut passport = create_test_passport(ts::ctx(&mut scenario));
             passport_id = sui::object::id(&passport);
+
+            // EntryDataを追加
+            add_test_entry_data(&mut passport, &clock);
+
             medical_passport::transfer_to(passport, USER1);
 
             let secret_hash = create_test_secret_hash();
-            let scopes = create_test_scopes(); // ["medication", "lab_results"]
+            let scopes = create_test_scopes(); // ["medications", "lab_results"]
             let duration_ms = 86400000u64;
 
             let token = consent_token::create_consent_internal(
@@ -1379,7 +1457,7 @@ module cure_pocket::consent_token_tests {
             clock::destroy_for_testing(clock);
         };
 
-        // スコープ内アクセス（medication）を試みる
+        // スコープ内アクセス（medications）を試みる
         ts::next_tx(&mut scenario, USER1);
         {
             let passport = ts::take_from_sender<MedicalPassport>(&scenario);
@@ -1387,18 +1465,23 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // BCSエンコードされたペイロードを作成
-            let mut bcs_bytes = bcs::to_bytes(&secret);
+            // seal_idをUTF-8バイトとして取得
+            let entry_seal_id = create_test_entry_seal_id();
+            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+
+            // BCSエンコードされたauth_payloadを作成
+            let mut auth_payload = bcs::to_bytes(&secret);
             let passport_address = object::id_to_address(&passport_id);
             let passport_bytes = bcs::to_bytes(&passport_address);
-            vector::append(&mut bcs_bytes, passport_bytes);
-            let requested_scope = string::utf8(b"medication"); // スコープ内
+            vector::append(&mut auth_payload, passport_bytes);
+            let requested_scope = string::utf8(b"medications"); // スコープ内
             let scope_bytes = bcs::to_bytes(&requested_scope);
-            vector::append(&mut bcs_bytes, scope_bytes);
+            vector::append(&mut auth_payload, scope_bytes);
 
             // abortしないことを確認
             accessor::seal_approve_consent(
-                bcs_bytes,
+                seal_id_bytes,
+                auth_payload,
                 &token,
                 &passport,
                 requested_scope,

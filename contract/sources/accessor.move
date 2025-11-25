@@ -269,23 +269,28 @@ public fun has_passport(registry: &PassportRegistry, owner: address): bool {
 /// 2. `passport`のIDを取得
 /// 3. `PassportRegistry`の`address -> object::ID`マッピングで、特定のパスポートがsenderのものかを確認
 /// 4. senderが指定パスポートを所有していなければabort（アクセス拒否）
-/// 5. 所有していれば関数終了（アクセス許可）
+/// 5. 要求されたseal_idがEntryDataに格納されたseal_idと一致するかを確認
+/// 6. 一致しなければabort、一致すれば関数終了（アクセス許可）
 ///
 /// ## パラメータ
+/// - `id`: 要求されたSeal ID（UTF-8バイト）
 /// - `passport`: MedicalPassportオブジェクトへの参照（パスポートID取得用）
 /// - `registry`: PassportRegistryへの参照（所有権確認用）
+/// - `data_type`: データ種別（EntryData検索用）
 /// - `ctx`: トランザクションコンテキスト（sender取得用）
 ///
 /// ## Aborts
 /// - `E_NO_ACCESS`: senderが指定パスポートを所有していない（アクセス拒否）
+/// - `E_INVALID_SEAL_ID`: 要求されたseal_idがEntryDataのseal_idと一致しない
+/// - `E_DATA_ENTRY_NOT_FOUND`: 指定されたdata_typeのEntryDataが存在しない
 entry fun seal_approve_patient_only(
     id: vector<u8>,
     passport: &MedicalPassport,
     registry: &PassportRegistry,
+    data_type: String,
     ctx: &tx_context::TxContext
 ) {
-    let _ = id; // Seal identity; kept for API compatibility
-    seal_accessor::seal_approve_patient_only_internal(passport, registry, ctx);
+    seal_accessor::seal_approve_patient_only_internal(id, passport, registry, data_type, ctx);
 }
 
 
@@ -400,17 +405,19 @@ entry fun revoke_consent_token(
 /// この関数がabortしなければ、復号鍵の提供が許可されます。
 ///
 /// ## アクセス制御ロジック
-/// 1. `id`（BCSエンコードされた`SealAuthPayload`）をデシリアライズ
-/// 2. Payloadを分解して`secret`と`target_passport_id`、`requested_scope`を取得
-/// 3. `data_type`とPayload内の`requested_scope`が一致することを確認
-/// 4. ConsentTokenがアクティブか確認
-/// 5. 有効期限を確認
-/// 6. パスポートIDの整合性を確認（Payloadの`target_passport_id`とTokenの`passport_id`、passportのIDが一致するか）
-/// 7. ハッシュロック検証（生`secret`をハッシュ化し、オンチェーンの`secret_hash`と比較）
-/// 8. スコープ検証（`data_type`がTokenのscopesに含まれているか）
+/// 1. 要求されたseal_idがEntryDataに格納されたseal_idと一致するかを確認
+/// 2. `auth_payload`（BCSエンコードされた`SealAuthPayload`）をデシリアライズ
+/// 3. Payloadを分解して`secret`と`target_passport_id`、`requested_scope`を取得
+/// 4. `data_type`とPayload内の`requested_scope`が一致することを確認
+/// 5. ConsentTokenがアクティブか確認
+/// 6. 有効期限を確認
+/// 7. パスポートIDの整合性を確認（Payloadの`target_passport_id`とTokenの`passport_id`、passportのIDが一致するか）
+/// 8. ハッシュロック検証（生`secret`をハッシュ化し、オンチェーンの`secret_hash`と比較）
+/// 9. スコープ検証（`data_type`がTokenのscopesに含まれているか）
 ///
 /// ## パラメータ
-/// - `id`: BCSエンコードされた`SealAuthPayload`（`vector<u8>`）
+/// - `id`: 要求されたSeal ID（UTF-8バイト）
+/// - `auth_payload`: BCSエンコードされた`SealAuthPayload`（`vector<u8>`）
 /// - `token`: 検証対象のConsentToken（共有オブジェクト）
 /// - `passport`: 閲覧対象のパスポート（ID検証用）
 /// - `data_type`: 閲覧対象のデータ種別（"medication", "lab_results"など）
@@ -423,6 +430,8 @@ entry fun revoke_consent_token(
 /// - なし（検証のみ）
 ///
 /// ## Aborts
+/// - `E_INVALID_SEAL_ID`: 要求されたseal_idがEntryDataのseal_idと一致しない
+/// - `E_DATA_ENTRY_NOT_FOUND`: 指定されたdata_typeのEntryDataが存在しない
 /// - `E_CONSENT_REVOKED`: ConsentTokenが無効化されている
 /// - `E_CONSENT_EXPIRED`: ConsentTokenの有効期限が切れている
 /// - `E_INVALID_PASSPORT_ID`: パスポートIDが一致しない
@@ -431,32 +440,40 @@ entry fun revoke_consent_token(
 /// - `E_DATA_TYPE_MISMATCH`: data_typeとrequested_scopeが不一致
 entry fun seal_approve_consent(
     id: vector<u8>,
+    auth_payload: vector<u8>,
     token: &ConsentToken,
     passport: &MedicalPassport,
     data_type: String,
     clock: &Clock
 ) {
-    // 1. BCSデシリアライズ（peel_*系の関数を使用）
-    // SealAuthPayload構造体をBCSから読み取る
-    let mut bcs_cursor = bcs::new(id);
+    // 1. Seal ID検証
+    // EntryDataを取得し、要求されたseal_idが一致するかを確認
+    let entry = medical_passport::get_data_entry(passport, data_type);
+    let stored_seal_id = medical_passport::get_entry_seal_id(entry);
+    let id_string = string::utf8(id);
+    assert!(id_string == *stored_seal_id, seal_accessor::e_invalid_seal_id());
+
+    // 2. BCSデシリアライズ（peel_*系の関数を使用）
+    // SealAuthPayload構造体をauth_payloadから読み取る
+    let mut bcs_cursor = bcs::new(auth_payload);
     let secret = bcs::peel_vec_u8(&mut bcs_cursor);
     let target_passport_id = bcs::peel_address(&mut bcs_cursor);
     let requested_scope_bytes = bcs::peel_vec_u8(&mut bcs_cursor);
     let requested_scope = string::utf8(requested_scope_bytes);
 
-    // 2. data_typeとrequested_scopeの整合性確認
+    // 3. data_typeとrequested_scopeの整合性確認
     // 呼び出し側が指定したdata_typeとPayload内のrequested_scopeが一致することを確認
     assert!(data_type == requested_scope, consent_token::e_data_type_mismatch());
 
-    // 3. パスポートIDをID型に変換（addressからIDへ）
+    // 4. パスポートIDをID型に変換（addressからIDへ）
     let target_passport_id_obj = object::id_from_address(target_passport_id);
     let passport_id = object::id(passport);
 
-    // 4. パスポートIDの整合性確認
+    // 5. パスポートIDの整合性確認
     // passportのIDとPayloadのtarget_passport_id、Tokenのpassport_idがすべて一致することを確認
     assert!(passport_id == target_passport_id_obj, consent_token::e_invalid_passport_id());
 
-    // 5. 基本検証ロジックを内部関数に委譲
+    // 6. 基本検証ロジックを内部関数に委譲
     // コードの重複を削減し、保守性を向上
     consent_token::verify_consent_internal(
         token,
@@ -465,7 +482,7 @@ entry fun seal_approve_consent(
         clock
     );
 
-    // 6. スコープ検証
+    // 7. スコープ検証
     // ConsentTokenのscopesフィールドにdata_typeが含まれているかを確認
     // スコープが許可されていない場合はE_SCOPE_NOT_ALLOWEDでabort
     consent_token::verify_scope(token, data_type);
