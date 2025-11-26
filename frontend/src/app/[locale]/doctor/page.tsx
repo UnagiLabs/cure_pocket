@@ -22,6 +22,56 @@ interface QRPayload {
 	exp?: string;
 }
 
+/**
+ * 複数の領域でQRコードを検出する関数
+ * 装飾付き画像（中央にQRコード）とQRのみの画像の両方に対応
+ */
+function detectQRCode(
+	ctx: CanvasRenderingContext2D,
+	imgWidth: number,
+	imgHeight: number,
+): ReturnType<typeof jsQR> {
+	// 試行する領域リスト（中央 → 上部 → 全体）
+	const regions = [
+		// 1. 中央領域（装飾画像のQRコード位置）
+		{
+			x: Math.floor(imgWidth * 0.2),
+			y: Math.floor(imgHeight * 0.15),
+			width: Math.floor(imgWidth * 0.6),
+			height: Math.floor(imgHeight * 0.4),
+		},
+		// 2. 上半分
+		{
+			x: 0,
+			y: 0,
+			width: imgWidth,
+			height: Math.floor(imgHeight * 0.5),
+		},
+		// 3. 画像全体（フォールバック）
+		{
+			x: 0,
+			y: 0,
+			width: imgWidth,
+			height: imgHeight,
+		},
+	];
+
+	for (const region of regions) {
+		const imageData = ctx.getImageData(
+			region.x,
+			region.y,
+			region.width,
+			region.height,
+		);
+		const code = jsQR(imageData.data, imageData.width, imageData.height);
+		if (code) {
+			return code;
+		}
+	}
+
+	return null;
+}
+
 export default function DoctorPage() {
 	const router = useRouter();
 	const locale = useLocale();
@@ -60,8 +110,8 @@ export default function DoctorPage() {
 				canvas.height = img.height;
 				ctx.drawImage(img, 0, 0);
 
-				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-				const code = jsQR(imageData.data, imageData.width, imageData.height);
+				// 複数領域でQRコードを検出（装飾付き画像対応）
+				const code = detectQRCode(ctx, canvas.width, canvas.height);
 
 				URL.revokeObjectURL(imageUrl);
 
