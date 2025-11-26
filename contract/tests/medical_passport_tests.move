@@ -14,8 +14,8 @@ module cure_pocket::medical_passport_tests {
     const ADMIN: address = @0xA;
     const USER2: address = @0xB;
 
-    fun passport_data(): (String, String, bool) {
-        (string::utf8(b"seal-123"), string::utf8(b"JP"), true)
+    fun passport_data(): (String, bool) {
+        (string::utf8(b"JP"), true)
     }
 
     fun sample_blob_ids(): vector<String> {
@@ -27,17 +27,15 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
-            assert!(accessor::get_seal_id(&passport) == &string::utf8(b"seal-123"), 0);
-            assert!(accessor::get_country_code(&passport) == &string::utf8(b"JP"), 1);
-            assert!(accessor::get_analytics_opt_in(&passport), 2);
+            assert!(accessor::get_country_code(&passport) == &string::utf8(b"JP"), 0);
+            assert!(accessor::get_analytics_opt_in(&passport), 1);
 
             test_utils::destroy_passport(passport);
         };
@@ -49,9 +47,8 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
@@ -85,9 +82,8 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
@@ -131,9 +127,8 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
@@ -154,34 +149,14 @@ module cure_pocket::medical_passport_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = 1, location = medical_passport)]
-    fun empty_seal_id_aborts() {
-        let mut scenario = ts::begin(ADMIN);
-        {
-            let ctx = ts::ctx(&mut scenario);
-            let (_, country_code, analytics_opt_in) = passport_data();
-            let empty = string::utf8(b"");
-            let passport = medical_passport::create_passport_internal(
-                empty,
-                country_code,
-                analytics_opt_in,
-                ctx,
-            );
-            test_utils::destroy_passport(passport);
-        };
-        ts::end(scenario);
-    }
-
-    #[test]
     #[expected_failure(abort_code = 2, location = medical_passport)]
     fun empty_country_code_aborts() {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, _, analytics_opt_in) = passport_data();
+            let (_, analytics_opt_in) = passport_data();
             let empty = string::utf8(b"");
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 empty,
                 analytics_opt_in,
                 ctx,
@@ -196,18 +171,16 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
-            let (seal_ref, country_ref, analytics) = accessor::get_all_fields(&passport);
-            assert!(*seal_ref == string::utf8(b"seal-123"), 0);
-            assert!(*country_ref == string::utf8(b"JP"), 1);
-            assert!(analytics, 2);
+            let (country_ref, analytics) = accessor::get_all_fields(&passport);
+            assert!(*country_ref == string::utf8(b"JP"), 0);
+            assert!(analytics, 1);
 
             test_utils::destroy_passport(passport);
         };
@@ -224,8 +197,8 @@ module cure_pocket::medical_passport_tests {
             {
                 let ctx = ts::ctx(&mut scenario);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             assert!(accessor::has_passport(&registry, ADMIN), 0);
@@ -246,16 +219,16 @@ module cure_pocket::medical_passport_tests {
             {
                 let ctx = ts::ctx(&mut scenario);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             // 2回目は重複でabort
             ts::next_tx(&mut scenario, ADMIN);
             {
                 let ctx = ts::ctx(&mut scenario);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             test_utils::destroy_registry(registry);
@@ -276,8 +249,8 @@ module cure_pocket::medical_passport_tests {
                 let ctx = ts::ctx(&mut scenario);
                 admin_cap = cure_pocket::test_init_for_tests(ctx);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             // 移行トランザクション
@@ -302,10 +275,9 @@ module cure_pocket::medical_passport_tests {
             ts::next_tx(&mut scenario, USER2);
             {
                 let passport = ts::take_from_address<MedicalPassport>(&scenario, USER2);
-                let (seal_ref, country_ref, analytics) = accessor::get_all_fields(&passport);
-                assert!(*seal_ref == string::utf8(b"seal-123"), 0);
-                assert!(*country_ref == string::utf8(b"JP"), 1);
-                assert!(analytics, 2);
+                let (country_ref, analytics) = accessor::get_all_fields(&passport);
+                assert!(*country_ref == string::utf8(b"JP"), 0);
+                assert!(analytics, 1);
                 test_utils::destroy_passport(passport);
             };
 

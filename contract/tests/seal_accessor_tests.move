@@ -13,8 +13,8 @@ module cure_pocket::seal_accessor_tests {
     const USER1: address = @0xA1;
     const USER2: address = @0xA2;
 
-    fun passport_data(): (String, String, bool) {
-        (string::utf8(b"seal-key-abcde"), string::utf8(b"JP"), true)
+    fun passport_data(): (String, bool) {
+        (string::utf8(b"JP"), true)
     }
 
     // EntryData用のテストデータ
@@ -35,8 +35,8 @@ module cure_pocket::seal_accessor_tests {
             ts::next_tx(&mut scenario, USER1);
             {
                 let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (seal_id, country_code, analytics) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics, ts::ctx(&mut scenario));
+                let (country_code, analytics) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics, ts::ctx(&mut scenario));
                 ts::return_shared(registry);
             };
 
@@ -79,8 +79,8 @@ module cure_pocket::seal_accessor_tests {
             ts::next_tx(&mut scenario, USER1);
             {
                 let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (seal_id, country_code, analytics) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics, ts::ctx(&mut scenario));
+                let (country_code, analytics) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics, ts::ctx(&mut scenario));
                 ts::return_shared(registry);
             };
 
@@ -125,8 +125,8 @@ module cure_pocket::seal_accessor_tests {
             ts::next_tx(&mut scenario, USER1);
             {
                 let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (seal_id, country_code, analytics) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics, ts::ctx(&mut scenario));
+                let (country_code, analytics) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics, ts::ctx(&mut scenario));
                 ts::return_shared(registry);
             };
 
@@ -172,8 +172,8 @@ module cure_pocket::seal_accessor_tests {
             ts::next_tx(&mut scenario, USER1);
             {
                 let mut registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (seal_id, country_code, analytics) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics, ts::ctx(&mut scenario));
+                let (country_code, analytics) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics, ts::ctx(&mut scenario));
                 ts::return_shared(registry);
             };
 

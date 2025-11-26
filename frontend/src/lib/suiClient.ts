@@ -39,12 +39,10 @@ export const PASSPORT_REGISTRY_ID =
 
 /**
  * MedicalPassport object structure from Move contract
- * Note: seal_id exists in the contract but is no longer used by frontend
- * (seal_id is now dynamically generated per dataType using generateSealId)
+ * Note: seal_id is stored per EntryData (not in MedicalPassport)
  */
 interface MedicalPassportObject {
 	id: string; // Sui object ID
-	seal_id: string; // Deprecated: kept for contract compatibility, not used
 	country_code: string;
 	analytics_opt_in: boolean;
 }

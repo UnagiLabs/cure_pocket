@@ -40,7 +40,6 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
     /// ## パラメータ
     /// - `_admin`: AdminCapへの参照（権限証明として使用、内容は読まない）
     /// - `registry`: PassportRegistry の可変参照（共有オブジェクト）
-    /// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
     /// - `country_code`: 発行国コード
     /// - `analytics_opt_in`: 匿名統計データ提供可否
     /// - `ctx`: トランザクションコンテキスト
@@ -50,12 +49,10 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
     ///
     /// ## Aborts
     /// - `E_ALREADY_HAS_PASSPORT`: 既にパスポートを所持している
-    /// - `E_EMPTY_SEAL_ID`: seal_idが空文字列（create_passport_internalでabort）
     /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列（create_passport_internalでabort）
     public fun admin_mint_medical_passport(
         _admin: &AdminCap,  // 所有していることが権限証明（内容は使用しない）
         registry: &mut PassportRegistry,
-        seal_id: String,
         country_code: String,
         analytics_opt_in: bool,
         ctx: &mut tx_context::TxContext
@@ -67,7 +64,6 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
 
         // パスポートを生成
         let passport = medical_passport::create_passport_internal(
-            seal_id,
             country_code,
             analytics_opt_in,
             ctx
@@ -91,7 +87,7 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
     ///
     /// ## 用途
     /// - ユーザーがウォレットを紛失した際のパスポート移行
-    /// - 既存のパスポートデータ（seal_id, country_code, analytics_opt_in）を
+    /// - 既存のパスポートデータ（country_code, analytics_opt_in）を
     ///   新しいアドレスに移行し、元のパスポートは削除
     ///
     /// ## 制約
@@ -151,7 +147,7 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
         medical_passport::unregister_passport_by_owner(registry, old_owner);
 
         // 3. パスポートデータを取得（値のコピー）
-        let (seal_id, country_code, analytics_opt_in) = medical_passport::get_passport_data(&passport);
+        let (country_code, analytics_opt_in) = medical_passport::get_passport_data(&passport);
 
         // 4. 移行イベントを構築・発行
         let passport_id = object::id(&passport);
@@ -160,7 +156,6 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
             old_owner,
             new_owner,
             passport_id,
-            seal_id,
             country_code,
             analytics_opt_in,
             timestamp_ms
@@ -171,7 +166,6 @@ use cure_pocket::medical_passport::{Self, PassportRegistry, MedicalPassport};
 
         // 6. 同じデータで新しいパスポートを作成
         let new_passport = medical_passport::create_passport_internal(
-            seal_id,
             country_code,
             analytics_opt_in,
             ctx

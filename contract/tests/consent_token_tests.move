@@ -42,10 +42,9 @@ module cure_pocket::consent_token_tests {
 
     // テストヘルパー: テスト用MedicalPassportを作成
     fun create_test_passport(ctx: &mut sui::tx_context::TxContext): MedicalPassport {
-        let seal_id = string::utf8(b"test-seal-id");
         let country_code = string::utf8(b"JP");
         let analytics_opt_in = true;
-        medical_passport::create_passport_internal(seal_id, country_code, analytics_opt_in, ctx)
+        medical_passport::create_passport_internal(country_code, analytics_opt_in, ctx)
     }
 
     // テストヘルパー: EntryData用のseal_idを生成（バイナリ形式）

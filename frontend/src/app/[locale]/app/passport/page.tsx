@@ -8,7 +8,6 @@ import { useApp } from "@/contexts/AppContext";
 import { useCheckProfileExists } from "@/hooks/useCheckProfileExists";
 import { useMintPassport } from "@/hooks/useMintPassport";
 import { usePassport } from "@/hooks/usePassport";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { getTheme } from "@/lib/themes";
 
 /**
@@ -51,12 +50,8 @@ export default function PassportPage() {
 				throw new Error("ウォレットが接続されていません");
 			}
 
-			// ウォレットアドレスから決定論的にseal_idを生成（パスポート用のデフォルトスコープ）
-			const seal_id = await generateSealId(walletAddress, "basic_profile");
-			console.log(`[Mint] Generated seal_id: ${seal_id.substring(0, 16)}...`);
-
 			// パスポートをmint
-			await mint(seal_id, undefined, false); // seal_id, country_code, analytics_opt_in
+			await mint(undefined, false); // country_code, analytics_opt_in
 		} catch (error) {
 			// エラーはuseMintPassportで処理される
 			console.error("パスポート発行エラー:", error);

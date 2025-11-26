@@ -39,7 +39,6 @@ use cure_pocket::consent_token::{Self, ConsentToken};
 ///
 /// ## パラメータ
 /// - `registry`: PassportRegistry の可変参照（共有オブジェクト）
-/// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
 /// - `country_code`: 発行国コード
 /// - `analytics_opt_in`: 匿名統計データ提供可否
 /// - `ctx`: トランザクションコンテキスト
@@ -49,11 +48,9 @@ use cure_pocket::consent_token::{Self, ConsentToken};
 ///
 /// ## Aborts
 /// - `E_ALREADY_HAS_PASSPORT`: 既にパスポートを所持している
-/// - `E_EMPTY_SEAL_ID`: seal_idが空文字列
 /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列
 entry fun mint_medical_passport(
     registry: &mut PassportRegistry,
-    seal_id: String,
     country_code: String,
     analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
@@ -65,7 +62,6 @@ entry fun mint_medical_passport(
 
     // パスポートを生成
     let passport = medical_passport::create_passport_internal(
-        seal_id,
         country_code,
         analytics_opt_in,
         ctx
@@ -79,21 +75,6 @@ entry fun mint_medical_passport(
 
     // Registry にパスポートIDを登録
     medical_passport::register_passport_with_id(registry, passport_id, sender);
-}
-
-/// Seal IDを取得
-///
-/// ## 用途
-/// - パスポートに紐づく暗号鍵/ポリシーの識別子を取得
-/// - Seal システムで医療データの復号化に使用
-///
-/// ## パラメータ
-/// - `passport`: MedicalPassportへの参照
-///
-/// ## 返り値
-/// - Seal IDへの参照
-public fun get_seal_id(passport: &MedicalPassport): &String {
-    medical_passport::get_seal_id(passport)
 }
 
 /// 国コードを取得
@@ -121,8 +102,8 @@ public fun get_country_code(passport: &MedicalPassport): &String {
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (seal_id, country_code, analytics_opt_in)
-public fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool) {
+/// - タプル: (country_code, analytics_opt_in)
+public fun get_all_fields(passport: &MedicalPassport): (&String, bool) {
     medical_passport::get_all_fields(passport)
 }
 
