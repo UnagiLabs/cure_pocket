@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { getDataTypeLabel } from "@/lib/mockData";
 import { getDataEntry } from "@/lib/suiClient";
 import { type DataScope, toContractDataType } from "@/types/doctor";
 
@@ -136,7 +135,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				const canvas = document.createElement("canvas");
 				const ctx = canvas.getContext("2d");
 				if (!ctx) {
-					setFetchMessage("Canvas コンテキストを取得できませんでした");
+					setFetchMessage(t("doctor.canvasContextError"));
 					setIsScanning(false);
 					return;
 				}
@@ -165,13 +164,13 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 							setQrScopes(payload.scope);
 						}
 
-						setFetchMessage("✅ QRコードの読み取りに成功しました！");
+						setFetchMessage(t("doctor.qrScanSuccessShort"));
 					} catch (err) {
 						console.error("QR decode error:", err);
-						setFetchMessage("QRコードのデコードに失敗しました");
+						setFetchMessage(t("doctor.qrDecodeError"));
 					}
 				} else {
-					setFetchMessage("QRコードが見つかりませんでした");
+					setFetchMessage(t("doctor.qrNotFound"));
 				}
 
 				setIsScanning(false);
@@ -179,14 +178,14 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 
 			img.onerror = () => {
 				URL.revokeObjectURL(imageUrl);
-				setFetchMessage("画像の読み込みに失敗しました");
+				setFetchMessage(t("doctor.imageLoadError"));
 				setIsScanning(false);
 			};
 
 			img.src = imageUrl;
 		} catch (err) {
 			console.error("QR upload error:", err);
-			setFetchMessage("QRコードの処理中にエラーが発生しました");
+			setFetchMessage(t("doctor.qrProcessError"));
 			setIsScanning(false);
 		}
 	};
@@ -197,19 +196,19 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		setResults([]);
 
 		if (!consentTokenId || !secret) {
-			setFetchMessage("QRコードを再度読み取ってください");
+			setFetchMessage(t("doctor.qrRescanRequired"));
 			return;
 		}
 
 		// スコープ検証（QRで許可されたスコープ外の場合はエラー）
 		if (qrScopes.length > 0 && !qrScopes.includes(dataType)) {
-			setFetchMessage("このデータ種は許可されていません");
+			setFetchMessage(t("doctor.dataTypeNotAllowed"));
 			return;
 		}
 
 		// SessionKey検証
 		if (!sessionKey || !sessionKeyValid) {
-			setFetchMessage("SessionKey を生成中です。再試行してください。");
+			setFetchMessage(t("doctor.sessionKeyGeneratingRetry"));
 			await generateSessionKey();
 			return;
 		}
@@ -253,7 +252,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		} catch (err) {
 			console.error("[DoctorPage] Fetch failed", err);
 			setFetchMessage(
-				err instanceof Error ? err.message : "取得に失敗しました",
+				err instanceof Error ? err.message : t("doctor.fetchFailed"),
 			);
 			setFetchState("error");
 		}
@@ -298,9 +297,9 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				<div className="flex flex-col sm:flex-row gap-3 items-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
 					<QrCode className="h-6 w-6 text-blue-600 flex-shrink-0" />
 					<div className="flex-1 text-sm text-blue-900">
-						<p className="font-semibold">患者のQRコードをスキャン</p>
+						<p className="font-semibold">{t("doctor.scanQRCode")}</p>
 						<p className="text-xs text-blue-700">
-							患者から受け取ったQRコード画像をアップロードしてください
+							{t("doctor.uploadQRCodeDescription")}
 						</p>
 					</div>
 					<input
@@ -319,12 +318,12 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 						{isScanning ? (
 							<>
 								<Loader2 className="h-4 w-4 animate-spin" />
-								読み取り中...
+								{t("doctor.scanning")}
 							</>
 						) : (
 							<>
 								<Upload className="h-4 w-4" />
-								QRコードをアップロード
+								{t("doctor.uploadQRCode")}
 							</>
 						)}
 					</button>
@@ -334,15 +333,15 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				{qrScopes.length > 0 && (
 					<div className="p-3 bg-green-50 border border-green-200 rounded-lg">
 						<p className="text-sm text-green-900">
-							<span className="font-semibold">QRスコープ: </span>
-							{qrScopes.map((s) => getDataTypeLabel(s as never)).join(", ")}
+							<span className="font-semibold">{t("doctor.qrScope")}</span>
+							{qrScopes.map((s) => scopeLabel[s] || s).join(", ")}
 						</p>
 					</div>
 				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 					<label className="space-y-1 text-sm text-gray-700">
-						<span className="font-semibold">データ種別</span>
+						<span className="font-semibold">{t("doctor.dataType")}</span>
 						<select
 							value={dataType}
 							onChange={(e) => setDataType(e.target.value as DataScope)}
@@ -364,10 +363,10 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 							className="rounded border px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100"
 						>
 							{isSessionKeyLoading
-								? "SessionKey生成中..."
+								? t("doctor.sessionKeyGenerating")
 								: sessionKeyValid
-									? "SessionKey再生成"
-									: "SessionKey生成"}
+									? t("doctor.sessionKeyRegenerate")
+									: t("doctor.sessionKeyGenerate")}
 						</button>
 						<button
 							type="button"
@@ -389,16 +388,32 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 
 				{sessionKeyError && (
 					<AlertCard
-						title="SessionKey エラー"
-						message={sessionKeyError}
+						title={t("doctor.sessionKeyError")}
+						message={
+							sessionKeyError === "Wallet not connected"
+								? t("doctor.walletNotConnected")
+								: sessionKeyError === "Package ID not configured"
+									? t("doctor.packageIdNotConfigured")
+									: sessionKeyError === "Failed to generate session key"
+										? t("doctor.sessionKeyGenerationFailed")
+										: sessionKeyError
+						}
 						intent="warning"
 					/>
 				)}
 				{consentError && (
-					<AlertCard title="復号エラー" message={consentError} intent="error" />
+					<AlertCard
+						title={t("doctor.decryptError")}
+						message={consentError}
+						intent="error"
+					/>
 				)}
 				{fetchMessage && (
-					<AlertCard title="結果" message={fetchMessage} intent="info" />
+					<AlertCard
+						title={t("doctor.result")}
+						message={fetchMessage}
+						intent="info"
+					/>
 				)}
 			</section>
 
@@ -415,10 +430,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				{results.length === 0 && fetchState === "idle" && (
 					<div className="rounded-xl border border-dashed bg-gray-50 px-4 py-6 text-sm text-gray-600 flex items-center gap-2">
 						<Lock className="h-4 w-4 text-gray-400" />
-						<span>
-							患者から共有された ConsentToken
-							と合言葉を入力してデータを取得します。
-						</span>
+						<span>{t("doctor.enterConsentToken")}</span>
 					</div>
 				)}
 
@@ -438,7 +450,8 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 									{typedItem.category && (
 										<div className="mb-3 pb-2 border-b">
 											<h3 className="text-base font-semibold text-gray-900">
-												{getDataTypeLabel(typedItem.category as never)}
+												{scopeLabel[typedItem.category as DataScope] ||
+													typedItem.category}
 											</h3>
 										</div>
 									)}

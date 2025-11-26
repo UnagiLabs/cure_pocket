@@ -163,10 +163,10 @@
 			"medicationRequired": "最低1つの薬品名を入力してください"
 		}
 	},
-	"card": {
-		"title": "緊急カード",
+	"share": {
+		"title": "QRコード共有",
 		"subtitle": "緊急時お薬情報",
-		"description": "緊急時に医療従事者とお薬情報を共有",
+		"description": "QRコードで医師と医療情報を共有",
 		"generateQR": "QRコード生成",
 		"generating": "生成中...",
 		"validFor": "有効期限: {duration}",
@@ -174,10 +174,10 @@
 		"currentMedications": "服用薬一覧",
 		"scanToView": "スキャンすると",
 		"englishVersion": "英語版も表示",
-		"selectCategories": "表示するカテゴリーを選択",
+		"selectCategories": "共有するカテゴリーを選択",
 		"emergencyInfo": {
-			"title": "緊急時の使い方",
-			"description": "このQRコードを医療従事者に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
+			"title": "使い方",
+			"description": "このQRコードを医師に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
 		}
 	},
 	"settings": {
@@ -797,7 +797,7 @@
 		"walletRequiredDesc": "暗号化された医療記録にアクセスするには、上部のボタンからウォレットを接続してください。",
 		"patientView": "患者情報閲覧",
 		"patientId": "患者ID",
-		"badge": "医師ビュー",
+		"badge": "医師専用画面",
 		"medicalRecord": "診療記録",
 		"patientInformation": "患者情報",
 		"viewDescription": "共有された医療データを閲覧しています。アクセスは許可されたスコープのみに制限されています。",
@@ -818,7 +818,42 @@
 		"accessRestricted": "アクセス制限",
 		"noPermission": "このデータを閲覧する権限がありません",
 		"fetchData": "データを取得",
-		"loading": "読み込み中..."
+		"loading": "読み込み中...",
+		"pageTitle": "医師用データ閲覧",
+		"pageDescription": "患者から共有されたQRコードをアップロードして、医療データを閲覧します",
+		"uploadQRTitle": "患者のQRコードをアップロード",
+		"uploadQRDescription": "PNG、JPG、JPEG形式に対応しています",
+		"selectImage": "画像を選択",
+		"scanning": "読み取り中...",
+		"uploadQRCode": "QRコードをアップロード",
+		"scanQRCode": "患者のQRコードをスキャン",
+		"uploadQRCodeDescription": "患者から受け取ったQRコード画像をアップロードしてください",
+		"uploadQRCodeGuidance": "患者から受け取ったQRコードをアップロードしてください",
+		"scanInfo": "スキャン情報",
+		"expirationDate": "有効期限:",
+		"qrScope": "QRスコープ: ",
+		"dataType": "データ種別",
+		"sessionKeyGenerating": "SessionKey生成中...",
+		"sessionKeyRegenerate": "SessionKey再生成",
+		"sessionKeyGenerate": "SessionKey生成",
+		"sessionKeyError": "SessionKey エラー",
+		"decryptError": "復号エラー",
+		"result": "結果",
+		"enterConsentToken": "患者から共有された ConsentToken と合言葉を入力してデータを取得します。",
+		"canvasContextError": "Canvas コンテキストを取得できませんでした",
+		"qrScanSuccess": "QRコードの読み取りに成功しました。患者データページへ遷移します...",
+		"qrScanSuccessShort": "✅ QRコードの読み取りに成功しました！",
+		"qrDecodeError": "QRコードのデコードに失敗しました",
+		"qrNotFound": "QRコードが見つかりませんでした",
+		"imageLoadError": "画像の読み込みに失敗しました",
+		"qrProcessError": "QRコードの処理中にエラーが発生しました",
+		"qrRescanRequired": "QRコードを再度読み取ってください",
+		"dataTypeNotAllowed": "このデータ種は許可されていません",
+		"sessionKeyGeneratingRetry": "SessionKey を生成中です。再試行してください。",
+		"fetchFailed": "取得に失敗しました",
+		"walletNotConnected": "ウォレットが接続されていません",
+		"packageIdNotConfigured": "パッケージIDが設定されていません",
+		"sessionKeyGenerationFailed": "SessionKeyの生成に失敗しました"
 	},
 	"common": {
 		"download": "ダウンロード",

@@ -100,7 +100,12 @@
 		"frequency": "Fréquence",
 		"startDate": "Date de début",
 		"endDate": "Date de fin (facultatif)",
-		"reason": "Raison"
+		"reason": "Raison",
+		"vitalsDescription": "Enregistrez vos signes vitaux",
+		"bloodPressureAdd": "Enregistrer la pression artérielle",
+		"bloodGlucoseAdd": "Enregistrer la glycémie",
+		"temperatureAdd": "Enregistrer la température corporelle",
+		"weightAdd": "Enregistrer le poids"
 	},
 	"medications": {
 		"title": "Vos médicaments",
@@ -112,19 +117,68 @@
 		"asNeeded": "Si nécessaire",
 		"clinic": "Clinique",
 		"warning": "Avertissement",
-		"noMedications": "Aucun médicament actif enregistré"
+		"noMedications": "Aucun médicament actif enregistré",
+		"noPrescriptions": "Aucune ordonnance enregistrée",
+		"addFirstPrescription": "Ajouter votre première ordonnance",
+		"addNewPrescription": "Ajouter une nouvelle ordonnance"
 	},
-	"card": {
-		"title": "Carte d'urgence",
+	"prescriptions": {
+		"addNew": "Ajouter une ordonnance",
+		"basicInfo": "Informations sur l'ordonnance",
+		"prescriptionDate": "Date de l'ordonnance",
+		"clinic": "Établissement médical",
+		"clinicPlaceholder": "ex. : Hôpital général",
+		"department": "Service",
+		"departmentPlaceholder": "ex. : Médecine interne, Orthopédie",
+		"doctorName": "Nom du médecin",
+		"doctorNamePlaceholder": "ex. : Dr. Martin",
+		"medications": "Médicaments",
+		"medication": "Médicament",
+		"addMedication": "Ajouter un médicament",
+		"drugName": "Nom du médicament",
+		"drugNamePlaceholder": "ex. : Aspirine 100mg",
+		"strength": "Dosage",
+		"dosage": "Posologie",
+		"dosagePlaceholder": "ex. : Deux fois par jour, après les repas",
+		"quantity": "Quantité",
+		"duration": "Durée/Montant",
+		"additionalInfo": "Notes et pièces jointes",
+		"symptoms": "Symptômes/Objectif",
+		"symptomsPlaceholder": "ex. : Maux de tête, fièvre",
+		"notes": "Notes",
+		"notesPlaceholder": "ex. : Ne pas prendre à jeun",
+		"photoAttachmentComingSoon": "Pièce jointe photo (bientôt disponible)",
+		"attachments": "pièces jointes",
+		"inputFromImage": "Saisie depuis une image",
+		"manualInput": "Saisie manuelle",
+		"uploadOrTakePhoto": "Télécharger ou prendre une photo",
+		"dragDropImages": "Glisser-déposer des images",
+		"clickToUpload": "Cliquer pour télécharger",
+		"uploadedImages": "Images téléchargées",
+		"attachedImages": "Images jointes",
+		"runOCR": "Exécuter OCR",
+		"ocrProcessing": "Traitement OCR...",
+		"validation": {
+			"clinicRequired": "Veuillez entrer le nom de l'établissement médical",
+			"medicationRequired": "Veuillez entrer au moins un nom de médicament"
+		}
+	},
+	"share": {
+		"title": "Partage de code QR",
 		"subtitle": "Informations médicales d'urgence",
-		"description": "Partagez vos informations sur les médicaments avec les prestataires de soins en cas d'urgence",
+		"description": "Partagez des informations médicales avec les médecins via un code QR",
 		"generateQR": "Générer un code QR",
 		"generating": "Génération en cours...",
 		"validFor": "Valide pour : {duration}",
 		"downloadImage": "Télécharger l'image",
 		"currentMedications": "Médicaments actuels",
 		"scanToView": "Scanner pour voir",
-		"englishVersion": "Version anglaise disponible"
+		"englishVersion": "Version anglaise disponible",
+		"selectCategories": "Sélectionner les catégories à partager",
+		"emergencyInfo": {
+			"title": "Comment utiliser",
+			"description": "Montrez ce code QR aux médecins pour partager en toute sécurité les informations des catégories que vous avez sélectionnées. Le lien expire automatiquement 24 heures après sa création."
+		}
 	},
 	"settings": {
 		"title": "Paramètres",
@@ -140,11 +194,15 @@
 		"bloodType": "Groupe sanguin",
 		"allergies": "Allergies",
 		"profile": "Profil",
+		"profileSettings": "Paramètres du profil",
 		"dataExport": "Export de données",
 		"walletConnected": "Portefeuille connecté",
 		"walrusStorage": "Stockage Walrus",
 		"encrypted": "Crypté",
-		"lastSync": "Dernière synchronisation : {{time}}"
+		"lastSync": "Dernière synchronisation : {{time}}",
+		"researchContribution": "Contribution à la recherche",
+		"earnedRewards": "Récompenses gagnées",
+		"lastSyncRecent": "Dernière synchronisation : il y a 2 minutes"
 	},
 	"wallet": {
 		"connect": "Connecter le portefeuille",
@@ -168,6 +226,8 @@
 		"connectionFailed": "Échec de la connexion du portefeuille. Veuillez réessayer."
 	},
 	"passport": {
+		"title": "Passeport médical",
+		"subtitle": "Émettez un passeport pour gérer en toute sécurité vos informations médicales.",
 		"mintSuccessTitle": "Passeport créé avec succès",
 		"mintSuccessDescription": "Votre passeport médical a été émis avec succès.",
 		"checkTransaction": "Voir la transaction →",
@@ -178,7 +238,29 @@
 		"minting": "Émission en cours...",
 		"mintButton": "Émettre le passeport",
 		"hasPassportTitle": "Passeport prêt",
-		"hasPassportDescription": "Votre passeport médical est émis et actif."
+		"hasPassportDescription": "Votre passeport médical est émis et actif.",
+		"messages": {
+			"checking": "Vérification du statut du passeport...",
+			"errorTitle": "Une erreur s'est produite",
+			"successTitle": "Passeport émis !",
+			"successBody": "Votre passeport médical a été émis. Redirection vers la configuration du profil..."
+		},
+		"actions": {
+			"reload": "Recharger",
+			"mint": "Émettre le passeport",
+			"minting": "Émission en cours...",
+			"back": "Retour"
+		},
+		"faq": {
+			"title": "Qu'est-ce qu'un passeport ?",
+			"description": "Le passeport médical est une attestation numérique sur la blockchain Sui qui gère en toute sécurité vos données médicales. Seulement vous pouvez y accéder.",
+			"points": [
+				"Gestion sécurisée des données médicales",
+				"Accès mondial",
+				"Protection de la vie privée",
+				"Partage facile via QR code"
+			]
+		}
 	},
 	"themes": {
 		"classic-blue": "Bleu classique",
@@ -213,6 +295,9 @@
 		"onsetDate": "Date d'apparition",
 		"diagnosedBy": "Diagnostiqué par",
 		"notes": "Notes",
+		"mild": "Légère",
+		"moderate": "Modérée",
+		"severe": "Sévère",
 		"severities": {
 			"mild": "Légère",
 			"moderate": "Modérée",
@@ -228,6 +313,7 @@
 		"type": "Type",
 		"diagnosis": "Diagnostic / Nom de la chirurgie",
 		"diagnosisDate": "Date du diagnostic / de la chirurgie",
+		"resolvedDate": "Date de résolution",
 		"diagnosedBy": "Diagnostiqué par",
 		"description": "Description",
 		"status": "Statut",
@@ -252,6 +338,7 @@
 		"testName": "Nom du test",
 		"value": "Valeur",
 		"unit": "Unité",
+		"reference": "Valeur de référence",
 		"referenceRange": "Plage de référence",
 		"testDate": "Date du test",
 		"testedBy": "Installation de test",
@@ -262,7 +349,8 @@
 		"selectTest": "Veuillez sélectionner un test",
 		"valuePlaceholder": "Entrez la valeur",
 		"validation": {
-			"required": "Veuillez entrer le nom du test et la valeur"
+			"required": "Veuillez entrer le nom du test et la valeur",
+			"noValues": "Veuillez entrer au moins une valeur de laboratoire."
 		},
 		"categories": {
 			"CBC": "NFS",
@@ -273,7 +361,27 @@
 			"inflammation": "Inflammation",
 			"endocrine": "Endocrinien",
 			"urine": "Urine qualitative"
-		}
+		},
+		"groups": {
+			"cbc": "NFS (Numération sanguine)",
+			"electrolyteRenal": "Électrolytes et fonction rénale",
+			"liver": "Fonction hépatique",
+			"lipid": "Profil lipidique",
+			"glucose": "Glucose / HbA1c",
+			"optional": "Tests optionnels"
+		},
+		"resultSummaryTitle": "Aperçu des résultats (prototype)",
+		"result": {
+			"headerTest": "Test",
+			"headerValue": "Votre valeur",
+			"headerReference": "Plage de référence",
+			"headerStatus": "Interprétation",
+			"low": "Faible (en dessous de la référence)",
+			"normal": "Dans la plage de référence",
+			"high": "Élevé (au-dessus de la référence)",
+			"notEntered": "Non renseigné"
+		},
+		"disclaimer": "Cette interprétation est à titre informatif uniquement et ne constitue pas un diagnostic médical. Consultez toujours un professionnel de santé pour les décisions cliniques."
 	},
 	"imaging": {
 		"title": "Rapports d'imagerie",
@@ -286,6 +394,8 @@
 		"summary": "Résumé / Constatations",
 		"findings": "Détails des constatations",
 		"impression": "Impression",
+		"images": "Images",
+		"viewImage": "Voir l'image",
 		"imageFile": "Fichier image",
 		"fileSizeLimit": "Taille maximale du fichier : 1 Mo (PNG, JPEG uniquement)",
 		"types": {
@@ -329,9 +439,81 @@
 		"history": "Antécédents",
 		"lab": "Résultat de laboratoire",
 		"imaging": "Rapport d'imagerie",
-		"vital": "Signe vital"
+		"vital": "Signe vital",
+		"vitals": "Signes vitaux"
 	},
 	"profile": {
+		"title": "Paramètres du profil",
+		"description": "Configuration initiale après l'émission de votre passeport. Entrez les informations de base maintenant et ajoutez les détails des maladies sur l'écran suivant.",
+		"basicInfo": "Informations de base",
+		"birthDate": "Date de naissance",
+		"gender": "Genre",
+		"genders": {
+			"male": "Homme",
+			"female": "Femme",
+			"other": "Autre",
+			"unknown": "Préfère ne pas dire"
+		},
+		"country": "Nationalité",
+		"selectPlaceholder": "Veuillez sélectionner",
+		"bloodType": "Groupe sanguin",
+		"selectOptional": "Non sélectionné",
+		"unknown": "Inconnu",
+		"allergy": "Allergies",
+		"allergySelectPlaceholder": "Choisir une allergie courante",
+		"allergyOther": "Autre",
+		"allergyOtherPlaceholder": "Entrer d'autres allergies",
+		"add": "Ajouter",
+		"nextToConditions": "Continuer vers les informations sur les maladies",
+		"allergyOptions": {
+			"peanut": "Arachide",
+			"shellfish": "Fruits de mer",
+			"egg": "Œuf",
+			"milk": "Lait",
+			"buckwheat": "Sarrasin",
+			"wheat": "Blé",
+			"penicillin": "Médicament (ex. : Pénicilline)",
+			"latex": "Latex"
+		},
+		"countries": {
+			"JP": "Japon",
+			"US": "États-Unis",
+			"CN": "Chine",
+			"KR": "Corée du Sud",
+			"TW": "Taïwan",
+			"HK": "Hong Kong",
+			"SG": "Singapour",
+			"TH": "Thaïlande",
+			"VN": "Vietnam",
+			"PH": "Philippines",
+			"ID": "Indonésie",
+			"MY": "Malaisie",
+			"IN": "Inde",
+			"BD": "Bangladesh",
+			"PK": "Pakistan",
+			"AE": "Émirats arabes unis",
+			"SA": "Arabie saoudite",
+			"EG": "Égypte",
+			"ZA": "Afrique du Sud",
+			"NG": "Nigeria",
+			"KE": "Kenya",
+			"GB": "Royaume-Uni",
+			"FR": "France",
+			"DE": "Allemagne",
+			"ES": "Espagne",
+			"IT": "Italie",
+			"NL": "Pays-Bas",
+			"SE": "Suède",
+			"CH": "Suisse",
+			"AU": "Australie",
+			"NZ": "Nouvelle-Zélande",
+			"CA": "Canada",
+			"MX": "Mexique",
+			"BR": "Brésil",
+			"AR": "Argentine",
+			"CL": "Chili",
+			"other": "Autre"
+		},
 		"name": "Nom"
 	},
 	"conditions": {
@@ -474,13 +656,25 @@
 				"title": "Confidentialité d'abord",
 				"description": "Vos données de santé sont cryptées et stockées sur Walrus"
 			},
+			"dataOwnership": {
+				"title": "Vous possédez vos données",
+				"description": "Avec Walrus, Seal et Sui, vous contrôlez en toute sécurité vos informations médicales. Partagez facilement avec les professionnels de santé avec un simple QR code."
+			},
 			"global": {
 				"title": "Accès mondial",
 				"description": "Accédez à votre passeport de santé n'importe où, n'importe quand"
 			},
+			"easyShare": {
+				"title": "Partage facile des informations",
+				"description": "Partagez vos informations avec les professionnels de santé facilement avec un simple QR code. Partagez en toute sécurité selon vos propres conditions."
+			},
 			"blockchain": {
 				"title": "Alimenté par la blockchain",
 				"description": "Construit sur la blockchain Sui pour la sécurité et la transparence"
+			},
+			"dataContribution": {
+				"title": "Contribuer au progrès médical",
+				"description": "Contribuez optionnellement vos données médicales anonymisées à la recherche. Vous recevrez une partie des revenus générés par les données. La participation est entièrement optionnelle."
 			}
 		}
 	},
@@ -572,13 +766,13 @@
 					"items": {
 						"required": "Le résultat de laboratoire doit avoir au moins un élément de test (index {{index}})",
 						"codes": {
-							"loinc": "Format de code LOINC invalide : {{code}}. Format attendu : 4548-4"
+							"loinc": "Format de code LOINC invalide (index {{index}}.{{itemIndex}}) : {{code}}. Format attendu : 4548-4"
 						},
 						"value": {
-							"number": "La valeur du résultat de laboratoire doit être un nombre"
+							"number": "La valeur du résultat de laboratoire doit être un nombre (index {{index}}.{{itemIndex}})"
 						},
 						"unit": {
-							"required": "L'unité du résultat de laboratoire est requise"
+							"required": "L'unité du résultat de laboratoire est requise (index {{index}}.{{itemIndex}})"
 						}
 					}
 				}
@@ -603,7 +797,7 @@
 		"walletRequiredDesc": "Veuillez connecter votre portefeuille à l'aide du bouton ci-dessus pour accéder aux dossiers médicaux chiffrés.",
 		"patientView": "Vue patient",
 		"patientId": "ID patient",
-		"badge": "Vue médecin",
+		"badge": "Écran Exclusif Médecin",
 		"medicalRecord": "Dossier médical",
 		"patientInformation": "Informations patient",
 		"viewDescription": "Consultation des données médicales partagées. L'accès est limité aux périmètres autorisés uniquement.",
@@ -624,7 +818,42 @@
 		"accessRestricted": "Accès restreint",
 		"noPermission": "Vous n'avez pas la permission de consulter ces données",
 		"fetchData": "Récupérer les données",
-		"loading": "Chargement..."
+		"loading": "Chargement...",
+		"pageTitle": "Consultation des données médicales",
+		"pageDescription": "Téléchargez le code QR partagé par le patient pour consulter les données médicales",
+		"uploadQRTitle": "Télécharger le code QR du patient",
+		"uploadQRDescription": "Formats pris en charge : PNG, JPG, JPEG",
+		"selectImage": "Sélectionner une image",
+		"scanning": "Analyse en cours...",
+		"uploadQRCode": "Télécharger le code QR",
+		"scanQRCode": "Scanner le code QR du patient",
+		"uploadQRCodeDescription": "Veuillez télécharger l'image du code QR reçue du patient",
+		"uploadQRCodeGuidance": "Veuillez télécharger le code QR reçu du patient",
+		"scanInfo": "Informations de scan",
+		"expirationDate": "Date d'expiration :",
+		"qrScope": "Périmètre QR : ",
+		"dataType": "Type de données",
+		"sessionKeyGenerating": "Génération de la clé de session...",
+		"sessionKeyRegenerate": "Régénérer la clé de session",
+		"sessionKeyGenerate": "Générer la clé de session",
+		"sessionKeyError": "Erreur de clé de session",
+		"decryptError": "Erreur de déchiffrement",
+		"result": "Résultat",
+		"enterConsentToken": "Entrez le ConsentToken et le secret partagés par le patient pour récupérer les données.",
+		"canvasContextError": "Échec de l'obtention du contexte canvas",
+		"qrScanSuccess": "Scan du code QR réussi. Redirection vers la page des données patient...",
+		"qrScanSuccessShort": "✅ Scan du code QR réussi !",
+		"qrDecodeError": "Échec du décodage du code QR",
+		"qrNotFound": "Code QR introuvable",
+		"imageLoadError": "Échec du chargement de l'image",
+		"qrProcessError": "Une erreur s'est produite lors du traitement du code QR",
+		"qrRescanRequired": "Veuillez rescanner le code QR",
+		"dataTypeNotAllowed": "Ce type de données n'est pas autorisé",
+		"sessionKeyGeneratingRetry": "Génération de la clé de session. Veuillez réessayer.",
+		"fetchFailed": "Échec de la récupération",
+		"walletNotConnected": "Portefeuille non connecté",
+		"packageIdNotConfigured": "ID de package non configuré",
+		"sessionKeyGenerationFailed": "Échec de la génération de la clé de session"
 	},
 	"common": {
 		"download": "Télécharger",

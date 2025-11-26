@@ -163,10 +163,10 @@
 			"medicationRequired": "Please enter at least one medication name"
 		}
 	},
-	"card": {
-		"title": "Emergency Card",
+	"share": {
+		"title": "QR Code Sharing",
 		"subtitle": "Emergency medical information",
-		"description": "Share your medication information with healthcare providers in emergencies",
+		"description": "Share medical information with doctors via QR code",
 		"generateQR": "Generate QR Code",
 		"generating": "Generating...",
 		"validFor": "Valid for: {duration}",
@@ -176,8 +176,8 @@
 		"englishVersion": "English version available",
 		"selectCategories": "Select categories to share",
 		"emergencyInfo": {
-			"title": "How to use this in emergencies",
-			"description": "Show this QR code to healthcare professionals to share only the categories you selected. The link automatically expires 24 hours after creation."
+			"title": "How to use",
+			"description": "Show this QR code to doctors to safely share information from the categories you selected. The link automatically expires 24 hours after creation."
 		}
 	},
 	"settings": {
@@ -295,6 +295,9 @@
 		"onsetDate": "Onset Date",
 		"diagnosedBy": "Diagnosed By",
 		"notes": "Notes",
+		"mild": "Mild",
+		"moderate": "Moderate",
+		"severe": "Severe",
 		"severities": {
 			"mild": "Mild",
 			"moderate": "Moderate",
@@ -310,6 +313,7 @@
 		"type": "Type",
 		"diagnosis": "Diagnosis / Surgery Name",
 		"diagnosisDate": "Diagnosis / Surgery Date",
+		"resolvedDate": "Resolved Date",
 		"diagnosedBy": "Diagnosed By",
 		"description": "Description",
 		"status": "Status",
@@ -334,6 +338,7 @@
 		"testName": "Test Name",
 		"value": "Value",
 		"unit": "Unit",
+		"reference": "Reference Value",
 		"referenceRange": "Reference Range",
 		"testDate": "Test Date",
 		"testedBy": "Test Facility",
@@ -389,6 +394,8 @@
 		"summary": "Summary / Findings",
 		"findings": "Findings Details",
 		"impression": "Impression",
+		"images": "Images",
+		"viewImage": "View Image",
 		"imageFile": "Image File",
 		"fileSizeLimit": "Maximum file size: 1MB (PNG, JPEG only)",
 		"types": {
@@ -506,7 +513,8 @@
 			"AR": "Argentina",
 			"CL": "Chile",
 			"other": "Other"
-		}
+		},
+		"name": "Name"
 	},
 	"conditions": {
 		"title": "Disease Information",
@@ -789,7 +797,7 @@
 		"walletRequiredDesc": "Please connect your wallet using the button above to access encrypted medical records.",
 		"patientView": "Patient View",
 		"patientId": "Patient ID",
-		"badge": "Doctor View",
+		"badge": "Doctor-Only Screen",
 		"medicalRecord": "Medical Record",
 		"patientInformation": "Patient Information",
 		"viewDescription": "Viewing shared medical data. Access is limited to authorized scopes only.",
@@ -810,7 +818,42 @@
 		"accessRestricted": "Access Restricted",
 		"noPermission": "You don't have permission to view this data",
 		"fetchData": "Fetch data",
-		"loading": "Loading..."
+		"loading": "Loading...",
+		"pageTitle": "Doctor's Data Browsing",
+		"pageDescription": "Upload the QR code shared by the patient to view medical data",
+		"uploadQRTitle": "Upload Patient's QR Code",
+		"uploadQRDescription": "Supports PNG, JPG, JPEG formats",
+		"selectImage": "Select image",
+		"scanning": "Scanning...",
+		"uploadQRCode": "Upload QR Code",
+		"scanQRCode": "Scan Patient's QR Code",
+		"uploadQRCodeDescription": "Please upload the QR code image received from the patient",
+		"uploadQRCodeGuidance": "Please upload the QR code received from the patient",
+		"scanInfo": "Scan Information",
+		"expirationDate": "Expiration Date:",
+		"qrScope": "QR Scope: ",
+		"dataType": "Data Type",
+		"sessionKeyGenerating": "Generating SessionKey...",
+		"sessionKeyRegenerate": "Regenerate SessionKey",
+		"sessionKeyGenerate": "Generate SessionKey",
+		"sessionKeyError": "SessionKey Error",
+		"decryptError": "Decryption Error",
+		"result": "Result",
+		"enterConsentToken": "Enter the ConsentToken and secret shared by the patient to fetch data.",
+		"canvasContextError": "Failed to get canvas context",
+		"qrScanSuccess": "QR code scan successful. Redirecting to patient data page...",
+		"qrScanSuccessShort": "✅ QR code scan successful!",
+		"qrDecodeError": "Failed to decode QR code",
+		"qrNotFound": "QR code not found",
+		"imageLoadError": "Failed to load image",
+		"qrProcessError": "An error occurred while processing QR code",
+		"qrRescanRequired": "Please rescan the QR code",
+		"dataTypeNotAllowed": "This data type is not allowed",
+		"sessionKeyGeneratingRetry": "Generating SessionKey. Please retry.",
+		"fetchFailed": "Failed to fetch",
+		"walletNotConnected": "Wallet not connected",
+		"packageIdNotConfigured": "Package ID not configured",
+		"sessionKeyGenerationFailed": "Failed to generate session key"
 	},
 	"common": {
 		"download": "Download",

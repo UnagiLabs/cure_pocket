@@ -100,7 +100,12 @@
 		"frequency": "频率",
 		"startDate": "开始日期",
 		"endDate": "结束日期（可选）",
-		"reason": "原因"
+		"reason": "原因",
+		"vitalsDescription": "记录您的生命体征",
+		"bloodPressureAdd": "记录血压",
+		"bloodGlucoseAdd": "记录血糖",
+		"temperatureAdd": "记录体温",
+		"weightAdd": "记录体重"
 	},
 	"medications": {
 		"title": "您的药物",
@@ -112,19 +117,68 @@
 		"asNeeded": "按需",
 		"clinic": "诊所",
 		"warning": "警告",
-		"noMedications": "未注册活动药物"
+		"noMedications": "未注册活动药物",
+		"noPrescriptions": "未注册处方",
+		"addFirstPrescription": "添加您的第一个处方",
+		"addNewPrescription": "添加新处方"
 	},
-	"card": {
-		"title": "紧急卡",
+	"prescriptions": {
+		"addNew": "添加处方",
+		"basicInfo": "处方信息",
+		"prescriptionDate": "处方日期",
+		"clinic": "医疗机构",
+		"clinicPlaceholder": "例如：综合医院",
+		"department": "科室",
+		"departmentPlaceholder": "例如：内科、骨科",
+		"doctorName": "医生姓名",
+		"doctorNamePlaceholder": "例如：张医生",
+		"medications": "药物",
+		"medication": "药物",
+		"addMedication": "添加药物",
+		"drugName": "药品名称",
+		"drugNamePlaceholder": "例如：阿司匹林100mg",
+		"strength": "剂量强度",
+		"dosage": "用法用量",
+		"dosagePlaceholder": "例如：每日两次，饭后服用",
+		"quantity": "数量",
+		"duration": "持续时间/总量",
+		"additionalInfo": "备注和附件",
+		"symptoms": "症状/目的",
+		"symptomsPlaceholder": "例如：头痛、发烧",
+		"notes": "备注",
+		"notesPlaceholder": "例如：空腹时不可服用",
+		"photoAttachmentComingSoon": "照片附件（即将推出）",
+		"attachments": "附件",
+		"inputFromImage": "从图片输入",
+		"manualInput": "手动输入",
+		"uploadOrTakePhoto": "上传或拍摄照片",
+		"dragDropImages": "拖放图片",
+		"clickToUpload": "点击上传",
+		"uploadedImages": "已上传图片",
+		"attachedImages": "附件图片",
+		"runOCR": "运行OCR",
+		"ocrProcessing": "处理OCR中...",
+		"validation": {
+			"clinicRequired": "请输入医疗机构名称",
+			"medicationRequired": "请输入至少一个药品名称"
+		}
+	},
+	"share": {
+		"title": "二维码共享",
 		"subtitle": "紧急医疗信息",
-		"description": "在紧急情况下与医疗提供者分享您的药物信息",
+		"description": "通过二维码与医生共享医疗信息",
 		"generateQR": "生成二维码",
 		"generating": "生成中...",
 		"validFor": "有效期：{duration}",
 		"downloadImage": "下载图片",
 		"currentMedications": "当前用药",
 		"scanToView": "扫描查看",
-		"englishVersion": "提供英文版本"
+		"englishVersion": "提供英文版本",
+		"selectCategories": "选择要共享的类别",
+		"emergencyInfo": {
+			"title": "使用方法",
+			"description": "向医生展示此二维码，可以安全地共享您选择的类别信息。链接将在创建后24小时自动失效。"
+		}
 	},
 	"settings": {
 		"title": "设置",
@@ -140,11 +194,15 @@
 		"bloodType": "血型",
 		"allergies": "过敏史",
 		"profile": "个人资料",
+		"profileSettings": "个人资料设置",
 		"dataExport": "数据导出",
 		"walletConnected": "已连接钱包",
 		"walrusStorage": "Walrus存储",
 		"encrypted": "已加密",
-		"lastSync": "最后同步：{{time}}"
+		"lastSync": "最后同步：{{time}}",
+		"researchContribution": "研究贡献",
+		"earnedRewards": "获得的奖励",
+		"lastSyncRecent": "最后同步：2分钟前"
 	},
 	"wallet": {
 		"connect": "连接钱包",
@@ -168,6 +226,8 @@
 		"connectionFailed": "钱包连接失败。请重试。"
 	},
 	"passport": {
+		"title": "医疗护照",
+		"subtitle": "发行护照以安全管理您的医疗信息。",
 		"mintSuccessTitle": "护照发行成功",
 		"mintSuccessDescription": "您的医疗护照已成功发行。",
 		"checkTransaction": "查看交易 →",
@@ -178,7 +238,29 @@
 		"minting": "发行中...",
 		"mintButton": "发行护照",
 		"hasPassportTitle": "已持有护照",
-		"hasPassportDescription": "医疗护照已发行并可用。"
+		"hasPassportDescription": "医疗护照已发行并可用。",
+		"messages": {
+			"checking": "正在检查护照状态...",
+			"errorTitle": "发生错误",
+			"successTitle": "护照已发行！",
+			"successBody": "您的医疗护照已发行。正在跳转到个人资料设置..."
+		},
+		"actions": {
+			"reload": "重新加载",
+			"mint": "发行护照",
+			"minting": "发行中...",
+			"back": "返回"
+		},
+		"faq": {
+			"title": "什么是护照？",
+			"description": "医疗护照是Sui区块链上的数字凭证，可安全管理您的医疗数据。只有您可以访问它。",
+			"points": [
+				"医疗数据的安全管理",
+				"全球访问",
+				"隐私保护",
+				"通过二维码轻松共享"
+			]
+		}
 	},
 	"themes": {
 		"classic-blue": "经典蓝",
@@ -213,6 +295,9 @@
 		"onsetDate": "发病日期",
 		"diagnosedBy": "诊断机构",
 		"notes": "备注",
+		"mild": "轻度",
+		"moderate": "中度",
+		"severe": "重度",
 		"severities": {
 			"mild": "轻度",
 			"moderate": "中度",
@@ -228,6 +313,7 @@
 		"type": "类型",
 		"diagnosis": "诊断/手术名称",
 		"diagnosisDate": "诊断/手术日期",
+		"resolvedDate": "治愈日期",
 		"diagnosedBy": "诊断机构",
 		"description": "描述",
 		"status": "状态",
@@ -252,6 +338,7 @@
 		"testName": "检验名称",
 		"value": "检验值",
 		"unit": "单位",
+		"reference": "参考值",
 		"referenceRange": "参考范围",
 		"testDate": "检验日期",
 		"testedBy": "检验机构",
@@ -262,7 +349,8 @@
 		"selectTest": "请选择检验项目",
 		"valuePlaceholder": "请输入值",
 		"validation": {
-			"required": "请输入检验名称和值"
+			"required": "请输入检验名称和值",
+			"noValues": "请输入至少一个检验值。"
 		},
 		"categories": {
 			"CBC": "血常规",
@@ -273,7 +361,27 @@
 			"inflammation": "炎症",
 			"endocrine": "内分泌",
 			"urine": "尿定性"
-		}
+		},
+		"groups": {
+			"cbc": "血常规（血细胞计数）",
+			"electrolyteRenal": "电解质和肾功能",
+			"liver": "肝功能",
+			"lipid": "血脂谱",
+			"glucose": "血糖 / HbA1c",
+			"optional": "可选检验"
+		},
+		"resultSummaryTitle": "结果概览（原型）",
+		"result": {
+			"headerTest": "检验项目",
+			"headerValue": "您的值",
+			"headerReference": "参考范围",
+			"headerStatus": "解读",
+			"low": "偏低（低于参考值）",
+			"normal": "在参考范围内",
+			"high": "偏高（高于参考值）",
+			"notEntered": "未输入"
+		},
+		"disclaimer": "此解读仅供参考，并非医疗诊断。临床决策请务必咨询医疗专业人员。"
 	},
 	"imaging": {
 		"title": "影像报告",
@@ -286,6 +394,8 @@
 		"summary": "摘要/发现",
 		"findings": "发现详情",
 		"impression": "印象",
+		"images": "图像",
+		"viewImage": "查看图像",
 		"imageFile": "图像文件",
 		"fileSizeLimit": "最大文件大小：1MB（仅限 PNG、JPEG）",
 		"types": {
@@ -329,9 +439,81 @@
 		"history": "病史",
 		"lab": "检验结果",
 		"imaging": "影像报告",
-		"vital": "生命体征"
+		"vital": "生命体征",
+		"vitals": "生命体征"
 	},
 	"profile": {
+		"title": "个人资料设置",
+		"description": "发行护照后的初始设置。现在输入基本信息，下一屏可添加疾病详情。",
+		"basicInfo": "基本信息",
+		"birthDate": "出生日期",
+		"gender": "性别",
+		"genders": {
+			"male": "男",
+			"female": "女",
+			"other": "其他",
+			"unknown": "不愿透露"
+		},
+		"country": "国籍",
+		"selectPlaceholder": "请选择",
+		"bloodType": "血型",
+		"selectOptional": "未选择",
+		"unknown": "未知",
+		"allergy": "过敏",
+		"allergySelectPlaceholder": "选择常见过敏",
+		"allergyOther": "其他",
+		"allergyOtherPlaceholder": "输入其他过敏",
+		"add": "添加",
+		"nextToConditions": "继续到疾病信息",
+		"allergyOptions": {
+			"peanut": "花生",
+			"shellfish": "贝类",
+			"egg": "鸡蛋",
+			"milk": "牛奶",
+			"buckwheat": "荞麦",
+			"wheat": "小麦",
+			"penicillin": "药物（例如：青霉素）",
+			"latex": "乳胶"
+		},
+		"countries": {
+			"JP": "日本",
+			"US": "美国",
+			"CN": "中国",
+			"KR": "韩国",
+			"TW": "台湾",
+			"HK": "香港",
+			"SG": "新加坡",
+			"TH": "泰国",
+			"VN": "越南",
+			"PH": "菲律宾",
+			"ID": "印度尼西亚",
+			"MY": "马来西亚",
+			"IN": "印度",
+			"BD": "孟加拉国",
+			"PK": "巴基斯坦",
+			"AE": "阿拉伯联合酋长国",
+			"SA": "沙特阿拉伯",
+			"EG": "埃及",
+			"ZA": "南非",
+			"NG": "尼日利亚",
+			"KE": "肯尼亚",
+			"GB": "英国",
+			"FR": "法国",
+			"DE": "德国",
+			"ES": "西班牙",
+			"IT": "意大利",
+			"NL": "荷兰",
+			"SE": "瑞典",
+			"CH": "瑞士",
+			"AU": "澳大利亚",
+			"NZ": "新西兰",
+			"CA": "加拿大",
+			"MX": "墨西哥",
+			"BR": "巴西",
+			"AR": "阿根廷",
+			"CL": "智利",
+			"other": "其他"
+		},
 		"name": "姓名"
 	},
 	"conditions": {
@@ -474,13 +656,25 @@
 				"title": "隐私优先",
 				"description": "您的健康数据经过加密并存储在Walrus上"
 			},
+			"dataOwnership": {
+				"title": "您拥有自己的数据",
+				"description": "使用Walrus、Seal和Sui，您可以安全地控制自己的医疗信息。只需一个二维码即可轻松与医疗专业人员共享。"
+			},
 			"global": {
 				"title": "全球访问",
 				"description": "随时随地访问您的健康护照"
 			},
+			"easyShare": {
+				"title": "轻松信息共享",
+				"description": "只需一个二维码即可轻松与医疗专业人员共享您的信息。您可以根据自己的条件安全地共享。"
+			},
 			"blockchain": {
 				"title": "区块链驱动",
 				"description": "基于Sui区块链构建，确保安全性和透明度"
+			},
+			"dataContribution": {
+				"title": "为医学进步做贡献",
+				"description": "可选择为研究贡献您的匿名医疗数据。您将获得数据产生的部分收入。参与完全是可选的。"
 			}
 		}
 	},
@@ -572,13 +766,13 @@
 					"items": {
 						"required": "实验室结果必须至少有一个测试项（索引 {{index}}）",
 						"codes": {
-							"loinc": "LOINC代码格式无效：{{code}}。预期格式：4548-4"
+							"loinc": "LOINC代码格式无效（索引 {{index}}.{{itemIndex}}）：{{code}}。预期格式：4548-4"
 						},
 						"value": {
-							"number": "实验室结果值必须是数字"
+							"number": "实验室结果值必须是数字（索引 {{index}}.{{itemIndex}}）"
 						},
 						"unit": {
-							"required": "需要实验室结果单位"
+							"required": "需要实验室结果单位（索引 {{index}}.{{itemIndex}}）"
 						}
 					}
 				}
@@ -603,7 +797,7 @@
 		"walletRequiredDesc": "请使用上方按钮连接您的钱包以访问加密的医疗记录。",
 		"patientView": "患者视图",
 		"patientId": "患者ID",
-		"badge": "医生视图",
+		"badge": "医生专用画面",
 		"medicalRecord": "医疗记录",
 		"patientInformation": "患者信息",
 		"viewDescription": "正在查看共享的医疗数据。仅限访问授权范围内的数据。",
@@ -624,7 +818,42 @@
 		"accessRestricted": "访问受限",
 		"noPermission": "您没有权限查看此数据",
 		"fetchData": "获取数据",
-		"loading": "加载中..."
+		"loading": "加载中...",
+		"pageTitle": "医生数据浏览",
+		"pageDescription": "上传患者共享的二维码以查看医疗数据",
+		"uploadQRTitle": "上传患者二维码",
+		"uploadQRDescription": "支持 PNG、JPG、JPEG 格式",
+		"selectImage": "选择图片",
+		"scanning": "扫描中...",
+		"uploadQRCode": "上传二维码",
+		"scanQRCode": "扫描患者二维码",
+		"uploadQRCodeDescription": "请上传从患者处收到的二维码图片",
+		"uploadQRCodeGuidance": "请上传从患者处收到的二维码",
+		"scanInfo": "扫描信息",
+		"expirationDate": "过期日期：",
+		"qrScope": "二维码范围：",
+		"dataType": "数据类型",
+		"sessionKeyGenerating": "正在生成会话密钥...",
+		"sessionKeyRegenerate": "重新生成会话密钥",
+		"sessionKeyGenerate": "生成会话密钥",
+		"sessionKeyError": "会话密钥错误",
+		"decryptError": "解密错误",
+		"result": "结果",
+		"enterConsentToken": "输入患者共享的 ConsentToken 和密钥以获取数据。",
+		"canvasContextError": "获取画布上下文失败",
+		"qrScanSuccess": "二维码扫描成功。正在重定向到患者数据页面...",
+		"qrScanSuccessShort": "✅ 二维码扫描成功！",
+		"qrDecodeError": "二维码解码失败",
+		"qrNotFound": "未找到二维码",
+		"imageLoadError": "图片加载失败",
+		"qrProcessError": "处理二维码时发生错误",
+		"qrRescanRequired": "请重新扫描二维码",
+		"dataTypeNotAllowed": "不允许此数据类型",
+		"sessionKeyGeneratingRetry": "正在生成会话密钥。请重试。",
+		"fetchFailed": "获取失败",
+		"walletNotConnected": "钱包未连接",
+		"packageIdNotConfigured": "未配置包ID",
+		"sessionKeyGenerationFailed": "生成会话密钥失败"
 	},
 	"common": {
 		"download": "下载",

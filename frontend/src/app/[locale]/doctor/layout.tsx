@@ -1,7 +1,8 @@
 "use client";
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { Stethoscope, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { WalletButton } from "@/components/wallet/WalletButton";
 
@@ -22,18 +23,20 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
 					<div className="flex items-center justify-between">
 						{/* ロゴ・タイトル */}
 						<div className="flex items-center gap-3">
-							<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md">
-								<Stethoscope className="h-5 w-5" />
-							</div>
-							<div>
+							<Image
+								src="/icon.png"
+								alt="CurePocket"
+								width={40}
+								height={40}
+								className="rounded-xl shadow-md"
+							/>
+							<div className="flex items-center gap-2">
 								<h1 className="text-lg font-bold text-gray-900">
-									{t("doctor.portalTitle", { default: "Doctor Portal" })}
+									{t("appName")}
 								</h1>
-								<p className="text-xs text-gray-500">
-									{t("doctor.portalSubtitle", {
-										default: "Secure Medical Data Access",
-									})}
-								</p>
+								<span className="px-2 py-0.5 text-xs font-medium rounded-md bg-blue-100 text-blue-700 border border-blue-200">
+									{t("doctor.badge", { default: "Doctor View" })}
+								</span>
 							</div>
 						</div>
 
