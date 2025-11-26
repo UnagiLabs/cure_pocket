@@ -197,7 +197,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		setResults([]);
 
 		if (!consentTokenId || !secret) {
-			setFetchMessage("ConsentToken ID と合言葉を入力してください");
+			setFetchMessage("QRコードを再度読み取ってください");
 			return;
 		}
 
@@ -328,29 +328,6 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 							</>
 						)}
 					</button>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<label className="space-y-1 text-sm text-gray-700">
-						<span className="font-semibold">ConsentToken Object ID</span>
-						<input
-							value={consentTokenId}
-							onChange={(e) => setConsentTokenId(e.target.value)}
-							className="w-full rounded border px-3 py-2 text-sm"
-							placeholder="0x..."
-						/>
-					</label>
-
-					<label className="space-y-1 text-sm text-gray-700">
-						<span className="font-semibold">合言葉 (secret)</span>
-						<input
-							value={secret}
-							onChange={(e) => setSecret(e.target.value)}
-							className="w-full rounded border px-3 py-2 text-sm"
-							placeholder="患者から共有された秘密文字列"
-							type="password"
-						/>
-					</label>
 				</div>
 
 				{/* QRコードからスキャンされたスコープの表示 */}
