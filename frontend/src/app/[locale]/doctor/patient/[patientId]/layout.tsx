@@ -1,21 +1,16 @@
 "use client";
 
-import { Eye, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { use } from "react";
-import { WalletButton } from "@/components/wallet/WalletButton";
 
 interface DoctorPatientLayoutProps {
 	children: React.ReactNode;
-	params: Promise<{ patientId: string }>;
 }
 
 export default function DoctorPatientLayout({
 	children,
-	params,
 }: DoctorPatientLayoutProps) {
 	const t = useTranslations();
-	const { patientId } = use(params);
 
 	// 医師向けテーマカラー（青系）
 	const doctorTheme = {
@@ -36,59 +31,6 @@ export default function DoctorPatientLayout({
 				color: doctorTheme.text,
 			}}
 		>
-			{/* Doctor View Header */}
-			<header
-				className="sticky top-0 z-50 border-b backdrop-blur-sm"
-				style={{
-					backgroundColor: `${doctorTheme.surface}f5`,
-					borderColor: `${doctorTheme.textSecondary}20`,
-				}}
-			>
-				<div className="mx-auto max-w-7xl px-4 md:px-8 py-4">
-					<div className="flex items-center justify-between gap-4">
-						{/* Left section */}
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-3">
-								<div
-									className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md"
-									style={{
-										backgroundImage: `linear-gradient(to top right, ${doctorTheme.primary}, ${doctorTheme.secondary})`,
-									}}
-								>
-									<Eye size={20} />
-								</div>
-								<div>
-									<h1
-										className="text-lg md:text-xl font-bold"
-										style={{ color: doctorTheme.text }}
-									>
-										{t("doctor.patientView", { default: "Patient View" })}
-									</h1>
-									<p
-										className="text-xs md:text-sm"
-										style={{ color: doctorTheme.textSecondary }}
-									>
-										{t("doctor.patientId", { default: "Patient ID" })}:{" "}
-										{patientId.slice(0, 8)}...
-									</p>
-								</div>
-							</div>
-						</div>
-
-						{/* Right section - Wallet + Doctor View Badge */}
-						<div className="flex items-center gap-3">
-							<WalletButton size="small" variant="mobile" colorScheme="solid" />
-							<div className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-blue-50 border border-blue-200">
-								<ShieldCheck size={16} className="text-blue-600" />
-								<span className="text-xs md:text-sm font-semibold text-blue-700">
-									{t("doctor.badge", { default: "Doctor View" })}
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</header>
-
 			{/* Main Content */}
 			<main className="mx-auto max-w-7xl">{children}</main>
 
