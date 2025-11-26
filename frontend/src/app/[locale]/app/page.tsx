@@ -295,7 +295,7 @@ export default function HomePage() {
 					<div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide lg:overflow-visible lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-6">
 						<button
 							type="button"
-							onClick={() => router.push(`/${locale}/app/card`)}
+							onClick={() => router.push(`/${locale}/app/share`)}
 							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 						>
 							<div

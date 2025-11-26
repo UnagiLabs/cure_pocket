@@ -349,7 +349,7 @@ export default function EmergencyCardPage() {
 			<div className="lg:hidden mb-6 flex items-center">
 				<AlertCircle className="mr-2 h-5 w-5 text-red-500" />
 				<h1 className="text-lg font-bold" style={{ color: theme.colors.text }}>
-					{t("card.title")}
+					{t("share.title")}
 				</h1>
 			</div>
 
@@ -357,7 +357,7 @@ export default function EmergencyCardPage() {
 				className="mb-6 text-sm md:text-base"
 				style={{ color: theme.colors.textSecondary }}
 			>
-				{t("card.description")}
+				{t("share.description")}
 			</p>
 
 			{/* Category Selection */}
@@ -369,7 +369,7 @@ export default function EmergencyCardPage() {
 					className="mb-3 font-bold md:text-lg"
 					style={{ color: theme.colors.text }}
 				>
-					{t("card.selectCategories")}
+					{t("share.selectCategories")}
 				</h3>
 				<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 md:gap-3">
 					{categoryOptions.map((option) => {
@@ -438,13 +438,13 @@ export default function EmergencyCardPage() {
 									{qrImageUrl ? (
 										<img
 											src={qrImageUrl}
-											alt={t("card.scanToView")}
+											alt={t("share.scanToView")}
 											className="h-full w-full rounded-lg object-cover"
 										/>
 									) : (
 										<div className="flex h-full w-full items-center justify-center">
 											<span className="text-xs font-medium text-gray-400">
-												{t("card.scanToView")}
+												{t("share.scanToView")}
 											</span>
 										</div>
 									)}
@@ -453,21 +453,21 @@ export default function EmergencyCardPage() {
 									className="text-sm"
 									style={{ color: theme.colors.textSecondary }}
 								>
-									{t("card.scanToView")}
+									{t("share.scanToView")}
 								</p>
 								<p
 									className="text-sm"
 									style={{ color: theme.colors.textSecondary }}
 								>
-									{t("card.englishVersion")}
+									{t("share.englishVersion")}
 								</p>
 							</>
 						) : (
 							<>
 								<QrCode className="mx-auto mb-2 h-32 w-32 text-gray-400" />
-								<p className="text-sm text-gray-600">{t("card.scanToView")}</p>
+								<p className="text-sm text-gray-600">{t("share.scanToView")}</p>
 								<p className="text-sm text-gray-600">
-									{t("card.englishVersion")}
+									{t("share.englishVersion")}
 								</p>
 							</>
 						)}
@@ -480,7 +480,7 @@ export default function EmergencyCardPage() {
 						style={{ color: theme.colors.textSecondary }}
 					>
 						<Clock className="mr-1 h-4 w-4" />
-						{t("card.validFor", { duration: durationLabel || "24h" })}
+						{t("share.validFor", { duration: durationLabel || "24h" })}
 					</div>
 				)}
 
@@ -491,7 +491,7 @@ export default function EmergencyCardPage() {
 					className="w-full rounded-lg p-3 font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
-					{isGenerating ? t("card.generating") : t("card.generateQR")}
+					{isGenerating ? t("share.generating") : t("share.generateQR")}
 				</button>
 			</div>
 
@@ -539,7 +539,7 @@ export default function EmergencyCardPage() {
 								className="mb-3 font-bold md:text-lg"
 								style={{ color: theme.colors.text }}
 							>
-								{t("card.currentMedications")}
+								{t("share.currentMedications")}
 							</h3>
 							<ul className="space-y-2">
 								{activeMedications.map((med) => (
@@ -657,7 +657,7 @@ export default function EmergencyCardPage() {
 					style={{ backgroundColor: theme.colors.primary }}
 				>
 					<Download className="mr-2 h-5 w-5" />
-					<span>{t("card.downloadImage")}</span>
+					<span>{t("share.downloadImage")}</span>
 				</button>
 			</div>
 
@@ -669,9 +669,9 @@ export default function EmergencyCardPage() {
 				<div className="flex items-start">
 					<span className="mr-3 text-2xl">ℹ️</span>
 					<div className="text-sm" style={{ color: theme.colors.text }}>
-						<p className="mb-1 font-medium">{t("card.emergencyInfo.title")}</p>
+						<p className="mb-1 font-medium">{t("share.emergencyInfo.title")}</p>
 						<p style={{ color: theme.colors.textSecondary }}>
-							{t("card.emergencyInfo.description")}
+							{t("share.emergencyInfo.description")}
 						</p>
 					</div>
 				</div>

@@ -38,8 +38,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 	useEffect(() => {
 		if (pathname.includes("/vitals")) {
 			setActiveTab("vitals");
-		} else if (pathname.includes("/card")) {
-			setActiveTab("card");
+		} else if (pathname.includes("/share")) {
+			setActiveTab("share");
 		} else if (pathname.includes("/data")) {
 			setActiveTab("files");
 		} else if (pathname.includes("/medications")) {
@@ -174,18 +174,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 					<button
 						type="button"
-						onClick={() => navigateTo("/app/card", "card")}
+						onClick={() => navigateTo("/app/share", "share")}
 						className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:translate-x-1"
 						style={{
 							backgroundColor:
-								activeTab === "card"
+								activeTab === "share"
 									? `${theme.colors.primary}15`
 									: "transparent",
 							color:
-								activeTab === "card" ? theme.colors.primary : theme.colors.text,
+								activeTab === "share"
+									? theme.colors.primary
+									: theme.colors.text,
 						}}
 					>
-						<Calendar size={20} strokeWidth={activeTab === "card" ? 2.5 : 2} />
+						<Calendar size={20} strokeWidth={activeTab === "share" ? 2.5 : 2} />
 						<span className="font-medium">{t("home.share")}</span>
 					</button>
 
@@ -305,7 +307,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							>
 								{activeTab === "home" && t("tabs.home")}
 								{activeTab === "vitals" && t("tabs.vitals")}
-								{activeTab === "card" && t("home.share")}
+								{activeTab === "share" && t("home.share")}
 								{activeTab === "files" && t("tabs.data")}
 								{activeTab === "settings" && t("tabs.settings")}
 								{activeTab === "profile" && t("tabs.profile")}
@@ -361,15 +363,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 						<button
 							type="button"
-							onClick={() => navigateTo("/app/card", "card")}
+							onClick={() => navigateTo("/app/share", "share")}
 							className="flex flex-col items-center gap-1 w-12 transition-colors duration-300"
 							style={{
-								color: activeTab === "card" ? theme.colors.primary : "#94a3b8",
+								color: activeTab === "share" ? theme.colors.primary : "#94a3b8",
 							}}
 						>
 							<Calendar
 								size={24}
-								strokeWidth={activeTab === "card" ? 2.5 : 2}
+								strokeWidth={activeTab === "share" ? 2.5 : 2}
 							/>
 							<span className="text-[10px] font-bold">{t("home.share")}</span>
 						</button>

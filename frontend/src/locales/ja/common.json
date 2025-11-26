@@ -163,10 +163,10 @@
 			"medicationRequired": "最低1つの薬品名を入力してください"
 		}
 	},
-	"card": {
-		"title": "緊急カード",
+	"share": {
+		"title": "QRコード共有",
 		"subtitle": "緊急時お薬情報",
-		"description": "緊急時に医療従事者とお薬情報を共有",
+		"description": "QRコードで医師と医療情報を共有",
 		"generateQR": "QRコード生成",
 		"generating": "生成中...",
 		"validFor": "有効期限: {duration}",
@@ -174,10 +174,10 @@
 		"currentMedications": "服用薬一覧",
 		"scanToView": "スキャンすると",
 		"englishVersion": "英語版も表示",
-		"selectCategories": "表示するカテゴリーを選択",
+		"selectCategories": "共有するカテゴリーを選択",
 		"emergencyInfo": {
-			"title": "緊急時の使い方",
-			"description": "このQRコードを医療従事者に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
+			"title": "使い方",
+			"description": "このQRコードを医師に見せることで、選択したカテゴリーの情報を安全に共有できます。リンクは24時間後に自動的に無効になります。"
 		}
 	},
 	"settings": {

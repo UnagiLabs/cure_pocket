@@ -163,10 +163,10 @@
 			"medicationRequired": "Please enter at least one medication name"
 		}
 	},
-	"card": {
-		"title": "Emergency Card",
+	"share": {
+		"title": "QR Code Sharing",
 		"subtitle": "Emergency medical information",
-		"description": "Share your medication information with healthcare providers in emergencies",
+		"description": "Share medical information with doctors via QR code",
 		"generateQR": "Generate QR Code",
 		"generating": "Generating...",
 		"validFor": "Valid for: {duration}",
@@ -176,8 +176,8 @@
 		"englishVersion": "English version available",
 		"selectCategories": "Select categories to share",
 		"emergencyInfo": {
-			"title": "How to use this in emergencies",
-			"description": "Show this QR code to healthcare professionals to share only the categories you selected. The link automatically expires 24 hours after creation."
+			"title": "How to use",
+			"description": "Show this QR code to doctors to safely share information from the categories you selected. The link automatically expires 24 hours after creation."
 		}
 	},
 	"settings": {

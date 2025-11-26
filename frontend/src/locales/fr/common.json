@@ -114,17 +114,22 @@
 		"warning": "Avertissement",
 		"noMedications": "Aucun médicament actif enregistré"
 	},
-	"card": {
-		"title": "Carte d'urgence",
+	"share": {
+		"title": "Partage de code QR",
 		"subtitle": "Informations médicales d'urgence",
-		"description": "Partagez vos informations sur les médicaments avec les prestataires de soins en cas d'urgence",
+		"description": "Partagez des informations médicales avec les médecins via un code QR",
 		"generateQR": "Générer un code QR",
 		"generating": "Génération en cours...",
 		"validFor": "Valide pour : {duration}",
 		"downloadImage": "Télécharger l'image",
 		"currentMedications": "Médicaments actuels",
 		"scanToView": "Scanner pour voir",
-		"englishVersion": "Version anglaise disponible"
+		"englishVersion": "Version anglaise disponible",
+		"selectCategories": "Sélectionner les catégories à partager",
+		"emergencyInfo": {
+			"title": "Comment utiliser",
+			"description": "Montrez ce code QR aux médecins pour partager en toute sécurité les informations des catégories que vous avez sélectionnées. Le lien expire automatiquement 24 heures après sa création."
+		}
 	},
 	"settings": {
 		"title": "Paramètres",
