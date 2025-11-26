@@ -16,7 +16,6 @@ import {
 	FileText,
 	FlaskConical,
 	Package,
-	Printer,
 	QrCode,
 	Scan,
 } from "lucide-react";
@@ -124,6 +123,22 @@ export default function EmergencyCardPage() {
 				? prev.filter((c) => c !== category)
 				: [...prev, category],
 		);
+	};
+
+	const handleDownloadImage = () => {
+		if (!qrImageUrl || !walletAddress) return;
+
+		// ウォレットアドレスの頭4桁と末尾4桁を取得
+		const addrPrefix = walletAddress.slice(0, 6); // "0x" + 4桁
+		const addrSuffix = walletAddress.slice(-4);
+		const filename = `${addrPrefix}...${addrSuffix}_share_qr.png`;
+
+		const link = document.createElement("a");
+		link.href = qrImageUrl;
+		link.download = filename;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
 	};
 
 	const handleGenerateQR = async () => {
@@ -536,22 +551,16 @@ export default function EmergencyCardPage() {
 			</div>
 
 			{/* Action Buttons */}
-			<div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+			<div className="mt-6">
 				<button
 					type="button"
-					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
+					onClick={handleDownloadImage}
+					disabled={!qrImageUrl}
+					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
 					<Download className="mr-2 h-5 w-5" />
-					<span>{t("card.downloadPDF")}</span>
-				</button>
-				<button
-					type="button"
-					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
-					style={{ backgroundColor: "#374151" }}
-				>
-					<Printer className="mr-2 h-5 w-5" />
-					<span>{t("card.printCard")}</span>
+					<span>{t("card.downloadImage")}</span>
 				</button>
 			</div>
 

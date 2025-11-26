@@ -121,8 +121,7 @@
 		"generateQR": "生成二维码",
 		"generating": "生成中...",
 		"validFor": "有效期：{duration}",
-		"downloadPDF": "下载PDF",
-		"printCard": "打印卡片",
+		"downloadImage": "下载图片",
 		"currentMedications": "当前用药",
 		"scanToView": "扫描查看",
 		"englishVersion": "提供英文版本"

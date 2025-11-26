@@ -121,8 +121,7 @@
 		"generateQR": "Gerar código QR",
 		"generating": "Gerando...",
 		"validFor": "Válido por: {duration}",
-		"downloadPDF": "Baixar PDF",
-		"printCard": "Imprimir cartão",
+		"downloadImage": "Baixar imagem",
 		"currentMedications": "Medicamentos atuais",
 		"scanToView": "Escanear para visualizar",
 		"englishVersion": "Versão em inglês disponível"
