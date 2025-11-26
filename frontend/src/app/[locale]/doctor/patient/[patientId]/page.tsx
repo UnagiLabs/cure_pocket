@@ -82,7 +82,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			}),
 			allergies: t("doctor.drugAllergies", { default: "Allergies" }),
 			conditions: t("dataOverview.chips.conditions", { default: "Conditions" }),
-			lab_results: t("home.labData", { default: "Lab Results" }),
+			lab_results: t("home.labResults", { default: "Lab Results" }),
 			imaging_reports: t("home.imagingData", { default: "Imaging" }),
 			vital_signs: t("home.todayVitals", { default: "Vital Signs" }),
 		}),

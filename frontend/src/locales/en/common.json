@@ -804,7 +804,8 @@
 		"confidentialNotice": "This information is confidential and protected by medical privacy laws.",
 		"encryptedConnection": "Encrypted Connection",
 		"accessRestricted": "Access Restricted",
-		"noPermission": "You don't have permission to view this data"
+		"noPermission": "You don't have permission to view this data",
+		"fetchData": "Fetch data"
 	},
 	"common": {
 		"download": "Download",

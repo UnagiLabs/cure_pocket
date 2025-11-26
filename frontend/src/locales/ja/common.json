@@ -812,7 +812,8 @@
 		"confidentialNotice": "この情報は守秘義務があり、医療プライバシー法により保護されています。",
 		"encryptedConnection": "暗号化接続",
 		"accessRestricted": "アクセス制限",
-		"noPermission": "このデータを閲覧する権限がありません"
+		"noPermission": "このデータを閲覧する権限がありません",
+		"fetchData": "データを取得"
 	},
 	"common": {
 		"download": "ダウンロード",
