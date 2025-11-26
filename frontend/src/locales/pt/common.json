@@ -100,7 +100,12 @@
 		"frequency": "Frequência",
 		"startDate": "Data de início",
 		"endDate": "Data de término (opcional)",
-		"reason": "Motivo"
+		"reason": "Motivo",
+		"vitalsDescription": "Registre seus sinais vitais",
+		"bloodPressureAdd": "Registrar pressão arterial",
+		"bloodGlucoseAdd": "Registrar glicemia",
+		"temperatureAdd": "Registrar temperatura corporal",
+		"weightAdd": "Registrar peso"
 	},
 	"medications": {
 		"title": "Seus medicamentos",
@@ -112,7 +117,51 @@
 		"asNeeded": "Conforme necessário",
 		"clinic": "Clínica",
 		"warning": "Aviso",
-		"noMedications": "Nenhum medicamento ativo registrado"
+		"noMedications": "Nenhum medicamento ativo registrado",
+		"noPrescriptions": "Nenhuma prescrição registrada",
+		"addFirstPrescription": "Adicionar sua primeira prescrição",
+		"addNewPrescription": "Adicionar nova prescrição"
+	},
+	"prescriptions": {
+		"addNew": "Adicionar Prescrição",
+		"basicInfo": "Informações da Prescrição",
+		"prescriptionDate": "Data da Prescrição",
+		"clinic": "Instalação Médica",
+		"clinicPlaceholder": "ex.: Hospital Geral",
+		"department": "Departamento",
+		"departmentPlaceholder": "ex.: Medicina Interna, Ortopedia",
+		"doctorName": "Nome do Médico",
+		"doctorNamePlaceholder": "ex.: Dr. Silva",
+		"medications": "Medicamentos",
+		"medication": "Medicamento",
+		"addMedication": "Adicionar medicamento",
+		"drugName": "Nome do Medicamento",
+		"drugNamePlaceholder": "ex.: Aspirina 100mg",
+		"strength": "Dosagem",
+		"dosage": "Posologia",
+		"dosagePlaceholder": "ex.: Duas vezes ao dia, após as refeições",
+		"quantity": "Quantidade",
+		"duration": "Duração/Quantidade",
+		"additionalInfo": "Notas e Anexos",
+		"symptoms": "Sintomas/Propósito",
+		"symptomsPlaceholder": "ex.: Dor de cabeça, febre",
+		"notes": "Notas",
+		"notesPlaceholder": "ex.: Não tomar em jejum",
+		"photoAttachmentComingSoon": "Anexo de foto (em breve)",
+		"attachments": "anexos",
+		"inputFromImage": "Entrada a partir de Imagem",
+		"manualInput": "Entrada Manual",
+		"uploadOrTakePhoto": "Carregar ou Tirar Foto",
+		"dragDropImages": "Arrastar e Soltar Imagens",
+		"clickToUpload": "Clique para Carregar",
+		"uploadedImages": "Imagens Carregadas",
+		"attachedImages": "Imagens Anexadas",
+		"runOCR": "Executar OCR",
+		"ocrProcessing": "Processando OCR...",
+		"validation": {
+			"clinicRequired": "Por favor, insira o nome da instalação médica",
+			"medicationRequired": "Por favor, insira pelo menos um nome de medicamento"
+		}
 	},
 	"share": {
 		"title": "Compartilhamento de código QR",
@@ -145,11 +194,15 @@
 		"bloodType": "Tipo Sanguíneo",
 		"allergies": "Alergias",
 		"profile": "Perfil",
+		"profileSettings": "Configurações do Perfil",
 		"dataExport": "Exportar dados",
 		"walletConnected": "Carteira conectada",
 		"walrusStorage": "Armazenamento Walrus",
 		"encrypted": "Criptografado",
-		"lastSync": "Última sincronização: {{time}}"
+		"lastSync": "Última sincronização: {{time}}",
+		"researchContribution": "Contribuição para Pesquisa",
+		"earnedRewards": "Recompensas Ganhas",
+		"lastSyncRecent": "Última sincronização: há 2 minutos"
 	},
 	"wallet": {
 		"connect": "Conectar carteira",
@@ -173,6 +226,8 @@
 		"connectionFailed": "Falha ao conectar carteira. Por favor, tente novamente."
 	},
 	"passport": {
+		"title": "Passaporte Médico",
+		"subtitle": "Emita um passaporte para gerenciar com segurança suas informações médicas.",
 		"mintSuccessTitle": "Passaporte emitido com sucesso",
 		"mintSuccessDescription": "Seu passaporte médico foi emitido com sucesso.",
 		"checkTransaction": "Ver transação →",
@@ -183,7 +238,29 @@
 		"minting": "Emitindo...",
 		"mintButton": "Emitir passaporte",
 		"hasPassportTitle": "Passaporte disponível",
-		"hasPassportDescription": "Seu passaporte médico está emitido e ativo."
+		"hasPassportDescription": "Seu passaporte médico está emitido e ativo.",
+		"messages": {
+			"checking": "Verificando o status do passaporte...",
+			"errorTitle": "Ocorreu um erro",
+			"successTitle": "Passaporte emitido!",
+			"successBody": "Seu Passaporte Médico foi emitido. Redirecionando para configuração do perfil..."
+		},
+		"actions": {
+			"reload": "Recarregar",
+			"mint": "Emitir passaporte",
+			"minting": "Emitindo...",
+			"back": "Voltar"
+		},
+		"faq": {
+			"title": "O que é um passaporte?",
+			"description": "O Passaporte Médico é uma credencial digital na blockchain Sui que gerencia com segurança seus dados médicos. Apenas você pode acessá-lo.",
+			"points": [
+				"Gerenciamento seguro de dados médicos",
+				"Acesso global",
+				"Proteção de privacidade",
+				"Compartilhamento fácil via código QR"
+			]
+		}
 	},
 	"themes": {
 		"classic-blue": "Azul clássico",
@@ -218,6 +295,9 @@
 		"onsetDate": "Data de início",
 		"diagnosedBy": "Diagnosticado por",
 		"notes": "Notas",
+		"mild": "Leve",
+		"moderate": "Moderada",
+		"severe": "Grave",
 		"severities": {
 			"mild": "Leve",
 			"moderate": "Moderada",
@@ -233,6 +313,7 @@
 		"type": "Tipo",
 		"diagnosis": "Diagnóstico / Nome da cirurgia",
 		"diagnosisDate": "Data do diagnóstico / cirurgia",
+		"resolvedDate": "Data de resolução",
 		"diagnosedBy": "Diagnosticado por",
 		"description": "Descrição",
 		"status": "Status",
@@ -257,6 +338,7 @@
 		"testName": "Nome do teste",
 		"value": "Valor",
 		"unit": "Unidade",
+		"reference": "Valor de referência",
 		"referenceRange": "Faixa de referência",
 		"testDate": "Data do teste",
 		"testedBy": "Instalação de teste",
@@ -267,7 +349,8 @@
 		"selectTest": "Por favor, selecione um teste",
 		"valuePlaceholder": "Digite o valor",
 		"validation": {
-			"required": "Por favor, insira o nome do teste e o valor"
+			"required": "Por favor, insira o nome do teste e o valor",
+			"noValues": "Por favor, insira pelo menos um valor de laboratório."
 		},
 		"categories": {
 			"CBC": "Hemograma",
@@ -278,7 +361,27 @@
 			"inflammation": "Inflamação",
 			"endocrine": "Endócrino",
 			"urine": "Urina qualitativa"
-		}
+		},
+		"groups": {
+			"cbc": "Hemograma (Contagem Sanguínea)",
+			"electrolyteRenal": "Eletrólitos e Função Renal",
+			"liver": "Função Hepática",
+			"lipid": "Perfil Lipídico",
+			"glucose": "Glicose / HbA1c",
+			"optional": "Testes Opcionais"
+		},
+		"resultSummaryTitle": "Visão geral dos resultados (protótipo)",
+		"result": {
+			"headerTest": "Teste",
+			"headerValue": "Seu valor",
+			"headerReference": "Faixa de referência",
+			"headerStatus": "Interpretação",
+			"low": "Baixo (abaixo da referência)",
+			"normal": "Dentro da faixa de referência",
+			"high": "Alto (acima da referência)",
+			"notEntered": "Não inserido"
+		},
+		"disclaimer": "Esta interpretação é apenas para referência e não é um diagnóstico médico. Sempre consulte um profissional de saúde para decisões clínicas."
 	},
 	"imaging": {
 		"title": "Relatórios de imagem",
@@ -291,6 +394,8 @@
 		"summary": "Resumo / Achados",
 		"findings": "Detalhes dos achados",
 		"impression": "Impressão",
+		"images": "Imagens",
+		"viewImage": "Ver imagem",
 		"imageFile": "Arquivo de imagem",
 		"fileSizeLimit": "Tamanho máximo do arquivo: 1 MB (apenas PNG, JPEG)",
 		"types": {
@@ -334,9 +439,81 @@
 		"history": "Histórico",
 		"lab": "Resultado de laboratório",
 		"imaging": "Relatório de imagem",
-		"vital": "Sinal vital"
+		"vital": "Sinal vital",
+		"vitals": "Sinais Vitais"
 	},
 	"profile": {
+		"title": "Configurações do Perfil",
+		"description": "Configuração inicial após emitir seu passaporte. Insira as informações básicas agora e adicione os detalhes das doenças na próxima tela.",
+		"basicInfo": "Informações Básicas",
+		"birthDate": "Data de Nascimento",
+		"gender": "Gênero",
+		"genders": {
+			"male": "Masculino",
+			"female": "Feminino",
+			"other": "Outro",
+			"unknown": "Prefiro não dizer"
+		},
+		"country": "Nacionalidade",
+		"selectPlaceholder": "Por favor, selecione",
+		"bloodType": "Tipo Sanguíneo",
+		"selectOptional": "Não selecionado",
+		"unknown": "Desconhecido",
+		"allergy": "Alergias",
+		"allergySelectPlaceholder": "Escolha uma alergia comum",
+		"allergyOther": "Outro",
+		"allergyOtherPlaceholder": "Digite outras alergias",
+		"add": "Adicionar",
+		"nextToConditions": "Continuar para Informações sobre Doenças",
+		"allergyOptions": {
+			"peanut": "Amendoim",
+			"shellfish": "Frutos do mar",
+			"egg": "Ovo",
+			"milk": "Leite",
+			"buckwheat": "Trigo sarraceno",
+			"wheat": "Trigo",
+			"penicillin": "Medicamento (ex.: Penicilina)",
+			"latex": "Latex"
+		},
+		"countries": {
+			"JP": "Japão",
+			"US": "Estados Unidos",
+			"CN": "China",
+			"KR": "Coreia do Sul",
+			"TW": "Taiwan",
+			"HK": "Hong Kong",
+			"SG": "Singapura",
+			"TH": "Tailândia",
+			"VN": "Vietnã",
+			"PH": "Filipinas",
+			"ID": "Indonésia",
+			"MY": "Malásia",
+			"IN": "Índia",
+			"BD": "Bangladesh",
+			"PK": "Paquistão",
+			"AE": "Emirados Árabes Unidos",
+			"SA": "Arábia Saudita",
+			"EG": "Egito",
+			"ZA": "África do Sul",
+			"NG": "Nigéria",
+			"KE": "Quênia",
+			"GB": "Reino Unido",
+			"FR": "França",
+			"DE": "Alemanha",
+			"ES": "Espanha",
+			"IT": "Itália",
+			"NL": "Países Baixos",
+			"SE": "Suécia",
+			"CH": "Suíça",
+			"AU": "Austrália",
+			"NZ": "Nova Zelândia",
+			"CA": "Canadá",
+			"MX": "México",
+			"BR": "Brasil",
+			"AR": "Argentina",
+			"CL": "Chile",
+			"other": "Outro"
+		},
 		"name": "Nome"
 	},
 	"conditions": {
@@ -479,13 +656,25 @@
 				"title": "Privacidade em primeiro lugar",
 				"description": "Seus dados de saúde são criptografados e armazenados no Walrus"
 			},
+			"dataOwnership": {
+				"title": "Você possui seus dados",
+				"description": "Usando Walrus, Seal e Sui, você controla com segurança suas informações médicas. Compartilhe facilmente com profissionais de saúde com apenas um código QR."
+			},
 			"global": {
 				"title": "Acesso global",
 				"description": "Acesse seu passaporte de saúde em qualquer lugar, a qualquer momento"
 			},
+			"easyShare": {
+				"title": "Compartilhamento fácil de informações",
+				"description": "Compartilhe suas informações com profissionais de saúde facilmente com apenas um código QR. Compartilhe com segurança em seus próprios termos."
+			},
 			"blockchain": {
 				"title": "Alimentado por blockchain",
 				"description": "Construído na blockchain Sui para segurança e transparência"
+			},
+			"dataContribution": {
+				"title": "Contribuir para o avanço médico",
+				"description": "Opcionalmente, contribua com seus dados médicos anonimizados para pesquisa. Você receberá uma parte da receita gerada pelos dados. A participação é totalmente opcional."
 			}
 		}
 	},
@@ -577,13 +766,13 @@
 					"items": {
 						"required": "Resultado de laboratório deve ter pelo menos um item de teste (índice {{index}})",
 						"codes": {
-							"loinc": "Formato de código LOINC inválido: {{code}}. Formato esperado: 4548-4"
+							"loinc": "Formato de código LOINC inválido (índice {{index}}.{{itemIndex}}): {{code}}. Formato esperado: 4548-4"
 						},
 						"value": {
-							"number": "Valor do resultado de laboratório deve ser um número"
+							"number": "Valor do resultado de laboratório deve ser um número (índice {{index}}.{{itemIndex}})"
 						},
 						"unit": {
-							"required": "Unidade do resultado de laboratório é obrigatória"
+							"required": "Unidade do resultado de laboratório é obrigatória (índice {{index}}.{{itemIndex}})"
 						}
 					}
 				}

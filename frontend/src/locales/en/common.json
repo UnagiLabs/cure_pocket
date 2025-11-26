@@ -295,6 +295,9 @@
 		"onsetDate": "Onset Date",
 		"diagnosedBy": "Diagnosed By",
 		"notes": "Notes",
+		"mild": "Mild",
+		"moderate": "Moderate",
+		"severe": "Severe",
 		"severities": {
 			"mild": "Mild",
 			"moderate": "Moderate",
@@ -310,6 +313,7 @@
 		"type": "Type",
 		"diagnosis": "Diagnosis / Surgery Name",
 		"diagnosisDate": "Diagnosis / Surgery Date",
+		"resolvedDate": "Resolved Date",
 		"diagnosedBy": "Diagnosed By",
 		"description": "Description",
 		"status": "Status",
@@ -334,6 +338,7 @@
 		"testName": "Test Name",
 		"value": "Value",
 		"unit": "Unit",
+		"reference": "Reference Value",
 		"referenceRange": "Reference Range",
 		"testDate": "Test Date",
 		"testedBy": "Test Facility",
@@ -389,6 +394,8 @@
 		"summary": "Summary / Findings",
 		"findings": "Findings Details",
 		"impression": "Impression",
+		"images": "Images",
+		"viewImage": "View Image",
 		"imageFile": "Image File",
 		"fileSizeLimit": "Maximum file size: 1MB (PNG, JPEG only)",
 		"types": {
@@ -506,7 +513,8 @@
 			"AR": "Argentina",
 			"CL": "Chile",
 			"other": "Other"
-		}
+		},
+		"name": "Name"
 	},
 	"conditions": {
 		"title": "Disease Information",
