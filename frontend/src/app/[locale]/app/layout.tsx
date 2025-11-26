@@ -96,6 +96,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 							width={48}
 							height={48}
 							className="rounded-xl shadow-lg"
+							style={{ height: "auto" }}
 						/>
 						<div>
 							<h1

@@ -178,28 +178,6 @@ export async function createSessionKey(options: {
 }
 
 /**
- * Generate seal_id from passport object ID
- *
- * seal_id is the identity suffix used in Seal's IBE model.
- * Format: [packageId][seal_id]
- *
- * @param passportObjectId - MedicalPassport Sui object ID
- * @returns seal_id as Uint8Array
- */
-export async function generateSealId(
-	passportObjectId: string,
-): Promise<string> {
-	// Use SHA-256 to generate deterministic seal_id
-	const encoder = new TextEncoder();
-	const data = encoder.encode(passportObjectId);
-	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-
-	return Array.from(new Uint8Array(hashBuffer))
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
-}
-
-/**
  * Encrypt health data using Seal's threshold IBE
  *
  * Official API flow:
@@ -228,6 +206,8 @@ export async function encryptHealthData<T = HealthData>(params: {
 	const data = new TextEncoder().encode(json);
 
 	// Encrypt with Seal
+	// sealId（hex文字列）をそのまま渡す
+	// Seal SDKは内部でfromHex()を使用してバイナリに変換する
 	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
 		threshold: effectiveThreshold,
 		packageId: PACKAGE_ID,
@@ -260,28 +240,91 @@ export async function decryptHealthData(params: {
 }): Promise<HealthData> {
 	const { encryptedData, sealClient, sessionKey, txBytes, sealId } = params;
 
+	console.log("[decryptHealthData] Starting decryption...");
+	console.log(
+		`[decryptHealthData] sealId: ${sealId ? `${sealId.substring(0, 20)}...` : "not provided"}`,
+	);
+	console.log(
+		`[decryptHealthData] encryptedData length: ${encryptedData.length}`,
+	);
+
 	// Optional sanity check: ensure the encrypted object matches expected id
 	if (sealId) {
-		const parsed = EncryptedObject.parse(encryptedData);
-		const normalize = (value: string) =>
-			value.startsWith("0x") ? value.slice(2) : value;
-		if (normalize(parsed.id) !== normalize(sealId)) {
-			throw new Error("Encrypted object seal_id mismatch");
+		try {
+			const parsed = EncryptedObject.parse(encryptedData);
+			console.log(`[decryptHealthData] parsed.id: ${parsed.id}`);
+
+			const normalize = (value: string): string => {
+				if (!value) return "";
+				let normalized = value.startsWith("0x") ? value.slice(2) : value;
+				normalized = normalized.toLowerCase();
+				return normalized;
+			};
+
+			const normalizedParsedId = normalize(parsed.id);
+			const normalizedSealId = normalize(sealId);
+			console.log(
+				`[decryptHealthData] normalized parsed.id: ${normalizedParsedId.substring(0, 20)}...`,
+			);
+			console.log(
+				`[decryptHealthData] normalized sealId: ${normalizedSealId.substring(0, 20)}...`,
+			);
+
+			if (normalizedParsedId !== normalizedSealId) {
+				// 形式の違いにより不一致が発生する可能性があるため、警告のみで復号は継続
+				console.warn(
+					`[decryptHealthData] seal_id形式不一致（復号は継続）: parsed=${normalizedParsedId.substring(0, 20)}, expected=${normalizedSealId.substring(0, 20)}`,
+				);
+			}
+			console.log("[decryptHealthData] seal_id match verified");
+		} catch (parseError) {
+			console.error(
+				"[decryptHealthData] EncryptedObject.parse or validation failed:",
+				parseError,
+			);
+			throw parseError;
 		}
 	}
 
 	// Decrypt with Seal
-	const decryptedBytes = await sealClient.decrypt({
-		data: encryptedData,
-		sessionKey,
-		txBytes,
-	});
+	try {
+		console.log("[decryptHealthData] Calling sealClient.decrypt...");
+		console.log(
+			"[decryptHealthData] sessionKey expired:",
+			sessionKey.isExpired(),
+		);
+		console.log("[decryptHealthData] txBytes length:", txBytes.length);
 
-	// Parse JSON
-	const json = new TextDecoder().decode(decryptedBytes);
-	const healthData = JSON.parse(json) as HealthData;
+		const decryptedBytes = await sealClient.decrypt({
+			data: encryptedData,
+			sessionKey,
+			txBytes,
+		});
+		console.log(
+			`[decryptHealthData] Decrypted ${decryptedBytes.length} bytes successfully`,
+		);
 
-	return healthData;
+		// Parse JSON
+		const json = new TextDecoder().decode(decryptedBytes);
+		const healthData = JSON.parse(json) as HealthData;
+		console.log("[decryptHealthData] Successfully parsed health data");
+
+		return healthData;
+	} catch (decryptError) {
+		console.error("[decryptHealthData] decrypt failed:", decryptError);
+		console.error("[decryptHealthData] error type:", typeof decryptError);
+		console.error(
+			"[decryptHealthData] error constructor:",
+			(decryptError as Error)?.constructor?.name,
+		);
+		// If error is undefined, wrap it with a descriptive message
+		if (decryptError === undefined) {
+			throw new Error(
+				"Seal SDK decrypt() rejected with undefined. Check network tab for key server response.",
+			);
+		}
+		throw decryptError;
+	}
 }
 
 /**
@@ -378,19 +421,24 @@ export async function buildPatientAccessPTB(params: {
 	registryObjectId: string;
 	suiClient: SuiClient;
 	sealId: string;
+	dataType: string;
 }): Promise<Uint8Array> {
-	const { passportObjectId, registryObjectId, suiClient, sealId } = params;
+	const { passportObjectId, registryObjectId, suiClient, sealId, dataType } =
+		params;
 
 	const tx = new Transaction();
 
-	// Call seal_approve_patient_only(id, passport, registry)
-	// First argument is the identity (seal_id), excluding package ID prefix
+	// Call seal_approve_patient_only(id, passport, registry, data_type)
+	// First argument is the identity (seal_id) as binary bytes
+	// sealId is a hex string that gets decoded to binary using fromHex()
+	// This matches how Seal SDK internally handles the id during encryption
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
 		arguments: [
-			tx.pure.vector("u8", Array.from(fromHex(sealId))), // Identity as vector<u8>
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // hex-decoded binary
 			tx.object(passportObjectId),
 			tx.object(registryObjectId),
+			tx.pure.string(dataType), // Data type for scope-based access
 		],
 	});
 

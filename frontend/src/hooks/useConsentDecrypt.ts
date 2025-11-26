@@ -22,6 +22,8 @@ export type ConsentDecryptionStage =
 
 export interface ConsentDecryptionParams {
 	blobId: string;
+	/** Seal ID retrieved from EntryData (required for decryption verification) */
+	sealId: string;
 	passportId: string;
 	consentTokenId: string;
 	dataType: string;
@@ -67,6 +69,7 @@ export function useConsentDecrypt(): UseConsentDecryptReturn {
 		): Promise<ConsentDecryptionResult> => {
 			const {
 				blobId,
+				sealId,
 				passportId,
 				consentTokenId,
 				dataType,
@@ -98,7 +101,7 @@ export function useConsentDecrypt(): UseConsentDecryptReturn {
 					suiClient,
 				});
 
-				// 4. Decrypt with Seal
+				// 4. Decrypt with Seal (using seal_id from EntryData)
 				setStage("decrypting");
 				const sealClient = createSealClient(suiClient);
 				const data = await decryptHealthData({
@@ -106,6 +109,7 @@ export function useConsentDecrypt(): UseConsentDecryptReturn {
 					sealClient,
 					sessionKey,
 					txBytes,
+					sealId, // Pass seal_id for verification
 				});
 
 				setStage("completed");

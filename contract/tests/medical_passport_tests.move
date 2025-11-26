@@ -14,8 +14,8 @@ module cure_pocket::medical_passport_tests {
     const ADMIN: address = @0xA;
     const USER2: address = @0xB;
 
-    fun passport_data(): (String, String, bool) {
-        (string::utf8(b"seal-123"), string::utf8(b"JP"), true)
+    fun passport_data(): (String, bool) {
+        (string::utf8(b"JP"), true)
     }
 
     fun sample_blob_ids(): vector<String> {
@@ -27,17 +27,15 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
-            assert!(accessor::get_seal_id(&passport) == &string::utf8(b"seal-123"), 0);
-            assert!(accessor::get_country_code(&passport) == &string::utf8(b"JP"), 1);
-            assert!(accessor::get_analytics_opt_in(&passport), 2);
+            assert!(accessor::get_country_code(&passport) == &string::utf8(b"JP"), 0);
+            assert!(accessor::get_analytics_opt_in(&passport), 1);
 
             test_utils::destroy_passport(passport);
         };
@@ -49,24 +47,31 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
+            let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"lab_results");
+            let entry_seal_id = b"entry-seal-001";
             let blobs = sample_blob_ids();
-            accessor::add_data_entry(&mut passport, key, blobs);
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, blobs, &clk);
 
-            let stored = accessor::get_data_entry(&passport, key);
+            let entry = accessor::get_data_entry(&passport, key);
+            let stored = accessor::get_entry_blob_ids(entry);
             assert!(vector::length(stored) == 2, 0);
             assert!(*vector::borrow(stored, 0) == string::utf8(b"blob_a"), 1);
             assert!(*vector::borrow(stored, 1) == string::utf8(b"blob_b"), 2);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
+            // Verify seal_id is stored correctly
+            let stored_seal_id = accessor::get_entry_seal_id(entry);
+            assert!(*stored_seal_id == b"entry-seal-001", 3);
+
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
@@ -77,25 +82,40 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
+            let mut clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"basic_profile");
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            let entry_seal_id = b"entry-seal-001";
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
+
+            // Advance clock to verify updated_at changes
+            clock::increment_for_testing(&mut clk, 1000);
 
             let new_blobs = vector[string::utf8(b"new_blob")];
-            accessor::replace_data_entry(&mut passport, key, new_blobs);
+            let new_seal_id = b"entry-seal-002";
+            accessor::replace_data_entry(&mut passport, key, new_seal_id, new_blobs, &clk);
 
-            let stored = accessor::get_data_entry(&passport, key);
+            let entry = accessor::get_data_entry(&passport, key);
+            let stored = accessor::get_entry_blob_ids(entry);
             assert!(vector::length(stored) == 1, 0);
             assert!(*vector::borrow(stored, 0) == string::utf8(b"new_blob"), 1);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
+            // Verify seal_id was updated
+            let stored_seal_id = accessor::get_entry_seal_id(entry);
+            assert!(*stored_seal_id == b"entry-seal-002", 2);
+
+            // Verify updated_at is 1000ms (after clock increment)
+            let updated_at = accessor::get_entry_updated_at(entry);
+            assert!(updated_at == 1000, 3);
+
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
@@ -107,39 +127,22 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let mut passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
+            let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"medications");
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            let entry_seal_id = b"entry-seal-001";
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
             // 2回目は同じキーで登録しようとすると abort
-            accessor::add_data_entry(&mut passport, key, sample_blob_ids());
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
 
-            let _ = accessor::remove_data_entry(&mut passport, key);
-            test_utils::destroy_passport(passport);
-        };
-        ts::end(scenario);
-    }
-
-    #[test]
-    #[expected_failure(abort_code = 1, location = medical_passport)]
-    fun empty_seal_id_aborts() {
-        let mut scenario = ts::begin(ADMIN);
-        {
-            let ctx = ts::ctx(&mut scenario);
-            let (_, country_code, analytics_opt_in) = passport_data();
-            let empty = string::utf8(b"");
-            let passport = medical_passport::create_passport_internal(
-                empty,
-                country_code,
-                analytics_opt_in,
-                ctx,
-            );
+            accessor::remove_data_entry(&mut passport, key);
+            clock::destroy_for_testing(clk);
             test_utils::destroy_passport(passport);
         };
         ts::end(scenario);
@@ -151,10 +154,9 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, _, analytics_opt_in) = passport_data();
+            let (_, analytics_opt_in) = passport_data();
             let empty = string::utf8(b"");
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 empty,
                 analytics_opt_in,
                 ctx,
@@ -169,18 +171,16 @@ module cure_pocket::medical_passport_tests {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
-            let (seal_id, country_code, analytics_opt_in) = passport_data();
+            let (country_code, analytics_opt_in) = passport_data();
             let passport = medical_passport::create_passport_internal(
-                seal_id,
                 country_code,
                 analytics_opt_in,
                 ctx,
             );
 
-            let (seal_ref, country_ref, analytics) = accessor::get_all_fields(&passport);
-            assert!(*seal_ref == string::utf8(b"seal-123"), 0);
-            assert!(*country_ref == string::utf8(b"JP"), 1);
-            assert!(analytics, 2);
+            let (country_ref, analytics) = accessor::get_all_fields(&passport);
+            assert!(*country_ref == string::utf8(b"JP"), 0);
+            assert!(analytics, 1);
 
             test_utils::destroy_passport(passport);
         };
@@ -197,8 +197,8 @@ module cure_pocket::medical_passport_tests {
             {
                 let ctx = ts::ctx(&mut scenario);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             assert!(accessor::has_passport(&registry, ADMIN), 0);
@@ -219,16 +219,16 @@ module cure_pocket::medical_passport_tests {
             {
                 let ctx = ts::ctx(&mut scenario);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             // 2回目は重複でabort
             ts::next_tx(&mut scenario, ADMIN);
             {
                 let ctx = ts::ctx(&mut scenario);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             test_utils::destroy_registry(registry);
@@ -249,8 +249,8 @@ module cure_pocket::medical_passport_tests {
                 let ctx = ts::ctx(&mut scenario);
                 admin_cap = cure_pocket::test_init_for_tests(ctx);
                 registry = medical_passport::create_passport_registry(ctx);
-                let (seal_id, country_code, analytics_opt_in) = passport_data();
-                accessor::mint_medical_passport(&mut registry, seal_id, country_code, analytics_opt_in, ctx);
+                let (country_code, analytics_opt_in) = passport_data();
+                accessor::mint_medical_passport(&mut registry, country_code, analytics_opt_in, ctx);
             };
 
             // 移行トランザクション
@@ -275,10 +275,9 @@ module cure_pocket::medical_passport_tests {
             ts::next_tx(&mut scenario, USER2);
             {
                 let passport = ts::take_from_address<MedicalPassport>(&scenario, USER2);
-                let (seal_ref, country_ref, analytics) = accessor::get_all_fields(&passport);
-                assert!(*seal_ref == string::utf8(b"seal-123"), 0);
-                assert!(*country_ref == string::utf8(b"JP"), 1);
-                assert!(analytics, 2);
+                let (country_ref, analytics) = accessor::get_all_fields(&passport);
+                assert!(*country_ref == string::utf8(b"JP"), 0);
+                assert!(analytics, 1);
                 test_utils::destroy_passport(passport);
             };
 

@@ -1,34 +1,25 @@
 "use client";
 
-import { useSuiClient } from "@mysten/dapp-kit";
 import { Calendar, Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import {
 	type DisplayMedication,
 	medicationsDataToDisplayData,
 } from "@/lib/prescriptionConverter";
-import {
-	buildPatientAccessPTB,
-	createSealClient,
-	decryptHealthData,
-} from "@/lib/seal";
-import {
-	getDataEntryBlobIds,
-	getSuiClient,
-	PASSPORT_REGISTRY_ID,
-} from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type { MedicationsData } from "@/types/healthData";
 
 /**
  * 処方箋一覧ページ
  * Walrusから medications データ(JSON形式) を読み込んで表示
+ * seal_id は useDecryptAndFetch フック内で自動生成される
  */
 export default function MedicationsPage() {
 	const t = useTranslations();
@@ -36,7 +27,6 @@ export default function MedicationsPage() {
 	const locale = useLocale();
 	const { settings } = useApp();
 	const theme = getTheme(settings.theme);
-	const suiClient = useSuiClient();
 
 	// Passport and session key
 	const { passport, has_passport, loading: passportLoading } = usePassport();
@@ -45,6 +35,9 @@ export default function MedicationsPage() {
 		generateSessionKey,
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
+
+	// Unified decrypt hook (seal_id retrieved from SBT Dynamic Fields)
+	const { decryptWithSealId, isDecrypting } = useDecryptAndFetch();
 
 	// State
 	const [medications, setMedications] = useState<DisplayMedication[]>([]);
@@ -72,52 +65,36 @@ export default function MedicationsPage() {
 		try {
 			console.log("[Medications] Loading medications from Walrus...");
 
-			// Step 1: パスポートからmedications Blob IDsを取得
-			const medicationsBlobIds = await getDataEntryBlobIds(
-				passport.id,
-				"medications",
-			);
+			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			const entryData = await getDataEntry(passport.id, "medications");
 
-			if (medicationsBlobIds.length === 0) {
+			if (!entryData || entryData.blobIds.length === 0) {
 				console.log("[Medications] No medications data found");
 				setMedications([]);
 				setIsLoading(false);
 				return;
 			}
 
+			const { sealId, blobIds } = entryData;
 			console.log(
-				`[Medications] Found ${medicationsBlobIds.length} medications blob(s)`,
+				`[Medications] Found ${blobIds.length} medications blob(s), seal_id: ${sealId.substring(0, 16)}...`,
 			);
 
-			// Step 2: Seal clientとPTBを準備
-			const sealClient = createSealClient(getSuiClient());
-			const txBytes = await buildPatientAccessPTB({
-				passportObjectId: passport.id,
-				registryObjectId: PASSPORT_REGISTRY_ID,
-				suiClient,
-				sealId: passport.sealId,
-			});
-
-			// Step 3: 各Blobをダウンロード→復号化→JSON変換
+			// Step 2: 各Blobをダウンロード→復号化→JSON変換
+			// seal_id はDFから取得した値を使用
 			const allMedications: DisplayMedication[] = [];
 
-			for (const blobId of medicationsBlobIds) {
-				console.log(`[Medications] Downloading blob: ${blobId}`);
+			for (const blobId of blobIds) {
+				console.log(`[Medications] Downloading and decrypting blob: ${blobId}`);
 
 				try {
-					// Walrusからダウンロード
-					const encryptedData = await downloadFromWalrusByBlobId(blobId);
-					console.log(
-						`[Medications] Downloaded encrypted data size: ${encryptedData.byteLength} bytes`,
-					);
-
-					// Seal復号化（JSON形式）
-					const decryptedData = await decryptHealthData({
-						encryptedData,
-						sealClient,
+					// DFから取得したseal_idを使用して復号化
+					const decryptedData = await decryptWithSealId({
+						blobId,
+						sealId,
+						dataType: "medications",
 						sessionKey,
-						txBytes,
-						sealId: passport.sealId,
+						passportId: passport.id,
 					});
 
 					// 復号化結果の詳細をコンソールに表示
@@ -199,7 +176,7 @@ export default function MedicationsPage() {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		suiClient,
+		decryptWithSealId,
 	]);
 
 	// パスポート・SessionKey準備完了後にデータ読み込み
@@ -235,6 +212,8 @@ export default function MedicationsPage() {
 		});
 	};
 
+	const showLoading = isLoading || isDecrypting;
+
 	return (
 		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8 space-y-6">
 			{/* Header - Mobile only, desktop shows in top bar */}
@@ -251,7 +230,7 @@ export default function MedicationsPage() {
 			</div>
 
 			{/* Loading State */}
-			{isLoading && (
+			{showLoading && (
 				<div
 					className="flex flex-col h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
@@ -268,7 +247,7 @@ export default function MedicationsPage() {
 			)}
 
 			{/* Error State */}
-			{error && !isLoading && (
+			{error && !showLoading && (
 				<div
 					className="rounded-lg p-4 border-2"
 					style={{
@@ -291,7 +270,7 @@ export default function MedicationsPage() {
 			)}
 
 			{/* No Passport State */}
-			{!has_passport && !passportLoading && !isLoading && (
+			{!has_passport && !passportLoading && !showLoading && (
 				<div
 					className="flex flex-col h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
@@ -306,7 +285,7 @@ export default function MedicationsPage() {
 			)}
 
 			{/* Empty State */}
-			{!isLoading &&
+			{!showLoading &&
 				!error &&
 				has_passport &&
 				medications.length === 0 &&
@@ -336,7 +315,7 @@ export default function MedicationsPage() {
 				)}
 
 			{/* Medications List */}
-			{!isLoading && !error && medications.length > 0 && (
+			{!showLoading && !error && medications.length > 0 && (
 				<div className="space-y-4">
 					{medications.map((medication, index) => (
 						<div

@@ -13,6 +13,7 @@
 module cure_pocket::medical_passport;
 
 use std::string::{Self, String};
+use sui::clock::Clock;
 use sui::display;
 use sui::dynamic_field as df;
 use sui::package::Publisher;
@@ -30,12 +31,13 @@ use sui::package::Publisher;
 ///
 /// ## フィールド
 /// - `id`: Sui オブジェクトID
-/// - `seal_id`: Seal暗号化システムの鍵/ポリシーID
 /// - `country_code`: 発行国コード（ISO 3166-1 alpha-2想定）
 /// - `analytics_opt_in`: 匿名統計データ提供への同意フラグ
+///
+/// ## 注意
+/// - seal_id は各 EntryData に個別に保存される（データ種別ごとに異なる暗号化ID）
 public struct MedicalPassport has key {
     id: object::UID,
-    seal_id: String,
     country_code: String,
     analytics_opt_in: bool,
 }
@@ -58,6 +60,22 @@ public struct MedicalPassport has key {
 /// - 特定のパスポートの所有者確認: address -> object::ID から取得したパスポートIDと比較
 public struct PassportRegistry has key {
     id: object::UID,
+}
+
+/// データエントリ構造体
+///
+/// ## 設計
+/// - 各データ型（basic_profile, medications など）に対して個別の暗号化キーを持つ
+/// - Walrus Blob ID と更新タイムスタンプを含む
+///
+/// ## フィールド
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
+/// - `blob_ids`: Walrus Blob ID の配列
+/// - `updated_at`: 最終更新時刻（Unix timestamp ms）
+public struct EntryData has store, drop {
+    seal_id: vector<u8>,
+    blob_ids: vector<String>,
+    updated_at: u64,
 }
 
 // ============================================================
@@ -111,7 +129,6 @@ const DATA_TYPE_SELF_METRICS: vector<u8> = b"self_metrics";
 /// - `old_owner`: 移行元アドレス
 /// - `new_owner`: 移行先アドレス
 /// - `passport_id`: 移行されたパスポートのID（burnされる前のID）
-/// - `seal_id`: 継承されるSeal ID
 /// - `country_code`: 継承される国コード
 /// - `analytics_opt_in`: 継承される統計データ提供可否
 /// - `timestamp_ms`: 移行実行時刻（ミリ秒）
@@ -119,7 +136,6 @@ public struct PassportMigrationEvent has copy, drop {
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    seal_id: String,
     country_code: String,
     analytics_opt_in: bool,
     timestamp_ms: u64,
@@ -128,9 +144,6 @@ public struct PassportMigrationEvent has copy, drop {
 // ============================================================
 // エラーコード
 // ============================================================
-
-/// Seal IDが空文字列
-const E_EMPTY_SEAL_ID: u64 = 1;
 
 /// 国コードが空文字列
 const E_EMPTY_COUNTRY_CODE: u64 = 2;
@@ -165,6 +178,9 @@ const E_DATA_ENTRY_NOT_FOUND: u64 = 12;
 /// 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 const E_INVALID_DATA_TYPE: u64 = 13;
 
+/// データエントリの Seal ID が空
+const E_EMPTY_ENTRY_SEAL_ID: u64 = 14;
+
 // ============================================================
 // エラーコードゲッター
 // ============================================================
@@ -193,17 +209,6 @@ public(package) fun e_migration_target_has_passport(): u64 {
     E_MIGRATION_TARGET_HAS_PASSPORT
 }
 
-/// E_EMPTY_SEAL_ID エラーコードを取得
-///
-/// ## 用途
-/// - assert! で使用するエラーコードを取得
-/// - Move 2024 では const を public にできないため、ゲッター経由でアクセス
-///
-/// ## 返り値
-/// - エラーコード `E_EMPTY_SEAL_ID` の値
-public(package) fun e_empty_seal_id(): u64 {
-    E_EMPTY_SEAL_ID
-}
 
 /// E_REGISTRY_ALREADY_REGISTERED エラーコードを取得
 public(package) fun e_registry_already_registered(): u64 {
@@ -218,6 +223,11 @@ public(package) fun e_registry_not_found(): u64 {
 /// E_NOT_OWNER_FOR_MIGRATION エラーコードを取得
 public(package) fun e_not_owner_for_migration(): u64 {
     E_NOT_OWNER_FOR_MIGRATION
+}
+
+/// E_EMPTY_ENTRY_SEAL_ID エラーコードを取得
+public(package) fun e_empty_entry_seal_id(): u64 {
+    E_EMPTY_ENTRY_SEAL_ID
 }
 
 // ============================================================
@@ -265,10 +275,9 @@ public(package) fun create_passport_display(
 /// - MedicalPassport は `has key` のため、このモジュール内でのみ作成可能
 ///
 /// ## バリデーション
-/// - `seal_id` と `country_code` が空文字列でないことを確認
+/// - `country_code` が空文字列でないことを確認
 ///
 /// ## パラメータ
-/// - `seal_id`: Seal鍵ID（空文字列不可）
 /// - `country_code`: 国コード（空文字列不可）
 /// - `analytics_opt_in`: 匿名統計データ提供可否
 /// - `ctx`: トランザクションコンテキスト
@@ -277,22 +286,18 @@ public(package) fun create_passport_display(
 /// - `MedicalPassport`: 新しく生成されたパスポートオブジェクト
 ///
 /// ## Aborts
-/// - `E_EMPTY_SEAL_ID`: seal_idが空文字列
 /// - `E_EMPTY_COUNTRY_CODE`: country_codeが空文字列
 public(package) fun create_passport_internal(
-    seal_id: String,
     country_code: String,
     analytics_opt_in: bool,
     ctx: &mut tx_context::TxContext
 ): MedicalPassport {
     // バリデーション: 空文字列チェック
-    assert!(!string::is_empty(&seal_id), E_EMPTY_SEAL_ID);
     assert!(!string::is_empty(&country_code), E_EMPTY_COUNTRY_CODE);
 
     // パスポートオブジェクトの生成
     MedicalPassport {
         id: object::new(ctx),
-        seal_id,
         country_code,
         analytics_opt_in,
     }
@@ -319,17 +324,6 @@ public(package) fun transfer_to(passport: MedicalPassport, recipient: address) {
 // ============================================================
 // 内部公開関数: フィールドアクセス
 // ============================================================
-
-/// Seal IDを取得
-///
-/// ## パラメータ
-/// - `passport`: MedicalPassportへの参照
-///
-/// ## 返り値
-/// - Seal IDへの参照
-public(package) fun get_seal_id(passport: &MedicalPassport): &String {
-    &passport.seal_id
-}
 
 /// 国コードを取得
 ///
@@ -359,9 +353,9 @@ public(package) fun get_analytics_opt_in(passport: &MedicalPassport): bool {
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (seal_id, country_code, analytics_opt_in)
-public(package) fun get_all_fields(passport: &MedicalPassport): (&String, &String, bool) {
-    (&passport.seal_id, &passport.country_code, passport.analytics_opt_in)
+/// - タプル: (country_code, analytics_opt_in)
+public(package) fun get_all_fields(passport: &MedicalPassport): (&String, bool) {
+    (&passport.country_code, passport.analytics_opt_in)
 }
 
 // ============================================================
@@ -402,107 +396,166 @@ fun is_valid_data_type(data_type: &String): bool {
 /// ## 用途
 /// - 医療データ種（例: `basic_profile`, `medications` など）ごとの Blob ID 配列を登録
 /// - データ種キー未登録の場合のみ追加（重複登録はabort）
+/// - 各データ種に個別の Seal ID を設定可能
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: データ種キー（文字列）
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
+/// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
 public(package) fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: vector<u8>,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
+    assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         !df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_ALREADY_EXISTS
     );
 
-    df::add(&mut passport.id, data_type, blob_ids);
+    let entry = EntryData {
+        seal_id,
+        blob_ids,
+        updated_at: sui::clock::timestamp_ms(clock),
+    };
+
+    df::add(&mut passport.id, data_type, entry);
 }
 
-/// 既存のデータ種に紐づく Blob ID 配列を丸ごと置き換える
+/// 既存のデータ種に紐づく EntryData を丸ごと置き換える
 ///
 /// ## 用途
 /// - 最新データへの差し替え
-/// - 古い Blob を全て無効化し、新しい配列に置換
+/// - Seal ID、Blob ID、タイムスタンプを全て更新
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
+/// - `seal_id`: 新しい Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+/// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
+/// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
 /// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    blob_ids: vector<String>
+    seal_id: vector<u8>,
+    blob_ids: vector<String>,
+    clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
+    assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    let entry_ref = df::borrow_mut<String, vector<String>>(&mut passport.id, data_type);
-    *entry_ref = blob_ids;
+    let entry_ref = df::borrow_mut<String, EntryData>(&mut passport.id, data_type);
+    *entry_ref = EntryData {
+        seal_id,
+        blob_ids,
+        updated_at: sui::clock::timestamp_ms(clock),
+    };
 }
 
-/// 指定データ種の Blob ID 配列を取得
+/// 指定データ種の EntryData を取得
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への参照
 /// - `data_type`: 取得するデータ種キー（文字列）
 ///
 /// ## 返り値
-/// - `&vector<String>`: 登録済み Blob ID 配列への参照
+/// - `&EntryData`: 登録済み EntryData への参照
 ///
 /// ## Aborts
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun get_data_entry(
     passport: &MedicalPassport,
     data_type: String
-): &vector<String> {
+): &EntryData {
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::borrow<String, vector<String>>(&passport.id, data_type)
+    df::borrow<String, EntryData>(&passport.id, data_type)
 }
 
-/// 指定データ種の Blob ID 配列を削除し、値を返す
+/// 指定データ種の EntryData を削除し、値を返す
 ///
 /// ## 用途
 /// - データ種ごとに参照をリセットする
 /// - パスポート削除や移行前のクリーンアップ
+///
+/// ## 返り値
+/// - `EntryData`: 削除された EntryData
 ///
 /// ## Aborts
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun remove_data_entry(
     passport: &mut MedicalPassport,
     data_type: String
-): vector<String> {
+): EntryData {
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
     );
 
-    df::remove<String, vector<String>>(&mut passport.id, data_type)
+    df::remove<String, EntryData>(&mut passport.id, data_type)
+}
+
+/// EntryData から Seal ID を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Seal ID への参照（バイナリ形式）
+public(package) fun get_entry_seal_id(entry: &EntryData): &vector<u8> {
+    &entry.seal_id
+}
+
+/// EntryData から Blob ID 配列を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - Blob ID 配列への参照
+public(package) fun get_entry_blob_ids(entry: &EntryData): &vector<String> {
+    &entry.blob_ids
+}
+
+/// EntryData から更新時刻を取得
+///
+/// ## パラメータ
+/// - `entry`: EntryData への参照
+///
+/// ## 返り値
+/// - 更新時刻（Unix timestamp ms）
+public(package) fun get_entry_updated_at(entry: &EntryData): u64 {
+    entry.updated_at
 }
 
 // ============================================================
@@ -636,10 +689,9 @@ public(package) fun assert_passport_owner(
 /// - `passport`: MedicalPassportへの参照
 ///
 /// ## 返り値
-/// - タプル: (seal_id, country_code, analytics_opt_in) の値のコピー
-public(package) fun get_passport_data(passport: &MedicalPassport): (String, String, bool) {
+/// - タプル: (country_code, analytics_opt_in) の値のコピー
+public(package) fun get_passport_data(passport: &MedicalPassport): (String, bool) {
     (
-        passport.seal_id,
         passport.country_code,
         passport.analytics_opt_in,
     )
@@ -658,7 +710,7 @@ public(package) fun get_passport_data(passport: &MedicalPassport): (String, Stri
 /// ## パラメータ
 /// - `passport`: 削除するMedicalPassport（所有権を受け取る）
 public(package) fun burn_passport(passport: MedicalPassport) {
-    let MedicalPassport { id, seal_id: _, country_code: _, analytics_opt_in: _ } = passport;
+    let MedicalPassport { id, country_code: _, analytics_opt_in: _ } = passport;
     object::delete(id);
 }
 
@@ -672,7 +724,6 @@ public(package) fun burn_passport(passport: MedicalPassport) {
 /// - `old_owner`: 移行元アドレス
 /// - `new_owner`: 移行先アドレス
 /// - `passport_id`: 移行されたパスポートのID
-/// - `seal_id`: Seal ID
 /// - `country_code`: 国コード
 /// - `analytics_opt_in`: 統計データ提供可否
 /// - `timestamp_ms`: 移行実行時刻（ミリ秒）
@@ -680,7 +731,6 @@ public(package) fun emit_migration_event(
     old_owner: address,
     new_owner: address,
     passport_id: object::ID,
-    seal_id: String,
     country_code: String,
     analytics_opt_in: bool,
     timestamp_ms: u64
@@ -689,7 +739,6 @@ public(package) fun emit_migration_event(
         old_owner,
         new_owner,
         passport_id,
-        seal_id,
         country_code,
         analytics_opt_in,
         timestamp_ms,
@@ -726,7 +775,7 @@ public fun create_passport_registry(ctx: &mut tx_context::TxContext): PassportRe
 /// テスト専用: MedicalPassport を破棄
 #[test_only]
 public fun destroy_passport_for_tests(passport: MedicalPassport) {
-    let MedicalPassport { id, seal_id: _, country_code: _, analytics_opt_in: _ } = passport;
+    let MedicalPassport { id, country_code: _, analytics_opt_in: _ } = passport;
     object::delete(id);
 }
 
