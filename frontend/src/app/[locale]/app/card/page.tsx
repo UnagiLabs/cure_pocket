@@ -89,7 +89,8 @@ export default function EmergencyCardPage() {
 		let isMounted = true;
 		QRCode.toDataURL(consentUrl, {
 			margin: 1,
-			width: 176,
+			width: 400,
+			errorCorrectionLevel: "M",
 			color: {
 				dark: "#000000",
 				light: "#FFFFFF",
