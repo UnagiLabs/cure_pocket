@@ -110,7 +110,13 @@ export default function LandingPage() {
 			>
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex justify-between items-center h-16 sm:h-20">
-						<div className="flex items-center gap-3 group cursor-pointer">
+						<div
+							className="flex items-center gap-3 group cursor-pointer"
+							onClick={() => {
+								// ランディングページから /app に遷移
+								router.push(`/${selectedLocale}/app`);
+							}}
+						>
 							<div className="relative">
 								<div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
 								<Image
@@ -369,7 +375,13 @@ export default function LandingPage() {
 			<footer className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-teal-100/50 bg-gradient-to-b from-white to-teal-50/30">
 				<div className="max-w-6xl mx-auto text-center">
 					<div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-6">
-						<div className="flex items-center gap-3 group">
+						<div
+							className="flex items-center gap-3 group cursor-pointer"
+							onClick={() => {
+								// フッターのロゴからも /app に遷移
+								router.push(`/${selectedLocale}/app`);
+							}}
+						>
 							<div className="relative">
 								<div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
 								<Image

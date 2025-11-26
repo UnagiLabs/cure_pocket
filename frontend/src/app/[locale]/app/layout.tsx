@@ -89,7 +89,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					className="px-6 py-8 border-b"
 					style={{ borderColor: `${theme.colors.textSecondary}20` }}
 				>
-					<div className="flex items-center gap-3">
+					<div
+						className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+						onClick={() => {
+							// 医者画面以外の場合のみ /app に遷移
+							if (!pathname.includes("/doctor")) {
+								router.push(`/${locale}/app`);
+							}
+						}}
+					>
 						<Image
 							src="/icon.png"
 							alt="CurePocket"
@@ -258,13 +266,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
 					className="lg:hidden px-6 pt-8 pb-2 flex justify-between items-center sticky top-0 z-30 transition-colors duration-500"
 					style={{ backgroundColor: theme.colors.background }}
 				>
-					<div className="flex items-center gap-3">
+					<div
+						className="flex items-center gap-3 cursor-pointer"
+						onClick={() => {
+							// 医者画面以外の場合のみ /app に遷移
+							if (!pathname.includes("/doctor")) {
+								router.push(`/${locale}/app`);
+							}
+						}}
+					>
 						<Image
 							src="/icon.png"
 							alt="CurePocket"
 							width={40}
 							height={40}
-							className="rounded-xl shadow-md cursor-pointer hover:scale-105 transition-transform"
+							className="rounded-xl shadow-md hover:scale-105 transition-transform"
 						/>
 						<div className="sr-only">
 							<p>{t("home.greetingShort")}</p>
