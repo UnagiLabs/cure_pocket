@@ -172,8 +172,7 @@
 		"validFor": "有効期限: {duration}",
 		"downloadImage": "画像をダウンロード",
 		"currentMedications": "服用薬一覧",
-		"scanToView": "スキャンすると",
-		"englishVersion": "英語版も表示",
+		"scanToView": "スキャンで安全に情報共有",
 		"selectCategories": "共有するカテゴリーを選択",
 		"emergencyInfo": {
 			"title": "使い方",

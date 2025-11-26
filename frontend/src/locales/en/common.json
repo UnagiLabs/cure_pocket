@@ -172,8 +172,7 @@
 		"validFor": "Valid for: {duration}",
 		"downloadImage": "Download Image",
 		"currentMedications": "Current Medications",
-		"scanToView": "Scan to view",
-		"englishVersion": "English version available",
+		"scanToView": "Securely share via scan",
 		"selectCategories": "Select categories to share",
 		"emergencyInfo": {
 			"title": "How to use",

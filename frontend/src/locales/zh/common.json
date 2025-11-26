@@ -172,8 +172,7 @@
 		"validFor": "有效期：{duration}",
 		"downloadImage": "下载图片",
 		"currentMedications": "当前用药",
-		"scanToView": "扫描查看",
-		"englishVersion": "提供英文版本",
+		"scanToView": "扫描安全共享",
 		"selectCategories": "选择要共享的类别",
 		"emergencyInfo": {
 			"title": "使用方法",
