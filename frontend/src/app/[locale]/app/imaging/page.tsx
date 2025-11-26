@@ -1,27 +1,16 @@
 "use client";
 
-import { useSuiClient } from "@mysten/dapp-kit";
 import { Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ImagingImageViewer } from "@/components/ImagingImageViewer";
 import { useApp } from "@/contexts/AppContext";
+import { useDecryptAndFetch } from "@/hooks/useDecryptAndFetch";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { decryptAndDisplayImage } from "@/lib/imagingDisplay";
-import {
-	buildPatientAccessPTB,
-	createSealClient,
-	decryptHealthData,
-} from "@/lib/seal";
-import {
-	getDataEntryBlobIds,
-	getSuiClient,
-	PASSPORT_REGISTRY_ID,
-} from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type { ImagingReport } from "@/types";
 import type { ImagingMetaData } from "@/types/healthData";
 
@@ -52,6 +41,7 @@ function mapModalityToType(
 /**
  * 画像レポート一覧ページ
  * 登録された画像レポートを一覧表示する（追加は別ページに遷移）
+ * seal_id は useDecryptAndFetch フック内で自動生成される
  */
 export default function ImagingPage() {
 	const t = useTranslations();
@@ -59,7 +49,6 @@ export default function ImagingPage() {
 	const locale = useLocale();
 	const { imagingReports, settings } = useApp();
 	const theme = getTheme(settings.theme);
-	const suiClient = useSuiClient();
 
 	// Passport and session key
 	const { passport, has_passport, loading: passportLoading } = usePassport();
@@ -68,6 +57,9 @@ export default function ImagingPage() {
 		generateSessionKey,
 		isValid: sessionKeyValid,
 	} = useSessionKeyManager();
+
+	// Unified decrypt hook (seal_id retrieved from SBT Dynamic Fields)
+	const { decryptWithSealId, isDecrypting } = useDecryptAndFetch();
 
 	// State
 	const [walrusReports, setWalrusReports] = useState<ImagingReport[]>([]);
@@ -98,50 +90,46 @@ export default function ImagingPage() {
 		try {
 			console.log("[Imaging] Loading imaging data from Walrus...");
 
-			// Step 1: パスポートからimaging_meta Blob IDsを取得
-			const metaBlobIds = await getDataEntryBlobIds(
-				passport.id,
-				"imaging_meta",
-			);
+			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			const metaEntryData = await getDataEntry(passport.id, "imaging_meta");
+			const binaryEntryData = await getDataEntry(passport.id, "imaging_binary");
 
-			if (metaBlobIds.length === 0) {
-				console.log("[Imaging] No imaging data found");
+			if (!metaEntryData || metaEntryData.blobIds.length === 0) {
+				console.log("[Imaging] No imaging meta data found");
 				setWalrusReports([]);
 				setIsLoading(false);
 				return;
 			}
 
-			console.log(`[Imaging] Found ${metaBlobIds.length} imaging_meta blob(s)`);
+			const { sealId: metaSealId, blobIds: metaBlobIds } = metaEntryData;
+			const binarySealId = binaryEntryData?.sealId;
 
-			// Step 2: Seal clientとPTBを準備
-			const sealClient = createSealClient(getSuiClient());
-			const txBytes = await buildPatientAccessPTB({
-				passportObjectId: passport.id,
-				registryObjectId: PASSPORT_REGISTRY_ID,
-				suiClient,
-				sealId: passport.sealId,
-			});
+			console.log(
+				`[Imaging] Found ${metaBlobIds.length} imaging_meta blob(s), meta_seal_id: ${metaSealId.substring(0, 16)}...`,
+			);
+			if (binarySealId) {
+				console.log(
+					`[Imaging] Binary seal_id: ${binarySealId.substring(0, 16)}...`,
+				);
+			}
 
-			// Step 3: 各Blobをダウンロード→復号化→ObjectURL生成
+			// Step 2: 各Blobをダウンロード→復号化→ObjectURL生成
+			// seal_id はDFから取得した値を使用
 			const allReports: ImagingReport[] = [];
 
 			for (const metaBlobId of metaBlobIds) {
-				console.log(`[Imaging] Downloading meta blob: ${metaBlobId}`);
+				console.log(
+					`[Imaging] Downloading and decrypting meta blob: ${metaBlobId}`,
+				);
 
 				try {
-					// Walrusからメタデータをダウンロード
-					const encryptedMeta = await downloadFromWalrusByBlobId(metaBlobId);
-					console.log(
-						`[Imaging] Downloaded encrypted meta size: ${encryptedMeta.byteLength} bytes`,
-					);
-
-					// Seal復号化（JSON形式）
-					const decryptedMeta = await decryptHealthData({
-						encryptedData: encryptedMeta,
-						sealClient,
+					// メタデータを復号化（DFから取得したseal_idを使用）
+					const decryptedMeta = await decryptWithSealId({
+						blobId: metaBlobId,
+						sealId: metaSealId,
+						dataType: "imaging_meta",
 						sessionKey,
-						txBytes,
-						sealId: passport.sealId,
+						passportId: passport.id,
 					});
 
 					console.log("[Imaging] Decrypted meta data:", decryptedMeta);
@@ -213,13 +201,18 @@ export default function ImagingPage() {
 							console.log(
 								`[Imaging] 🔄 Attempting to decrypt image: ${binaryBlobId}`,
 							);
-							imageObjectUrl = await decryptAndDisplayImage({
+							// 画像バイナリを復号化（DFから取得したseal_idを使用）
+							if (!binarySealId) {
+								throw new Error("Binary seal_id not found in EntryData");
+							}
+							const imagingBinary = await decryptWithSealId({
 								blobId: binaryBlobId,
-								sealId: passport.sealId,
+								sealId: binarySealId,
+								dataType: "imaging_binary",
 								sessionKey,
 								passportId: passport.id,
-								suiClient,
 							});
+							imageObjectUrl = imagingBinary.objectUrl;
 							console.log(
 								`[Imaging] ✅ Successfully generated ObjectURL: ${imageObjectUrl}`,
 							);
@@ -323,7 +316,7 @@ export default function ImagingPage() {
 		sessionKey,
 		sessionKeyValid,
 		generateSessionKey,
-		suiClient,
+		decryptWithSealId,
 	]);
 
 	// パスポート・SessionKey準備完了後にデータ読み込み
@@ -391,6 +384,8 @@ export default function ImagingPage() {
 		document.body.removeChild(link);
 	};
 
+	const showLoading = isLoading || isDecrypting;
+
 	return (
 		<div className="p-4 md:p-6 space-y-6">
 			{/* Header */}
@@ -421,7 +416,7 @@ export default function ImagingPage() {
 			</div>
 
 			{/* Loading State */}
-			{isLoading && (
+			{showLoading && (
 				<div
 					className="flex flex-col h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
@@ -438,7 +433,7 @@ export default function ImagingPage() {
 			)}
 
 			{/* Error State */}
-			{error && !isLoading && (
+			{error && !showLoading && (
 				<div
 					className="rounded-lg p-4 border-2"
 					style={{
@@ -461,7 +456,7 @@ export default function ImagingPage() {
 			)}
 
 			{/* No Passport State */}
-			{!has_passport && !passportLoading && !isLoading && (
+			{!has_passport && !passportLoading && !showLoading && (
 				<div
 					className="flex flex-col h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
@@ -476,7 +471,7 @@ export default function ImagingPage() {
 			)}
 
 			{/* Reports List */}
-			{!isLoading && !error && sortedReports.length === 0 && (
+			{!showLoading && !error && sortedReports.length === 0 && (
 				<div
 					className="flex h-64 items-center justify-center rounded-lg"
 					style={{ backgroundColor: theme.colors.surface }}
@@ -488,7 +483,7 @@ export default function ImagingPage() {
 			)}
 
 			{/* Reports List */}
-			{!isLoading && !error && sortedReports.length > 0 && (
+			{!showLoading && !error && sortedReports.length > 0 && (
 				<div className="space-y-3">
 					{sortedReports.map((report) => {
 						const examDate = new Date(report.examDate).toLocaleDateString(

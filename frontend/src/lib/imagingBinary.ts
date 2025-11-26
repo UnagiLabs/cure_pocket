@@ -16,6 +16,7 @@ import {
 	createSealClient,
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
+import { generateSealId } from "@/lib/sealIdGenerator";
 import { PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 
@@ -50,19 +51,26 @@ async function fileToUint8(file: Blob): Promise<Uint8Array> {
 
 type EncryptBinaryParams = {
 	file: File | Blob;
-	sealId: string;
+	address: string;
 	suiClient: SuiClient;
 };
 
+/**
+ * Encrypt image binary and store in Walrus
+ * seal_id is automatically generated from address with "imaging_binary" scope
+ */
 export async function encryptAndStoreImagingBinary({
 	file,
-	sealId,
+	address,
 	suiClient,
 }: EncryptBinaryParams): Promise<{
 	blobId: string;
 	contentType: string;
 	size: number;
 }> {
+	// Generate scoped seal_id for imaging_binary
+	const sealId = await generateSealId(address, "imaging_binary");
+
 	const bytes = await fileToUint8(file);
 	const envelope = encodeEnvelope(
 		file.type || "application/octet-stream",
@@ -72,6 +80,8 @@ export async function encryptAndStoreImagingBinary({
 	const sealClient = createSealClient(suiClient);
 	const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
+	// sealId（hex文字列）をそのまま渡す
+	// Seal SDKは内部でfromHex()を使用してバイナリに変換する
 	const { encryptedObject } = await sealClient.encrypt({
 		threshold,
 		packageId: PACKAGE_ID,
@@ -121,12 +131,57 @@ export async function decryptImagingBinary({
 		registryObjectId: effectiveRegistryId,
 		suiClient,
 		sealId,
+		dataType: "imaging_binary",
 	});
 
 	const sealClient = createSealClient(suiClient);
 
 	const decryptedBytes = await sealClient.decrypt({
 		data: encrypted,
+		sessionKey,
+		txBytes,
+	});
+
+	const { mime, data } = decodeEnvelope(new Uint8Array(decryptedBytes));
+	const cloned = data.slice();
+	const arrayBuffer = cloned.buffer as ArrayBuffer;
+	const objectUrl = URL.createObjectURL(
+		new Blob([arrayBuffer], { type: mime }),
+	);
+
+	return { contentType: mime, data: arrayBuffer, objectUrl };
+}
+
+/**
+ * Internal helper for decrypting imaging binary
+ * Called from useDecryptAndFetch hook - does NOT download from Walrus
+ * (Walrus download is handled by the hook)
+ *
+ * @param params - Decryption parameters with already-downloaded encrypted data
+ * @returns Decrypted image with content type and object URL
+ */
+type DecryptBinaryInternalParams = {
+	encryptedData: Uint8Array;
+	sealId: string;
+	sessionKey: SessionKey;
+	txBytes: Uint8Array;
+	suiClient: SuiClient;
+};
+
+export async function decryptImagingBinaryInternal({
+	encryptedData,
+	sessionKey,
+	txBytes,
+	suiClient,
+}: DecryptBinaryInternalParams): Promise<{
+	contentType: string;
+	data: ArrayBuffer;
+	objectUrl: string;
+}> {
+	const sealClient = createSealClient(suiClient);
+
+	const decryptedBytes = await sealClient.decrypt({
+		data: encryptedData,
 		sessionKey,
 		txBytes,
 	});

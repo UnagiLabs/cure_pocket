@@ -355,7 +355,8 @@ export interface ThemeConfig {
  */
 export interface MedicalPassport {
 	id: string; // Sui Object ID
-	sealId: string;
+	// sealId is no longer stored here - it's dynamically generated per dataType
+	// using generateSealId(address, dataType) from @/lib/sealIdGenerator
 	countryCode: string;
 	analyticsOptIn: boolean; // 統計データ提供同意フラグ
 }

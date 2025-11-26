@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -9,9 +9,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
-import { encryptAndStoreImagingBinary } from "@/lib/imagingBinary";
 import { createImagingMeta, generateDicomUIDs } from "@/lib/imagingHelpers";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { getDataEntryBlobIds } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import type { ImagingReport } from "@/types";
@@ -24,12 +22,11 @@ export default function AddImagingPage() {
 	const router = useRouter();
 	const locale = useLocale();
 	const currentAccount = useCurrentAccount();
-	const suiClient = useSuiClient();
 	const { settings } = useApp();
 	const { passport } = usePassport();
 	const theme = getTheme(settings.theme);
 
-	const { encryptAndStoreMultiple, progress, isEncrypting } =
+	const { encryptAndStoreMultiple, encryptImage, progress, isEncrypting } =
 		useEncryptAndStore();
 	const {
 		updateMultiplePassportData,
@@ -55,41 +52,31 @@ export default function AddImagingPage() {
 		try {
 			setUploadError(null);
 
-			// Generate seal ID for encryption
-			const sealId = await generateSealId(currentAccount.address);
-
 			// Generate DICOM UIDs
 			const dicomUIDs = generateDicomUIDs();
 
-			// imaging_binary を専用ルートで暗号化・アップロード
-			const binaryResult = await encryptAndStoreImagingBinary({
-				file: report.imageFile,
-				sealId,
-				suiClient,
-			});
+			// imaging_binary を暗号化・アップロード（seal_idはフック内で自動生成）
+			const binaryResult = await encryptImage(report.imageFile);
 
 			const binaryBlobId = binaryResult.blobId;
 
 			// Create imaging_meta with the blob ID
 			const imagingMeta = createImagingMeta(report, binaryBlobId, dicomUIDs);
 
-			// Upload imaging_meta
-			const metaResults = await encryptAndStoreMultiple(
-				[
-					{
-						data: {
-							meta: {
-								schema_version: "2.0.0",
-								updated_at: Date.now(),
-								generator: "CurePocket_Web_v1",
-							},
-							imaging_meta: [imagingMeta],
+			// Upload imaging_meta（seal_idはフック内で自動生成）
+			const metaResults = await encryptAndStoreMultiple([
+				{
+					data: {
+						meta: {
+							schema_version: "2.0.0",
+							updated_at: Date.now(),
+							generator: "CurePocket_Web_v1",
 						},
-						dataType: "imaging_meta",
+						imaging_meta: [imagingMeta],
 					},
-				],
-				sealId,
-			);
+					dataType: "imaging_meta",
+				},
+			]);
 
 			if (!metaResults || metaResults.length === 0) {
 				throw new Error("Failed to upload imaging_meta");

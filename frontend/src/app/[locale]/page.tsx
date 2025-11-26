@@ -391,7 +391,7 @@ export default function LandingPage() {
 						</div>
 					</div>
 					<p className="text-sm text-gray-600 font-medium">
-						© 2025 CurePocket. Your health, your data, your control. ✨
+						© 2025 UnagiLabs. Your health, your data, your control. ✨
 					</p>
 				</div>
 			</footer>

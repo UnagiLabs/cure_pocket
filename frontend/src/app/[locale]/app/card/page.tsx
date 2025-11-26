@@ -27,6 +27,28 @@ import { useApp } from "@/contexts/AppContext";
 import { usePassport } from "@/hooks/usePassport";
 import { PACKAGE_ID, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
+import type { DataType } from "@/types/healthData";
+
+/**
+ * UIカテゴリーIDからコントラクトのdataTypeへのマッピング
+ * UIカテゴリーは表示用、dataTypeはコントラクト/暗号化用
+ */
+type UiCategory =
+	| "medications"
+	| "allergies"
+	| "histories"
+	| "labs"
+	| "imaging"
+	| "vitals";
+
+const uiCategoryToDataType: Record<UiCategory, DataType> = {
+	medications: "medications",
+	allergies: "basic_profile", // アレルギーはbasic_profileに含まれる
+	histories: "conditions", // 既往歴はconditionsに含まれる
+	labs: "lab_results",
+	imaging: "imaging_meta",
+	vitals: "self_metrics",
+};
 
 /**
  * 緊急ヘルスカードページ
@@ -53,16 +75,10 @@ export default function EmergencyCardPage() {
 	const [expiresAt, setExpiresAt] = useState("");
 	const [durationLabel, setDurationLabel] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
-	const [selectedCategories, setSelectedCategories] = useState<
-		(
-			| "medications"
-			| "allergies"
-			| "histories"
-			| "labs"
-			| "imaging"
-			| "vitals"
-		)[]
-	>(["medications", "allergies"]);
+	const [selectedCategories, setSelectedCategories] = useState<UiCategory[]>([
+		"medications",
+		"allergies",
+	]);
 	const [qrImageUrl, setQrImageUrl] = useState("");
 
 	useEffect(() => {
@@ -102,15 +118,7 @@ export default function EmergencyCardPage() {
 	const latestImaging = imagingReports[0];
 	const recentVitals = vitalSigns.slice(0, 3);
 
-	const handleCategoryToggle = (
-		category:
-			| "medications"
-			| "allergies"
-			| "histories"
-			| "labs"
-			| "imaging"
-			| "vitals",
-	) => {
+	const handleCategoryToggle = (category: UiCategory) => {
 		setSelectedCategories((prev) =>
 			prev.includes(category)
 				? prev.filter((c) => c !== category)
@@ -145,7 +153,12 @@ export default function EmergencyCardPage() {
 			const durationMs = 24 * 60 * 60 * 1000;
 			const expiresAtIso = new Date(Date.now() + durationMs).toISOString();
 
-			// 3) Build PTB for create_consent_token
+			// 3) UIカテゴリーをコントラクトのdataTypeに変換（重複を除去）
+			const contractScopes = [
+				...new Set(selectedCategories.map((cat) => uiCategoryToDataType[cat])),
+			];
+
+			// 4) Build PTB for create_consent_token
 			const tx = new Transaction();
 			tx.moveCall({
 				target: `${PACKAGE_ID}::accessor::create_consent_token`,
@@ -153,7 +166,7 @@ export default function EmergencyCardPage() {
 					tx.object(passport.id),
 					tx.object(PASSPORT_REGISTRY_ID),
 					tx.pure.vector("u8", Array.from(secretHash)),
-					tx.pure.vector("string", selectedCategories),
+					tx.pure.vector("string", contractScopes),
 					tx.pure.u64(durationMs),
 					tx.object("0x6"), // Clock
 				],
@@ -180,7 +193,7 @@ export default function EmergencyCardPage() {
 				tokenId,
 				passportId: passport.id,
 				secret: newSecret,
-				scopes: selectedCategories,
+				scopes: contractScopes,
 				expiresAt: expiresAtIso,
 			});
 
