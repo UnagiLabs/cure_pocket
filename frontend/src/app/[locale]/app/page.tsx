@@ -6,7 +6,7 @@ import {
 	FileText,
 	FlaskConical,
 	Heart,
-	Package,
+	Pill,
 	QrCode,
 	Scan,
 	Thermometer,
@@ -47,7 +47,7 @@ export default function HomePage() {
 			type: "medication" | "allergy" | "history" | "lab" | "imaging";
 			title: string;
 			date: string;
-			icon: typeof Package;
+			icon: typeof Pill;
 		}> = [];
 
 		prescriptions.forEach((prescription) => {
@@ -64,7 +64,7 @@ export default function HomePage() {
 				type: "medication",
 				title: `${prescription.clinic} - ${displayTitle}`,
 				date: prescription.prescriptionDate,
-				icon: Package,
+				icon: Pill,
 			});
 		});
 
@@ -318,7 +318,7 @@ export default function HomePage() {
 							className="flex-shrink-0 w-20 h-24 bg-white rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-transform lg:w-full lg:h-40 lg:rounded-3xl lg:shadow-md"
 						>
 							<div className="w-10 h-10 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] lg:w-14 lg:h-14">
-								<Package className="w-5 h-5 lg:w-7 lg:h-7" />
+								<Pill className="w-5 h-5 lg:w-7 lg:h-7" />
 							</div>
 							<span className="text-[10px] font-bold text-slate-500 text-center leading-tight lg:text-sm">
 								{t("home.medicationNotebook")}
