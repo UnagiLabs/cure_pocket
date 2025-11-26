@@ -202,14 +202,13 @@ export default function EmergencyCardPage() {
 			setDurationLabel(formatDuration(expiresAtIso));
 		} catch (error) {
 			console.error("Failed to generate consent token:", error);
-			// Fallback to mock for now
-			const mockUrl = `https://curepocket.app/view/${walletAddress?.slice(0, 8)}`;
-			const mockExpires = new Date(
-				Date.now() + 24 * 60 * 60 * 1000,
-			).toISOString();
-			setConsentUrl(mockUrl);
-			setExpiresAt(mockExpires);
-			setDurationLabel("24時間");
+			const errorMessage =
+				error instanceof Error ? error.message : "不明なエラー";
+			alert(`QRコード生成に失敗しました: ${errorMessage}`);
+			// QRコードを表示しない
+			setConsentUrl("");
+			setExpiresAt("");
+			setDurationLabel("");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -611,7 +610,10 @@ function buildQrPayload(params: {
 	};
 
 	const json = JSON.stringify(payload);
-	const base64 = btoa(unescape(encodeURIComponent(json)));
+	// UTF-8文字列をBase64に変換（unescape非推奨のため置き換え）
+	const encoder = new TextEncoder();
+	const data = encoder.encode(json);
+	const base64 = btoa(String.fromCharCode(...data));
 	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 

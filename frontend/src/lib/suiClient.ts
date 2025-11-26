@@ -27,6 +27,11 @@ const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 	| "localnet";
 
 /**
+ * Debug mode flag - only log in development environment
+ */
+const isDev = process.env.NODE_ENV === "development";
+
+/**
  * Smart contract addresses
  */
 export const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
@@ -357,10 +362,12 @@ export async function getDataEntry(
 		const rawFields = content.fields as Record<string, unknown>;
 
 		// Debug: Log the actual structure to understand the response format
-		console.log(
-			"[getDataEntry] Raw fields structure:",
-			JSON.stringify(rawFields, null, 2),
-		);
+		if (isDev) {
+			console.log(
+				"[getDataEntry] Raw fields structure:",
+				JSON.stringify(rawFields, null, 2),
+			);
+		}
 
 		// Extract EntryData from multiple possible structures
 		// Note: seal_id is now stored as vector<u8> on-chain, returned as number array
@@ -377,12 +384,16 @@ export async function getDataEntry(
 			// Pattern 1: value.fields contains EntryData (nested structure)
 			if ("fields" in value && typeof value.fields === "object") {
 				entryDataRaw = value.fields as EntryDataShape;
-				console.log("[getDataEntry] Using nested structure (value.fields)");
+				if (isDev) {
+					console.log("[getDataEntry] Using nested structure (value.fields)");
+				}
 			}
 			// Pattern 2: value directly contains EntryData fields
 			else if ("blob_ids" in value) {
 				entryDataRaw = value as EntryDataShape;
-				console.log("[getDataEntry] Using direct structure (value)");
+				if (isDev) {
+					console.log("[getDataEntry] Using direct structure (value)");
+				}
 			}
 		}
 
@@ -410,13 +421,17 @@ export async function getDataEntry(
 			sealIdHex = entryDataRaw.seal_id
 				.map((b) => b.toString(16).padStart(2, "0"))
 				.join("");
-			console.log(
-				"[getDataEntry] Converted seal_id from vector<u8> to hex string",
-			);
+			if (isDev) {
+				console.log(
+					"[getDataEntry] Converted seal_id from vector<u8> to hex string",
+				);
+			}
 		} else if (typeof entryDataRaw.seal_id === "string") {
 			// Legacy format: hex string stored directly (backward compatibility)
 			sealIdHex = entryDataRaw.seal_id;
-			console.log("[getDataEntry] Using seal_id as hex string directly");
+			if (isDev) {
+				console.log("[getDataEntry] Using seal_id as hex string directly");
+			}
 		} else {
 			throw new Error(`Invalid seal_id type: ${typeof entryDataRaw.seal_id}`);
 		}

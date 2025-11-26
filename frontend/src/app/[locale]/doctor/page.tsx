@@ -8,8 +8,10 @@ import {
 	Stethoscope,
 	Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useRef, useState } from "react";
-import { type DataType, getDataTypeLabel, getMockData } from "@/lib/mockData";
+import { type DataType, getDataTypeLabel } from "@/lib/mockData";
 
 interface QRPayload {
 	v?: number;
@@ -21,9 +23,10 @@ interface QRPayload {
 }
 
 export default function DoctorPage() {
+	const router = useRouter();
+	const locale = useLocale();
 	const [isScanning, setIsScanning] = useState(false);
 	const [qrData, setQrData] = useState<QRPayload | null>(null);
-	const [results, setResults] = useState<Record<string, unknown> | null>(null);
 	const [message, setMessage] = useState<{
 		type: "info" | "error" | "success";
 		text: string;
@@ -36,7 +39,6 @@ export default function DoctorPage() {
 
 		setIsScanning(true);
 		setMessage(null);
-		setResults(null);
 
 		try {
 			const imageUrl = URL.createObjectURL(file);
@@ -74,13 +76,25 @@ export default function DoctorPage() {
 						setQrData(payload);
 						setMessage({
 							type: "success",
-							text: "QRコードの読み取りに成功しました",
+							text: "QRコードの読み取りに成功しました。患者データページへ遷移します...",
 						});
 
-						// モックデータを自動取得
-						if (payload.scope && payload.scope.length > 0) {
-							const mockDataResults = getMockData(payload.scope);
-							setResults(mockDataResults);
+						// QRペイロードをsessionStorageに保存
+						sessionStorage.setItem(
+							"qrPayload",
+							JSON.stringify({
+								token: payload.token,
+								secret: payload.secret,
+								scope: payload.scope,
+								exp: payload.exp,
+							}),
+						);
+
+						// patient/[patientId]ページへ遷移
+						if (payload.passport) {
+							setTimeout(() => {
+								router.push(`/${locale}/doctor/patient/${payload.passport}`);
+							}, 1000);
 						}
 					} catch (err) {
 						console.error("QR decode error:", err);
@@ -225,40 +239,14 @@ export default function DoctorPage() {
 					</div>
 				</div>
 
-				{/* データ表示エリア */}
-				{results && (
-					<div className="space-y-4">
-						<h2 className="text-2xl font-bold text-gray-900">患者データ</h2>
-						{Object.entries(results).map(([category, data]) => (
-							<div
-								key={category}
-								className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
-							>
-								<div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
-									<h3 className="text-xl font-bold text-white">
-										{getDataTypeLabel(category as DataType)}
-									</h3>
-								</div>
-								<div className="p-6">
-									<div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-										<pre className="text-xs text-gray-800 overflow-auto max-h-96 whitespace-pre-wrap">
-											{JSON.stringify(data, null, 2)}
-										</pre>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				)}
-
-				{/* データがない場合の表示 */}
-				{!results && !isScanning && (
+				{/* ガイダンス表示 */}
+				{!qrData && !isScanning && (
 					<div className="text-center py-12">
 						<div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
 							<QrCode className="h-10 w-10 text-gray-400" />
 						</div>
 						<p className="text-gray-500">
-							QRコードをアップロードすると、ここにデータが表示されます
+							患者から受け取ったQRコードをアップロードしてください
 						</p>
 					</div>
 				)}

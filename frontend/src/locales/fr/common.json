@@ -119,6 +119,7 @@
 		"subtitle": "Informations médicales d'urgence",
 		"description": "Partagez vos informations sur les médicaments avec les prestataires de soins en cas d'urgence",
 		"generateQR": "Générer un code QR",
+		"generating": "Génération en cours...",
 		"validFor": "Valide pour : {duration}",
 		"downloadPDF": "Télécharger le PDF",
 		"printCard": "Imprimer la carte",
