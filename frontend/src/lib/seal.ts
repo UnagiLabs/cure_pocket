@@ -13,7 +13,7 @@
  * Official Documentation: https://seal-docs.wal.app/
  */
 
-import { fromHex, toHex } from "@mysten/bcs";
+import { fromHex } from "@mysten/bcs";
 import { EncryptedObject, SealClient, SessionKey } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
@@ -206,15 +206,12 @@ export async function encryptHealthData<T = HealthData>(params: {
 	const data = new TextEncoder().encode(json);
 
 	// Encrypt with Seal
-	// sealId をUTF-8エンコードしてからhex文字列に変換
-	// これにより、PTB構築時の TextEncoder().encode(sealId) と同じバイト列になる
-	// Seal SDKは内部で fromHex() を使用するため、この変換が必要
-	const sealIdForEncryption = toHex(new TextEncoder().encode(sealId));
-
+	// sealId（hex文字列）をそのまま渡す
+	// Seal SDKは内部でfromHex()を使用してバイナリに変換する
 	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
 		threshold: effectiveThreshold,
 		packageId: PACKAGE_ID,
-		id: sealIdForEncryption,
+		id: sealId,
 		data,
 	});
 
@@ -245,7 +242,7 @@ export async function decryptHealthData(params: {
 
 	console.log("[decryptHealthData] Starting decryption...");
 	console.log(
-		`[decryptHealthData] sealId: ${sealId ? sealId.substring(0, 20) + "..." : "not provided"}`,
+		`[decryptHealthData] sealId: ${sealId ? `${sealId.substring(0, 20)}...` : "not provided"}`,
 	);
 	console.log(
 		`[decryptHealthData] encryptedData length: ${encryptedData.length}`,
@@ -432,13 +429,13 @@ export async function buildPatientAccessPTB(params: {
 	const tx = new Transaction();
 
 	// Call seal_approve_patient_only(id, passport, registry, data_type)
-	// First argument is the identity (seal_id) as UTF-8 bytes
-	// Note: sealId is a hex string that must be passed as UTF-8 bytes (not hex-decoded)
-	// because the contract compares it with stored seal_id using std::string::utf8()
+	// First argument is the identity (seal_id) as binary bytes
+	// sealId is a hex string that gets decoded to binary using fromHex()
+	// This matches how Seal SDK internally handles the id during encryption
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
 		arguments: [
-			tx.pure.vector("u8", Array.from(new TextEncoder().encode(sealId))), // UTF-8 encoded string
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // hex-decoded binary
 			tx.object(passportObjectId),
 			tx.object(registryObjectId),
 			tx.pure.string(dataType), // Data type for scope-based access

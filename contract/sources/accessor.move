@@ -16,6 +16,7 @@ module cure_pocket::accessor;
 use std::string::{Self as string, String};
 use sui::bcs;
 use sui::clock::Clock;
+use sui::hex;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 use cure_pocket::seal_accessor;
 use cure_pocket::consent_token::{Self, ConsentToken};
@@ -448,9 +449,12 @@ entry fun seal_approve_consent(
 ) {
     // 1. Seal ID検証
     // EntryDataを取得し、要求されたseal_idが一致するかを確認
+    // PTBからはfromHex(sealId)でデコードされたバイナリが渡される
+    // stored_seal_idはhex文字列なので、idをhexエンコードして比較
     let entry = medical_passport::get_data_entry(passport, data_type);
     let stored_seal_id = medical_passport::get_entry_seal_id(entry);
-    let id_string = string::utf8(id);
+    let id_hex = hex::encode(id);
+    let id_string = string::utf8(id_hex);
     assert!(id_string == *stored_seal_id, seal_accessor::e_invalid_seal_id());
 
     // 2. BCSデシリアライズ（peel_*系の関数を使用）

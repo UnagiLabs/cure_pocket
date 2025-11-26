@@ -14,6 +14,7 @@
 module cure_pocket::seal_accessor;
 
 use std::string::String;
+use sui::hex;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 
 // ============================================================
@@ -105,8 +106,11 @@ public(package) fun seal_approve_patient_only_internal(
     let entry = medical_passport::get_data_entry(passport, data_type);
     let stored_seal_id = medical_passport::get_entry_seal_id(entry);
 
-    // 5. 要求されたid（UTF-8バイト）をStringに変換して比較
-    let id_string = std::string::utf8(id);
+    // 5. 要求されたid（バイナリ）をhex文字列に変換して比較
+    // PTBからはfromHex(sealId)でデコードされたバイナリが渡される
+    // stored_seal_idはhex文字列なので、idをhexエンコードして比較
+    let id_hex = hex::encode(id);
+    let id_string = std::string::utf8(id_hex);
     assert!(id_string == *stored_seal_id, E_INVALID_SEAL_ID);
 
     // 6. すべての検証をパスすれば関数終了（Sealが「OK」と判断）

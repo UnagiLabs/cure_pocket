@@ -8,7 +8,6 @@
  * [..]    raw image bytes
  */
 
-import { toHex } from "@mysten/bcs";
 import type { SessionKey } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
 import {
@@ -81,14 +80,12 @@ export async function encryptAndStoreImagingBinary({
 	const sealClient = createSealClient(suiClient);
 	const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
 
-	// sealId をUTF-8エンコードしてからhex文字列に変換
-	// PTB構築時の TextEncoder().encode(sealId) と同じバイト列になるようにする
-	const sealIdForEncryption = toHex(new TextEncoder().encode(sealId));
-
+	// sealId（hex文字列）をそのまま渡す
+	// Seal SDKは内部でfromHex()を使用してバイナリに変換する
 	const { encryptedObject } = await sealClient.encrypt({
 		threshold,
 		packageId: PACKAGE_ID,
-		id: sealIdForEncryption,
+		id: sealId,
 		data: envelope,
 	});
 
