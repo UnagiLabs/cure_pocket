@@ -170,8 +170,7 @@
 		"generateQR": "QRコード生成",
 		"generating": "生成中...",
 		"validFor": "有効期限: {duration}",
-		"downloadPDF": "PDFダウンロード",
-		"printCard": "印刷用カード生成",
+		"downloadImage": "画像をダウンロード",
 		"currentMedications": "服用薬一覧",
 		"scanToView": "スキャンすると",
 		"englishVersion": "英語版も表示",
@@ -792,6 +791,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "医師ポータル",
+		"portalSubtitle": "安全な医療データアクセス",
+		"walletRequired": "患者データの復号にはウォレット接続が必要です",
+		"walletRequiredDesc": "暗号化された医療記録にアクセスするには、上部のボタンからウォレットを接続してください。",
 		"patientView": "患者情報閲覧",
 		"patientId": "患者ID",
 		"badge": "医師ビュー",
@@ -813,7 +816,9 @@
 		"confidentialNotice": "この情報は守秘義務があり、医療プライバシー法により保護されています。",
 		"encryptedConnection": "暗号化接続",
 		"accessRestricted": "アクセス制限",
-		"noPermission": "このデータを閲覧する権限がありません"
+		"noPermission": "このデータを閲覧する権限がありません",
+		"fetchData": "データを取得",
+		"loading": "読み込み中..."
 	},
 	"common": {
 		"download": "ダウンロード",

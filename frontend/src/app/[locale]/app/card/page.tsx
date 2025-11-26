@@ -16,7 +16,6 @@ import {
 	FileText,
 	FlaskConical,
 	Package,
-	Printer,
 	QrCode,
 	Scan,
 } from "lucide-react";
@@ -92,8 +91,8 @@ export default function EmergencyCardPage() {
 			margin: 1,
 			width: 176,
 			color: {
-				dark: theme.colors.primary,
-				light: theme.colors.surface,
+				dark: "#000000",
+				light: "#FFFFFF",
 			},
 		})
 			.then((url: string) => {
@@ -108,7 +107,7 @@ export default function EmergencyCardPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, [consentUrl, theme.colors.primary, theme.colors.surface]);
+	}, [consentUrl]);
 
 	const activeMedications = medications.filter((m) => m.status === "active");
 	const importantHistories = medicalHistories.filter(
@@ -124,6 +123,135 @@ export default function EmergencyCardPage() {
 				? prev.filter((c) => c !== category)
 				: [...prev, category],
 		);
+	};
+
+	const categoryOptions = [
+		{
+			id: "medications" as const,
+			label: t("dataTypes.medication"),
+			icon: Package,
+		},
+		{
+			id: "allergies" as const,
+			label: t("dataTypes.allergy"),
+			icon: AlertTriangle,
+		},
+		{ id: "histories" as const, label: t("dataTypes.history"), icon: FileText },
+		{ id: "labs" as const, label: t("dataTypes.lab"), icon: FlaskConical },
+		{ id: "imaging" as const, label: t("dataTypes.imaging"), icon: Scan },
+		{ id: "vitals" as const, label: t("dataTypes.vitals"), icon: Activity },
+	];
+
+	/**
+	 * Instagram風の装飾付きQR画像を生成する
+	 */
+	const generateStyledQRImage = async (): Promise<Blob | null> => {
+		if (!qrImageUrl || !walletAddress) return null;
+
+		const CANVAS_WIDTH = 1080;
+		const CANVAS_HEIGHT = 1920;
+		const QR_SIZE = 500;
+
+		const canvas = document.createElement("canvas");
+		canvas.width = CANVAS_WIDTH;
+		canvas.height = CANVAS_HEIGHT;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return null;
+
+		// 1. 背景グラデーション（テーマカラーベース）
+		const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+		gradient.addColorStop(0, theme.colors.background);
+		gradient.addColorStop(1, theme.colors.surface);
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+		// 2. ロゴ描画（上部中央）
+		const logo = new Image();
+		logo.crossOrigin = "anonymous";
+		logo.src = "/icon.png";
+		await new Promise<void>((resolve, reject) => {
+			logo.onload = () => resolve();
+			logo.onerror = () => reject(new Error("Failed to load logo"));
+		});
+		const logoSize = 150;
+		ctx.drawImage(logo, (CANVAS_WIDTH - logoSize) / 2, 100, logoSize, logoSize);
+
+		// 3. QRコード描画（中央）
+		const qrImage = new Image();
+		qrImage.src = qrImageUrl;
+		await new Promise<void>((resolve) => {
+			qrImage.onload = () => resolve();
+		});
+
+		// QRコードの白い背景ボックス（角丸、シャドウ付き）
+		const qrBoxSize = QR_SIZE + 40;
+		const qrX = (CANVAS_WIDTH - qrBoxSize) / 2;
+		const qrY = 320;
+		ctx.fillStyle = "#FFFFFF";
+		ctx.shadowColor = "rgba(0,0,0,0.15)";
+		ctx.shadowBlur = 30;
+		ctx.shadowOffsetY = 10;
+		roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 24);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		ctx.shadowOffsetY = 0;
+
+		ctx.drawImage(qrImage, qrX + 20, qrY + 20, QR_SIZE, QR_SIZE);
+
+		// 4. 共有カテゴリセクション
+		ctx.fillStyle = theme.colors.text;
+		ctx.font = "bold 40px sans-serif";
+		ctx.textAlign = "center";
+		ctx.fillText("📋 共有カテゴリ", CANVAS_WIDTH / 2, 960);
+
+		ctx.font = "36px sans-serif";
+		ctx.fillStyle = theme.colors.textSecondary;
+		const categoryLabels = selectedCategories.map((cat) => {
+			return categoryOptions.find((opt) => opt.id === cat)?.label || cat;
+		});
+		categoryLabels.forEach((label, i) => {
+			ctx.fillText(`・${label}`, CANVAS_WIDTH / 2, 1030 + i * 55);
+		});
+
+		// 5. 有効期限（具体的な日時形式で表示）
+		const expiryY = 1030 + categoryLabels.length * 55 + 100;
+		ctx.fillStyle = theme.colors.text;
+		ctx.font = "bold 36px sans-serif";
+		const expiryDateStr = expiresAt
+			? formatExpiryDateTime(expiresAt)
+			: "24時間";
+		ctx.fillText(`⏱ 有効期限: ${expiryDateStr}`, CANVAS_WIDTH / 2, expiryY);
+
+		// 6. フッター（アプリ名）
+		ctx.fillStyle = theme.colors.textSecondary;
+		ctx.font = "32px sans-serif";
+		ctx.fillText("─ CurePocket ─", CANVAS_WIDTH / 2, CANVAS_HEIGHT - 120);
+
+		// Blob生成
+		return new Promise((resolve) => {
+			canvas.toBlob((blob) => resolve(blob), "image/png", 0.95);
+		});
+	};
+
+	const handleDownloadImage = async () => {
+		if (!qrImageUrl || !walletAddress) return;
+
+		const blob = await generateStyledQRImage();
+		if (!blob) return;
+
+		// ウォレットアドレスの頭4桁と末尾4桁を取得
+		const addrPrefix = walletAddress.slice(0, 6); // "0x" + 4桁
+		const addrSuffix = walletAddress.slice(-4);
+		const filename = `${addrPrefix}...${addrSuffix}_share_qr.png`;
+
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = filename;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	};
 
 	const handleGenerateQR = async () => {
@@ -202,35 +330,17 @@ export default function EmergencyCardPage() {
 			setDurationLabel(formatDuration(expiresAtIso));
 		} catch (error) {
 			console.error("Failed to generate consent token:", error);
-			// Fallback to mock for now
-			const mockUrl = `https://curepocket.app/view/${walletAddress?.slice(0, 8)}`;
-			const mockExpires = new Date(
-				Date.now() + 24 * 60 * 60 * 1000,
-			).toISOString();
-			setConsentUrl(mockUrl);
-			setExpiresAt(mockExpires);
-			setDurationLabel("24時間");
+			const errorMessage =
+				error instanceof Error ? error.message : "不明なエラー";
+			alert(`QRコード生成に失敗しました: ${errorMessage}`);
+			// QRコードを表示しない
+			setConsentUrl("");
+			setExpiresAt("");
+			setDurationLabel("");
 		} finally {
 			setIsGenerating(false);
 		}
 	};
-
-	const categoryOptions = [
-		{
-			id: "medications" as const,
-			label: t("dataTypes.medication"),
-			icon: Package,
-		},
-		{
-			id: "allergies" as const,
-			label: t("dataTypes.allergy"),
-			icon: AlertTriangle,
-		},
-		{ id: "histories" as const, label: t("dataTypes.history"), icon: FileText },
-		{ id: "labs" as const, label: t("dataTypes.lab"), icon: FlaskConical },
-		{ id: "imaging" as const, label: t("dataTypes.imaging"), icon: Scan },
-		{ id: "vitals" as const, label: t("dataTypes.vitals"), icon: Activity },
-	];
 
 	return (
 		<div className="px-4 md:px-8 lg:px-12 py-4 lg:py-8 pb-24 lg:pb-8">
@@ -537,22 +647,16 @@ export default function EmergencyCardPage() {
 			</div>
 
 			{/* Action Buttons */}
-			<div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+			<div className="mt-6">
 				<button
 					type="button"
-					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
+					onClick={handleDownloadImage}
+					disabled={!qrImageUrl}
+					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
 					<Download className="mr-2 h-5 w-5" />
-					<span>{t("card.downloadPDF")}</span>
-				</button>
-				<button
-					type="button"
-					className="flex w-full items-center justify-center rounded-xl p-4 font-medium text-white shadow-md transition-transform active:scale-95 md:p-5 md:text-lg hover:shadow-lg"
-					style={{ backgroundColor: "#374151" }}
-				>
-					<Printer className="mr-2 h-5 w-5" />
-					<span>{t("card.printCard")}</span>
+					<span>{t("card.downloadImage")}</span>
 				</button>
 			</div>
 
@@ -588,6 +692,20 @@ function formatDuration(expiresAtIso: string): string {
 	return `${hours}時間`;
 }
 
+/**
+ * 有効期限を「2025/10/10 15:00」形式でフォーマット
+ */
+function formatExpiryDateTime(expiresAtIso: string): string {
+	const date = new Date(expiresAtIso);
+	if (Number.isNaN(date.getTime())) return "";
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	const hours = String(date.getHours()).padStart(2, "0");
+	const minutes = String(date.getMinutes()).padStart(2, "0");
+	return `${year}/${month}/${day} ${hours}:${minutes}`;
+}
+
 function generateSecret(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(16));
 	const base64 = btoa(String.fromCharCode(...bytes));
@@ -611,7 +729,10 @@ function buildQrPayload(params: {
 	};
 
 	const json = JSON.stringify(payload);
-	const base64 = btoa(unescape(encodeURIComponent(json)));
+	// UTF-8文字列をBase64に変換（unescape非推奨のため置き換え）
+	const encoder = new TextEncoder();
+	const data = encoder.encode(json);
+	const base64 = btoa(String.fromCharCode(...data));
 	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
@@ -650,4 +771,28 @@ function extractConsentTokenId(result: {
 		if (objectId) return objectId;
 	}
 	return undefined;
+}
+
+/**
+ * Canvas上に角丸矩形を描画するヘルパー関数
+ */
+function roundRect(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	radius: number,
+) {
+	ctx.beginPath();
+	ctx.moveTo(x + radius, y);
+	ctx.lineTo(x + width - radius, y);
+	ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+	ctx.lineTo(x + width, y + height - radius);
+	ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+	ctx.lineTo(x + radius, y + height);
+	ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+	ctx.lineTo(x, y + radius);
+	ctx.quadraticCurveTo(x, y, x + radius, y);
+	ctx.closePath();
 }

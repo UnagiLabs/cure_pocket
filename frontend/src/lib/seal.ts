@@ -367,6 +367,7 @@ export async function buildConsentAccessPTB(params: {
 	passportObjectId: string; // MedicalPassport object ID
 	consentTokenObjectId: string;
 	dataType: string; // Data type being accessed (e.g., "medications")
+	sealId: string; // Seal ID (hex string) for encryption identity
 	payload: Uint8Array; // BCS-encoded SealAuthPayload
 	suiClient: SuiClient;
 }): Promise<Uint8Array> {
@@ -374,6 +375,7 @@ export async function buildConsentAccessPTB(params: {
 		passportObjectId,
 		consentTokenObjectId,
 		dataType,
+		sealId,
 		suiClient,
 		payload,
 	} = params;
@@ -384,11 +386,12 @@ export async function buildConsentAccessPTB(params: {
 
 	const tx = new Transaction();
 
-	// Call seal_approve_consent(id, consent_token, passport, data_type, clock)
+	// Call seal_approve_consent(id, auth_payload, consent_token, passport, data_type, clock)
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
 		arguments: [
-			tx.pure.vector("u8", Array.from(payload)), // SealAuthPayload
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // id (Seal ID)
+			tx.pure.vector("u8", Array.from(payload)), // auth_payload (SealAuthPayload)
 			tx.object(consentTokenObjectId), // ConsentToken
 			tx.object(passportObjectId), // MedicalPassport
 			tx.pure.string(dataType), // data_type

@@ -8,8 +8,10 @@ import {
 	Stethoscope,
 	Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useRef, useState } from "react";
-import { type DataType, getDataTypeLabel, getMockData } from "@/lib/mockData";
+import { type DataType, getDataTypeLabel } from "@/lib/mockData";
 
 interface QRPayload {
 	v?: number;
@@ -20,10 +22,61 @@ interface QRPayload {
 	exp?: string;
 }
 
+/**
+ * 複数の領域でQRコードを検出する関数
+ * 装飾付き画像（中央にQRコード）とQRのみの画像の両方に対応
+ */
+function detectQRCode(
+	ctx: CanvasRenderingContext2D,
+	imgWidth: number,
+	imgHeight: number,
+): ReturnType<typeof jsQR> {
+	// 試行する領域リスト（中央 → 上部 → 全体）
+	const regions = [
+		// 1. 中央領域（装飾画像のQRコード位置）
+		{
+			x: Math.floor(imgWidth * 0.2),
+			y: Math.floor(imgHeight * 0.15),
+			width: Math.floor(imgWidth * 0.6),
+			height: Math.floor(imgHeight * 0.4),
+		},
+		// 2. 上半分
+		{
+			x: 0,
+			y: 0,
+			width: imgWidth,
+			height: Math.floor(imgHeight * 0.5),
+		},
+		// 3. 画像全体（フォールバック）
+		{
+			x: 0,
+			y: 0,
+			width: imgWidth,
+			height: imgHeight,
+		},
+	];
+
+	for (const region of regions) {
+		const imageData = ctx.getImageData(
+			region.x,
+			region.y,
+			region.width,
+			region.height,
+		);
+		const code = jsQR(imageData.data, imageData.width, imageData.height);
+		if (code) {
+			return code;
+		}
+	}
+
+	return null;
+}
+
 export default function DoctorPage() {
+	const router = useRouter();
+	const locale = useLocale();
 	const [isScanning, setIsScanning] = useState(false);
 	const [qrData, setQrData] = useState<QRPayload | null>(null);
-	const [results, setResults] = useState<Record<string, unknown> | null>(null);
 	const [message, setMessage] = useState<{
 		type: "info" | "error" | "success";
 		text: string;
@@ -36,7 +89,6 @@ export default function DoctorPage() {
 
 		setIsScanning(true);
 		setMessage(null);
-		setResults(null);
 
 		try {
 			const imageUrl = URL.createObjectURL(file);
@@ -58,8 +110,8 @@ export default function DoctorPage() {
 				canvas.height = img.height;
 				ctx.drawImage(img, 0, 0);
 
-				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-				const code = jsQR(imageData.data, imageData.width, imageData.height);
+				// 複数領域でQRコードを検出（装飾付き画像対応）
+				const code = detectQRCode(ctx, canvas.width, canvas.height);
 
 				URL.revokeObjectURL(imageUrl);
 
@@ -74,13 +126,25 @@ export default function DoctorPage() {
 						setQrData(payload);
 						setMessage({
 							type: "success",
-							text: "QRコードの読み取りに成功しました",
+							text: "QRコードの読み取りに成功しました。患者データページへ遷移します...",
 						});
 
-						// モックデータを自動取得
-						if (payload.scope && payload.scope.length > 0) {
-							const mockDataResults = getMockData(payload.scope);
-							setResults(mockDataResults);
+						// QRペイロードをsessionStorageに保存
+						sessionStorage.setItem(
+							"qrPayload",
+							JSON.stringify({
+								token: payload.token,
+								secret: payload.secret,
+								scope: payload.scope,
+								exp: payload.exp,
+							}),
+						);
+
+						// patient/[patientId]ページへ遷移
+						if (payload.passport) {
+							setTimeout(() => {
+								router.push(`/${locale}/doctor/patient/${payload.passport}`);
+							}, 1000);
 						}
 					} catch (err) {
 						console.error("QR decode error:", err);
@@ -225,40 +289,14 @@ export default function DoctorPage() {
 					</div>
 				</div>
 
-				{/* データ表示エリア */}
-				{results && (
-					<div className="space-y-4">
-						<h2 className="text-2xl font-bold text-gray-900">患者データ</h2>
-						{Object.entries(results).map(([category, data]) => (
-							<div
-								key={category}
-								className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
-							>
-								<div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
-									<h3 className="text-xl font-bold text-white">
-										{getDataTypeLabel(category as DataType)}
-									</h3>
-								</div>
-								<div className="p-6">
-									<div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-										<pre className="text-xs text-gray-800 overflow-auto max-h-96 whitespace-pre-wrap">
-											{JSON.stringify(data, null, 2)}
-										</pre>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				)}
-
-				{/* データがない場合の表示 */}
-				{!results && !isScanning && (
+				{/* ガイダンス表示 */}
+				{!qrData && !isScanning && (
 					<div className="text-center py-12">
 						<div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
 							<QrCode className="h-10 w-10 text-gray-400" />
 						</div>
 						<p className="text-gray-500">
-							QRコードをアップロードすると、ここにデータが表示されます
+							患者から受け取ったQRコードをアップロードしてください
 						</p>
 					</div>
 				)}

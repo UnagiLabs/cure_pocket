@@ -119,9 +119,9 @@
 		"subtitle": "Informations médicales d'urgence",
 		"description": "Partagez vos informations sur les médicaments avec les prestataires de soins en cas d'urgence",
 		"generateQR": "Générer un code QR",
+		"generating": "Génération en cours...",
 		"validFor": "Valide pour : {duration}",
-		"downloadPDF": "Télécharger le PDF",
-		"printCard": "Imprimer la carte",
+		"downloadImage": "Télécharger l'image",
 		"currentMedications": "Médicaments actuels",
 		"scanToView": "Scanner pour voir",
 		"englishVersion": "Version anglaise disponible"
@@ -596,7 +596,38 @@
 			}
 		}
 	},
+	"doctor": {
+		"portalTitle": "Portail médecin",
+		"portalSubtitle": "Accès sécurisé aux données médicales",
+		"walletRequired": "Connexion du portefeuille requise pour déchiffrer les données patient",
+		"walletRequiredDesc": "Veuillez connecter votre portefeuille à l'aide du bouton ci-dessus pour accéder aux dossiers médicaux chiffrés.",
+		"patientView": "Vue patient",
+		"patientId": "ID patient",
+		"badge": "Vue médecin",
+		"medicalRecord": "Dossier médical",
+		"patientInformation": "Informations patient",
+		"viewDescription": "Consultation des données médicales partagées. L'accès est limité aux périmètres autorisés uniquement.",
+		"allergies": "Allergies",
+		"drugAllergies": "Allergies médicamenteuses",
+		"noAllergies": "Aucune allergie médicamenteuse enregistrée",
+		"prescriptionHistory": "Historique des prescriptions et médicaments actuels du patient",
+		"labHistory": "Résultats d'analyses et tendances du patient",
+		"tests": "tests",
+		"medicalHistory": "Pathologies, chirurgies et procédures du patient",
+		"vitalHistory": "Enregistrements des signes vitaux du patient",
+		"allergyWarning": "Information critique - Vérifier avant toute prescription",
+		"severeAllergies": "Allergies sévères détectées",
+		"severeAllergyWarning": "Ce patient présente des allergies médicamenteuses sévères. Faites preuve d'une extrême prudence lors de la prescription.",
+		"imagingHistory": "Historique des examens radiologiques et d'imagerie du patient",
+		"confidentialNotice": "Ces informations sont confidentielles et protégées par les lois sur la confidentialité médicale.",
+		"encryptedConnection": "Connexion chiffrée",
+		"accessRestricted": "Accès restreint",
+		"noPermission": "Vous n'avez pas la permission de consulter ces données",
+		"fetchData": "Récupérer les données",
+		"loading": "Chargement..."
+	},
 	"common": {
-		"download": "Télécharger"
+		"download": "Télécharger",
+		"back": "Retour"
 	}
 }

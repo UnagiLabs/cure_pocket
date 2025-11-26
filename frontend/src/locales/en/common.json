@@ -168,9 +168,9 @@
 		"subtitle": "Emergency medical information",
 		"description": "Share your medication information with healthcare providers in emergencies",
 		"generateQR": "Generate QR Code",
+		"generating": "Generating...",
 		"validFor": "Valid for: {duration}",
-		"downloadPDF": "Download PDF",
-		"printCard": "Print Card",
+		"downloadImage": "Download Image",
 		"currentMedications": "Current Medications",
 		"scanToView": "Scan to view",
 		"englishVersion": "English version available",
@@ -783,6 +783,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "Doctor Portal",
+		"portalSubtitle": "Secure Medical Data Access",
+		"walletRequired": "Wallet connection required to decrypt patient data",
+		"walletRequiredDesc": "Please connect your wallet using the button above to access encrypted medical records.",
 		"patientView": "Patient View",
 		"patientId": "Patient ID",
 		"badge": "Doctor View",
@@ -804,7 +808,9 @@
 		"confidentialNotice": "This information is confidential and protected by medical privacy laws.",
 		"encryptedConnection": "Encrypted Connection",
 		"accessRestricted": "Access Restricted",
-		"noPermission": "You don't have permission to view this data"
+		"noPermission": "You don't have permission to view this data",
+		"fetchData": "Fetch data",
+		"loading": "Loading..."
 	},
 	"common": {
 		"download": "Download",
