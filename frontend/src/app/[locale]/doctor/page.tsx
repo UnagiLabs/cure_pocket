@@ -9,9 +9,9 @@ import {
 	Upload,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
-import { useRef, useState } from "react";
-import { type DataType, getDataTypeLabel } from "@/lib/mockData";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useRef, useState } from "react";
+import type { DataType } from "@/lib/mockData";
 
 interface QRPayload {
 	v?: number;
@@ -75,6 +75,7 @@ function detectQRCode(
 export default function DoctorPage() {
 	const router = useRouter();
 	const locale = useLocale();
+	const t = useTranslations();
 	const [isScanning, setIsScanning] = useState(false);
 	const [qrData, setQrData] = useState<QRPayload | null>(null);
 	const [message, setMessage] = useState<{
@@ -82,6 +83,20 @@ export default function DoctorPage() {
 		text: string;
 	} | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const dataTypeLabel = useMemo(
+		() => ({
+			medications: t("dataOverview.chips.prescriptions", {
+				default: "Medications",
+			}),
+			allergies: t("doctor.drugAllergies", { default: "Allergies" }),
+			histories: t("dataOverview.chips.conditions", { default: "Conditions" }),
+			labs: t("home.labResults", { default: "Lab Results" }),
+			imaging: t("home.imagingData", { default: "Imaging" }),
+			vitals: t("home.todayVitals", { default: "Vital Signs" }),
+		}),
+		[t],
+	);
 
 	const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -100,7 +115,7 @@ export default function DoctorPage() {
 				if (!ctx) {
 					setMessage({
 						type: "error",
-						text: "Canvas コンテキストを取得できませんでした",
+						text: t("doctor.canvasContextError"),
 					});
 					setIsScanning(false);
 					return;
@@ -126,7 +141,7 @@ export default function DoctorPage() {
 						setQrData(payload);
 						setMessage({
 							type: "success",
-							text: "QRコードの読み取りに成功しました。患者データページへ遷移します...",
+							text: t("doctor.qrScanSuccess"),
 						});
 
 						// QRペイロードをsessionStorageに保存
@@ -150,11 +165,11 @@ export default function DoctorPage() {
 						console.error("QR decode error:", err);
 						setMessage({
 							type: "error",
-							text: "QRコードのデコードに失敗しました",
+							text: t("doctor.qrDecodeError"),
 						});
 					}
 				} else {
-					setMessage({ type: "error", text: "QRコードが見つかりませんでした" });
+					setMessage({ type: "error", text: t("doctor.qrNotFound") });
 				}
 
 				setIsScanning(false);
@@ -162,7 +177,7 @@ export default function DoctorPage() {
 
 			img.onerror = () => {
 				URL.revokeObjectURL(imageUrl);
-				setMessage({ type: "error", text: "画像の読み込みに失敗しました" });
+				setMessage({ type: "error", text: t("doctor.imageLoadError") });
 				setIsScanning(false);
 			};
 
@@ -171,7 +186,7 @@ export default function DoctorPage() {
 			console.error("QR upload error:", err);
 			setMessage({
 				type: "error",
-				text: "QRコードの処理中にエラーが発生しました",
+				text: t("doctor.qrProcessError"),
 			});
 			setIsScanning(false);
 		}
@@ -188,9 +203,11 @@ export default function DoctorPage() {
 					<div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-2">
 						<Stethoscope className="h-8 w-8 text-blue-600" />
 					</div>
-					<h1 className="text-3xl font-bold text-gray-900">医師用データ閲覧</h1>
+					<h1 className="text-3xl font-bold text-gray-900">
+						{t("doctor.pageTitle")}
+					</h1>
 					<p className="text-gray-600 max-w-2xl mx-auto">
-						患者から共有されたQRコードをアップロードして、医療データを閲覧します
+						{t("doctor.pageDescription")}
 					</p>
 				</div>
 
@@ -203,10 +220,10 @@ export default function DoctorPage() {
 									<QrCode className="h-16 w-16 text-blue-600 mx-auto" />
 									<div>
 										<h3 className="text-lg font-semibold text-gray-900 mb-1">
-											患者のQRコードをアップロード
+											{t("doctor.uploadQRTitle")}
 										</h3>
 										<p className="text-sm text-gray-600">
-											PNG、JPG、JPEG形式に対応しています
+											{t("doctor.uploadQRDescription")}
 										</p>
 									</div>
 									<input
@@ -225,12 +242,12 @@ export default function DoctorPage() {
 										{isScanning ? (
 											<>
 												<Loader2 className="h-5 w-5 animate-spin" />
-												読み取り中...
+												{t("doctor.scanning")}
 											</>
 										) : (
 											<>
 												<Upload className="h-5 w-5" />
-												画像を選択
+												{t("doctor.selectImage")}
 											</>
 										)}
 									</button>
@@ -262,7 +279,7 @@ export default function DoctorPage() {
 						{qrData && (
 							<div className="w-full max-w-md p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
 								<h4 className="font-semibold text-blue-900 mb-3">
-									スキャン情報
+									{t("doctor.scanInfo")}
 								</h4>
 								<div className="space-y-2 text-sm">
 									{qrData.scope && qrData.scope.length > 0 && (
@@ -272,15 +289,17 @@ export default function DoctorPage() {
 													key={s}
 													className="px-3 py-1 bg-white rounded-full text-blue-700 font-medium shadow-sm"
 												>
-													{getDataTypeLabel(s)}
+													{dataTypeLabel[s] || s}
 												</span>
 											))}
 										</div>
 									)}
 									{qrData.exp && (
 										<p className="text-blue-700">
-											<span className="font-medium">有効期限:</span>{" "}
-											{new Date(qrData.exp).toLocaleString("ja-JP")}
+											<span className="font-medium">
+												{t("doctor.expirationDate")}
+											</span>{" "}
+											{new Date(qrData.exp).toLocaleString(locale)}
 										</p>
 									)}
 								</div>
@@ -295,9 +314,7 @@ export default function DoctorPage() {
 						<div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
 							<QrCode className="h-10 w-10 text-gray-400" />
 						</div>
-						<p className="text-gray-500">
-							患者から受け取ったQRコードをアップロードしてください
-						</p>
+						<p className="text-gray-500">{t("doctor.uploadQRCodeGuidance")}</p>
 					</div>
 				)}
 			</div>
