@@ -37,6 +37,7 @@
  */
 "use client";
 
+import { fromHex } from "@mysten/bcs";
 import {
 	useCurrentAccount,
 	useSignAndExecuteTransaction,
@@ -171,7 +172,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 					arguments: [
 						tx.object(passportId), // passport
 						tx.pure.string(dataType), // data_type
-						tx.pure.string(sealId), // seal_id
+						tx.pure.vector("u8", Array.from(fromHex(sealId))), // seal_id (vector<u8>)
 						tx.pure.vector("string", blobIds), // blob_ids (vector<String>)
 						tx.object(SUI_CLOCK_OBJECT_ID), // clock
 					],
@@ -271,7 +272,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 						arguments: [
 							tx.object(passportId), // passport
 							tx.pure.string(entry.dataType), // data_type
-							tx.pure.string(sealId), // seal_id
+							tx.pure.vector("u8", Array.from(fromHex(sealId))), // seal_id (vector<u8>)
 							tx.pure.vector("string", entry.blobIds), // blob_ids (vector<String>)
 							tx.object(SUI_CLOCK_OBJECT_ID), // clock
 						],

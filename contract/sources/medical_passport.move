@@ -68,11 +68,11 @@ public struct PassportRegistry has key {
 /// - Walrus Blob ID と更新タイムスタンプを含む
 ///
 /// ## フィールド
-/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: Walrus Blob ID の配列
 /// - `updated_at`: 最終更新時刻（Unix timestamp ms）
 public struct EntryData has store, drop {
-    seal_id: String,
+    seal_id: vector<u8>,
     blob_ids: vector<String>,
     updated_at: u64,
 }
@@ -432,7 +432,7 @@ fun is_valid_data_type(data_type: &String): bool {
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: データ種キー（文字列）
-/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
@@ -445,13 +445,13 @@ fun is_valid_data_type(data_type: &String): bool {
 public(package) fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    seal_id: String,
+    seal_id: vector<u8>,
     blob_ids: vector<String>,
     clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
-    assert!(!string::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
+    assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         !df::exists_<String>(&passport.id, data_type),
@@ -476,7 +476,7 @@ public(package) fun add_data_entry(
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
-/// - `seal_id`: 新しい Seal 暗号化 ID
+/// - `seal_id`: 新しい Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
@@ -489,13 +489,13 @@ public(package) fun add_data_entry(
 public(package) fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    seal_id: String,
+    seal_id: vector<u8>,
     blob_ids: vector<String>,
     clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
-    assert!(!string::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
+    assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
     assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
     assert!(
         df::exists_<String>(&passport.id, data_type),
@@ -562,8 +562,8 @@ public(package) fun remove_data_entry(
 /// - `entry`: EntryData への参照
 ///
 /// ## 返り値
-/// - Seal ID への参照
-public(package) fun get_entry_seal_id(entry: &EntryData): &String {
+/// - Seal ID への参照（バイナリ形式）
+public(package) fun get_entry_seal_id(entry: &EntryData): &vector<u8> {
     &entry.seal_id
 }
 

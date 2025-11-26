@@ -18,9 +18,9 @@ module cure_pocket::seal_accessor_tests {
     }
 
     // EntryData用のテストデータ
-    fun entry_data(): (String, String, vector<String>) {
+    fun entry_data(): (String, vector<u8>, vector<String>) {
         let data_type = string::utf8(b"medications");
-        let entry_seal_id = string::utf8(b"entry-seal-id-12345");
+        let entry_seal_id = b"entry-seal-id-12345";
         let mut blob_ids = vector::empty<String>();
         vector::push_back(&mut blob_ids, string::utf8(b"blob-id-1"));
         (data_type, entry_seal_id, blob_ids)
@@ -59,9 +59,8 @@ module cure_pocket::seal_accessor_tests {
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
                 let (data_type, entry_seal_id, _) = entry_data();
 
-                // seal_idをUTF-8バイトとして渡す
-                let seal_id_bytes = *string::as_bytes(&entry_seal_id);
-                accessor::seal_approve_patient_only(seal_id_bytes, &passport, &registry, data_type, ts::ctx(&mut scenario));
+                // seal_idはバイナリ形式で直接渡す
+                accessor::seal_approve_patient_only(entry_seal_id, &passport, &registry, data_type, ts::ctx(&mut scenario));
 
                 ts::return_shared(registry);
                 ts::return_to_sender(&scenario, passport);
@@ -105,9 +104,8 @@ module cure_pocket::seal_accessor_tests {
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
                 let (data_type, entry_seal_id, _) = entry_data();
 
-                // seal_idをUTF-8バイトとして渡す
-                let seal_id_bytes = *string::as_bytes(&entry_seal_id);
-                accessor::seal_approve_patient_only(seal_id_bytes, &passport, &registry, data_type, ts::ctx(&mut scenario));
+                // seal_idはバイナリ形式で直接渡す
+                accessor::seal_approve_patient_only(entry_seal_id, &passport, &registry, data_type, ts::ctx(&mut scenario));
 
                 ts::return_shared(registry);
                 ts::return_to_address(USER1, passport);

@@ -16,7 +16,6 @@ module cure_pocket::accessor;
 use std::string::{Self as string, String};
 use sui::bcs;
 use sui::clock::Clock;
-use sui::hex;
 use cure_pocket::medical_passport::{Self, MedicalPassport, PassportRegistry};
 use cure_pocket::seal_accessor;
 use cure_pocket::consent_token::{Self, ConsentToken};
@@ -142,13 +141,13 @@ public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
 /// ## パラメータ
 /// - `passport`: MedicalPassportへの可変参照
 /// - `data_type`: データ種キー（文字列）
-/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID
+/// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: Walrus Blob IDの配列（1件以上必須）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    seal_id: String,
+    seal_id: vector<u8>,
     blob_ids: vector<String>,
     clock: &Clock
 ) {
@@ -164,13 +163,13 @@ entry fun add_data_entry(
 /// ## パラメータ
 /// - `passport`: MedicalPassportへの可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
-/// - `seal_id`: 新しい Seal 暗号化 ID
+/// - `seal_id`: 新しい Seal 暗号化 ID（バイナリ形式）
 /// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
-    seal_id: String,
+    seal_id: vector<u8>,
     blob_ids: vector<String>,
     clock: &Clock
 ) {
@@ -198,8 +197,8 @@ public fun get_data_entry(
 /// - `entry`: EntryData への参照
 ///
 /// ## 返り値
-/// - Seal ID への参照
-public fun get_entry_seal_id(entry: &medical_passport::EntryData): &String {
+/// - Seal ID への参照（バイナリ形式）
+public fun get_entry_seal_id(entry: &medical_passport::EntryData): &vector<u8> {
     medical_passport::get_entry_seal_id(entry)
 }
 
@@ -449,13 +448,10 @@ entry fun seal_approve_consent(
 ) {
     // 1. Seal ID検証
     // EntryDataを取得し、要求されたseal_idが一致するかを確認
-    // PTBからはfromHex(sealId)でデコードされたバイナリが渡される
-    // stored_seal_idはhex文字列なので、idをhexエンコードして比較
+    // MystenLabs Seal公式パターンに準拠したバイナリ同士の直接比較
     let entry = medical_passport::get_data_entry(passport, data_type);
     let stored_seal_id = medical_passport::get_entry_seal_id(entry);
-    let id_hex = hex::encode(id);
-    let id_string = string::utf8(id_hex);
-    assert!(id_string == *stored_seal_id, seal_accessor::e_invalid_seal_id());
+    assert!(id == *stored_seal_id, seal_accessor::e_invalid_seal_id());
 
     // 2. BCSデシリアライズ（peel_*系の関数を使用）
     // SealAuthPayload構造体をauth_payloadから読み取る

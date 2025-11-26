@@ -365,8 +365,9 @@ export async function getDataEntry(
 		);
 
 		// Extract EntryData from multiple possible structures
+		// Note: seal_id is now stored as vector<u8> on-chain, returned as number array
 		type EntryDataShape = {
-			seal_id?: string;
+			seal_id?: number[] | string; // vector<u8> from on-chain or hex string (legacy)
 			blob_ids?: string[];
 			updated_at?: string | number;
 		};
@@ -396,7 +397,7 @@ export async function getDataEntry(
 			throw new Error("Invalid EntryData structure: blob_ids not found");
 		}
 
-		if (!entryDataRaw?.seal_id || typeof entryDataRaw.seal_id !== "string") {
+		if (entryDataRaw?.seal_id === undefined || entryDataRaw.seal_id === null) {
 			console.error(
 				"[getDataEntry] Failed to extract seal_id. Full structure:",
 				JSON.stringify(content.fields, null, 2),
@@ -404,8 +405,26 @@ export async function getDataEntry(
 			throw new Error("Invalid EntryData structure: seal_id not found");
 		}
 
+		// Convert seal_id from vector<u8> (number array) to hex string if needed
+		let sealIdHex: string;
+		if (Array.isArray(entryDataRaw.seal_id)) {
+			// New format: vector<u8> stored on-chain, returned as number array
+			sealIdHex = entryDataRaw.seal_id
+				.map((b) => b.toString(16).padStart(2, "0"))
+				.join("");
+			console.log(
+				"[getDataEntry] Converted seal_id from vector<u8> to hex string",
+			);
+		} else if (typeof entryDataRaw.seal_id === "string") {
+			// Legacy format: hex string stored directly (backward compatibility)
+			sealIdHex = entryDataRaw.seal_id;
+			console.log("[getDataEntry] Using seal_id as hex string directly");
+		} else {
+			throw new Error(`Invalid seal_id type: ${typeof entryDataRaw.seal_id}`);
+		}
+
 		return {
-			sealId: entryDataRaw.seal_id,
+			sealId: sealIdHex,
 			blobIds: entryDataRaw.blob_ids,
 			updatedAt:
 				typeof entryDataRaw.updated_at === "string"

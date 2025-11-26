@@ -59,7 +59,7 @@ module cure_pocket::medical_passport_tests {
 
             let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"lab_results");
-            let entry_seal_id = string::utf8(b"entry-seal-001");
+            let entry_seal_id = b"entry-seal-001";
             let blobs = sample_blob_ids();
             accessor::add_data_entry(&mut passport, key, entry_seal_id, blobs, &clk);
 
@@ -71,7 +71,7 @@ module cure_pocket::medical_passport_tests {
 
             // Verify seal_id is stored correctly
             let stored_seal_id = accessor::get_entry_seal_id(entry);
-            assert!(*stored_seal_id == string::utf8(b"entry-seal-001"), 3);
+            assert!(*stored_seal_id == b"entry-seal-001", 3);
 
             accessor::remove_data_entry(&mut passport, key);
             clock::destroy_for_testing(clk);
@@ -95,14 +95,14 @@ module cure_pocket::medical_passport_tests {
 
             let mut clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"basic_profile");
-            let entry_seal_id = string::utf8(b"entry-seal-001");
+            let entry_seal_id = b"entry-seal-001";
             accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
 
             // Advance clock to verify updated_at changes
             clock::increment_for_testing(&mut clk, 1000);
 
             let new_blobs = vector[string::utf8(b"new_blob")];
-            let new_seal_id = string::utf8(b"entry-seal-002");
+            let new_seal_id = b"entry-seal-002";
             accessor::replace_data_entry(&mut passport, key, new_seal_id, new_blobs, &clk);
 
             let entry = accessor::get_data_entry(&passport, key);
@@ -112,7 +112,7 @@ module cure_pocket::medical_passport_tests {
 
             // Verify seal_id was updated
             let stored_seal_id = accessor::get_entry_seal_id(entry);
-            assert!(*stored_seal_id == string::utf8(b"entry-seal-002"), 2);
+            assert!(*stored_seal_id == b"entry-seal-002", 2);
 
             // Verify updated_at is 1000ms (after clock increment)
             let updated_at = accessor::get_entry_updated_at(entry);
@@ -141,7 +141,7 @@ module cure_pocket::medical_passport_tests {
 
             let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"medications");
-            let entry_seal_id = string::utf8(b"entry-seal-001");
+            let entry_seal_id = b"entry-seal-001";
             accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
             // 2回目は同じキーで登録しようとすると abort
             accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);

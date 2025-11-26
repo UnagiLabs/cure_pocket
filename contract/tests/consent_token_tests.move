@@ -48,9 +48,9 @@ module cure_pocket::consent_token_tests {
         medical_passport::create_passport_internal(seal_id, country_code, analytics_opt_in, ctx)
     }
 
-    // テストヘルパー: EntryData用のseal_idを生成
-    fun create_test_entry_seal_id(): String {
-        string::utf8(b"test-entry-seal-id-for-medication")
+    // テストヘルパー: EntryData用のseal_idを生成（バイナリ形式）
+    fun create_test_entry_seal_id(): vector<u8> {
+        b"test-entry-seal-id-for-medication"
     }
 
     // テストヘルパー: EntryDataを追加
@@ -568,7 +568,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -668,7 +668,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -759,7 +759,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -845,7 +845,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&wrong_secret);
@@ -934,7 +934,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -1034,7 +1034,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -1346,7 +1346,7 @@ module cure_pocket::consent_token_tests {
 
             // lab_results用のEntryDataを追加（テスト対象のスコープ外アクセス用）
             let data_type = string::utf8(b"lab_results");
-            let entry_seal_id = string::utf8(b"test-seal-id-for-lab-results");
+            let entry_seal_id = b"test-seal-id-for-lab-results";
             let mut blob_ids = vector::empty<String>();
             vector::push_back(&mut blob_ids, string::utf8(b"test-blob-id"));
             medical_passport::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
@@ -1380,9 +1380,8 @@ module cure_pocket::consent_token_tests {
             let clock = clock::create_for_testing(ts::ctx(&mut scenario));
             let secret = create_test_secret();
 
-            // lab_results用のseal_idをUTF-8バイトとして取得
-            let entry_seal_id = string::utf8(b"test-seal-id-for-lab-results");
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            // lab_results用のseal_idをバイナリとして直接使用
+            let seal_id_bytes = b"test-seal-id-for-lab-results";
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
@@ -1467,7 +1466,7 @@ module cure_pocket::consent_token_tests {
 
             // seal_idをUTF-8バイトとして取得
             let entry_seal_id = create_test_entry_seal_id();
-            let seal_id_bytes = *string::as_bytes(&entry_seal_id);
+            let seal_id_bytes = entry_seal_id;
 
             // BCSエンコードされたauth_payloadを作成
             let mut auth_payload = bcs::to_bytes(&secret);
