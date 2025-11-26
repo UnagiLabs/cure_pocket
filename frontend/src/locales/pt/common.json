@@ -597,6 +597,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "Portal do Médico",
+		"portalSubtitle": "Acesso Seguro a Dados Médicos",
+		"walletRequired": "Conexão de carteira necessária para descriptografar dados do paciente",
+		"walletRequiredDesc": "Por favor, conecte sua carteira usando o botão acima para acessar os registros médicos criptografados.",
 		"patientView": "Visualização do paciente",
 		"patientId": "ID do paciente",
 		"badge": "Visualização médica",

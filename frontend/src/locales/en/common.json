@@ -783,6 +783,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "Doctor Portal",
+		"portalSubtitle": "Secure Medical Data Access",
+		"walletRequired": "Wallet connection required to decrypt patient data",
+		"walletRequiredDesc": "Please connect your wallet using the button above to access encrypted medical records.",
 		"patientView": "Patient View",
 		"patientId": "Patient ID",
 		"badge": "Doctor View",

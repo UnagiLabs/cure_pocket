@@ -597,6 +597,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "Portail médecin",
+		"portalSubtitle": "Accès sécurisé aux données médicales",
+		"walletRequired": "Connexion du portefeuille requise pour déchiffrer les données patient",
+		"walletRequiredDesc": "Veuillez connecter votre portefeuille à l'aide du bouton ci-dessus pour accéder aux dossiers médicaux chiffrés.",
 		"patientView": "Vue patient",
 		"patientId": "ID patient",
 		"badge": "Vue médecin",

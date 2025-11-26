@@ -791,6 +791,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "医師ポータル",
+		"portalSubtitle": "安全な医療データアクセス",
+		"walletRequired": "患者データの復号にはウォレット接続が必要です",
+		"walletRequiredDesc": "暗号化された医療記録にアクセスするには、上部のボタンからウォレットを接続してください。",
 		"patientView": "患者情報閲覧",
 		"patientId": "患者ID",
 		"badge": "医師ビュー",

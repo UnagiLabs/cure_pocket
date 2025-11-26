@@ -597,6 +597,10 @@
 		}
 	},
 	"doctor": {
+		"portalTitle": "医生门户",
+		"portalSubtitle": "安全医疗数据访问",
+		"walletRequired": "需要连接钱包才能解密患者数据",
+		"walletRequiredDesc": "请使用上方按钮连接您的钱包以访问加密的医疗记录。",
 		"patientView": "患者视图",
 		"patientId": "患者ID",
 		"badge": "医生视图",

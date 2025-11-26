@@ -3,6 +3,7 @@
 import { Eye, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { use } from "react";
+import { WalletButton } from "@/components/wallet/WalletButton";
 
 interface DoctorPatientLayoutProps {
 	children: React.ReactNode;
@@ -74,12 +75,15 @@ export default function DoctorPatientLayout({
 							</div>
 						</div>
 
-						{/* Right section - Doctor View Badge */}
-						<div className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-blue-50 border border-blue-200">
-							<ShieldCheck size={16} className="text-blue-600" />
-							<span className="text-xs md:text-sm font-semibold text-blue-700">
-								{t("doctor.badge", { default: "Doctor View" })}
-							</span>
+						{/* Right section - Wallet + Doctor View Badge */}
+						<div className="flex items-center gap-3">
+							<WalletButton size="small" variant="mobile" />
+							<div className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-blue-50 border border-blue-200">
+								<ShieldCheck size={16} className="text-blue-600" />
+								<span className="text-xs md:text-sm font-semibold text-blue-700">
+									{t("doctor.badge", { default: "Doctor View" })}
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
