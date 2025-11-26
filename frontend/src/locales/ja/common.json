@@ -797,7 +797,7 @@
 		"walletRequiredDesc": "暗号化された医療記録にアクセスするには、上部のボタンからウォレットを接続してください。",
 		"patientView": "患者情報閲覧",
 		"patientId": "患者ID",
-		"badge": "医師ビュー",
+		"badge": "医師専用画面",
 		"medicalRecord": "診療記録",
 		"patientInformation": "患者情報",
 		"viewDescription": "共有された医療データを閲覧しています。アクセスは許可されたスコープのみに制限されています。",

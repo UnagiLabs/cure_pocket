@@ -797,7 +797,7 @@
 		"walletRequiredDesc": "Veuillez connecter votre portefeuille à l'aide du bouton ci-dessus pour accéder aux dossiers médicaux chiffrés.",
 		"patientView": "Vue patient",
 		"patientId": "ID patient",
-		"badge": "Vue médecin",
+		"badge": "Écran Exclusif Médecin",
 		"medicalRecord": "Dossier médical",
 		"patientInformation": "Informations patient",
 		"viewDescription": "Consultation des données médicales partagées. L'accès est limité aux périmètres autorisés uniquement.",

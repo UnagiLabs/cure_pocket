@@ -797,7 +797,7 @@
 		"walletRequiredDesc": "请使用上方按钮连接您的钱包以访问加密的医疗记录。",
 		"patientView": "患者视图",
 		"patientId": "患者ID",
-		"badge": "医生视图",
+		"badge": "医生专用画面",
 		"medicalRecord": "医疗记录",
 		"patientInformation": "患者信息",
 		"viewDescription": "正在查看共享的医疗数据。仅限访问授权范围内的数据。",

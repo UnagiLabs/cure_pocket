@@ -797,7 +797,7 @@
 		"walletRequiredDesc": "Por favor, conecte sua carteira usando o botão acima para acessar os registros médicos criptografados.",
 		"patientView": "Visualização do paciente",
 		"patientId": "ID do paciente",
-		"badge": "Visualização médica",
+		"badge": "Tela Exclusiva para Médicos",
 		"medicalRecord": "Prontuário médico",
 		"patientInformation": "Informações do paciente",
 		"viewDescription": "Visualizando dados médicos compartilhados. O acesso é limitado apenas aos escopos autorizados.",
