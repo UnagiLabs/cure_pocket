@@ -119,9 +119,9 @@
 		"subtitle": "Informações médicas de emergência",
 		"description": "Compartilhe suas informações de medicamentos com profissionais de saúde em emergências",
 		"generateQR": "Gerar código QR",
+		"generating": "Gerando...",
 		"validFor": "Válido por: {duration}",
-		"downloadPDF": "Baixar PDF",
-		"printCard": "Imprimir cartão",
+		"downloadImage": "Baixar imagem",
 		"currentMedications": "Medicamentos atuais",
 		"scanToView": "Escanear para visualizar",
 		"englishVersion": "Versão em inglês disponível"
@@ -596,7 +596,38 @@
 			}
 		}
 	},
+	"doctor": {
+		"portalTitle": "Portal do Médico",
+		"portalSubtitle": "Acesso Seguro a Dados Médicos",
+		"walletRequired": "Conexão de carteira necessária para descriptografar dados do paciente",
+		"walletRequiredDesc": "Por favor, conecte sua carteira usando o botão acima para acessar os registros médicos criptografados.",
+		"patientView": "Visualização do paciente",
+		"patientId": "ID do paciente",
+		"badge": "Visualização médica",
+		"medicalRecord": "Prontuário médico",
+		"patientInformation": "Informações do paciente",
+		"viewDescription": "Visualizando dados médicos compartilhados. O acesso é limitado apenas aos escopos autorizados.",
+		"allergies": "Alergias",
+		"drugAllergies": "Alergias a medicamentos",
+		"noAllergies": "Nenhuma alergia a medicamentos registrada",
+		"prescriptionHistory": "Histórico de prescrições e medicamentos atuais do paciente",
+		"labHistory": "Resultados de exames laboratoriais e tendências do paciente",
+		"tests": "exames",
+		"medicalHistory": "Condições, cirurgias e procedimentos do paciente",
+		"vitalHistory": "Registros de monitoramento de sinais vitais do paciente",
+		"allergyWarning": "Informação crítica - Revisar antes de prescrever qualquer medicamento",
+		"severeAllergies": "Alergias graves detectadas",
+		"severeAllergyWarning": "Este paciente tem alergias graves a medicamentos. Tenha extrema cautela ao prescrever medicamentos.",
+		"imagingHistory": "Histórico de exames de radiologia e imagem do paciente",
+		"confidentialNotice": "Esta informação é confidencial e protegida pelas leis de privacidade médica.",
+		"encryptedConnection": "Conexão criptografada",
+		"accessRestricted": "Acesso restrito",
+		"noPermission": "Você não tem permissão para visualizar estes dados",
+		"fetchData": "Buscar dados",
+		"loading": "Carregando..."
+	},
 	"common": {
-		"download": "Baixar"
+		"download": "Baixar",
+		"back": "Voltar"
 	}
 }

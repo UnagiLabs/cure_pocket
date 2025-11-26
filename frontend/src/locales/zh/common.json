@@ -119,9 +119,9 @@
 		"subtitle": "紧急医疗信息",
 		"description": "在紧急情况下与医疗提供者分享您的药物信息",
 		"generateQR": "生成二维码",
+		"generating": "生成中...",
 		"validFor": "有效期：{duration}",
-		"downloadPDF": "下载PDF",
-		"printCard": "打印卡片",
+		"downloadImage": "下载图片",
 		"currentMedications": "当前用药",
 		"scanToView": "扫描查看",
 		"englishVersion": "提供英文版本"
@@ -596,7 +596,38 @@
 			}
 		}
 	},
+	"doctor": {
+		"portalTitle": "医生门户",
+		"portalSubtitle": "安全医疗数据访问",
+		"walletRequired": "需要连接钱包才能解密患者数据",
+		"walletRequiredDesc": "请使用上方按钮连接您的钱包以访问加密的医疗记录。",
+		"patientView": "患者视图",
+		"patientId": "患者ID",
+		"badge": "医生视图",
+		"medicalRecord": "医疗记录",
+		"patientInformation": "患者信息",
+		"viewDescription": "正在查看共享的医疗数据。仅限访问授权范围内的数据。",
+		"allergies": "过敏",
+		"drugAllergies": "药物过敏",
+		"noAllergies": "无药物过敏记录",
+		"prescriptionHistory": "患者的处方历史和当前用药",
+		"labHistory": "患者的检验结果和趋势",
+		"tests": "检验",
+		"medicalHistory": "患者的疾病、手术和治疗历史",
+		"vitalHistory": "患者的生命体征监测记录",
+		"allergyWarning": "重要信息 - 开药前请务必查看",
+		"severeAllergies": "检测到严重过敏",
+		"severeAllergyWarning": "该患者有严重的药物过敏。开药时请格外谨慎。",
+		"imagingHistory": "患者的放射和影像检查历史",
+		"confidentialNotice": "此信息为机密信息，受医疗隐私法保护。",
+		"encryptedConnection": "加密连接",
+		"accessRestricted": "访问受限",
+		"noPermission": "您没有权限查看此数据",
+		"fetchData": "获取数据",
+		"loading": "加载中..."
+	},
 	"common": {
-		"download": "下载"
+		"download": "下载",
+		"back": "返回"
 	}
 }

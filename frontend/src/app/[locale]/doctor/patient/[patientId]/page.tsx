@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useConsentDecrypt } from "@/hooks/useConsentDecrypt";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { getDataTypeLabel, getMockData } from "@/lib/mockData";
+import { getDataTypeLabel } from "@/lib/mockData";
 import { getDataEntry } from "@/lib/suiClient";
 import { type DataScope, toContractDataType } from "@/types/doctor";
 
@@ -58,7 +58,6 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 	const [fetchMessage, setFetchMessage] = useState<string | null>(null);
 	const [qrScopes, setQrScopes] = useState<DataScope[]>([]);
 	const [isScanning, setIsScanning] = useState(false);
-	const [useMockData, setUseMockData] = useState(true);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const isBusy =
@@ -83,12 +82,44 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			}),
 			allergies: t("doctor.drugAllergies", { default: "Allergies" }),
 			conditions: t("dataOverview.chips.conditions", { default: "Conditions" }),
-			lab_results: t("home.labData", { default: "Lab Results" }),
+			lab_results: t("home.labResults", { default: "Lab Results" }),
 			imaging_reports: t("home.imagingData", { default: "Imaging" }),
 			vital_signs: t("home.todayVitals", { default: "Vital Signs" }),
 		}),
 		[t],
 	);
+
+	// sessionStorageからQRペイロードを取得（doctor/page.tsxから遷移時）
+	useEffect(() => {
+		const stored = sessionStorage.getItem("qrPayload");
+		if (stored) {
+			try {
+				const payload = JSON.parse(stored);
+				if (payload.token) setConsentTokenId(payload.token);
+				if (payload.secret) setSecret(payload.secret);
+				if (payload.scope && Array.isArray(payload.scope)) {
+					setQrScopes(payload.scope as DataScope[]);
+				}
+				// 使用後は削除（セキュリティ対策）
+				sessionStorage.removeItem("qrPayload");
+			} catch (e) {
+				console.error("Failed to parse qrPayload:", e);
+			}
+		}
+	}, []);
+
+	// qrScopesが設定された時、dataTypeを許可された最初のスコープに設定
+	useEffect(() => {
+		if (qrScopes.length > 0 && !qrScopes.includes(dataType)) {
+			setDataType(qrScopes[0]);
+		}
+	}, [qrScopes, dataType]);
+
+	// qrScopesが存在する場合、それに基づいてフィルター
+	const allowedScopes = useMemo(() => {
+		if (qrScopes.length === 0) return SUPPORTED_SCOPES;
+		return SUPPORTED_SCOPES.filter((scope) => qrScopes.includes(scope));
+	}, [qrScopes]);
 
 	const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -166,36 +197,17 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 		setResults([]);
 
 		if (!consentTokenId || !secret) {
-			setFetchMessage("ConsentToken ID と合言葉を入力してください");
+			setFetchMessage("QRコードを再度読み取ってください");
 			return;
 		}
 
-		// モックデータを使用する場合
-		if (useMockData) {
-			setFetchState("loading");
-			// 擬似的な読み込み時間
-			setTimeout(() => {
-				const scopesToFetch = qrScopes.length > 0 ? qrScopes : [dataType];
-				const mockDataResults = getMockData(scopesToFetch as never);
-
-				const formattedResults = Object.entries(mockDataResults).map(
-					([key, data]) => ({
-						blobId: `mock-${key}-${Date.now()}`,
-						data,
-						category: key,
-					}),
-				);
-
-				setResults(formattedResults as never);
-				setFetchState("success");
-				setFetchMessage(
-					`✅ モックデータを取得しました（${scopesToFetch.map((s) => getDataTypeLabel(s as never)).join(", ")}）`,
-				);
-			}, 1000);
+		// スコープ検証（QRで許可されたスコープ外の場合はエラー）
+		if (qrScopes.length > 0 && !qrScopes.includes(dataType)) {
+			setFetchMessage("このデータ種は許可されていません");
 			return;
 		}
 
-		// 実際のブロックチェーン連携（既存の実装）
+		// SessionKey検証
 		if (!sessionKey || !sessionKeyValid) {
 			setFetchMessage("SessionKey を生成中です。再試行してください。");
 			await generateSessionKey();
@@ -318,47 +330,6 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 					</button>
 				</div>
 
-				{/* モックデータ切り替え */}
-				<div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-					<input
-						type="checkbox"
-						id="useMockData"
-						checked={useMockData}
-						onChange={(e) => setUseMockData(e.target.checked)}
-						className="h-4 w-4 rounded border-amber-300"
-					/>
-					<label
-						htmlFor="useMockData"
-						className="text-sm text-amber-900 cursor-pointer"
-					>
-						<span className="font-semibold">デモモード: </span>
-						モックデータを表示（ブロックチェーン連携なし）
-					</label>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<label className="space-y-1 text-sm text-gray-700">
-						<span className="font-semibold">ConsentToken Object ID</span>
-						<input
-							value={consentTokenId}
-							onChange={(e) => setConsentTokenId(e.target.value)}
-							className="w-full rounded border px-3 py-2 text-sm"
-							placeholder="0x..."
-						/>
-					</label>
-
-					<label className="space-y-1 text-sm text-gray-700">
-						<span className="font-semibold">合言葉 (secret)</span>
-						<input
-							value={secret}
-							onChange={(e) => setSecret(e.target.value)}
-							className="w-full rounded border px-3 py-2 text-sm"
-							placeholder="患者から共有された秘密文字列"
-							type="password"
-						/>
-					</label>
-				</div>
-
 				{/* QRコードからスキャンされたスコープの表示 */}
 				{qrScopes.length > 0 && (
 					<div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -377,7 +348,7 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 							onChange={(e) => setDataType(e.target.value as DataScope)}
 							className="w-full rounded border px-3 py-2 text-sm"
 						>
-							{SUPPORTED_SCOPES.map((scope) => (
+							{allowedScopes.map((scope) => (
 								<option key={scope} value={scope}>
 									{scopeLabel[scope] || scope}
 								</option>
