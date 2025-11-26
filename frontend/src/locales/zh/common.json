@@ -623,7 +623,8 @@
 		"encryptedConnection": "加密连接",
 		"accessRestricted": "访问受限",
 		"noPermission": "您没有权限查看此数据",
-		"fetchData": "获取数据"
+		"fetchData": "获取数据",
+		"loading": "加载中..."
 	},
 	"common": {
 		"download": "下载",

@@ -809,7 +809,8 @@
 		"encryptedConnection": "Encrypted Connection",
 		"accessRestricted": "Access Restricted",
 		"noPermission": "You don't have permission to view this data",
-		"fetchData": "Fetch data"
+		"fetchData": "Fetch data",
+		"loading": "Loading..."
 	},
 	"common": {
 		"download": "Download",

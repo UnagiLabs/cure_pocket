@@ -39,7 +39,7 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
 
 						{/* Wallet接続 */}
 						<div className="flex items-center gap-3">
-							<WalletButton size="medium" variant="desktop" />
+							<WalletButton size="medium" variant="desktop" colorScheme="solid" />
 						</div>
 					</div>
 				</div>

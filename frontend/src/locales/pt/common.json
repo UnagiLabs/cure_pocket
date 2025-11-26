@@ -623,7 +623,8 @@
 		"encryptedConnection": "Conexão criptografada",
 		"accessRestricted": "Acesso restrito",
 		"noPermission": "Você não tem permissão para visualizar estes dados",
-		"fetchData": "Buscar dados"
+		"fetchData": "Buscar dados",
+		"loading": "Carregando..."
 	},
 	"common": {
 		"download": "Baixar",

@@ -97,6 +97,7 @@ export function useConsentDecrypt(): UseConsentDecryptReturn {
 					passportObjectId: passportId,
 					consentTokenObjectId: consentTokenId,
 					dataType,
+					sealId,
 					payload,
 					suiClient,
 				});

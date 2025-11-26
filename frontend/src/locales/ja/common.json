@@ -817,7 +817,8 @@
 		"encryptedConnection": "暗号化接続",
 		"accessRestricted": "アクセス制限",
 		"noPermission": "このデータを閲覧する権限がありません",
-		"fetchData": "データを取得"
+		"fetchData": "データを取得",
+		"loading": "読み込み中..."
 	},
 	"common": {
 		"download": "ダウンロード",

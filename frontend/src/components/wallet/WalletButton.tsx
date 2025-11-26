@@ -15,12 +15,14 @@ interface WalletButtonProps {
 	size?: "small" | "medium" | "large";
 	className?: string;
 	variant?: "desktop" | "mobile";
+	colorScheme?: "transparent" | "solid";
 }
 
 export function WalletButton({
 	size = "medium",
 	className = "",
 	variant = "desktop",
+	colorScheme = "transparent",
 }: WalletButtonProps) {
 	const t = useTranslations();
 	const { mutate: connectWallet, isPending: isConnecting } = useConnectWallet();
@@ -101,12 +103,17 @@ export function WalletButton({
 		);
 	}
 
+	const colorClasses =
+		colorScheme === "solid"
+			? "bg-blue-500 hover:bg-blue-600"
+			: "bg-white/20 hover:bg-white/30";
+
 	return (
 		<button
 			type="button"
 			onClick={handleConnectWallet}
 			disabled={isConnecting}
-			className={`${baseClasses} ${sizeClasses[size]} ${className} bg-white/20 hover:bg-white/30 disabled:opacity-50 flex items-center gap-1`}
+			className={`${baseClasses} ${sizeClasses[size]} ${className} ${colorClasses} disabled:opacity-50 flex items-center gap-1`}
 			aria-label={t("actions.connectWallet")}
 		>
 			<Wallet className="h-3 w-3" />
