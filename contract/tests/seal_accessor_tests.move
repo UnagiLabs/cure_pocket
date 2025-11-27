@@ -17,13 +17,12 @@ module cure_pocket::seal_accessor_tests {
         (string::utf8(b"JP"), true)
     }
 
-    // EntryData用のテストデータ
-    fun entry_data(): (String, vector<u8>, vector<String>) {
+    // EntryData用のテストデータ (v3.0.0: metadata_blob_id)
+    fun entry_data(): (String, vector<u8>, String) {
         let data_type = string::utf8(b"medications");
         let entry_seal_id = b"entry-seal-id-12345";
-        let mut blob_ids = vector::empty<String>();
-        vector::push_back(&mut blob_ids, string::utf8(b"blob-id-1"));
-        (data_type, entry_seal_id, blob_ids)
+        let metadata_blob_id = string::utf8(b"metadata-blob-001");
+        (data_type, entry_seal_id, metadata_blob_id)
     }
 
     #[test]
@@ -45,9 +44,9 @@ module cure_pocket::seal_accessor_tests {
             {
                 let mut passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-                let (data_type, entry_seal_id, blob_ids) = entry_data();
+                let (data_type, entry_seal_id, metadata_blob_id) = entry_data();
 
-                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
+                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, metadata_blob_id, &clock);
 
                 clock::destroy_for_testing(clock);
                 ts::return_to_sender(&scenario, passport);
@@ -57,7 +56,7 @@ module cure_pocket::seal_accessor_tests {
             {
                 let passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (data_type, entry_seal_id, _) = entry_data();
+                let (data_type, entry_seal_id, _metadata_blob_id) = entry_data();
 
                 // seal_idはバイナリ形式で直接渡す
                 accessor::seal_approve_patient_only(entry_seal_id, &passport, &registry, data_type, ts::ctx(&mut scenario));
@@ -89,9 +88,9 @@ module cure_pocket::seal_accessor_tests {
             {
                 let mut passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-                let (data_type, entry_seal_id, blob_ids) = entry_data();
+                let (data_type, entry_seal_id, metadata_blob_id) = entry_data();
 
-                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
+                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, metadata_blob_id, &clock);
 
                 clock::destroy_for_testing(clock);
                 ts::return_to_sender(&scenario, passport);
@@ -102,7 +101,7 @@ module cure_pocket::seal_accessor_tests {
             {
                 let passport = ts::take_from_address<MedicalPassport>(&scenario, USER1);
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (data_type, entry_seal_id, _) = entry_data();
+                let (data_type, entry_seal_id, _metadata_blob_id) = entry_data();
 
                 // seal_idはバイナリ形式で直接渡す
                 accessor::seal_approve_patient_only(entry_seal_id, &passport, &registry, data_type, ts::ctx(&mut scenario));
@@ -135,9 +134,9 @@ module cure_pocket::seal_accessor_tests {
             {
                 let mut passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let clock = clock::create_for_testing(ts::ctx(&mut scenario));
-                let (data_type, entry_seal_id, blob_ids) = entry_data();
+                let (data_type, entry_seal_id, metadata_blob_id) = entry_data();
 
-                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
+                accessor::add_data_entry(&mut passport, data_type, entry_seal_id, metadata_blob_id, &clock);
 
                 clock::destroy_for_testing(clock);
                 ts::return_to_sender(&scenario, passport);
@@ -148,7 +147,7 @@ module cure_pocket::seal_accessor_tests {
             {
                 let passport = ts::take_from_sender<MedicalPassport>(&scenario);
                 let registry = ts::take_shared<PassportRegistry>(&scenario);
-                let (data_type, _, _) = entry_data();
+                let (data_type, _, _metadata_blob_id) = entry_data();
 
                 // 誤ったseal_idを渡す
                 let wrong_seal_id_bytes = b"wrong-seal-id";

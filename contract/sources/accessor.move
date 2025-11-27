@@ -112,10 +112,11 @@ public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
     medical_passport::get_analytics_opt_in(passport)
 }
 
-/// データ種ごとの Walrus Blob ID 配列を追加（新規のみ）
+/// データ種ごとのメタデータBlob IDを追加（新規のみ）(v3.0.0)
 ///
 /// ## 用途
-/// - `basic_profile` / `medications` / `lab_results` などデータ種ごとのBlob参照を登録
+/// - `basic_profile` / `medications` / `lab_results` などデータ種ごとのメタデータBlobを登録
+/// - メタデータBlobが各データBlobへの参照を保持する2層構造
 /// - 各データ種に個別の Seal ID を設定可能
 /// - 既に同じキーが存在する場合はabort
 ///
@@ -123,38 +124,38 @@ public fun get_analytics_opt_in(passport: &MedicalPassport): bool {
 /// - `passport`: MedicalPassportへの可変参照
 /// - `data_type`: データ種キー（文字列）
 /// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
-/// - `blob_ids`: Walrus Blob IDの配列（1件以上必須）
+/// - `metadata_blob_id`: メタデータBlobのWalrus Blob ID（空文字不可）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
     seal_id: vector<u8>,
-    blob_ids: vector<String>,
+    metadata_blob_id: String,
     clock: &Clock
 ) {
-    medical_passport::add_data_entry(passport, data_type, seal_id, blob_ids, clock)
+    medical_passport::add_data_entry(passport, data_type, seal_id, metadata_blob_id, clock)
 }
 
-/// 既存データ種の EntryData を丸ごと置き換える
+/// 既存データ種の EntryData を丸ごと置き換える (v3.0.0)
 ///
 /// ## 用途
 /// - 最新データへの差し替え
-/// - Seal ID、Blob ID、タイムスタンプを全て更新
+/// - Seal ID、メタデータBlob ID、タイムスタンプを全て更新
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassportへの可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
 /// - `seal_id`: 新しい Seal 暗号化 ID（バイナリ形式）
-/// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+/// - `metadata_blob_id`: 新しいメタデータBlob ID（空文字不可）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 entry fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
     seal_id: vector<u8>,
-    blob_ids: vector<String>,
+    metadata_blob_id: String,
     clock: &Clock
 ) {
-    medical_passport::replace_data_entry(passport, data_type, seal_id, blob_ids, clock)
+    medical_passport::replace_data_entry(passport, data_type, seal_id, metadata_blob_id, clock)
 }
 
 /// データ種の EntryData を取得
@@ -183,15 +184,15 @@ public fun get_entry_seal_id(entry: &medical_passport::EntryData): &vector<u8> {
     medical_passport::get_entry_seal_id(entry)
 }
 
-/// EntryData から Blob ID 配列を取得（ヘルパー関数）
+/// EntryData からメタデータBlob IDを取得（ヘルパー関数）(v3.0.0)
 ///
 /// ## パラメータ
 /// - `entry`: EntryData への参照
 ///
 /// ## 返り値
-/// - Blob ID 配列への参照
-public fun get_entry_blob_ids(entry: &medical_passport::EntryData): &vector<String> {
-    medical_passport::get_entry_blob_ids(entry)
+/// - メタデータBlob IDへの参照
+public fun get_entry_metadata_blob_id(entry: &medical_passport::EntryData): &String {
+    medical_passport::get_entry_metadata_blob_id(entry)
 }
 
 /// EntryData から更新時刻を取得（ヘルパー関数）

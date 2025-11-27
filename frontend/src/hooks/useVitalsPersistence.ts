@@ -1,14 +1,20 @@
 /**
- * useVitalsPersistence Hook
+ * useVitalsPersistence Hook (v3.0.0)
  *
  * Handles vitals persistence to Walrus with monthly partitioning.
- * Each month's data is stored in a separate blob for scalability.
+ * Uses metadata blob architecture for efficient partition management.
  *
  * ## Features
- * - Monthly partitioning: one blob per month
- * - Replace latest blob per month (no history accumulation)
+ * - Monthly partitioning: one data blob per month
+ * - Metadata blob stores month references (no need to decrypt all blobs)
+ * - Replace per-month blob (no history accumulation)
  * - Encrypt with Seal, upload to Walrus
  * - Update SBT Dynamic Field
+ *
+ * ## Architecture (v3.0.0)
+ * - SBT DataEntry → メタデータBlob → データBlob[]
+ * - メタデータBlobにはmonth_keyごとのblob_id参照を保持
+ * - 特定月のデータ更新時はメタデータから該当entryを特定
  *
  * ## Usage
  * ```typescript
@@ -20,35 +26,18 @@
  */
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useCallback, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { usePassport } from "@/hooks/usePassport";
-import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
+import { useMetadataManager } from "@/hooks/useMetadataManager";
 import { vitalsToSelfMetrics } from "@/lib/profileConverter";
-import {
-	buildPatientAccessPTB,
-	calculateThreshold,
-	createSealClient,
-	decryptHealthData,
-	encryptHealthData,
-	SEAL_KEY_SERVERS,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
-import { getDataEntryBlobIds, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { VitalSign } from "@/types";
 import type { SelfMetricsData } from "@/types/healthData";
-
-/**
- * Month info for blob management
- */
-interface MonthBlobInfo {
-	monthKey: string; // "2025-11" format
-	blobId: string | null; // existing blob ID or null
-	blobIndex: number; // index in blob_ids array (-1 if new)
-}
+import {
+	createEmptyMetadata,
+	type SelfMetricsMetadata,
+	type SelfMetricsMetadataEntry,
+	type VitalSignType,
+} from "@/types/metadata";
 
 /**
  * Get month key from date string
@@ -73,6 +62,37 @@ function groupVitalsByMonth(vitals: VitalSign[]): Map<string, VitalSign[]> {
 }
 
 /**
+ * Extract unique vital sign types from vitals array
+ * Maps VitalSign.type (kebab-case) to VitalSignType (snake_case)
+ */
+function extractVitalTypes(vitals: VitalSign[]): VitalSignType[] {
+	const types = new Set<VitalSignType>();
+	for (const vital of vitals) {
+		// Map vital.type (kebab-case) to VitalSignType (snake_case)
+		switch (vital.type) {
+			case "blood-pressure":
+				types.add("blood_pressure");
+				break;
+			case "heart-rate":
+				types.add("heart_rate");
+				break;
+			case "blood-glucose":
+				types.add("blood_glucose");
+				break;
+			case "weight":
+				types.add("weight");
+				break;
+			case "temperature":
+				types.add("temperature");
+				break;
+			default:
+				types.add("other");
+		}
+	}
+	return Array.from(types);
+}
+
+/**
  * Hook return type
  */
 export interface UseVitalsPersistenceReturn {
@@ -85,130 +105,39 @@ export interface UseVitalsPersistenceReturn {
 }
 
 /**
- * Vitals persistence hook with monthly partitioning
+ * Vitals persistence hook with monthly partitioning (v3.0.0)
+ *
+ * Uses useMetadataManager for efficient metadata-based partition management.
  */
 export function useVitalsPersistence(): UseVitalsPersistenceReturn {
-	const suiClient = useSuiClient();
-	const currentAccount = useCurrentAccount();
-	const { passport } = usePassport();
-	const { sessionKey } = useSessionKeyManager();
-	const { updatePassportData } = useUpdatePassportData();
+	const metadataManager = useMetadataManager<SelfMetricsMetadataEntry>({
+		dataType: "self_metrics",
+	});
 	const { setVitalSigns } = useApp();
 
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	/**
-	 * Load existing blobs and identify which months they contain
-	 */
-	const loadExistingMonthBlobs = useCallback(
-		async (
-			existingBlobIds: string[],
-			sealId: string,
-		): Promise<Map<string, MonthBlobInfo>> => {
-			const monthBlobs = new Map<string, MonthBlobInfo>();
-
-			if (existingBlobIds.length === 0 || !sessionKey || !passport) {
-				return monthBlobs;
-			}
-
-			// Load each blob and identify its month
-			for (let i = 0; i < existingBlobIds.length; i++) {
-				const blobId = existingBlobIds[i];
-				try {
-					const encryptedData = await downloadFromWalrusByBlobId(blobId);
-					const txBytes = await buildPatientAccessPTB({
-						passportObjectId: passport.id,
-						registryObjectId: PASSPORT_REGISTRY_ID,
-						suiClient,
-						sealId,
-						dataType: "self_metrics",
-					});
-
-					const sealClient = createSealClient(suiClient);
-					const decryptedData = await decryptHealthData({
-						encryptedData,
-						sealClient,
-						sessionKey,
-						txBytes,
-						sealId,
-					});
-
-					const metricsData = decryptedData as unknown as SelfMetricsData;
-					if (metricsData.self_metrics && metricsData.self_metrics.length > 0) {
-						// Get month from first metric's recorded_at
-						const monthKey = getMonthKey(
-							metricsData.self_metrics[0].recorded_at,
-						);
-						monthBlobs.set(monthKey, {
-							monthKey,
-							blobId,
-							blobIndex: i,
-						});
-					}
-				} catch (err) {
-					console.warn(
-						`[VitalsPersistence] Failed to load blob ${blobId}:`,
-						err,
-					);
-					// Continue with other blobs
-				}
-			}
-
-			return monthBlobs;
-		},
-		[passport, sessionKey, suiClient],
-	);
-
-	/**
 	 * Main persistence function
 	 */
 	const persistVitals = useCallback(
 		async (updatedVitals: VitalSign[]) => {
-			// Validate prerequisites
-			if (!passport) {
-				throw new Error(
-					"パスポートが見つかりません。プロフィールを作成してください。",
-				);
-			}
-			if (!currentAccount?.address) {
-				throw new Error("ウォレットが接続されていません。");
-			}
-			if (!sessionKey) {
-				throw new Error(
-					"セッションキーが見つかりません。再度ログインしてください。",
-				);
-			}
-
 			setIsSaving(true);
 			setError(null);
 
 			try {
-				// Generate seal_id for self_metrics
-				const selfMetricsSealId = await generateSealId(
-					currentAccount.address,
-					"self_metrics",
-				);
 				console.log(
-					`[VitalsPersistence] Generated seal_id: ${selfMetricsSealId.substring(0, 16)}...`,
+					`[VitalsPersistence] Starting persistence for ${updatedVitals.length} vitals`,
 				);
 
-				// Get existing blob IDs
-				const existingBlobIds = await getDataEntryBlobIds(
-					passport.id,
-					"self_metrics",
-				);
-				console.log(
-					`[VitalsPersistence] Found ${existingBlobIds.length} existing blob(s)`,
-				);
+				// Load existing metadata (or create new)
+				let metadata: SelfMetricsMetadata =
+					(await metadataManager.loadMetadata()) ||
+					createEmptyMetadata("self_metrics");
 
-				// Load existing month-blob mapping
-				const existingMonthBlobs = await loadExistingMonthBlobs(
-					existingBlobIds,
-					selfMetricsSealId,
-				);
 				console.log(
-					`[VitalsPersistence] Loaded ${existingMonthBlobs.size} month(s) from existing blobs`,
+					`[VitalsPersistence] Loaded metadata with ${metadata.entries.length} existing entries`,
 				);
 
 				// Group updated vitals by month
@@ -217,81 +146,68 @@ export function useVitalsPersistence(): UseVitalsPersistenceReturn {
 					`[VitalsPersistence] Updated vitals span ${vitalsByMonth.size} month(s)`,
 				);
 
-				// Prepare new blob IDs array (start with existing, will be updated)
-				const newBlobIds = [...existingBlobIds];
+				// Track which months need processing
+				const existingMonthKeys = new Set(
+					metadata.entries.map((e) => e.month_key),
+				);
+				const newMonthKeys = new Set(vitalsByMonth.keys());
 
-				// Track which months were affected (either updated or removed)
-				const affectedMonths = new Set<string>();
-				for (const monthKey of vitalsByMonth.keys()) {
-					affectedMonths.add(monthKey);
-				}
-				for (const monthKey of existingMonthBlobs.keys()) {
-					affectedMonths.add(monthKey);
-				}
-
-				// Process each affected month
-				const sealClient = createSealClient(suiClient);
-				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
-
-				for (const monthKey of affectedMonths) {
-					const monthVitals = vitalsByMonth.get(monthKey) || [];
-					const existingInfo = existingMonthBlobs.get(monthKey);
-
-					if (monthVitals.length === 0) {
-						// Month was deleted - remove from blob_ids
-						if (existingInfo && existingInfo.blobIndex >= 0) {
-							console.log(`[VitalsPersistence] Removing month ${monthKey}`);
-							// Mark for removal (set to empty string, will filter later)
-							newBlobIds[existingInfo.blobIndex] = "";
-						}
-					} else {
-						// Month has data - create/update blob
-						console.log(
-							`[VitalsPersistence] Processing month ${monthKey} with ${monthVitals.length} vitals`,
-						);
-
-						// Convert to SelfMetricsData
-						const metricsData = vitalsToSelfMetrics(monthVitals);
-
-						// Encrypt
-						const { encryptedObject } = await encryptHealthData({
-							healthData: metricsData as unknown as never,
-							sealClient,
-							sealId: selfMetricsSealId,
-							threshold,
-						});
-
-						// Upload to Walrus
-						const walrusRef = await uploadToWalrus(encryptedObject);
-						console.log(
-							`[VitalsPersistence] Uploaded month ${monthKey}, blobId: ${walrusRef.blobId}`,
-						);
-
-						// Update blob_ids array
-						if (existingInfo && existingInfo.blobIndex >= 0) {
-							// Replace existing
-							newBlobIds[existingInfo.blobIndex] = walrusRef.blobId;
-						} else {
-							// Add new
-							newBlobIds.push(walrusRef.blobId);
-						}
-					}
-				}
-
-				// Filter out empty strings (deleted months)
-				const finalBlobIds = newBlobIds.filter((id) => id !== "");
-				console.log(
-					`[VitalsPersistence] Final blob_ids count: ${finalBlobIds.length}`,
+				// Find months to delete (exist in metadata but not in new vitals)
+				const monthsToDelete = [...existingMonthKeys].filter(
+					(key) => !newMonthKeys.has(key),
 				);
 
-				// Update SBT Dynamic Field
-				const shouldReplace = existingBlobIds.length > 0;
-				await updatePassportData({
-					passportId: passport.id,
-					dataType: "self_metrics",
-					blobIds: finalBlobIds,
-					replace: shouldReplace,
-				});
+				// Find months to add/update
+				const monthsToProcess = [...newMonthKeys];
+
+				// Process deleted months
+				for (const monthKey of monthsToDelete) {
+					console.log(`[VitalsPersistence] Removing month ${monthKey}`);
+					metadata = metadataManager.removeEntry(
+						metadata,
+						monthKey,
+						"month_key",
+					);
+				}
+
+				// Process each month with data
+				for (const monthKey of monthsToProcess) {
+					const monthVitals = vitalsByMonth.get(monthKey);
+					if (!monthVitals || monthVitals.length === 0) {
+						continue;
+					}
+
+					console.log(
+						`[VitalsPersistence] Processing month ${monthKey} with ${monthVitals.length} vitals`,
+					);
+
+					// Convert to SelfMetricsData
+					const metricsData = vitalsToSelfMetrics(monthVitals);
+
+					// Upload data blob (encrypted)
+					const blobId =
+						await metadataManager.uploadDataBlob<SelfMetricsData>(metricsData);
+					console.log(
+						`[VitalsPersistence] Uploaded month ${monthKey}, blobId: ${blobId}`,
+					);
+
+					// Create metadata entry
+					const entry: SelfMetricsMetadataEntry = {
+						blob_id: blobId,
+						month_key: monthKey,
+						record_count: monthVitals.length,
+						types: extractVitalTypes(monthVitals),
+					};
+
+					// Upsert entry (add or replace by month_key)
+					metadata = metadataManager.upsertEntry(metadata, entry, "month_key");
+				}
+
+				// Save metadata (encrypts and uploads to Walrus, updates SBT)
+				console.log(
+					`[VitalsPersistence] Saving metadata with ${metadata.entries.length} entries`,
+				);
+				await metadataManager.saveMetadata(metadata);
 
 				// Update local state
 				setVitalSigns(updatedVitals);
@@ -307,15 +223,7 @@ export function useVitalsPersistence(): UseVitalsPersistenceReturn {
 				setIsSaving(false);
 			}
 		},
-		[
-			currentAccount,
-			loadExistingMonthBlobs,
-			passport,
-			sessionKey,
-			setVitalSigns,
-			suiClient,
-			updatePassportData,
-		],
+		[metadataManager, setVitalSigns],
 	);
 
 	return {

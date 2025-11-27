@@ -238,13 +238,14 @@ export default function ConditionsPage() {
 			// Step 2: 並列暗号化とアップロード（seal_idはフック内で自動生成）
 			const encryptionResults = await encryptAndStoreMultiple(dataItems);
 
-			// Step 3: 各データ型のオンチェーン存在チェック
+			// Step 3: 各データ型のオンチェーン存在チェックとメタデータBlob作成
 			const dataEntries = await Promise.all(
 				encryptionResults.map(async (result) => {
 					const exists = await checkExists(passport.id, result.dataType);
+					// v3.0.0: データBlobをメタデータBlobとして登録（単一entryのシンプルなメタデータ）
 					return {
 						dataType: result.dataType,
-						blobIds: [result.blobId],
+						metadataBlobId: result.blobId, // データBlobをそのまま使用（後で適切なメタデータ構造に移行）
 						replace: exists,
 					};
 				}),

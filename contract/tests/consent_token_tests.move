@@ -52,13 +52,12 @@ module cure_pocket::consent_token_tests {
         b"test-entry-seal-id-for-medication"
     }
 
-    // テストヘルパー: EntryDataを追加
+    // テストヘルパー: EntryDataを追加 (v3.0.0: metadata_blob_id)
     fun add_test_entry_data(passport: &mut MedicalPassport, clock: &clock::Clock) {
         let data_type = string::utf8(b"medications");
         let entry_seal_id = create_test_entry_seal_id();
-        let mut blob_ids = vector::empty<String>();
-        vector::push_back(&mut blob_ids, string::utf8(b"test-blob-id"));
-        medical_passport::add_data_entry(passport, data_type, entry_seal_id, blob_ids, clock);
+        let metadata_blob_id = string::utf8(b"test-metadata-blob-id");
+        medical_passport::add_data_entry(passport, data_type, entry_seal_id, metadata_blob_id, clock);
     }
 
     // ============================================================
@@ -1346,9 +1345,8 @@ module cure_pocket::consent_token_tests {
             // lab_results用のEntryDataを追加（テスト対象のスコープ外アクセス用）
             let data_type = string::utf8(b"lab_results");
             let entry_seal_id = b"test-seal-id-for-lab-results";
-            let mut blob_ids = vector::empty<String>();
-            vector::push_back(&mut blob_ids, string::utf8(b"test-blob-id"));
-            medical_passport::add_data_entry(&mut passport, data_type, entry_seal_id, blob_ids, &clock);
+            let metadata_blob_id = string::utf8(b"test-metadata-blob-id");
+            medical_passport::add_data_entry(&mut passport, data_type, entry_seal_id, metadata_blob_id, &clock);
 
             medical_passport::transfer_to(passport, USER1);
 

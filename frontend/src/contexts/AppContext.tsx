@@ -18,7 +18,7 @@ import {
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
 import {
-	getDataEntryBlobIds,
+	getDataEntry,
 	getSuiClient,
 	PASSPORT_REGISTRY_ID,
 } from "@/lib/suiClient";
@@ -42,6 +42,11 @@ import type {
 	MedicationsData,
 	SelfMetricsData,
 } from "@/types/healthData";
+import type {
+	BaseMetadata,
+	BaseMetadataEntry,
+	SelfMetricsMetadataEntry,
+} from "@/types/metadata";
 
 /**
  * Loading states for different data types
@@ -237,12 +242,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					dataType: "basic_profile",
 				});
 
-				const basicProfileBlobIds = await getDataEntryBlobIds(
+				// v3.0.0: Get metadata_blob_id from EntryData
+				const basicProfileEntry = await getDataEntry(
 					passport.id,
 					"basic_profile",
 				);
 
-				if (basicProfileBlobIds.length === 0) {
+				if (!basicProfileEntry || !basicProfileEntry.metadataBlobId) {
 					console.log(
 						"[AppContext] No basic_profile data found, user needs to complete profile setup",
 					);
@@ -251,9 +257,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					return;
 				}
 
-				const latestBlobId =
-					basicProfileBlobIds[basicProfileBlobIds.length - 1];
-				const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
+				// Decrypt metadata blob first
+				const encryptedMetadata = await downloadFromWalrusByBlobId(
+					basicProfileEntry.metadataBlobId,
+				);
+				const metadataData = (await decryptHealthData({
+					encryptedData: encryptedMetadata,
+					sealClient,
+					sessionKey,
+					txBytes: basicProfileTxBytes,
+					sealId: basicProfileSealId,
+				})) as unknown as BaseMetadata<BaseMetadataEntry>;
+
+				if (metadataData.entries.length === 0) {
+					console.log("[AppContext] No basic_profile entries in metadata");
+					setIsLoading(false);
+					setLoadingStates((prev) => ({ ...prev, basic_profile: false }));
+					return;
+				}
+
+				// Get data blob from first entry
+				const latestEntry = metadataData.entries[0];
+				const encryptedData = await downloadFromWalrusByBlobId(
+					latestEntry.blob_id,
+				);
 				const decryptedData = await decryptHealthData({
 					encryptedData,
 					sealClient,
@@ -332,12 +359,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					(async () => {
 						setLoadingStates((prev) => ({ ...prev, conditions: true }));
 						try {
-							const conditionsBlobIds = await getDataEntryBlobIds(
+							// v3.0.0: Get metadata from EntryData
+							const conditionsEntry = await getDataEntry(
 								passport.id,
 								"conditions",
 							);
 
-							if (conditionsBlobIds.length > 0) {
+							if (conditionsEntry?.metadataBlobId) {
 								// Generate seal_id for conditions
 								const conditionsSealId = await generateSealId(
 									currentAccount.address,
@@ -351,43 +379,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									dataType: "conditions",
 								});
 
-								const latestConditionsBlobId =
-									conditionsBlobIds[conditionsBlobIds.length - 1];
-								const encryptedConditionsData =
-									await downloadFromWalrusByBlobId(latestConditionsBlobId);
-								const decryptedConditionsData = await decryptHealthData({
-									encryptedData: encryptedConditionsData,
+								// Decrypt metadata first
+								const encryptedMetadata = await downloadFromWalrusByBlobId(
+									conditionsEntry.metadataBlobId,
+								);
+								const metadataData = (await decryptHealthData({
+									encryptedData: encryptedMetadata,
 									sealClient,
 									sessionKey,
 									txBytes: conditionsTxBytes,
 									sealId: conditionsSealId,
-								});
+								})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-								const conditionsData =
-									decryptedConditionsData as ConditionsData;
-								const medicalHistories: MedicalHistory[] =
-									conditionsData.conditions.map((condition) => ({
-										id: condition.id,
-										type: "condition" as const,
-										diagnosis: condition.name.en,
-										diagnosisDate: condition.onset_date || "",
-										status:
-											condition.status === "resolved"
-												? ("resolved" as const)
-												: ("chronic" as const),
-										description: condition.note || "",
-										icd10Code: condition.codes.icd10,
-										resolvedDate:
-											condition.status === "resolved"
-												? condition.note?.match(
-														/完治日: (\d{4}-\d{2}-\d{2})/,
-													)?.[1]
-												: undefined,
-										notes: condition.note || "",
-									}));
+								if (metadataData.entries.length > 0) {
+									// Decrypt data blob
+									const latestEntry = metadataData.entries[0];
+									const encryptedConditionsData =
+										await downloadFromWalrusByBlobId(latestEntry.blob_id);
+									const decryptedConditionsData = await decryptHealthData({
+										encryptedData: encryptedConditionsData,
+										sealClient,
+										sessionKey,
+										txBytes: conditionsTxBytes,
+										sealId: conditionsSealId,
+									});
 
-								setMedicalHistories(medicalHistories);
-								console.log("[AppContext] Conditions loaded successfully");
+									const conditionsData =
+										decryptedConditionsData as ConditionsData;
+									const medicalHistories: MedicalHistory[] =
+										conditionsData.conditions.map((condition) => ({
+											id: condition.id,
+											type: "condition" as const,
+											diagnosis: condition.name.en,
+											diagnosisDate: condition.onset_date || "",
+											status:
+												condition.status === "resolved"
+													? ("resolved" as const)
+													: ("chronic" as const),
+											description: condition.note || "",
+											icd10Code: condition.codes.icd10,
+											resolvedDate:
+												condition.status === "resolved"
+													? condition.note?.match(
+															/完治日: (\d{4}-\d{2}-\d{2})/,
+														)?.[1]
+													: undefined,
+											notes: condition.note || "",
+										}));
+
+									setMedicalHistories(medicalHistories);
+									console.log("[AppContext] Conditions loaded successfully");
+								}
 							}
 						} catch (error) {
 							console.log(
@@ -403,12 +445,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					(async () => {
 						setLoadingStates((prev) => ({ ...prev, medications: true }));
 						try {
-							const medicationsBlobIds = await getDataEntryBlobIds(
+							// v3.0.0: Get metadata from EntryData
+							const medicationsEntry = await getDataEntry(
 								passport.id,
 								"medications",
 							);
 
-							if (medicationsBlobIds.length > 0) {
+							if (medicationsEntry?.metadataBlobId) {
 								// Generate seal_id for medications
 								const medicationsSealId = await generateSealId(
 									currentAccount.address,
@@ -422,39 +465,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									dataType: "medications",
 								});
 
-								const latestMedicationsBlobId =
-									medicationsBlobIds[medicationsBlobIds.length - 1];
-								const encryptedMedicationsData =
-									await downloadFromWalrusByBlobId(latestMedicationsBlobId);
-								const decryptedMedicationsData = await decryptHealthData({
-									encryptedData: encryptedMedicationsData,
+								// Decrypt metadata first
+								const encryptedMetadata = await downloadFromWalrusByBlobId(
+									medicationsEntry.metadataBlobId,
+								);
+								const metadataData = (await decryptHealthData({
+									encryptedData: encryptedMetadata,
 									sealClient,
 									sessionKey,
 									txBytes: medicationsTxBytes,
 									sealId: medicationsSealId,
-								});
+								})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-								const medicationsData =
-									decryptedMedicationsData as MedicationsData;
-								const convertedMedications: Medication[] =
-									medicationsData.medications.map((med) => ({
-										id: med.id,
-										name: med.name.en,
-										genericName: med.name.local,
-										strength: undefined,
-										form: undefined,
-										dose: med.dosage,
-										frequency: undefined,
-										timing: undefined,
-										startDate: med.start_date,
-										endDate: med.end_date,
-										reason: undefined,
-										clinic: med.prescriber,
-										warning: undefined,
-										status: med.status === "active" ? "active" : "stopped",
-									}));
+								// Load all medication blobs and merge
+								const allMedications: Medication[] = [];
+								for (const entry of metadataData.entries) {
+									const encryptedMedicationsData =
+										await downloadFromWalrusByBlobId(entry.blob_id);
+									const decryptedMedicationsData = await decryptHealthData({
+										encryptedData: encryptedMedicationsData,
+										sealClient,
+										sessionKey,
+										txBytes: medicationsTxBytes,
+										sealId: medicationsSealId,
+									});
 
-								setMedications(convertedMedications);
+									const medicationsData =
+										decryptedMedicationsData as MedicationsData;
+									const convertedMedications: Medication[] =
+										medicationsData.medications.map((med) => ({
+											id: med.id,
+											name: med.name.en,
+											genericName: med.name.local,
+											strength: undefined,
+											form: undefined,
+											dose: med.dosage,
+											frequency: undefined,
+											timing: undefined,
+											startDate: med.start_date,
+											endDate: med.end_date,
+											reason: undefined,
+											clinic: med.prescriber,
+											warning: undefined,
+											status: med.status === "active" ? "active" : "stopped",
+										}));
+									allMedications.push(...convertedMedications);
+								}
+
+								setMedications(allMedications);
 								console.log("[AppContext] Medications loaded successfully");
 							}
 						} catch (error) {
@@ -471,12 +529,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					(async () => {
 						setLoadingStates((prev) => ({ ...prev, lab_results: true }));
 						try {
-							const labResultsBlobIds = await getDataEntryBlobIds(
+							// v3.0.0: Get metadata from EntryData
+							const labResultsEntry = await getDataEntry(
 								passport.id,
 								"lab_results",
 							);
 
-							if (labResultsBlobIds.length > 0) {
+							if (labResultsEntry?.metadataBlobId) {
 								// Generate seal_id for lab_results
 								const labResultsSealId = await generateSealId(
 									currentAccount.address,
@@ -490,39 +549,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									dataType: "lab_results",
 								});
 
-								const latestLabResultsBlobId =
-									labResultsBlobIds[labResultsBlobIds.length - 1];
-								const encryptedLabResultsData =
-									await downloadFromWalrusByBlobId(latestLabResultsBlobId);
-								const decryptedLabResultsData = await decryptHealthData({
-									encryptedData: encryptedLabResultsData,
+								// Decrypt metadata first
+								const encryptedMetadata = await downloadFromWalrusByBlobId(
+									labResultsEntry.metadataBlobId,
+								);
+								const metadataData = (await decryptHealthData({
+									encryptedData: encryptedMetadata,
 									sealClient,
 									sessionKey,
 									txBytes: labResultsTxBytes,
 									sealId: labResultsSealId,
-								});
+								})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-								const labResultsData =
-									decryptedLabResultsData as LabResultsData;
+								// Load all lab result blobs and merge
 								const convertedLabResults: LabResult[] = [];
+								for (const entry of metadataData.entries) {
+									const encryptedLabResultsData =
+										await downloadFromWalrusByBlobId(entry.blob_id);
+									const decryptedLabResultsData = await decryptHealthData({
+										encryptedData: encryptedLabResultsData,
+										sealClient,
+										sessionKey,
+										txBytes: labResultsTxBytes,
+										sealId: labResultsSealId,
+									});
 
-								for (const labResult of labResultsData.lab_results) {
-									for (const item of labResult.items) {
-										convertedLabResults.push({
-											id: `${labResult.id}-${item.codes.loinc || Math.random()}`,
-											testName: item.name.en,
-											value: item.value.toString(),
-											unit: item.unit,
-											referenceRange:
-												item.range_low !== undefined &&
-												item.range_high !== undefined
-													? `${item.range_low}-${item.range_high}`
-													: undefined,
-											testDate: labResult.date,
-											testedBy: undefined,
-											category: labResult.category,
-											notes: undefined,
-										});
+									const labResultsData =
+										decryptedLabResultsData as LabResultsData;
+
+									for (const labResult of labResultsData.lab_results) {
+										for (const item of labResult.items) {
+											convertedLabResults.push({
+												id: `${labResult.id}-${item.codes.loinc || Math.random()}`,
+												testName: item.name.en,
+												value: item.value.toString(),
+												unit: item.unit,
+												referenceRange:
+													item.range_low !== undefined &&
+													item.range_high !== undefined
+														? `${item.range_low}-${item.range_high}`
+														: undefined,
+												testDate: labResult.date,
+												testedBy: undefined,
+												category: labResult.category,
+												notes: undefined,
+											});
+										}
 									}
 								}
 
@@ -543,12 +615,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					(async () => {
 						setLoadingStates((prev) => ({ ...prev, vitals: true }));
 						try {
-							const vitalsBlobIds = await getDataEntryBlobIds(
+							// v3.0.0: Get metadata from EntryData
+							const vitalsEntry = await getDataEntry(
 								passport.id,
 								"self_metrics",
 							);
 
-							if (vitalsBlobIds.length > 0) {
+							if (vitalsEntry?.metadataBlobId) {
 								// Generate seal_id for self_metrics
 								const selfMetricsSealId = await generateSealId(
 									currentAccount.address,
@@ -562,49 +635,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									dataType: "self_metrics",
 								});
 
-								const latestVitalsBlobId =
-									vitalsBlobIds[vitalsBlobIds.length - 1];
-								const encryptedVitalsData =
-									await downloadFromWalrusByBlobId(latestVitalsBlobId);
-								const decryptedVitalsData = await decryptHealthData({
-									encryptedData: encryptedVitalsData,
+								// Decrypt metadata first
+								const encryptedMetadata = await downloadFromWalrusByBlobId(
+									vitalsEntry.metadataBlobId,
+								);
+								const metadataData = (await decryptHealthData({
+									encryptedData: encryptedMetadata,
 									sealClient,
 									sessionKey,
 									txBytes: selfMetricsTxBytes,
 									sealId: selfMetricsSealId,
-								});
+								})) as unknown as BaseMetadata<SelfMetricsMetadataEntry>;
 
-								const vitalsData =
-									decryptedVitalsData as unknown as SelfMetricsData;
-								const convertedVitals: VitalSign[] =
-									vitalsData.self_metrics.map((metric) => {
-										// Convert metric_type to VitalSignType
-										let type: VitalSign["type"] = "heart-rate";
-										if (metric.metric_type === "blood_pressure") {
-											type = "blood-pressure";
-										} else if (metric.metric_type === "heart_rate") {
-											type = "heart-rate";
-										} else if (metric.metric_type === "blood_glucose") {
-											type = "blood-glucose";
-										} else if (metric.metric_type === "temperature") {
-											type = "temperature";
-										} else if (metric.metric_type === "weight") {
-											type = "weight";
-										}
-
-										return {
-											id: metric.id,
-											type: type,
-											recordedAt: metric.recorded_at,
-											systolic: metric.systolic,
-											diastolic: metric.diastolic,
-											value: metric.value,
-											unit: metric.unit,
-											notes: metric.notes,
-										};
+								// Load all vitals blobs and merge
+								const allVitals: VitalSign[] = [];
+								for (const entry of metadataData.entries) {
+									const encryptedVitalsData = await downloadFromWalrusByBlobId(
+										entry.blob_id,
+									);
+									const decryptedVitalsData = await decryptHealthData({
+										encryptedData: encryptedVitalsData,
+										sealClient,
+										sessionKey,
+										txBytes: selfMetricsTxBytes,
+										sealId: selfMetricsSealId,
 									});
 
-								setVitalSigns(convertedVitals);
+									const vitalsData =
+										decryptedVitalsData as unknown as SelfMetricsData;
+									const convertedVitals: VitalSign[] =
+										vitalsData.self_metrics.map((metric) => {
+											// Convert metric_type to VitalSignType
+											let type: VitalSign["type"] = "heart-rate";
+											if (metric.metric_type === "blood_pressure") {
+												type = "blood-pressure";
+											} else if (metric.metric_type === "heart_rate") {
+												type = "heart-rate";
+											} else if (metric.metric_type === "blood_glucose") {
+												type = "blood-glucose";
+											} else if (metric.metric_type === "temperature") {
+												type = "temperature";
+											} else if (metric.metric_type === "weight") {
+												type = "weight";
+											}
+
+											return {
+												id: metric.id,
+												type: type,
+												recordedAt: metric.recorded_at,
+												systolic: metric.systolic,
+												diastolic: metric.diastolic,
+												value: metric.value,
+												unit: metric.unit,
+												notes: metric.notes,
+											};
+										});
+									allVitals.push(...convertedVitals);
+								}
+
+								setVitalSigns(allVitals);
 								console.log("[AppContext] Vitals loaded successfully");
 							}
 						} catch (error) {
@@ -621,12 +710,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					(async () => {
 						setLoadingStates((prev) => ({ ...prev, imaging: true }));
 						try {
-							const imagingBlobIds = await getDataEntryBlobIds(
+							// v3.0.0: Get metadata from EntryData
+							const imagingEntry = await getDataEntry(
 								passport.id,
 								"imaging_meta",
 							);
 
-							if (imagingBlobIds.length > 0) {
+							if (imagingEntry?.metadataBlobId) {
 								// Generate seal_id for imaging_meta
 								const imagingMetaSealId = await generateSealId(
 									currentAccount.address,
@@ -640,62 +730,78 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									dataType: "imaging_meta",
 								});
 
-								const latestImagingBlobId =
-									imagingBlobIds[imagingBlobIds.length - 1];
-								const encryptedImagingData =
-									await downloadFromWalrusByBlobId(latestImagingBlobId);
-								const decryptedImagingData = await decryptHealthData({
-									encryptedData: encryptedImagingData,
+								// Decrypt metadata first
+								const encryptedMetadata = await downloadFromWalrusByBlobId(
+									imagingEntry.metadataBlobId,
+								);
+								const metadataData = (await decryptHealthData({
+									encryptedData: encryptedMetadata,
 									sealClient,
 									sessionKey,
 									txBytes: imagingMetaTxBytes,
 									sealId: imagingMetaSealId,
-								});
+								})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-								// Cast to ImagingMetaData which contains imaging_meta: ImagingStudyV2[]
-								const imagingMetaData = decryptedImagingData as unknown as {
-									meta: unknown;
-									imaging_meta: ImagingStudyV2[];
-								};
-
-								const convertedImaging: ImagingReport[] =
-									imagingMetaData.imaging_meta.map((study) => {
-										// Convert modality to ImagingType
-										let type: ImagingReport["type"] = "other";
-										const modalityLower = study.modality.toLowerCase();
-										if (modalityLower.includes("ct")) {
-											type = "ct";
-										} else if (
-											modalityLower.includes("mr") ||
-											modalityLower.includes("mri")
-										) {
-											type = "mri";
-										} else if (
-											modalityLower.includes("us") ||
-											modalityLower.includes("ultrasound")
-										) {
-											type = "ultrasound";
-										} else if (
-											modalityLower.includes("cr") ||
-											modalityLower.includes("xr") ||
-											modalityLower.includes("xray")
-										) {
-											type = "xray";
-										}
-
-										return {
-											id: study.study_uid,
-											type: type,
-											bodyPart: study.body_site,
-											examDate: study.performed_at || "",
-											performedBy: study.facility,
-											summary: study.report?.summary || "",
-											findings: study.report?.findings,
-											impression: study.report?.impression,
-										};
+								// Load all imaging blobs and merge
+								const allImaging: ImagingReport[] = [];
+								for (const entry of metadataData.entries) {
+									const encryptedImagingData = await downloadFromWalrusByBlobId(
+										entry.blob_id,
+									);
+									const decryptedImagingData = await decryptHealthData({
+										encryptedData: encryptedImagingData,
+										sealClient,
+										sessionKey,
+										txBytes: imagingMetaTxBytes,
+										sealId: imagingMetaSealId,
 									});
 
-								setImagingReports(convertedImaging);
+									// Cast to ImagingMetaData which contains imaging_meta: ImagingStudyV2[]
+									const imagingMetaData = decryptedImagingData as unknown as {
+										meta: unknown;
+										imaging_meta: ImagingStudyV2[];
+									};
+
+									const convertedImaging: ImagingReport[] =
+										imagingMetaData.imaging_meta.map((study) => {
+											// Convert modality to ImagingType
+											let type: ImagingReport["type"] = "other";
+											const modalityLower = study.modality.toLowerCase();
+											if (modalityLower.includes("ct")) {
+												type = "ct";
+											} else if (
+												modalityLower.includes("mr") ||
+												modalityLower.includes("mri")
+											) {
+												type = "mri";
+											} else if (
+												modalityLower.includes("us") ||
+												modalityLower.includes("ultrasound")
+											) {
+												type = "ultrasound";
+											} else if (
+												modalityLower.includes("cr") ||
+												modalityLower.includes("xr") ||
+												modalityLower.includes("xray")
+											) {
+												type = "xray";
+											}
+
+											return {
+												id: study.study_uid,
+												type: type,
+												bodyPart: study.body_site,
+												examDate: study.performed_at || "",
+												performedBy: study.facility,
+												summary: study.report?.summary || "",
+												findings: study.report?.findings,
+												impression: study.report?.impression,
+											};
+										});
+									allImaging.push(...convertedImaging);
+								}
+
+								setImagingReports(allImaging);
 								console.log("[AppContext] Imaging loaded successfully");
 							}
 						} catch (error) {

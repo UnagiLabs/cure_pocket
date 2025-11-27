@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePassport } from "@/hooks/usePassport";
-import { getDataEntryBlobIds } from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 
 /**
- * Check if basic_profile data exists in the passport's Dynamic Fields
+ * Check if basic_profile data exists in the passport's Dynamic Fields (v3.0.0)
  *
  * @returns {Object} - { profileExists: boolean, loading: boolean, error: string | null, refetch: () => void }
  */
@@ -25,8 +25,9 @@ export function useCheckProfileExists() {
 		}
 
 		try {
-			const blobIds = await getDataEntryBlobIds(passport.id, "basic_profile");
-			setProfileExists(blobIds.length > 0);
+			// v3.0.0: Check if EntryData exists (contains metadataBlobId)
+			const entryData = await getDataEntry(passport.id, "basic_profile");
+			setProfileExists(entryData !== null && !!entryData.metadataBlobId);
 			setError(null);
 		} catch (err) {
 			console.error(

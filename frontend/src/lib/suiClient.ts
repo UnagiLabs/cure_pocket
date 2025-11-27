@@ -288,42 +288,40 @@ export async function getAllPassports(
  * @returns Transaction block ready for signing
  */
 /**
- * EntryData structure from MedicalPassport Dynamic Fields
- * Contains seal_id and blob_ids for a specific data type
+ * EntryData structure from MedicalPassport Dynamic Fields (v3.0.0)
+ * Contains seal_id and metadata_blob_id for a specific data type
  */
 export interface EntryData {
 	/** Seal ID used for encryption (for decryption verification) */
 	sealId: string;
-	/** Array of Walrus blob IDs */
-	blobIds: string[];
+	/** Metadata blob ID (references the metadata blob containing data blob entries) */
+	metadataBlobId: string;
 	/** Last updated timestamp (ms since epoch) */
 	updatedAt: number;
 }
 
 /**
- * Get EntryData (seal_id + blob_ids) for a specific data type from MedicalPassport Dynamic Fields
+ * Get EntryData (seal_id + metadata_blob_id) for a specific data type from MedicalPassport Dynamic Fields (v3.0.0)
  *
  * This queries the Dynamic Field associated with a specific data type
  * (e.g., "medications", "basic_profile") and returns the full EntryData including seal_id.
  *
  * Flow:
  * 1. Query Dynamic Field with data type as key (String type)
- * 2. Extract seal_id and blob_ids from field value (EntryData struct)
+ * 2. Extract seal_id and metadata_blob_id from field value (EntryData struct)
  * 3. Return EntryData for decryption
  *
  * @param passportObjectId - MedicalPassport Sui object ID
  * @param dataType - Data type key (e.g., "medications", "basic_profile")
- * @returns EntryData with sealId and blobIds, or null if data type not found
+ * @returns EntryData with sealId and metadataBlobId, or null if data type not found
  * @throws Error if query fails (except for "not found" which returns null)
  *
  * @example
  * ```typescript
  * const entry = await getDataEntry(passportId, "medications");
  * if (entry) {
- *   for (const blobId of entry.blobIds) {
- *     const encryptedData = await downloadFromWalrusByBlobId(blobId);
- *     // Use entry.sealId for decryption
- *   }
+ *   const encryptedMetadata = await downloadFromWalrusByBlobId(entry.metadataBlobId);
+ *   // Decrypt metadata to get data blob IDs
  * }
  * ```
  */
@@ -369,11 +367,12 @@ export async function getDataEntry(
 			);
 		}
 
-		// Extract EntryData from multiple possible structures
-		// Note: seal_id is now stored as vector<u8> on-chain, returned as number array
+		// Extract EntryData from multiple possible structures (v3.0.0)
+		// Note: seal_id is stored as vector<u8> on-chain, returned as number array
+		// metadata_blob_id is a single String (not array)
 		type EntryDataShape = {
 			seal_id?: number[] | string; // vector<u8> from on-chain or hex string (legacy)
-			blob_ids?: string[];
+			metadata_blob_id?: string; // v3.0.0: single metadata blob ID
 			updated_at?: string | number;
 		};
 		let entryDataRaw: EntryDataShape | undefined;
@@ -388,8 +387,8 @@ export async function getDataEntry(
 					console.log("[getDataEntry] Using nested structure (value.fields)");
 				}
 			}
-			// Pattern 2: value directly contains EntryData fields
-			else if ("blob_ids" in value) {
+			// Pattern 2: value directly contains EntryData fields (v3.0.0: metadata_blob_id)
+			else if ("metadata_blob_id" in value) {
 				entryDataRaw = value as EntryDataShape;
 				if (isDev) {
 					console.log("[getDataEntry] Using direct structure (value)");
@@ -397,13 +396,18 @@ export async function getDataEntry(
 			}
 		}
 
-		// Validate extraction
-		if (!entryDataRaw?.blob_ids || !Array.isArray(entryDataRaw.blob_ids)) {
+		// Validate extraction (v3.0.0: metadata_blob_id)
+		if (
+			!entryDataRaw?.metadata_blob_id ||
+			typeof entryDataRaw.metadata_blob_id !== "string"
+		) {
 			console.error(
-				"[getDataEntry] Failed to extract blob_ids. Full structure:",
+				"[getDataEntry] Failed to extract metadata_blob_id. Full structure:",
 				JSON.stringify(content.fields, null, 2),
 			);
-			throw new Error("Invalid EntryData structure: blob_ids not found");
+			throw new Error(
+				"Invalid EntryData structure: metadata_blob_id not found",
+			);
 		}
 
 		if (entryDataRaw?.seal_id === undefined || entryDataRaw.seal_id === null) {
@@ -438,7 +442,7 @@ export async function getDataEntry(
 
 		return {
 			sealId: sealIdHex,
-			blobIds: entryDataRaw.blob_ids,
+			metadataBlobId: entryDataRaw.metadata_blob_id,
 			updatedAt:
 				typeof entryDataRaw.updated_at === "string"
 					? Number.parseInt(entryDataRaw.updated_at, 10)
@@ -461,33 +465,37 @@ export async function getDataEntry(
 }
 
 /**
- * Get blob IDs for a specific data type from MedicalPassport Dynamic Fields
- *
- * @deprecated Use getDataEntry() instead to also get seal_id for decryption
+ * Get metadata blob ID for a specific data type from MedicalPassport Dynamic Fields (v3.0.0)
  *
  * @param passportObjectId - MedicalPassport Sui object ID
  * @param dataType - Data type key (e.g., "medications", "basic_profile")
- * @returns Array of blob IDs, or empty array if data type not found
+ * @returns Metadata blob ID, or null if data type not found
  */
-export async function getDataEntryBlobIds(
+export async function getDataEntryMetadataBlobId(
 	passportObjectId: string,
 	dataType: string,
-): Promise<string[]> {
+): Promise<string | null> {
 	const entry = await getDataEntry(passportObjectId, dataType);
-	return entry?.blobIds ?? [];
+	return entry?.metadataBlobId ?? null;
 }
 
+/**
+ * Build transaction for updating data entry in Dynamic Fields (v3.0.0)
+ *
+ * @param params - Update parameters
+ * @returns Transaction block ready for signing
+ */
 export function buildUpdateDataEntryTransaction(params: {
 	passportObjectId: string;
 	dataType: string; // データ種別 (e.g., "basic_profile", "medications")
 	sealId: string; // Seal ID for encryption
-	blobIds: string[]; // Blob IDの配列
+	metadataBlobId: string; // v3.0.0: single metadata blob ID
 	replace?: boolean; // true: replace_data_entry, false: add_data_entry
 }): {
 	packageId: string;
 	module: string;
 	function: string;
-	arguments: (string | string[])[];
+	arguments: string[];
 } {
 	if (!PACKAGE_ID) {
 		throw new Error("NEXT_PUBLIC_PACKAGE_ID not configured");
@@ -501,7 +509,7 @@ export function buildUpdateDataEntryTransaction(params: {
 			params.passportObjectId,
 			params.dataType,
 			params.sealId,
-			params.blobIds,
+			params.metadataBlobId,
 		],
 	};
 }

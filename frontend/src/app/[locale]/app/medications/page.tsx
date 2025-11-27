@@ -65,26 +65,51 @@ export default function MedicationsPage() {
 		try {
 			console.log("[Medications] Loading medications from Walrus...");
 
-			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			// Step 1: パスポートからEntryData（seal_id + metadata_blob_id）を取得 (v3.0.0)
 			const entryData = await getDataEntry(passport.id, "medications");
 
-			if (!entryData || entryData.blobIds.length === 0) {
+			if (!entryData || !entryData.metadataBlobId) {
 				console.log("[Medications] No medications data found");
 				setMedications([]);
 				setIsLoading(false);
 				return;
 			}
 
-			const { sealId, blobIds } = entryData;
+			const { sealId, metadataBlobId } = entryData;
 			console.log(
-				`[Medications] Found ${blobIds.length} medications blob(s), seal_id: ${sealId.substring(0, 16)}...`,
+				`[Medications] Found metadata blob: ${metadataBlobId.substring(0, 16)}..., seal_id: ${sealId.substring(0, 16)}...`,
 			);
 
-			// Step 2: 各Blobをダウンロード→復号化→JSON変換
-			// seal_id はDFから取得した値を使用
+			// Step 2: メタデータBlobを復号化してデータBlob IDを取得
+			console.log(`[Medications] Downloading and decrypting metadata blob`);
+			const metadataResult = await decryptWithSealId({
+				blobId: metadataBlobId,
+				sealId,
+				dataType: "medications",
+				sessionKey,
+				passportId: passport.id,
+			});
+
+			// メタデータからentriesを取得
+			const metadata = metadataResult as unknown as {
+				entries: Array<{ blob_id: string }>;
+			};
+			if (!metadata.entries || metadata.entries.length === 0) {
+				console.log("[Medications] No entries in metadata");
+				setMedications([]);
+				setIsLoading(false);
+				return;
+			}
+
+			console.log(
+				`[Medications] Found ${metadata.entries.length} data blob(s)`,
+			);
+
+			// Step 3: 各データBlobをダウンロード→復号化→JSON変換
 			const allMedications: DisplayMedication[] = [];
 
-			for (const blobId of blobIds) {
+			for (const entry of metadata.entries) {
+				const blobId = entry.blob_id;
 				console.log(`[Medications] Downloading and decrypting blob: ${blobId}`);
 
 				try {
