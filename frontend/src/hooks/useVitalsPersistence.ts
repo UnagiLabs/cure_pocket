@@ -137,7 +137,7 @@ export function useVitalsPersistence(): UseVitalsPersistenceReturn {
 					createEmptyMetadata("self_metrics");
 
 				console.log(
-					`[VitalsPersistence] Loaded metadata with ${metadata.entries.length} existing entries`,
+					`[VitalsPersistence] Loaded metadata with ${metadata.entries?.length ?? 0} existing entries`,
 				);
 
 				// Group updated vitals by month
@@ -148,7 +148,7 @@ export function useVitalsPersistence(): UseVitalsPersistenceReturn {
 
 				// Track which months need processing
 				const existingMonthKeys = new Set(
-					metadata.entries.map((e) => e.month_key),
+					(metadata.entries || []).map((e) => e.month_key),
 				);
 				const newMonthKeys = new Set(vitalsByMonth.keys());
 
@@ -205,7 +205,7 @@ export function useVitalsPersistence(): UseVitalsPersistenceReturn {
 
 				// Save metadata (encrypts and uploads to Walrus, updates SBT)
 				console.log(
-					`[VitalsPersistence] Saving metadata with ${metadata.entries.length} entries`,
+					`[VitalsPersistence] Saving metadata with ${metadata.entries?.length ?? 0} entries`,
 				);
 				await metadataManager.saveMetadata(metadata);
 

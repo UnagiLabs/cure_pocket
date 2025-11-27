@@ -305,6 +305,20 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 
 				for (const item of dataItems) {
 					try {
+						// v3.0.0: メタデータBlobは型特有のバリデーションをスキップ
+						// メタデータBlobはschema_versionとentriesフィールドを持つ
+						if (
+							item.data &&
+							typeof item.data === "object" &&
+							"schema_version" in item.data &&
+							"entries" in item.data
+						) {
+							console.log(
+								`[EncryptAndStoreMultiple] Detected metadata blob for ${item.dataType}, skipping validation`,
+							);
+							continue;
+						}
+
 						// Use data-type-specific validation functions
 						switch (item.dataType) {
 							case "basic_profile":

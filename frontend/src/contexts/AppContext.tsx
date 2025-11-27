@@ -269,7 +269,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 					sealId: basicProfileSealId,
 				})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-				if (metadataData.entries.length === 0) {
+				if (!metadataData.entries || metadataData.entries.length === 0) {
 					console.log("[AppContext] No basic_profile entries in metadata");
 					setIsLoading(false);
 					setLoadingStates((prev) => ({ ...prev, basic_profile: false }));
@@ -391,7 +391,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 									sealId: conditionsSealId,
 								})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
-								if (metadataData.entries.length > 0) {
+								if (metadataData.entries && metadataData.entries.length > 0) {
 									// Decrypt data blob
 									const latestEntry = metadataData.entries[0];
 									const encryptedConditionsData =
@@ -479,7 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 								// Load all medication blobs and merge
 								const allMedications: Medication[] = [];
-								for (const entry of metadataData.entries) {
+								for (const entry of metadataData.entries || []) {
 									const encryptedMedicationsData =
 										await downloadFromWalrusByBlobId(entry.blob_id);
 									const decryptedMedicationsData = await decryptHealthData({
@@ -563,7 +563,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 								// Load all lab result blobs and merge
 								const convertedLabResults: LabResult[] = [];
-								for (const entry of metadataData.entries) {
+								for (const entry of metadataData.entries || []) {
 									const encryptedLabResultsData =
 										await downloadFromWalrusByBlobId(entry.blob_id);
 									const decryptedLabResultsData = await decryptHealthData({
@@ -649,7 +649,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 								// Load all vitals blobs and merge
 								const allVitals: VitalSign[] = [];
-								for (const entry of metadataData.entries) {
+								for (const entry of metadataData.entries || []) {
 									const encryptedVitalsData = await downloadFromWalrusByBlobId(
 										entry.blob_id,
 									);
@@ -744,7 +744,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 								// Load all imaging blobs and merge
 								const allImaging: ImagingReport[] = [];
-								for (const entry of metadataData.entries) {
+								for (const entry of metadataData.entries || []) {
 									const encryptedImagingData = await downloadFromWalrusByBlobId(
 										entry.blob_id,
 									);

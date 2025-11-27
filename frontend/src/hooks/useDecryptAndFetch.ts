@@ -447,13 +447,17 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 				})) as unknown as BaseMetadata<BaseMetadataEntry>;
 
 				console.log(
-					`[DecryptAndFetch] Metadata decrypted, ${metadata.entries.length} entries`,
+					`[DecryptAndFetch] Metadata decrypted, ${metadata.entries?.length ?? 0} entries`,
 				);
 
 				// Select data blob based on partition key or use first entry
 				let targetEntry: BaseMetadataEntry | undefined;
 
-				if (partitionKeyValue && metadata.entries.length > 0) {
+				if (
+					partitionKeyValue &&
+					metadata.entries &&
+					metadata.entries.length > 0
+				) {
 					// Find entry by partition key value
 					targetEntry = metadata.entries.find((entry) => {
 						// Check common partition keys
@@ -467,7 +471,7 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 					});
 				}
 
-				if (!targetEntry && metadata.entries.length > 0) {
+				if (!targetEntry && metadata.entries && metadata.entries.length > 0) {
 					// Use first entry if no partition key match
 					targetEntry = metadata.entries[0];
 				}
