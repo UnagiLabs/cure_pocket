@@ -1,10 +1,12 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useApp } from "@/contexts/AppContext";
+import { useVitalsPersistence } from "@/hooks/useVitalsPersistence";
 import { getTheme } from "@/lib/themes";
 import type { VitalSign, VitalSignType } from "@/types";
 
@@ -16,7 +18,12 @@ export default function AddVitalPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings, addVitalSign } = useApp();
+	const { settings, vitalSigns } = useApp();
+	const {
+		persistVitals,
+		isSaving,
+		error: persistError,
+	} = useVitalsPersistence();
 	const theme = getTheme(settings.theme);
 
 	const [type, setType] = useState<VitalSignType>("blood-pressure");
@@ -64,16 +71,16 @@ export default function AddVitalPage() {
 		}
 	};
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		// バリデーション
 		if (type === "blood-pressure") {
 			if (!systolic || !diastolic) {
-				alert("最高血圧と最低血圧を入力してください");
+				alert(t("vitals.validation.bloodPressureRequired"));
 				return;
 			}
 		} else {
 			if (!value) {
-				alert("値を入力してください");
+				alert(t("vitals.validation.valueRequired"));
 				return;
 			}
 		}
@@ -93,8 +100,14 @@ export default function AddVitalPage() {
 			vitalSign.value = Number.parseFloat(value);
 		}
 
-		addVitalSign(vitalSign);
-		router.push(`/${locale}/app`);
+		try {
+			const updatedVitals = [...vitalSigns, vitalSign];
+			await persistVitals(updatedVitals);
+			router.push(`/${locale}/app/vitals?type=${type}`);
+		} catch (err) {
+			console.error("[AddVitalPage] Save failed:", err);
+			alert(err instanceof Error ? err.message : t("vitals.error.saveFailed"));
+		}
 	};
 
 	return (
@@ -271,15 +284,26 @@ export default function AddVitalPage() {
 					/>
 				</div>
 
+				{/* エラー表示 */}
+				{persistError && <p className="text-xs text-red-500">{persistError}</p>}
+
 				{/* 保存ボタン */}
 				<div className="flex gap-3 pt-4">
 					<button
 						type="button"
 						onClick={handleSave}
-						className="flex-1 rounded-lg p-3 font-medium text-white transition-colors"
+						disabled={isSaving}
+						className="flex-1 rounded-lg p-3 font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 						style={{ backgroundColor: theme.colors.primary }}
 					>
-						{t("actions.save")}
+						{isSaving ? (
+							<>
+								<Loader2 size={18} className="animate-spin" />
+								{t("vitals.saving")}
+							</>
+						) : (
+							t("actions.save")
+						)}
 					</button>
 				</div>
 			</div>
