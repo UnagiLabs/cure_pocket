@@ -831,13 +831,7 @@ function LabInputRow({
 }) {
 	const numValue = Number.parseFloat(value);
 	const flag = !Number.isNaN(numValue)
-		? calculateFlag(
-				numValue,
-				field.refLow,
-				field.refHigh,
-				gender,
-				field.refRanges,
-			)
+		? calculateFlag(numValue, field.refRanges, gender)
 		: null;
 
 	const flagColor =

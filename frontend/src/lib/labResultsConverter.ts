@@ -38,10 +38,29 @@ export type LabCategory =
 	| "other";
 
 /**
+ * 基準値範囲の型定義
+ */
+export interface RefRange {
+	low?: number;
+	high?: number;
+}
+
+/**
+ * 性別別・デフォルト基準値の型定義
+ * - default: 性別不問のデフォルト値（必須）
+ * - male/female: 性別別のオーバーライド値（オプション）
+ */
+export interface RefRanges {
+	default: RefRange;
+	male?: RefRange;
+	female?: RefRange;
+}
+
+/**
  * 検査項目フィールド定義インターフェース
  *
  * 各検査項目のID、ラベル、単位、基準値範囲、LOINCコードなどを定義。
- * 性別に応じた基準値が異なる項目は refRanges プロパティで定義。
+ * 性別に応じた基準値が異なる項目は refRanges.male/female プロパティで定義。
  */
 export interface LabFieldDefinition {
 	id: string;
@@ -52,8 +71,6 @@ export interface LabFieldDefinition {
 	labelFr: string;
 	labelPt: string;
 	unit: string;
-	refLow?: number;
-	refHigh?: number;
 	/**
 	 * 基準値範囲（全言語共通）
 	 * 数値は言語に関係なく同じため、1つのフィールドで管理
@@ -62,13 +79,11 @@ export interface LabFieldDefinition {
 	loincCode: string;
 	category: LabCategory;
 	/**
-	 * 男女別の基準値範囲
-	 * 性別に応じた閾値が異なる検査項目で使用
+	 * 基準値範囲
+	 * - default: 性別不問のデフォルト値（必須）
+	 * - male/female: 性別別のオーバーライド値（オプション）
 	 */
-	refRanges?: {
-		male?: { low?: number; high?: number };
-		female?: { low?: number; high?: number };
-	};
+	refRanges: RefRanges;
 }
 
 /**
@@ -225,38 +240,34 @@ export function createMetaData(): MetaData {
 /**
  * フラグを計算
  * @param value 検査値
- * @param refLow 基準値下限（デフォルト値）
- * @param refHigh 基準値上限（デフォルト値）
+ * @param refRanges 基準値範囲（default + 性別別オーバーライド）
  * @param gender 性別（"male" | "female"）
- * @param refRanges 男女別の基準値範囲
  * @returns フラグ（H: 高い, L: 低い, N: 正常）
  */
 export function calculateFlag(
 	value: number,
-	refLow?: number,
-	refHigh?: number,
+	refRanges: RefRanges,
 	gender?: "male" | "female",
-	refRanges?: {
-		male?: { low?: number; high?: number };
-		female?: { low?: number; high?: number };
-	},
 ): "H" | "L" | "N" {
-	// refRangesとgenderが提供され、genderが"male"または"female"の場合、性別に応じた閾値を使用
-	let effectiveRefLow = refLow;
-	let effectiveRefHigh = refHigh;
+	// 性別に応じた基準値を決定
+	let effectiveLow: number | undefined;
+	let effectiveHigh: number | undefined;
 
-	if (refRanges && gender && (gender === "male" || gender === "female")) {
+	if (gender && refRanges[gender]) {
+		// 性別別オーバーライドがあればそちらを優先
 		const genderRange = refRanges[gender];
-		if (genderRange) {
-			effectiveRefLow = genderRange.low ?? refLow;
-			effectiveRefHigh = genderRange.high ?? refHigh;
-		}
+		effectiveLow = genderRange?.low ?? refRanges.default.low;
+		effectiveHigh = genderRange?.high ?? refRanges.default.high;
+	} else {
+		// 性別不明またはオーバーライドなしの場合はデフォルト
+		effectiveLow = refRanges.default.low;
+		effectiveHigh = refRanges.default.high;
 	}
 
-	if (effectiveRefLow !== undefined && value < effectiveRefLow) {
+	if (effectiveLow !== undefined && value < effectiveLow) {
 		return "L";
 	}
-	if (effectiveRefHigh !== undefined && value > effectiveRefHigh) {
+	if (effectiveHigh !== undefined && value > effectiveHigh) {
 		return "H";
 	}
 	return "N";
@@ -322,27 +333,18 @@ export function formValuesToLabResultsData(
 		if (Number.isNaN(value)) continue;
 
 		// 性別に応じた閾値でフラグを計算
-		const flag = calculateFlag(
-			value,
-			field.refLow,
-			field.refHigh,
-			gender,
-			field.refRanges,
-		);
+		const flag = calculateFlag(value, field.refRanges, gender);
 
 		// 性別に応じた基準値を決定（表示用）
-		let effectiveRefLow = field.refLow;
-		let effectiveRefHigh = field.refHigh;
-		if (
-			field.refRanges &&
-			gender &&
-			(gender === "male" || gender === "female")
-		) {
+		let effectiveRefLow: number | undefined;
+		let effectiveRefHigh: number | undefined;
+		if (gender && field.refRanges[gender]) {
 			const genderRange = field.refRanges[gender];
-			if (genderRange) {
-				effectiveRefLow = genderRange.low ?? field.refLow;
-				effectiveRefHigh = genderRange.high ?? field.refHigh;
-			}
+			effectiveRefLow = genderRange?.low ?? field.refRanges.default.low;
+			effectiveRefHigh = genderRange?.high ?? field.refRanges.default.high;
+		} else {
+			effectiveRefLow = field.refRanges.default.low;
+			effectiveRefHigh = field.refRanges.default.high;
 		}
 
 		// ロケールに応じたラベルを選択
