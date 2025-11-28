@@ -706,11 +706,24 @@
 		"newRecord": "Registrar novos dados",
 		"dataHistory": "Histórico de dados",
 		"saveRecord": "Salvar registro",
+		"saving": "Salvando...",
+		"records": "Registros",
+		"noRecords": "Nenhum registro ainda",
+		"confirmDelete": "Tem certeza de que deseja excluir este registro?",
 		"period": {
 			"week": "1 semana",
 			"month": "1 mês",
 			"3months": "3 meses",
 			"year": "1 ano"
+		},
+		"validation": {
+			"bloodPressureRequired": "Por favor, insira a pressão arterial sistólica e diastólica",
+			"valueRequired": "Por favor, insira um valor"
+		},
+		"error": {
+			"saveFailed": "Falha ao salvar sinal vital",
+			"deleteFailed": "Falha ao excluir sinal vital",
+			"editFailed": "Falha ao editar sinal vital"
 		}
 	},
 	"validation": {
@@ -856,6 +869,10 @@
 	},
 	"common": {
 		"download": "Baixar",
-		"back": "Voltar"
+		"back": "Voltar",
+		"save": "Salvar",
+		"cancel": "Cancelar",
+		"edit": "Editar",
+		"delete": "Excluir"
 	}
 }
