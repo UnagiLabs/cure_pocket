@@ -86,7 +86,7 @@ export default function AddLabPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const { settings } = useApp();
+	const { settings, profile } = useApp();
 	const theme = getTheme(settings.theme);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -242,11 +242,17 @@ export default function AddLabPage() {
 			);
 
 			// フォーム値をLabResultsDataに変換
+			// 性別が"male"または"female"の場合のみ、男女別の閾値を使用
+			const gender =
+				profile?.gender === "male" || profile?.gender === "female"
+					? profile.gender
+					: undefined;
 			const newLabResultsData = formValuesToLabResultsData(
 				values,
 				testDate,
 				facility,
 				locale,
+				gender,
 			);
 
 			// v3.0.0: 既存のlab_resultsメタデータを読み込む
@@ -725,16 +731,25 @@ export default function AddLabPage() {
 									{/* グループ内容 */}
 									{expandedGroups[group.id] && (
 										<div className="px-4 pb-4 space-y-3">
-											{groupFields.map((field) => (
-												<LabInputRow
-													key={field.id}
-													field={field}
-													value={values[field.id] || ""}
-													onChange={(val) => handleValueChange(field.id, val)}
-													locale={locale}
-													theme={theme}
-												/>
-											))}
+											{groupFields.map((field) => {
+												// 性別が"male"または"female"の場合のみ、男女別の閾値を使用
+												const gender =
+													profile?.gender === "male" ||
+													profile?.gender === "female"
+														? profile.gender
+														: undefined;
+												return (
+													<LabInputRow
+														key={field.id}
+														field={field}
+														value={values[field.id] || ""}
+														onChange={(val) => handleValueChange(field.id, val)}
+														locale={locale}
+														theme={theme}
+														gender={gender}
+													/>
+												);
+											})}
 										</div>
 									)}
 								</div>
@@ -805,16 +820,24 @@ function LabInputRow({
 	onChange,
 	locale,
 	theme,
+	gender,
 }: {
 	field: LabFieldDefinition;
 	value: string;
 	onChange: (value: string) => void;
 	locale: string;
 	theme: ReturnType<typeof getTheme>;
+	gender?: "male" | "female";
 }) {
 	const numValue = Number.parseFloat(value);
 	const flag = !Number.isNaN(numValue)
-		? calculateFlag(numValue, field.refLow, field.refHigh)
+		? calculateFlag(
+				numValue,
+				field.refLow,
+				field.refHigh,
+				gender,
+				field.refRanges,
+			)
 		: null;
 
 	const flagColor =

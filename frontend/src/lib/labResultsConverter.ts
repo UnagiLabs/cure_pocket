@@ -42,6 +42,14 @@ export interface LabFieldDefinition {
 	referenceEn: string;
 	loincCode: string;
 	category: LabCategory;
+	/**
+	 * 男女別の基準値範囲
+	 * 性別に応じた閾値が異なる検査項目で使用
+	 */
+	refRanges?: {
+		male?: { low?: number; high?: number };
+		female?: { low?: number; high?: number };
+	};
 }
 
 /**
@@ -87,6 +95,10 @@ export const LAB_FIELDS: LabFieldDefinition[] = [
 		referenceEn: "M: 13.0-17.0 / F: 12.0-15.5",
 		loincCode: "718-7",
 		category: "hematology",
+		refRanges: {
+			male: { low: 13.0, high: 17.0 },
+			female: { low: 12.0, high: 15.5 },
+		},
 	},
 	{
 		id: "hct",
@@ -100,6 +112,10 @@ export const LAB_FIELDS: LabFieldDefinition[] = [
 		referenceEn: "M: 40-50 / F: 36-45",
 		loincCode: "4544-3",
 		category: "hematology",
+		refRanges: {
+			male: { low: 40, high: 50 },
+			female: { low: 36, high: 45 },
+		},
 	},
 	{
 		id: "plt",
@@ -180,6 +196,10 @@ export const LAB_FIELDS: LabFieldDefinition[] = [
 		referenceEn: "M: 0.7-1.3 / F: 0.6-1.1",
 		loincCode: "2160-0",
 		category: "biochemistry",
+		refRanges: {
+			male: { low: 0.7, high: 1.3 },
+			female: { low: 0.6, high: 1.1 },
+		},
 	},
 	{
 		id: "egfr",
@@ -247,6 +267,10 @@ export const LAB_FIELDS: LabFieldDefinition[] = [
 		referenceEn: "M: ≤80 / F: ≤30",
 		loincCode: "2324-2",
 		category: "biochemistry",
+		refRanges: {
+			male: { high: 80 },
+			female: { high: 30 },
+		},
 	},
 	{
 		id: "tbil",
@@ -539,19 +563,42 @@ export function createMetaData(): MetaData {
 /**
  * フラグを計算
  * @param value 検査値
- * @param refLow 基準値下限
- * @param refHigh 基準値上限
+ * @param refLow 基準値下限（デフォルト値）
+ * @param refHigh 基準値上限（デフォルト値）
+ * @param gender 性別（"male" | "female"）
+ * @param refRanges 男女別の基準値範囲
  * @returns フラグ（H: 高い, L: 低い, N: 正常）
  */
 export function calculateFlag(
 	value: number,
 	refLow?: number,
 	refHigh?: number,
+	gender?: "male" | "female",
+	refRanges?: {
+		male?: { low?: number; high?: number };
+		female?: { low?: number; high?: number };
+	},
 ): "H" | "L" | "N" {
-	if (refLow !== undefined && value < refLow) {
+	// refRangesとgenderが提供され、genderが"male"または"female"の場合、性別に応じた閾値を使用
+	let effectiveRefLow = refLow;
+	let effectiveRefHigh = refHigh;
+
+	if (
+		refRanges &&
+		gender &&
+		(gender === "male" || gender === "female")
+	) {
+		const genderRange = refRanges[gender];
+		if (genderRange) {
+			effectiveRefLow = genderRange.low ?? refLow;
+			effectiveRefHigh = genderRange.high ?? refHigh;
+		}
+	}
+
+	if (effectiveRefLow !== undefined && value < effectiveRefLow) {
 		return "L";
 	}
-	if (refHigh !== undefined && value > refHigh) {
+	if (effectiveRefHigh !== undefined && value > effectiveRefHigh) {
 		return "H";
 	}
 	return "N";
@@ -597,6 +644,7 @@ export function determineCategory(
  * @param testDate 検査日（YYYY-MM-DD）
  * @param facility 医療機関名
  * @param locale 現在のロケール（翻訳用）
+ * @param gender 性別（"male" | "female"）
  * @returns LabResultsData
  */
 export function formValuesToLabResultsData(
@@ -604,6 +652,7 @@ export function formValuesToLabResultsData(
 	testDate: string,
 	_facility: string,
 	locale: string,
+	gender?: "male" | "female",
 ): LabResultsData {
 	const items: (LabItem & { category: LabCategory })[] = [];
 
@@ -614,7 +663,29 @@ export function formValuesToLabResultsData(
 		const value = Number.parseFloat(valueStr);
 		if (Number.isNaN(value)) continue;
 
-		const flag = calculateFlag(value, field.refLow, field.refHigh);
+		// 性別に応じた閾値でフラグを計算
+		const flag = calculateFlag(
+			value,
+			field.refLow,
+			field.refHigh,
+			gender,
+			field.refRanges,
+		);
+
+		// 性別に応じた基準値を決定（表示用）
+		let effectiveRefLow = field.refLow;
+		let effectiveRefHigh = field.refHigh;
+		if (
+			field.refRanges &&
+			gender &&
+			(gender === "male" || gender === "female")
+		) {
+			const genderRange = field.refRanges[gender];
+			if (genderRange) {
+				effectiveRefLow = genderRange.low ?? field.refLow;
+				effectiveRefHigh = genderRange.high ?? field.refHigh;
+			}
+		}
 
 		const name: LocalizedString = {
 			en: field.labelEn,
@@ -628,8 +699,8 @@ export function formValuesToLabResultsData(
 			name,
 			value,
 			unit: field.unit,
-			range_low: field.refLow,
-			range_high: field.refHigh,
+			range_low: effectiveRefLow,
+			range_high: effectiveRefHigh,
 			flag,
 			category: field.category,
 		});
