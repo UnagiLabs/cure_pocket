@@ -20,6 +20,7 @@ import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
 import {
 	calculateFlag,
 	createMetaData,
+	formatReferenceRange,
 	formValuesToLabResultsData,
 	getLabFieldsByGroup,
 	LAB_FIELDS,
@@ -855,7 +856,7 @@ function LabInputRow({
 					className="text-xs truncate"
 					style={{ color: theme.colors.textSecondary }}
 				>
-					{field.reference}
+					{formatReferenceRange(field.refRanges)}
 				</p>
 			</div>
 

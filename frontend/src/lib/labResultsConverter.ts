@@ -71,11 +71,6 @@ export interface LabFieldDefinition {
 	labelFr: string;
 	labelPt: string;
 	unit: string;
-	/**
-	 * 基準値範囲（全言語共通）
-	 * 数値は言語に関係なく同じため、1つのフィールドで管理
-	 */
-	reference: string;
 	loincCode: string;
 	category: LabCategory;
 	/**
@@ -271,6 +266,55 @@ export function calculateFlag(
 		return "H";
 	}
 	return "N";
+}
+
+/**
+ * 数値をフォーマット（4桁以上はカンマ区切り）
+ */
+function formatNumber(num: number): string {
+	if (num >= 1000) {
+		return num.toLocaleString("en-US");
+	}
+	return num.toString();
+}
+
+/**
+ * RefRange を文字列にフォーマット
+ */
+function formatRange(range: RefRange): string {
+	const { low, high } = range;
+
+	if (low !== undefined && high !== undefined) {
+		return `${formatNumber(low)}-${formatNumber(high)}`;
+	}
+	if (low !== undefined) {
+		return `≥${formatNumber(low)}`;
+	}
+	if (high !== undefined) {
+		return `≤${formatNumber(high)}`;
+	}
+	return "-";
+}
+
+/**
+ * RefRanges から基準値表示文字列を動的に生成
+ * @param refRanges 基準値範囲
+ * @returns 基準値表示文字列（例: "4,000-10,000", "M: 13.0-17.0 / F: 12.0-15.5"）
+ */
+export function formatReferenceRange(refRanges: RefRanges): string {
+	// 性別別オーバーライドがあるかチェック
+	const hasMale = refRanges.male !== undefined;
+	const hasFemale = refRanges.female !== undefined;
+
+	if (hasMale || hasFemale) {
+		// 性別別表示
+		const maleRange = formatRange(refRanges.male ?? refRanges.default);
+		const femaleRange = formatRange(refRanges.female ?? refRanges.default);
+		return `M: ${maleRange} / F: ${femaleRange}`;
+	}
+
+	// デフォルト表示
+	return formatRange(refRanges.default);
 }
 
 /**

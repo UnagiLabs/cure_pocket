@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { calculateFlag, type RefRanges } from "../labResultsConverter";
+import {
+	calculateFlag,
+	formatReferenceRange,
+	type RefRanges,
+} from "../labResultsConverter";
 
 describe("calculateFlag", () => {
 	describe("default範囲のみの場合", () => {
@@ -86,5 +90,55 @@ describe("calculateFlag", () => {
 		it("女性で高値", () => {
 			expect(calculateFlag(50, refRanges, "female")).toBe("H");
 		});
+	});
+});
+
+describe("formatReferenceRange", () => {
+	it("両端指定でハイフン区切り", () => {
+		expect(formatReferenceRange({ default: { low: 4000, high: 10000 } })).toBe(
+			"4,000-10,000",
+		);
+	});
+
+	it("小数点の両端指定", () => {
+		expect(formatReferenceRange({ default: { low: 4.0, high: 5.5 } })).toBe(
+			"4-5.5",
+		);
+	});
+
+	it("下限のみで≥表記", () => {
+		expect(formatReferenceRange({ default: { low: 60 } })).toBe("≥60");
+	});
+
+	it("上限のみで≤表記", () => {
+		expect(formatReferenceRange({ default: { high: 140 } })).toBe("≤140");
+	});
+
+	it("性別別オーバーライドがある場合", () => {
+		const refRanges: RefRanges = {
+			default: { low: 12, high: 17 },
+			male: { low: 13, high: 17 },
+			female: { low: 12, high: 15.5 },
+		};
+		expect(formatReferenceRange(refRanges)).toBe("M: 13-17 / F: 12-15.5");
+	});
+
+	it("性別別で片側のみ（γ-GTP）", () => {
+		const refRanges: RefRanges = {
+			default: { high: 80 },
+			male: { high: 80 },
+			female: { high: 30 },
+		};
+		expect(formatReferenceRange(refRanges)).toBe("M: ≤80 / F: ≤30");
+	});
+
+	it("両方undefinedの場合はハイフン", () => {
+		expect(formatReferenceRange({ default: {} })).toBe("-");
+	});
+
+	it("大きい数値はカンマ区切り", () => {
+		expect(
+			formatReferenceRange({ default: { low: 150000, high: 400000 } }),
+		).toBe("150,000-400,000");
 	});
 });

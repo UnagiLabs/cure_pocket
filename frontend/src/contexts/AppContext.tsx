@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
+import { formatReferenceRange } from "@/lib/labResultsConverter";
 import { calculateAgeBandFromDate } from "@/lib/profileConverter";
 import {
 	buildPatientAccessPTB,
@@ -584,11 +585,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 												testName: item.name.en,
 												value: item.value.toString(),
 												unit: item.unit,
-												referenceRange:
-													item.range_low !== undefined &&
-													item.range_high !== undefined
-														? `${item.range_low}-${item.range_high}`
-														: undefined,
+												referenceRange: formatReferenceRange({
+													default: {
+														low: item.range_low,
+														high: item.range_high,
+													},
+												}),
 												testDate: labResult.date,
 												testedBy: undefined,
 												category: labResult.category,
