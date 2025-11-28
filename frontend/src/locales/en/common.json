@@ -358,6 +358,11 @@
 		"ocrSuccess": "OCR completed successfully",
 		"ocrError": "OCR processing failed",
 		"saving": "Saving...",
+		"basicInfo": "Basic Information",
+		"facilityPlaceholder": "e.g., Sample Hospital Lab",
+		"notesPlaceholder": "Notes (optional)",
+		"testValues": "Test Values",
+		"itemsFilled": "items filled",
 		"validation": {
 			"required": "Please enter test name and value",
 			"noValues": "Please enter at least one lab value.",

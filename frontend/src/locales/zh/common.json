@@ -358,6 +358,11 @@
 		"ocrSuccess": "OCR 处理完成",
 		"ocrError": "OCR 处理失败",
 		"saving": "保存中...",
+		"basicInfo": "基本信息",
+		"facilityPlaceholder": "例：〇〇医院 检验科",
+		"notesPlaceholder": "备注（可选）",
+		"testValues": "检验值",
+		"itemsFilled": "项已填写",
 		"validation": {
 			"required": "请输入检验名称和值",
 			"noValues": "请输入至少一个检验值。",

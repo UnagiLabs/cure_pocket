@@ -358,6 +358,11 @@
 		"ocrSuccess": "Processamento OCR concluído",
 		"ocrError": "Falha no processamento OCR",
 		"saving": "Salvando...",
+		"basicInfo": "Informações Básicas",
+		"facilityPlaceholder": "ex.: Hospital Exemplo, Laboratório",
+		"notesPlaceholder": "Notas (opcional)",
+		"testValues": "Valores dos Testes",
+		"itemsFilled": "itens preenchidos",
 		"validation": {
 			"required": "Por favor, insira o nome do teste e o valor",
 			"noValues": "Por favor, insira pelo menos um valor de laboratório.",

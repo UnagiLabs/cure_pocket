@@ -358,6 +358,11 @@
 		"ocrSuccess": "OCR処理が完了しました",
 		"ocrError": "OCR処理に失敗しました",
 		"saving": "保存中...",
+		"basicInfo": "基本情報",
+		"facilityPlaceholder": "例：〇〇病院 検査部",
+		"notesPlaceholder": "メモ（任意）",
+		"testValues": "検査値",
+		"itemsFilled": "項目入力済み",
 		"validation": {
 			"required": "検査項目と値を入力してください",
 			"noValues": "少なくとも1つ以上の検査値を入力してください。",
