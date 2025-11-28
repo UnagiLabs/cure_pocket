@@ -706,11 +706,24 @@
 		"newRecord": "Enregistrer de nouvelles données",
 		"dataHistory": "Historique des données",
 		"saveRecord": "Enregistrer",
+		"saving": "Enregistrement...",
+		"records": "Enregistrements",
+		"noRecords": "Aucun enregistrement",
+		"confirmDelete": "Êtes-vous sûr de vouloir supprimer cet enregistrement ?",
 		"period": {
 			"week": "1 semaine",
 			"month": "1 mois",
 			"3months": "3 mois",
 			"year": "1 an"
+		},
+		"validation": {
+			"bloodPressureRequired": "Veuillez entrer la pression artérielle systolique et diastolique",
+			"valueRequired": "Veuillez entrer une valeur"
+		},
+		"error": {
+			"saveFailed": "Échec de l'enregistrement du signe vital",
+			"deleteFailed": "Échec de la suppression du signe vital",
+			"editFailed": "Échec de la modification du signe vital"
 		}
 	},
 	"validation": {
@@ -856,6 +869,10 @@
 	},
 	"common": {
 		"download": "Télécharger",
-		"back": "Retour"
+		"back": "Retour",
+		"save": "Enregistrer",
+		"cancel": "Annuler",
+		"edit": "Modifier",
+		"delete": "Supprimer"
 	}
 }

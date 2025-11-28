@@ -218,9 +218,9 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 			// DataScope（UI用）をコントラクトのdataTypeに変換
 			const contractDataType = toContractDataType(dataType);
 
-			// EntryData（seal_id + blob_ids）をDFから取得
+			// v3.0.0: EntryData（seal_id + metadata_blob_id）をDFから取得
 			const entryData = await getDataEntry(patientId, contractDataType);
-			if (!entryData || entryData.blobIds.length === 0) {
+			if (!entryData || !entryData.metadataBlobId) {
 				setFetchMessage(
 					`${scopeLabel[dataType] || dataType}: Blob が登録されていません`,
 				);
@@ -228,16 +228,49 @@ export default function DoctorPatientPage({ params }: DoctorPatientPageProps) {
 				return;
 			}
 
-			const { sealId, blobIds } = entryData;
+			const { sealId, metadataBlobId } = entryData;
 			console.log(
 				`[DoctorPage] Retrieved seal_id from DF: ${sealId.substring(0, 16)}...`,
 			);
+			console.log(
+				`[DoctorPage] Metadata blob ID: ${metadataBlobId.substring(0, 16)}...`,
+			);
 
+			// Step 1: メタデータBlobを復号化
+			const metadataRes = await decryptWithConsent({
+				blobId: metadataBlobId,
+				sealId,
+				passportId: patientId,
+				consentTokenId,
+				dataType: contractDataType,
+				secret,
+				sessionKey,
+			});
+
+			// メタデータからエントリを取得
+			const metadata = metadataRes.data as {
+				entries?: Array<{ blob_id: string }>;
+			};
+			const entries = metadata?.entries || [];
+
+			if (entries.length === 0) {
+				setFetchMessage(
+					`${scopeLabel[dataType] || dataType}: データエントリが見つかりません`,
+				);
+				setFetchState("idle");
+				return;
+			}
+
+			console.log(
+				`[DoctorPage] Found ${entries.length} data blob(s) in metadata`,
+			);
+
+			// Step 2: 各データBlobを復号化
 			const decrypted: Array<{ blobId: string; data: unknown }> = [];
-			for (const blobId of blobIds) {
+			for (const entry of entries) {
 				const res = await decryptWithConsent({
-					blobId,
-					sealId, // DFから取得したseal_idを渡す
+					blobId: entry.blob_id,
+					sealId,
 					passportId: patientId,
 					consentTokenId,
 					dataType: contractDataType,

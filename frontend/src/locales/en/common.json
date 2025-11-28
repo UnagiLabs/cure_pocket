@@ -706,11 +706,24 @@
 		"newRecord": "Record New Data",
 		"dataHistory": "Data History",
 		"saveRecord": "Save Record",
+		"saving": "Saving...",
+		"records": "Records",
+		"noRecords": "No records yet",
+		"confirmDelete": "Are you sure you want to delete this record?",
 		"period": {
 			"week": "1 Week",
 			"month": "1 Month",
 			"3months": "3 Months",
 			"year": "1 Year"
+		},
+		"validation": {
+			"bloodPressureRequired": "Please enter both systolic and diastolic blood pressure",
+			"valueRequired": "Please enter a value"
+		},
+		"error": {
+			"saveFailed": "Failed to save vital sign",
+			"deleteFailed": "Failed to delete vital sign",
+			"editFailed": "Failed to edit vital sign"
 		}
 	},
 	"validation": {
@@ -856,6 +869,10 @@
 	},
 	"common": {
 		"download": "Download",
-		"back": "Back"
+		"back": "Back",
+		"save": "Save",
+		"cancel": "Cancel",
+		"edit": "Edit",
+		"delete": "Delete"
 	}
 }

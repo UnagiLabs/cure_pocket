@@ -10,9 +10,10 @@ import { useEncryptAndStore } from "@/hooks/useEncryptAndStore";
 import { usePassport } from "@/hooks/usePassport";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
 import { createImagingMeta, generateDicomUIDs } from "@/lib/imagingHelpers";
-import { getDataEntryBlobIds } from "@/lib/suiClient";
+import { getDataEntry } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import type { ImagingReport } from "@/types";
+import type { ImagingMetadataEntry } from "@/types/metadata";
 
 /**
  * 画像レポートの追加フォームページ
@@ -84,19 +85,53 @@ export default function AddImagingPage() {
 
 			const metaBlobId = metaResults[0].blobId;
 
+			// v3.0.0: Create metadata blob with entry reference
 			// Check if data entries already exist to determine mode (add or replace)
-			const existingMetaBlobs = await getDataEntryBlobIds(
-				passport.id,
-				"imaging_meta",
-			);
-			const existingBinaryBlobs = await getDataEntryBlobIds(
+			const existingMetaEntry = await getDataEntry(passport.id, "imaging_meta");
+			const existingBinaryEntry = await getDataEntry(
 				passport.id,
 				"imaging_binary",
 			);
 
 			// Use replace mode if data already exists, add mode if not
-			const shouldReplaceMetadata = existingMetaBlobs.length > 0;
-			const shouldReplaceBinary = existingBinaryBlobs.length > 0;
+			const shouldReplaceMetadata = existingMetaEntry !== null;
+			const shouldReplaceBinary = existingBinaryEntry !== null;
+
+			// Create metadata structure with entry pointing to data blob
+			const metadataEntry: ImagingMetadataEntry = {
+				blob_id: metaBlobId,
+				study_id: dicomUIDs.studyUid,
+				study_date: report.examDate || new Date().toISOString().split("T")[0],
+				modality: report.type || "other",
+				body_part: report.bodyPart || "",
+				binary_blob_id: binaryBlobId,
+			};
+
+			// v3.0.0: メタデータBlobを作成（暗号化・アップロード用）
+			const metadataForUpload = {
+				meta: {
+					schema_version: "3.0.0",
+					updated_at: Date.now(),
+					generator: "CurePocket_Web_v1",
+				},
+				imaging_meta: [createImagingMeta(report, binaryBlobId, dicomUIDs)],
+				// メタデータエントリ情報も含める
+				entries: [metadataEntry],
+			};
+
+			// Upload metadata blob
+			const metadataUploadResult = await encryptAndStoreMultiple([
+				{
+					data: metadataForUpload,
+					dataType: "imaging_meta",
+				},
+			]);
+
+			if (!metadataUploadResult || metadataUploadResult.length === 0) {
+				throw new Error("Failed to upload metadata blob");
+			}
+
+			const metadataBlobId = metadataUploadResult[0].blobId;
 
 			// Update passport with imaging_meta and imaging_binary
 			await updateMultiplePassportData({
@@ -104,12 +139,12 @@ export default function AddImagingPage() {
 				dataEntries: [
 					{
 						dataType: "imaging_meta",
-						blobIds: [metaBlobId],
+						metadataBlobId: metadataBlobId,
 						replace: shouldReplaceMetadata,
 					},
 					{
 						dataType: "imaging_binary",
-						blobIds: [binaryBlobId],
+						metadataBlobId: binaryBlobId, // Binary uses data blob ID as metadata
 						replace: shouldReplaceBinary,
 					},
 				],

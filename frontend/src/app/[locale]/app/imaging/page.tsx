@@ -90,22 +90,22 @@ export default function ImagingPage() {
 		try {
 			console.log("[Imaging] Loading imaging data from Walrus...");
 
-			// Step 1: パスポートからEntryData（seal_id + blob_ids）を取得
+			// Step 1: パスポートからEntryData（seal_id + metadata_blob_id）を取得 (v3.0.0)
 			const metaEntryData = await getDataEntry(passport.id, "imaging_meta");
 			const binaryEntryData = await getDataEntry(passport.id, "imaging_binary");
 
-			if (!metaEntryData || metaEntryData.blobIds.length === 0) {
+			if (!metaEntryData || !metaEntryData.metadataBlobId) {
 				console.log("[Imaging] No imaging meta data found");
 				setWalrusReports([]);
 				setIsLoading(false);
 				return;
 			}
 
-			const { sealId: metaSealId, blobIds: metaBlobIds } = metaEntryData;
+			const { sealId: metaSealId, metadataBlobId } = metaEntryData;
 			const binarySealId = binaryEntryData?.sealId;
 
 			console.log(
-				`[Imaging] Found ${metaBlobIds.length} imaging_meta blob(s), meta_seal_id: ${metaSealId.substring(0, 16)}...`,
+				`[Imaging] Found metadata blob: ${metadataBlobId.substring(0, 16)}..., meta_seal_id: ${metaSealId.substring(0, 16)}...`,
 			);
 			if (binarySealId) {
 				console.log(
@@ -113,11 +113,34 @@ export default function ImagingPage() {
 				);
 			}
 
-			// Step 2: 各Blobをダウンロード→復号化→ObjectURL生成
-			// seal_id はDFから取得した値を使用
+			// Step 2: メタデータBlobを復号化してデータBlob IDを取得
+			console.log(`[Imaging] Downloading and decrypting metadata blob`);
+			const topMetadataResult = await decryptWithSealId({
+				blobId: metadataBlobId,
+				sealId: metaSealId,
+				dataType: "imaging_meta",
+				sessionKey,
+				passportId: passport.id,
+			});
+
+			// メタデータからentriesを取得
+			const topMetadata = topMetadataResult as unknown as {
+				entries: Array<{ blob_id: string }>;
+			};
+			if (!topMetadata.entries || topMetadata.entries.length === 0) {
+				console.log("[Imaging] No entries in metadata");
+				setWalrusReports([]);
+				setIsLoading(false);
+				return;
+			}
+
+			console.log(`[Imaging] Found ${topMetadata.entries.length} data blob(s)`);
+
+			// Step 3: 各データBlobをダウンロード→復号化→ObjectURL生成
 			const allReports: ImagingReport[] = [];
 
-			for (const metaBlobId of metaBlobIds) {
+			for (const entry of topMetadata.entries) {
+				const metaBlobId = entry.blob_id;
 				console.log(
 					`[Imaging] Downloading and decrypting meta blob: ${metaBlobId}`,
 				);

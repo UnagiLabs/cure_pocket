@@ -1,18 +1,18 @@
 /**
- * useUpdatePassportData Hook
+ * useUpdatePassportData Hook (v3.0.0)
  *
  * Updates MedicalPassport Dynamic Fields on-chain after data save.
- * Replaces the old single-blob model with data-type-based blob management.
+ * Supports the new metadata blob architecture (v3.0.0).
  *
  * ## Features
  * - Call add_data_entry contract function (add new data type)
  * - Call replace_data_entry contract function (replace existing data type)
  * - Transaction status management with error handling
- * - Support for multiple blob IDs per data type
+ * - Single metadata blob ID per data type
  *
- * ## Contract Functions
- * - `add_data_entry(passport, data_type, seal_id, blob_ids, clock)`
- * - `replace_data_entry(passport, data_type, seal_id, blob_ids, clock)`
+ * ## Contract Functions (v3.0.0)
+ * - `add_data_entry(passport, data_type, seal_id, metadata_blob_id, clock)`
+ * - `replace_data_entry(passport, data_type, seal_id, metadata_blob_id, clock)`
  *
  * ## Usage
  * ```typescript
@@ -22,7 +22,7 @@
  * await updatePassportData({
  *   passportId: "0x123...",
  *   dataType: "medications",
- *   blobIds: ["abc...", "def..."],
+ *   metadataBlobId: "abc...",
  *   replace: false, // add mode
  * });
  *
@@ -30,7 +30,7 @@
  * await updatePassportData({
  *   passportId: "0x123...",
  *   dataType: "basic_profile",
- *   blobIds: ["xyz..."],
+ *   metadataBlobId: "xyz...",
  *   replace: true, // replace mode
  * });
  * ```
@@ -68,21 +68,21 @@ function getPackageId(): string {
 const SUI_CLOCK_OBJECT_ID = "0x6";
 
 /**
- * Update parameters for Dynamic Fields
+ * Update parameters for Dynamic Fields (v3.0.0)
  */
 export interface UpdatePassportParams {
 	/** MedicalPassport object ID */
 	passportId: string;
 	/** Data type (e.g., "basic_profile", "medications") */
 	dataType: DataType | string;
-	/** Array of Walrus blob IDs for this data type */
-	blobIds: string[];
+	/** Metadata blob ID (v3.0.0: single metadata blob, not array) */
+	metadataBlobId: string;
 	/** If true, use replace_data_entry; if false, use add_data_entry */
 	replace?: boolean;
 }
 
 /**
- * Parameters for batch update
+ * Parameters for batch update (v3.0.0)
  */
 export interface UpdateMultiplePassportParams {
 	/** MedicalPassport object ID */
@@ -90,7 +90,7 @@ export interface UpdateMultiplePassportParams {
 	/** Array of data entries to add/replace */
 	dataEntries: Array<{
 		dataType: DataType | string;
-		blobIds: string[];
+		metadataBlobId: string;
 		replace: boolean;
 	}>;
 }
@@ -129,20 +129,20 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	const [digest, setDigest] = useState<string | null>(null);
 
 	/**
-	 * Update passport Dynamic Fields on-chain
+	 * Update passport Dynamic Fields on-chain (v3.0.0)
 	 */
 	const updatePassportData = useCallback(
 		async (params: UpdatePassportParams) => {
-			const { passportId, dataType, blobIds, replace = false } = params;
+			const { passportId, dataType, metadataBlobId, replace = false } = params;
 
 			// Validate: wallet must be connected
 			if (!currentAccount?.address) {
 				throw new Error("Wallet not connected");
 			}
 
-			// Validate: blob IDs must be provided
-			if (!blobIds || blobIds.length === 0) {
-				throw new Error("At least one blob ID must be provided");
+			// Validate: metadata blob ID must be provided
+			if (!metadataBlobId) {
+				throw new Error("Metadata blob ID must be provided");
 			}
 
 			setIsUpdating(true);
@@ -155,17 +155,17 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				// Generate seal_id from wallet address and data type
 				const sealId = await generateSealId(currentAccount.address, dataType);
 
-				console.log("[UpdatePassport] Preparing transaction...");
+				console.log("[UpdatePassport] Preparing transaction (v3.0.0)...");
 				console.log(`  Passport ID: ${passportId}`);
 				console.log(`  Data Type: ${dataType}`);
 				console.log(`  Seal ID: ${sealId}`);
-				console.log(`  Blob IDs: ${blobIds.join(", ")}`);
+				console.log(`  Metadata Blob ID: ${metadataBlobId}`);
 				console.log(`  Mode: ${replace ? "replace" : "add"}`);
 
 				// Build transaction
 				const tx = new Transaction();
 
-				// Use add_data_entry or replace_data_entry
+				// Use add_data_entry or replace_data_entry (v3.0.0: metadata_blob_id)
 				const functionName = replace ? "replace_data_entry" : "add_data_entry";
 				tx.moveCall({
 					target: `${packageId}::accessor::${functionName}`,
@@ -173,7 +173,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 						tx.object(passportId), // passport
 						tx.pure.string(dataType), // data_type
 						tx.pure.vector("u8", Array.from(fromHex(sealId))), // seal_id (vector<u8>)
-						tx.pure.vector("string", blobIds), // blob_ids (vector<String>)
+						tx.pure.string(metadataBlobId), // metadata_blob_id (String)
 						tx.object(SUI_CLOCK_OBJECT_ID), // clock
 					],
 				});
@@ -214,7 +214,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 	);
 
 	/**
-	 * Update multiple data types in a single transaction
+	 * Update multiple data types in a single transaction (v3.0.0)
 	 */
 	const updateMultiplePassportData = useCallback(
 		async (params: UpdateMultiplePassportParams) => {
@@ -230,11 +230,11 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 				throw new Error("At least one data entry must be provided");
 			}
 
-			// Validate: all data entries must have blob IDs
+			// Validate: all data entries must have metadata blob ID
 			for (const entry of dataEntries) {
-				if (!entry.blobIds || entry.blobIds.length === 0) {
+				if (!entry.metadataBlobId) {
 					throw new Error(
-						`Data type "${entry.dataType}" must have at least one blob ID`,
+						`Data type "${entry.dataType}" must have a metadata blob ID`,
 					);
 				}
 			}
@@ -246,12 +246,14 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 			try {
 				const packageId = getPackageId();
 
-				console.log("[UpdateMultiplePassport] Preparing batch transaction...");
+				console.log(
+					"[UpdateMultiplePassport] Preparing batch transaction (v3.0.0)...",
+				);
 				console.log(`  Passport ID: ${passportId}`);
 				console.log(`  Data Entries: ${dataEntries.length}`);
 				for (const entry of dataEntries) {
 					console.log(
-						`    - ${entry.dataType}: ${entry.blobIds.join(", ")} (${entry.replace ? "replace" : "add"})`,
+						`    - ${entry.dataType}: ${entry.metadataBlobId} (${entry.replace ? "replace" : "add"})`,
 					);
 				}
 
@@ -273,7 +275,7 @@ export function useUpdatePassportData(): UseUpdatePassportDataReturn {
 							tx.object(passportId), // passport
 							tx.pure.string(entry.dataType), // data_type
 							tx.pure.vector("u8", Array.from(fromHex(sealId))), // seal_id (vector<u8>)
-							tx.pure.vector("string", entry.blobIds), // blob_ids (vector<String>)
+							tx.pure.string(entry.metadataBlobId), // metadata_blob_id (String)
 							tx.object(SUI_CLOCK_OBJECT_ID), // clock
 						],
 					});

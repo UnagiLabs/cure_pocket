@@ -21,6 +21,11 @@ import {
 } from "@/lib/profileConverter";
 import { getTheme } from "@/lib/themes";
 import type { AgeBand, MedicalHistory, PatientProfile } from "@/types";
+import type { DataType } from "@/types/healthData";
+import type {
+	BasicProfileMetadataEntry,
+	ConditionsMetadataEntry,
+} from "@/types/metadata";
 
 function birthDateToAgeBand(birthDate: string | null): AgeBand | null {
 	if (!birthDate) return null;
@@ -238,13 +243,41 @@ export default function ConditionsPage() {
 			// Step 2: 並列暗号化とアップロード（seal_idはフック内で自動生成）
 			const encryptionResults = await encryptAndStoreMultiple(dataItems);
 
-			// Step 3: 各データ型のオンチェーン存在チェック
+			// Step 3: 各データ型に対してv3.0.0メタデータBlobを作成してアップロード
 			const dataEntries = await Promise.all(
 				encryptionResults.map(async (result) => {
 					const exists = await checkExists(passport.id, result.dataType);
+
+					// v3.0.0メタデータエントリを作成
+					const metadataEntry:
+						| BasicProfileMetadataEntry
+						| ConditionsMetadataEntry =
+						result.dataType === "basic_profile"
+							? { blob_id: result.blobId }
+							: {
+									blob_id: result.blobId,
+									condition_count: cleanedConditions.length,
+								};
+
+					// v3.0.0メタデータ構造を作成
+					const metadata = {
+						schema_version: "3.0.0" as const,
+						data_type: result.dataType,
+						updated_at: Date.now(),
+						entries: [metadataEntry],
+					};
+
+					// メタデータBlobを暗号化・アップロード
+					const metadataUploadResult = await encryptAndStoreMultiple([
+						{
+							data: metadata as unknown as HealthDataTypes,
+							dataType: result.dataType as DataType,
+						},
+					]);
+
 					return {
 						dataType: result.dataType,
-						blobIds: [result.blobId],
+						metadataBlobId: metadataUploadResult[0].blobId, // メタデータBlobのID
 						replace: exists,
 					};
 				}),

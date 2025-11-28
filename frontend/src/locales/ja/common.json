@@ -706,11 +706,24 @@
 		"newRecord": "新しいデータを記録",
 		"dataHistory": "データ履歴",
 		"saveRecord": "記録を保存",
+		"saving": "保存中...",
+		"records": "記録一覧",
+		"noRecords": "記録がありません",
+		"confirmDelete": "この記録を削除してもよろしいですか？",
 		"period": {
 			"week": "1週間",
 			"month": "1ヶ月",
 			"3months": "3ヶ月",
 			"year": "1年"
+		},
+		"validation": {
+			"bloodPressureRequired": "最高血圧と最低血圧の両方を入力してください",
+			"valueRequired": "値を入力してください"
+		},
+		"error": {
+			"saveFailed": "バイタルデータの保存に失敗しました",
+			"deleteFailed": "バイタルデータの削除に失敗しました",
+			"editFailed": "バイタルデータの編集に失敗しました"
 		}
 	},
 	"validation": {
@@ -856,6 +869,10 @@
 	},
 	"common": {
 		"download": "ダウンロード",
-		"back": "戻る"
+		"back": "戻る",
+		"save": "保存",
+		"cancel": "キャンセル",
+		"edit": "編集",
+		"delete": "削除"
 	}
 }
