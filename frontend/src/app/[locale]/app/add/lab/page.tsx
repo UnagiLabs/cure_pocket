@@ -861,7 +861,7 @@ function LabInputRow({
 					className="text-xs truncate"
 					style={{ color: theme.colors.textSecondary }}
 				>
-					{locale === "ja" ? field.referenceJa : field.referenceEn}
+					{field.reference}
 				</p>
 			</div>
 

@@ -4,6 +4,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
+import { LAB_FIELDS, LAB_GROUPS } from "@/data/labFields";
 import type {
 	LabItem,
 	LabResult,
@@ -16,6 +17,9 @@ import type {
 // 検査項目フィールド定義
 // ==========================================
 
+/**
+ * 検査項目グループID
+ */
 export type LabGroupId =
 	| "cbc"
 	| "electrolyteRenal"
@@ -24,22 +28,37 @@ export type LabGroupId =
 	| "glucose"
 	| "optional";
 
+/**
+ * 検査項目カテゴリ
+ */
 export type LabCategory =
 	| "biochemistry"
 	| "hematology"
 	| "immunology"
 	| "other";
 
+/**
+ * 検査項目フィールド定義インターフェース
+ *
+ * 各検査項目のID、ラベル、単位、基準値範囲、LOINCコードなどを定義。
+ * 性別に応じた基準値が異なる項目は refRanges プロパティで定義。
+ */
 export interface LabFieldDefinition {
 	id: string;
 	group: LabGroupId;
 	labelEn: string;
 	labelJa: string;
+	labelZh: string;
+	labelFr: string;
+	labelPt: string;
 	unit: string;
 	refLow?: number;
 	refHigh?: number;
-	referenceJa: string;
-	referenceEn: string;
+	/**
+	 * 基準値範囲（全言語共通）
+	 * 数値は言語に関係なく同じため、1つのフィールドで管理
+	 */
+	reference: string;
 	loincCode: string;
 	category: LabCategory;
 	/**
@@ -54,368 +73,11 @@ export interface LabFieldDefinition {
 
 /**
  * 検査項目定義（LOINCコード付き）
+ *
+ * データは frontend/src/data/labFields.ts からインポート。
+ * 既存のインポートパスとの互換性のため、ここから再エクスポート。
  */
-export const LAB_FIELDS: LabFieldDefinition[] = [
-	// CBC（血算）- hematology
-	{
-		id: "wbc",
-		group: "cbc",
-		labelEn: "WBC (White blood cells)",
-		labelJa: "WBC（白血球数）",
-		unit: "/µL",
-		refLow: 4000,
-		refHigh: 10000,
-		referenceJa: "4,000〜10,000",
-		referenceEn: "4,000-10,000",
-		loincCode: "26464-8",
-		category: "hematology",
-	},
-	{
-		id: "rbc",
-		group: "cbc",
-		labelEn: "RBC (Red blood cells)",
-		labelJa: "RBC（赤血球数）",
-		unit: "×10⁶/µL",
-		refLow: 4.0,
-		refHigh: 5.5,
-		referenceJa: "4.0〜5.5",
-		referenceEn: "4.0-5.5",
-		loincCode: "26453-1",
-		category: "hematology",
-	},
-	{
-		id: "hb",
-		group: "cbc",
-		labelEn: "Hb (Hemoglobin)",
-		labelJa: "Hb（ヘモグロビン）",
-		unit: "g/dL",
-		refLow: 12.0,
-		refHigh: 17.0,
-		referenceJa: "男: 13.0〜17.0 / 女: 12.0〜15.5",
-		referenceEn: "M: 13.0-17.0 / F: 12.0-15.5",
-		loincCode: "718-7",
-		category: "hematology",
-		refRanges: {
-			male: { low: 13.0, high: 17.0 },
-			female: { low: 12.0, high: 15.5 },
-		},
-	},
-	{
-		id: "hct",
-		group: "cbc",
-		labelEn: "Hct (Hematocrit)",
-		labelJa: "Hct（ヘマトクリット）",
-		unit: "%",
-		refLow: 36,
-		refHigh: 50,
-		referenceJa: "男: 40〜50 / 女: 36〜45",
-		referenceEn: "M: 40-50 / F: 36-45",
-		loincCode: "4544-3",
-		category: "hematology",
-		refRanges: {
-			male: { low: 40, high: 50 },
-			female: { low: 36, high: 45 },
-		},
-	},
-	{
-		id: "plt",
-		group: "cbc",
-		labelEn: "PLT (Platelets)",
-		labelJa: "PLT（血小板数）",
-		unit: "×10³/µL",
-		refLow: 150,
-		refHigh: 400,
-		referenceJa: "150〜400",
-		referenceEn: "150-400",
-		loincCode: "26515-7",
-		category: "hematology",
-	},
-
-	// 電解質・腎機能 - biochemistry
-	{
-		id: "na",
-		group: "electrolyteRenal",
-		labelEn: "Na (Sodium)",
-		labelJa: "Na（ナトリウム）",
-		unit: "mEq/L",
-		refLow: 135,
-		refHigh: 145,
-		referenceJa: "135〜145",
-		referenceEn: "135-145",
-		loincCode: "2951-2",
-		category: "biochemistry",
-	},
-	{
-		id: "k",
-		group: "electrolyteRenal",
-		labelEn: "K (Potassium)",
-		labelJa: "K（カリウム）",
-		unit: "mEq/L",
-		refLow: 3.5,
-		refHigh: 5.0,
-		referenceJa: "3.5〜5.0",
-		referenceEn: "3.5-5.0",
-		loincCode: "2823-3",
-		category: "biochemistry",
-	},
-	{
-		id: "cl",
-		group: "electrolyteRenal",
-		labelEn: "Cl (Chloride)",
-		labelJa: "Cl（クロール）",
-		unit: "mEq/L",
-		refLow: 96,
-		refHigh: 106,
-		referenceJa: "96〜106",
-		referenceEn: "96-106",
-		loincCode: "2075-0",
-		category: "biochemistry",
-	},
-	{
-		id: "bun",
-		group: "electrolyteRenal",
-		labelEn: "BUN (Blood Urea Nitrogen)",
-		labelJa: "BUN（尿素窒素）",
-		unit: "mg/dL",
-		refLow: 8,
-		refHigh: 20,
-		referenceJa: "8〜20",
-		referenceEn: "8-20",
-		loincCode: "3094-0",
-		category: "biochemistry",
-	},
-	{
-		id: "cre",
-		group: "electrolyteRenal",
-		labelEn: "Cre (Creatinine)",
-		labelJa: "Cre（クレアチニン）",
-		unit: "mg/dL",
-		refLow: 0.6,
-		refHigh: 1.2,
-		referenceJa: "男: 0.7〜1.3 / 女: 0.6〜1.1",
-		referenceEn: "M: 0.7-1.3 / F: 0.6-1.1",
-		loincCode: "2160-0",
-		category: "biochemistry",
-		refRanges: {
-			male: { low: 0.7, high: 1.3 },
-			female: { low: 0.6, high: 1.1 },
-		},
-	},
-	{
-		id: "egfr",
-		group: "electrolyteRenal",
-		labelEn: "eGFR",
-		labelJa: "eGFR（推算糸球体濾過量）",
-		unit: "mL/min/1.73m²",
-		refLow: 60,
-		refHigh: undefined,
-		referenceJa: "≥60",
-		referenceEn: "≥60",
-		loincCode: "33914-3",
-		category: "biochemistry",
-	},
-
-	// 肝機能 - biochemistry
-	{
-		id: "ast",
-		group: "liver",
-		labelEn: "AST (GOT)",
-		labelJa: "AST（GOT）",
-		unit: "U/L",
-		refLow: 10,
-		refHigh: 40,
-		referenceJa: "10〜40",
-		referenceEn: "10-40",
-		loincCode: "1920-8",
-		category: "biochemistry",
-	},
-	{
-		id: "alt",
-		group: "liver",
-		labelEn: "ALT (GPT)",
-		labelJa: "ALT（GPT）",
-		unit: "U/L",
-		refLow: 5,
-		refHigh: 40,
-		referenceJa: "5〜40",
-		referenceEn: "5-40",
-		loincCode: "1742-6",
-		category: "biochemistry",
-	},
-	{
-		id: "alp",
-		group: "liver",
-		labelEn: "ALP",
-		labelJa: "ALP（アルカリフォスファターゼ）",
-		unit: "U/L",
-		refLow: 30,
-		refHigh: 130,
-		referenceJa: "30〜130",
-		referenceEn: "30-130",
-		loincCode: "6768-6",
-		category: "biochemistry",
-	},
-	{
-		id: "ggt",
-		group: "liver",
-		labelEn: "γ-GTP",
-		labelJa: "γ-GTP",
-		unit: "U/L",
-		refLow: undefined,
-		refHigh: 80,
-		referenceJa: "男: ≤80 / 女: ≤30",
-		referenceEn: "M: ≤80 / F: ≤30",
-		loincCode: "2324-2",
-		category: "biochemistry",
-		refRanges: {
-			male: { high: 80 },
-			female: { high: 30 },
-		},
-	},
-	{
-		id: "tbil",
-		group: "liver",
-		labelEn: "T-Bil (Total Bilirubin)",
-		labelJa: "T-Bil（総ビリルビン）",
-		unit: "mg/dL",
-		refLow: 0.2,
-		refHigh: 1.2,
-		referenceJa: "0.2〜1.2",
-		referenceEn: "0.2-1.2",
-		loincCode: "1975-2",
-		category: "biochemistry",
-	},
-	{
-		id: "alb",
-		group: "liver",
-		labelEn: "Alb (Albumin)",
-		labelJa: "Alb（アルブミン）",
-		unit: "g/dL",
-		refLow: 3.5,
-		refHigh: 5.0,
-		referenceJa: "3.5〜5.0",
-		referenceEn: "3.5-5.0",
-		loincCode: "1751-7",
-		category: "biochemistry",
-	},
-
-	// 脂質 - biochemistry
-	{
-		id: "ldl",
-		group: "lipid",
-		labelEn: "LDL-C (LDL Cholesterol)",
-		labelJa: "LDL-C（LDLコレステロール）",
-		unit: "mg/dL",
-		refLow: undefined,
-		refHigh: 140,
-		referenceJa: "<140",
-		referenceEn: "<140",
-		loincCode: "13457-7",
-		category: "biochemistry",
-	},
-	{
-		id: "hdl",
-		group: "lipid",
-		labelEn: "HDL-C (HDL Cholesterol)",
-		labelJa: "HDL-C（HDLコレステロール）",
-		unit: "mg/dL",
-		refLow: 40,
-		refHigh: undefined,
-		referenceJa: "≥40",
-		referenceEn: "≥40",
-		loincCode: "2085-9",
-		category: "biochemistry",
-	},
-	{
-		id: "tg",
-		group: "lipid",
-		labelEn: "TG (Triglycerides)",
-		labelJa: "TG（中性脂肪）",
-		unit: "mg/dL",
-		refLow: undefined,
-		refHigh: 150,
-		referenceJa: "<150",
-		referenceEn: "<150",
-		loincCode: "2571-8",
-		category: "biochemistry",
-	},
-
-	// 血糖 - biochemistry
-	{
-		id: "glu_f",
-		group: "glucose",
-		labelEn: "FBS (Fasting Blood Sugar)",
-		labelJa: "空腹時血糖",
-		unit: "mg/dL",
-		refLow: 70,
-		refHigh: 109,
-		referenceJa: "70〜109",
-		referenceEn: "70-109",
-		loincCode: "1558-6",
-		category: "biochemistry",
-	},
-	{
-		id: "hba1c",
-		group: "glucose",
-		labelEn: "HbA1c",
-		labelJa: "HbA1c",
-		unit: "%",
-		refLow: 4.6,
-		refHigh: 6.2,
-		referenceJa: "4.6〜6.2",
-		referenceEn: "4.6-6.2",
-		loincCode: "4548-4",
-		category: "biochemistry",
-	},
-
-	// その他 - immunology / biochemistry
-	{
-		id: "crp",
-		group: "optional",
-		labelEn: "CRP (C-Reactive Protein)",
-		labelJa: "CRP（C反応性タンパク）",
-		unit: "mg/dL",
-		refLow: undefined,
-		refHigh: 0.3,
-		referenceJa: "≤0.3",
-		referenceEn: "≤0.3",
-		loincCode: "1988-5",
-		category: "immunology",
-	},
-	{
-		id: "tsh",
-		group: "optional",
-		labelEn: "TSH",
-		labelJa: "TSH（甲状腺刺激ホルモン）",
-		unit: "µIU/mL",
-		refLow: 0.4,
-		refHigh: 4.0,
-		referenceJa: "0.4〜4.0",
-		referenceEn: "0.4-4.0",
-		loincCode: "3016-3",
-		category: "biochemistry",
-	},
-];
-
-/**
- * グループ定義
- */
-export const LAB_GROUPS: {
-	id: LabGroupId;
-	labelEn: string;
-	labelJa: string;
-}[] = [
-	{ id: "cbc", labelEn: "CBC (Blood Count)", labelJa: "血算（CBC）" },
-	{
-		id: "electrolyteRenal",
-		labelEn: "Electrolytes & Renal",
-		labelJa: "電解質・腎機能",
-	},
-	{ id: "liver", labelEn: "Liver Function", labelJa: "肝機能" },
-	{ id: "lipid", labelEn: "Lipids", labelJa: "脂質" },
-	{ id: "glucose", labelEn: "Glucose", labelJa: "血糖" },
-	{ id: "optional", labelEn: "Optional", labelJa: "その他" },
-];
+export { LAB_FIELDS, LAB_GROUPS };
 
 // ==========================================
 // OCR結果マッピング用エイリアス
@@ -583,11 +245,7 @@ export function calculateFlag(
 	let effectiveRefLow = refLow;
 	let effectiveRefHigh = refHigh;
 
-	if (
-		refRanges &&
-		gender &&
-		(gender === "male" || gender === "female")
-	) {
+	if (refRanges && gender && (gender === "male" || gender === "female")) {
 		const genderRange = refRanges[gender];
 		if (genderRange) {
 			effectiveRefLow = genderRange.low ?? refLow;
@@ -687,9 +345,28 @@ export function formValuesToLabResultsData(
 			}
 		}
 
+		// ロケールに応じたラベルを選択
+		let localLabel: string;
+		switch (locale) {
+			case "ja":
+				localLabel = field.labelJa;
+				break;
+			case "zh":
+				localLabel = field.labelZh;
+				break;
+			case "fr":
+				localLabel = field.labelFr;
+				break;
+			case "pt":
+				localLabel = field.labelPt;
+				break;
+			default:
+				localLabel = field.labelEn;
+		}
+
 		const name: LocalizedString = {
 			en: field.labelEn,
-			local: locale === "ja" ? field.labelJa : field.labelEn,
+			local: localLabel,
 		};
 
 		items.push({
