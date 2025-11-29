@@ -1,6 +1,6 @@
 <div align="center">
   <img src="./Presentation/images/logo.png" alt="CurePocket Logo" width="200" />
-  <h1>🌍💊 CurePocket</h1>
+  <h1>CurePocket</h1>
   <h3>Your Global Health Passport on Sui / 世界中どこでも使えるヘルスパスポート</h3>
 
   <p>
@@ -23,15 +23,15 @@
 
 ---
 
-## 📖 About The Project
+## About The Project
 
-### 🇬🇧 English
+###  English
 **CurePocket** is a privacy-first personal health passport designed to solve the fragmentation of medical data.
 Born from the real-world experience of a **practicing pharmacist**, it addresses critical issues like forgotten medication history, lost lab results, and the inability to share health data across borders.
 
 By leveraging **Sui** for ownership, **Walrus** for decentralized storage, and **Seal** for encryption, CurePocket empowers patients to own their health data and share it securely—only when they want to.
 
-### 🇯🇵 日本語
+###  日本語
 **CurePocket（キュアポケット）** は、医療データの分断を解消するために設計された、プライバシーファーストの個人用ヘルスパスポートです。
 **現役薬剤師**の実体験から生まれたこのプロジェクトは、「お薬手帳の持参忘れ」「検査結果の紛失」「海外渡航時の医療情報共有の難しさ」といった現場の課題を解決します。
 
@@ -39,15 +39,15 @@ By leveraging **Sui** for ownership, **Walrus** for decentralized storage, and *
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🔐 Privacy & Security (プライバシーとセキュリティ)
+### Privacy & Security (プライバシーとセキュリティ)
 - **Patient-Owned Encryption:** All medical data (Prescriptions, X-rays, Lab results) is encrypted using **Seal**. Only the patient holds the decryption keys.
   - 全ての医療データは **Seal** で暗号化されます。復号鍵を持つのは患者本人だけです。
 - **Decentralized Storage:** Large files like MRI/CT scans are stored on **Walrus**, ensuring data permanence and privacy without centralized servers.
   - MRIやCTなどの大容量ファイルは **Walrus** に保存され、サーバーレスで永続性と秘匿性を確保します。
 
-### 📱 Mobile-First Experience (モバイルファースト体験)
+### Mobile-First Experience (モバイルファースト体験)
 - **Pocket-Sized Health:** Access your entire medical history from a smartphone. Simple UI designed for non-tech-savvy patients.
   - スマホひとつで全ての病歴にアクセス。ITに詳しくない患者さんでも使える直感的なデザインです。
 - **AI-Powered OCR:** Instantly digitize paper prescriptions and lab reports using the camera.
@@ -55,7 +55,7 @@ By leveraging **Sui** for ownership, **Walrus** for decentralized storage, and *
 - **QR Code Sharing:** Share temporary access to doctors instantly via QR code (e.g., in emergencies or travel).
   - 緊急時や旅行先でも、QRコードを見せるだけで医師に一時的なアクセス権を付与できます。
 
-### 🆔 Sui Medical Passport (Sui メディカルパスポート)
+### Sui Medical Passport (Sui メディカルパスポート)
 - **SBT Identity:** A Soulbound Token (SBT) on Sui acts as your immutable health identity.
   - Sui上の譲渡不可トークン（SBT）が、改ざん不可能な医療IDとして機能します。
 - **Interoperability:** Built with global standards (FHIR/ATC) in mind for cross-border usage.
@@ -63,7 +63,7 @@ By leveraging **Sui** for ownership, **Walrus** for decentralized storage, and *
 
 ---
 
-## 🚀 Try Demo
+## Try Demo
 
 Experience the live application directly in your browser.
 ブラウザですぐに動作するデモをお試しいただけます。
@@ -75,7 +75,7 @@ Experience the live application directly in your browser.
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 The system consists of three core layers: **Sui (Identity & Logic)**, **Walrus (Storage)**, and **Seal (Encryption)**.
 
@@ -110,7 +110,7 @@ graph TD
 
 -----
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Category | Technology | Usage |
 |---|---|---|
@@ -118,11 +118,10 @@ graph TD
 | **Storage** | **Walrus** | Encrypted Medical Data (JSON, Images, PDF) |
 | **Security** | **Seal** | TEE-based Key Management & Encryption |
 | **Frontend** | **Next.js / TypeScript** | Mobile-first PWA, Wallet Integration |
-| **AI** | **Google Gemini / OCR** | Prescription & Lab Result digitization |
 
 -----
 
-## 👥 Team Unagi Labs
+## Team Unagi Labs
 
 We are a team of builders bridging the gap between **Healthcare** and **Web3**.
 
@@ -131,6 +130,4 @@ We are a team of builders bridging the gap between **Healthcare** and **Web3**.
 
 -----
 
-\<div align="center"\>
-\<p\>Made with ❤️ for a healthier decentralized world.\</p\>
-\</div\>
+**Made with ❤️ for a healthier decentralized world.**
