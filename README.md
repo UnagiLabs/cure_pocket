@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./Presentation/images/logo.png" alt="CurePocket Logo" width="200" />
   <h1>CurePocket</h1>
-  <h3>Your Global Health Passport on Sui / 世界中どこでも使えるヘルスパスポート</h3>
+  <h3>Your Global Health Passport on Sui</h3>
 
   <p>
     <strong>Secure. Private. Portable.</strong><br>
