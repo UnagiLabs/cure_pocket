@@ -1,30 +1,22 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { LabForm } from "@/components/forms/LabForm";
+import { useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { getTheme } from "@/lib/themes";
 
 /**
  * 検査値一覧ページ
- * 登録された検査値を一覧表示し、同一画面で追加も行う
+ * 登録された検査値を一覧表示
  */
 export default function LabsPage() {
 	const t = useTranslations();
 	const router = useRouter();
 	const locale = useLocale();
-	const searchParams = useSearchParams();
 	const { labResults, settings } = useApp();
 	const theme = getTheme(settings.theme);
-
-	const [isAddOpen, setIsAddOpen] = useState(false);
-
-	useEffect(() => {
-		setIsAddOpen(searchParams.get("mode") === "add");
-	}, [searchParams]);
 
 	// 日付順にソート（新しい順）
 	const sortedResults = useMemo(() => {
@@ -33,19 +25,8 @@ export default function LabsPage() {
 		);
 	}, [labResults]);
 
-	const openAdd = () => {
-		setIsAddOpen(true);
-		const params = new URLSearchParams(searchParams.toString());
-		params.set("mode", "add");
-		router.replace(`/${locale}/app/labs?${params.toString()}`);
-	};
-
-	const closeAdd = () => {
-		setIsAddOpen(false);
-		const params = new URLSearchParams(searchParams.toString());
-		params.delete("mode");
-		const query = params.toString();
-		router.replace(`/${locale}/app/labs${query ? `?${query}` : ""}`);
+	const handleAdd = () => {
+		router.push(`/${locale}/app/add/lab`);
 	};
 
 	return (
@@ -68,7 +49,7 @@ export default function LabsPage() {
 				</div>
 				<button
 					type="button"
-					onClick={openAdd}
+					onClick={handleAdd}
 					className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors"
 					style={{ backgroundColor: theme.colors.primary }}
 				>
@@ -167,40 +148,6 @@ export default function LabsPage() {
 							</div>
 						);
 					})}
-				</div>
-			)}
-
-			{/* Add Lab Form (inline panel) */}
-			{isAddOpen && (
-				<div
-					className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t bg-white p-4 shadow-lg md:static md:rounded-xl md:border md:p-6"
-					style={{
-						backgroundColor: theme.colors.background,
-						borderColor: `${theme.colors.textSecondary}20`,
-					}}
-				>
-					<div className="mb-4 flex items-center justify-between">
-						<h2
-							className="text-lg font-bold md:text-xl"
-							style={{ color: theme.colors.text }}
-						>
-							{t("labs.add")}
-						</h2>
-						<button
-							type="button"
-							onClick={closeAdd}
-							className="rounded-full p-2"
-							style={{ color: theme.colors.textSecondary }}
-						>
-							<X className="h-5 w-5" />
-						</button>
-					</div>
-					<LabForm
-						onSaved={() => {
-							closeAdd();
-						}}
-						onCancel={closeAdd}
-					/>
 				</div>
 			)}
 		</div>
