@@ -1,6 +1,10 @@
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSuiClient,
+} from "@mysten/dapp-kit";
 import {
 	Camera,
 	Image as ImageIcon,
@@ -86,6 +90,8 @@ export default function AddPrescriptionPage() {
 	// Walrus関連フック
 	const suiClient = useSuiClient();
 	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } =
+		useSignAndExecuteTransaction();
 	const { passport } = usePassport();
 	const { updatePassportData, isUpdating } = useUpdatePassportData();
 	const { sessionKey } = useSessionKeyManager();
@@ -399,7 +405,10 @@ export default function AddPrescriptionPage() {
 			);
 
 			// Walrusにアップロード（データBlob）
-			const walrusRef = await uploadToWalrus(encryptedObject);
+			const walrusRef = await uploadToWalrus(encryptedObject, {
+				signAndExecuteTransaction,
+				owner: currentAccount.address,
+			});
 			setIsSaving(false);
 
 			console.log(
@@ -430,7 +439,10 @@ export default function AddPrescriptionPage() {
 			});
 
 			// メタデータBlobをアップロード
-			const metadataRef = await uploadToWalrus(encryptedMetadata);
+			const metadataRef = await uploadToWalrus(encryptedMetadata, {
+				signAndExecuteTransaction,
+				owner: currentAccount.address,
+			});
 			console.log(
 				`[AddMedication] Metadata blob upload complete, blobId: ${metadataRef.blobId}`,
 			);

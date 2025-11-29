@@ -14,7 +14,11 @@
  */
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSuiClient,
+} from "@mysten/dapp-kit";
 import { useCallback, useMemo } from "react";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
@@ -99,6 +103,8 @@ export function useMetadataManager<TEntry extends BaseMetadataEntry>(
 
 	const suiClient = useSuiClient();
 	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } =
+		useSignAndExecuteTransaction();
 	const { passport } = usePassport();
 	const { sessionKey } = useSessionKeyManager();
 	const { updatePassportData } = useUpdatePassportData();
@@ -208,7 +214,10 @@ export function useMetadataManager<TEntry extends BaseMetadataEntry>(
 				});
 
 				// Walrusにアップロード
-				const walrusRef = await uploadToWalrus(encryptedObject);
+				const walrusRef = await uploadToWalrus(encryptedObject, {
+					signAndExecuteTransaction,
+					owner: currentAccount.address,
+				});
 				console.log(`[MetadataManager] Metadata uploaded: ${walrusRef.blobId}`);
 
 				// 新規か既存かを判定
@@ -235,6 +244,7 @@ export function useMetadataManager<TEntry extends BaseMetadataEntry>(
 			getSealId,
 			isNewEntry,
 			suiClient,
+			signAndExecuteTransaction,
 			updatePassportData,
 		],
 	);
@@ -307,7 +317,10 @@ export function useMetadataManager<TEntry extends BaseMetadataEntry>(
 				});
 
 				// Walrusにアップロード
-				const walrusRef = await uploadToWalrus(encryptedObject);
+				const walrusRef = await uploadToWalrus(encryptedObject, {
+					signAndExecuteTransaction,
+					owner: currentAccount.address,
+				});
 				console.log(
 					`[MetadataManager] Data blob uploaded: ${walrusRef.blobId}`,
 				);
@@ -318,7 +331,7 @@ export function useMetadataManager<TEntry extends BaseMetadataEntry>(
 				throw err;
 			}
 		},
-		[currentAccount, dataType, getSealId, suiClient],
+		[currentAccount, dataType, getSealId, suiClient, signAndExecuteTransaction],
 	);
 
 	/**

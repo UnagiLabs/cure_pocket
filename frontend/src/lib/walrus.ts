@@ -2,15 +2,19 @@
  * Walrus Blob Storage Integration
  *
  * This module provides utilities for storing and retrieving encrypted medical data
- * using Walrus decentralized blob storage.
+ * using Walrus decentralized blob storage via @mysten/walrus SDK.
  *
  * Walrus Architecture:
  * - Decentralized storage with erasure coding
  * - Content-addressed blobs with on-chain references
- * - HTTP API for upload/download operations
- * - Integration with Sui blockchain for blob objects
+ * - Direct storage node interaction via SDK
+ * - Uses writeFilesFlow for browser-compatible uploads with dapp-kit
  */
 
+import { getFullnodeUrl } from "@mysten/sui/client";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import type { Transaction } from "@mysten/sui/transactions";
+import { type WalrusClient, WalrusFile, walrus } from "@mysten/walrus";
 import type { WalrusBlobReference } from "@/types/healthData";
 
 // ==========================================
@@ -18,76 +22,121 @@ import type { WalrusBlobReference } from "@/types/healthData";
 // ==========================================
 
 /**
- * Walrus Publisher endpoint (for uploads)
+ * Sui network configuration
  */
-const WALRUS_PUBLISHER =
-	process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_URL ||
-	"https://walrus-testnet-publisher.mystenlabs.com";
-
-/**
- * Walrus Aggregator endpoint (for downloads)
- */
-const WALRUS_AGGREGATOR =
-	process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_URL ||
-	"https://walrus-testnet-aggregator.mystenlabs.com";
+const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
+	| "mainnet"
+	| "testnet";
 
 /**
  * Maximum blob size (1MB default)
  */
 const MAX_BLOB_SIZE = 1 * 1024 * 1024;
 
+/**
+ * Default storage epochs (1 epoch ≈ 1 day on testnet)
+ * Testnet has epoch limits, SDK examples use epochs: 3
+ * Can be configured via environment variable for production
+ */
+const DEFAULT_EPOCHS = Number(process.env.NEXT_PUBLIC_WALRUS_EPOCHS) || 5;
+
+/**
+ * Upload relay configuration (optional, reduces request count)
+ */
+const UPLOAD_RELAY_HOST = process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY;
+
+// ==========================================
+// Walrus Client Setup
+// ==========================================
+
+// Type for the extended client with walrus methods
+interface WalrusExtendedClient extends SuiJsonRpcClient {
+	walrus: WalrusClient;
+}
+
+/**
+ * Create Walrus-enabled Sui client
+ * Uses $extend pattern to add walrus functionality
+ */
+function createWalrusClient(): WalrusExtendedClient {
+	// Build walrus options
+	const walrusOptions: Parameters<typeof walrus>[0] = {
+		network: SUI_NETWORK,
+	};
+
+	// Add upload relay if configured
+	if (UPLOAD_RELAY_HOST) {
+		walrusOptions.uploadRelay = {
+			host: UPLOAD_RELAY_HOST,
+			sendTip: {
+				max: 10_000, // Max tip in MIST
+			},
+		};
+	}
+
+	// Add WASM URL for browser environments
+	if (typeof window !== "undefined") {
+		walrusOptions.wasmUrl =
+			process.env.NEXT_PUBLIC_WALRUS_WASM_URL ||
+			"https://unpkg.com/@mysten/walrus-wasm@latest/web/walrus_wasm_bg.wasm";
+	}
+
+	const baseClient = new SuiJsonRpcClient({
+		url: getFullnodeUrl(SUI_NETWORK),
+		network: SUI_NETWORK,
+	});
+
+	// Extend with walrus functionality
+	// Explicitly pass name to satisfy type requirements
+	const walrusExtension = walrus({ ...walrusOptions, name: "walrus" as const });
+	return baseClient.$extend(walrusExtension) as unknown as WalrusExtendedClient;
+}
+
+// Singleton client instance
+let walrusClient: ReturnType<typeof createWalrusClient> | null = null;
+
+/**
+ * Get or create Walrus client instance
+ */
+function getWalrusClient() {
+	if (!walrusClient) {
+		walrusClient = createWalrusClient();
+	}
+	return walrusClient;
+}
+
 // ==========================================
 // Type Definitions
 // ==========================================
 
 /**
- * Walrus upload response for newly created blobs
+ * Transaction executor function type
+ * Compatible with dapp-kit's signAndExecuteTransaction
  */
-interface WalrusNewlyCreatedResponse {
-	newlyCreated: {
-		blobObject: {
-			id: string; // Sui object ID
-			storedEpoch: number;
-			blobId: string; // Content-addressed blob ID
-			size: number;
-			erasureCodeType: string;
-			certifiedEpoch: number;
-			storage: {
-				id: string;
-				startEpoch: number;
-				endEpoch: number;
-				storageSize: number;
-			};
-		};
-		encodedSize: number;
-		cost: number;
-	};
+export type TransactionExecutor = (params: {
+	transaction: Transaction;
+}) => Promise<{ digest: string }>;
+
+/**
+ * Options for upload operations using writeFilesFlow
+ */
+export interface UploadOptions {
+	/** Function to sign and execute transactions (from dapp-kit) */
+	signAndExecuteTransaction: TransactionExecutor;
+	/** Owner address for the blob */
+	owner: string;
+	/** Number of epochs to store (default: DEFAULT_EPOCHS) */
+	epochs?: number;
+	/** Whether the blob can be deleted later (default: false for medical data) */
+	deletable?: boolean;
 }
 
 /**
- * Walrus upload response for already certified blobs
+ * Options for download operations (no signer needed)
  */
-interface WalrusAlreadyCertifiedResponse {
-	alreadyCertified: {
-		blobId: string;
-		objectId: string;
-		endEpoch: number;
-	};
-}
-
-/**
- * Union type for Walrus upload responses
- */
-type WalrusUploadResponse =
-	| WalrusNewlyCreatedResponse
-	| WalrusAlreadyCertifiedResponse;
-
-/**
- * Walrus error response
- */
-interface WalrusErrorResponse {
-	error: string;
-	message?: string;
+export interface DownloadOptions {
+	/** Optional timeout in milliseconds */
+	timeout?: number;
 }
 
 // ==========================================
@@ -95,23 +144,33 @@ interface WalrusErrorResponse {
 // ==========================================
 
 /**
- * Upload encrypted data to Walrus
+ * Upload encrypted data to Walrus using SDK writeFilesFlow
  *
- * Upload flow:
+ * Upload flow (browser-compatible with dapp-kit):
  * 1. Validate data size
- * 2. Send PUT request to /v1/blobs
- * 3. Receive blob reference (blobId + objectId)
- * 4. Return reference for on-chain storage
+ * 2. Create WalrusFile and initialize writeFilesFlow
+ * 3. Encode the blob data
+ * 4. Register the blob (requires transaction signature)
+ * 5. Upload data to storage nodes
+ * 6. Certify the blob (requires transaction signature)
+ * 7. Return blob reference for on-chain storage
  *
  * @param data - Encrypted data to upload (Uint8Array)
- * @param epochs - Number of epochs to store (default: 1)
+ * @param options - Upload options including transaction executor
  * @returns Walrus blob reference
  * @throws Error if upload fails or data exceeds size limit
  */
 export async function uploadToWalrus(
 	data: Uint8Array,
-	_epochs: number = 1,
+	options: UploadOptions,
 ): Promise<WalrusBlobReference> {
+	const {
+		signAndExecuteTransaction,
+		owner,
+		epochs = DEFAULT_EPOCHS,
+		deletable = false,
+	} = options;
+
 	// Validate size
 	if (data.length > MAX_BLOB_SIZE) {
 		throw new Error(
@@ -120,41 +179,61 @@ export async function uploadToWalrus(
 	}
 
 	try {
-		// Upload to Walrus
-		const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs`, {
-			method: "PUT",
-			body: data as unknown as BodyInit,
-			headers: {
-				"Content-Type": "application/octet-stream",
-			},
+		const client = getWalrusClient();
+
+		// Create WalrusFile from data
+		const walrusFile = WalrusFile.from({
+			contents: data,
+			identifier: `medical-data-${Date.now()}`,
 		});
 
-		if (!response.ok) {
-			const errorData = (await response.json()) as WalrusErrorResponse;
-			throw new Error(
-				`Walrus upload failed: ${errorData.error || response.statusText}`,
-			);
+		// Initialize writeFilesFlow for browser-compatible upload
+		const flow = client.walrus.writeFilesFlow({
+			files: [walrusFile],
+		});
+
+		// Step 1: Encode the blob
+		console.log("[Walrus] Encoding blob...");
+		await flow.encode();
+
+		// Step 2: Register the blob (requires wallet signature)
+		console.log("[Walrus] Registering blob...");
+		const registerTx = flow.register({
+			epochs,
+			owner,
+			deletable,
+		});
+		const { digest: registerDigest } = await signAndExecuteTransaction({
+			transaction: registerTx,
+		});
+		console.log(`[Walrus] Register transaction: ${registerDigest}`);
+
+		// Step 3: Upload data to storage nodes
+		console.log("[Walrus] Uploading to storage nodes...");
+		await flow.upload({ digest: registerDigest });
+
+		// Step 4: Certify the blob (requires wallet signature)
+		console.log("[Walrus] Certifying blob...");
+		const certifyTx = flow.certify();
+		const { digest: certifyDigest } = await signAndExecuteTransaction({
+			transaction: certifyTx,
+		});
+		console.log(`[Walrus] Certify transaction: ${certifyDigest}`);
+
+		// Step 5: Get the uploaded file info
+		const files = await flow.listFiles();
+		if (files.length === 0) {
+			throw new Error("No files returned after upload");
 		}
 
-		const result = (await response.json()) as WalrusUploadResponse;
+		const uploadedFile = files[0];
+		console.log(`[Walrus] Upload complete, blobId: ${uploadedFile.blobId}`);
 
-		// Handle both response types
-		if ("newlyCreated" in result) {
-			return {
-				blobId: result.newlyCreated.blobObject.blobId,
-				uploadedAt: Date.now(),
-				size: result.newlyCreated.blobObject.size,
-			};
-		} else if ("alreadyCertified" in result) {
-			// Blob already exists, return existing reference
-			return {
-				blobId: result.alreadyCertified.blobId,
-				uploadedAt: Date.now(),
-				size: data.length,
-			};
-		} else {
-			throw new Error("Unexpected Walrus response format");
-		}
+		return {
+			blobId: uploadedFile.blobId,
+			uploadedAt: Date.now(),
+			size: data.length,
+		};
 	} catch (error) {
 		if (error instanceof Error) {
 			throw new Error(`Failed to upload to Walrus: ${error.message}`);
@@ -164,36 +243,34 @@ export async function uploadToWalrus(
 }
 
 /**
- * Download blob from Walrus by blob ID
+ * Download blob from Walrus by blob ID using SDK
  *
  * Download flow:
- * 1. Send GET request to /v1/blobs/by-blob-id/{blob_id}
- * 2. Receive encrypted data
- * 3. Return as Uint8Array for decryption
+ * 1. Use SDK readBlob to fetch from storage nodes
+ * 2. SDK handles erasure decoding automatically
+ * 3. Return decrypted data as Uint8Array
  *
  * @param blobId - Walrus blob ID (content-addressed)
+ * @param _options - Optional download options
  * @returns Encrypted data as Uint8Array
  * @throws Error if download fails or blob not found
  */
 export async function downloadFromWalrusByBlobId(
 	blobId: string,
+	_options?: DownloadOptions,
 ): Promise<Uint8Array> {
 	try {
-		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
-			method: "GET",
-		});
+		const client = getWalrusClient();
 
-		if (!response.ok) {
-			if (response.status === 404) {
-				throw new Error(`Blob not found: ${blobId}`);
-			}
-			throw new Error(`Walrus download failed: ${response.statusText}`);
-		}
+		// Download using SDK readBlob
+		const data = await client.walrus.readBlob({ blobId });
 
-		const arrayBuffer = await response.arrayBuffer();
-		return new Uint8Array(arrayBuffer);
+		return data;
 	} catch (error) {
 		if (error instanceof Error) {
+			if (error.message.includes("not found")) {
+				throw new Error(`Blob not found: ${blobId}`);
+			}
 			throw new Error(`Failed to download from Walrus: ${error.message}`);
 		}
 		throw new Error("Failed to download from Walrus: Unknown error");
@@ -203,7 +280,8 @@ export async function downloadFromWalrusByBlobId(
 /**
  * Download blob from Walrus by Sui object ID
  *
- * This is useful when you have the on-chain blob object reference.
+ * Note: SDK requires blobId for download. This function first
+ * retrieves the blobId from the Sui object, then downloads.
  *
  * @param objectId - Sui blob object ID
  * @returns Encrypted data as Uint8Array
@@ -213,22 +291,33 @@ export async function downloadFromWalrusByObjectId(
 	objectId: string,
 ): Promise<Uint8Array> {
 	try {
-		const response = await fetch(
-			`${WALRUS_AGGREGATOR}/v1/blobs/by-object-id/${objectId}`,
-			{
-				method: "GET",
-			},
-		);
+		const client = getWalrusClient();
 
-		if (!response.ok) {
-			if (response.status === 404) {
-				throw new Error(`Blob object not found: ${objectId}`);
-			}
-			throw new Error(`Walrus download failed: ${response.statusText}`);
+		// Get blob object to extract blobId
+		const blobObject = await client.getObject({
+			id: objectId,
+			options: { showContent: true },
+		});
+
+		if (!blobObject.data?.content) {
+			throw new Error(`Blob object not found: ${objectId}`);
 		}
 
-		const arrayBuffer = await response.arrayBuffer();
-		return new Uint8Array(arrayBuffer);
+		// Extract blobId from object content
+		const content = blobObject.data.content;
+		if (content.dataType !== "moveObject") {
+			throw new Error(`Invalid blob object type: ${objectId}`);
+		}
+
+		const fields = content.fields as Record<string, unknown>;
+		const blobId = fields.blob_id as string;
+
+		if (!blobId) {
+			throw new Error(`No blobId found in object: ${objectId}`);
+		}
+
+		// Download using blobId
+		return downloadFromWalrusByBlobId(blobId);
 	} catch (error) {
 		if (error instanceof Error) {
 			throw new Error(`Failed to download from Walrus: ${error.message}`);
@@ -245,38 +334,39 @@ export async function downloadFromWalrusByObjectId(
  */
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
-		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
-			method: "HEAD",
-		});
-		return response.ok;
+		const client = getWalrusClient();
+		const blob = await client.walrus.getBlob({ blobId });
+		return blob !== null;
 	} catch {
 		return false;
 	}
 }
 
 /**
- * Delete a blob from Walrus (if supported)
+ * Delete a blob from Walrus (if deletable)
  *
- * Note: Walrus is immutable storage, so deletion may not be supported.
- * This function is a placeholder for future deletion mechanisms.
+ * Note: Only blobs created with deletable=true can be deleted.
+ * Medical data should typically be non-deletable.
  *
  * @param blobId - Walrus blob ID to delete
+ * @param signAndExecuteTransaction - Transaction executor function
  * @returns True if deleted, false otherwise
  */
-export async function deleteBlob(blobId: string): Promise<boolean> {
-	// Walrus is immutable storage
-	// Deletion would require burning the on-chain blob object
-	// This is typically handled through smart contract calls
+export async function deleteBlob(
+	blobId: string,
+	_signAndExecuteTransaction?: TransactionExecutor,
+): Promise<boolean> {
 	console.warn(
-		`Walrus blob deletion not implemented: ${blobId}. Blobs are immutable.`,
+		`Walrus blob deletion attempted: ${blobId}. Medical data should typically be non-deletable.`,
 	);
+
+	// TODO: Implement deletion when SDK supports it
+	// For now, log warning and return false
 	return false;
 }
 
 /**
  * Get blob metadata without downloading content
- *
- * This is useful for checking blob size, epochs, etc. before downloading.
  *
  * @param blobId - Walrus blob ID
  * @returns Blob metadata
@@ -288,25 +378,17 @@ export async function getBlobMetadata(blobId: string): Promise<{
 	certified: boolean;
 }> {
 	try {
-		const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`, {
-			method: "HEAD",
-		});
+		const client = getWalrusClient();
+		const blob = await client.walrus.getBlob({ blobId });
 
-		if (!response.ok) {
+		if (!blob) {
 			throw new Error(`Blob not found: ${blobId}`);
 		}
 
-		const size = Number.parseInt(
-			response.headers.get("Content-Length") || "0",
-			10,
-		);
-		const contentType =
-			response.headers.get("Content-Type") || "application/octet-stream";
-
 		return {
-			size,
-			contentType,
-			certified: true, // Walrus blobs are always certified
+			size: 0, // SDK doesn't expose size directly
+			contentType: "application/octet-stream",
+			certified: true,
 		};
 	} catch (error) {
 		if (error instanceof Error) {
@@ -319,8 +401,10 @@ export async function getBlobMetadata(blobId: string): Promise<{
 /**
  * Estimate storage cost for a blob
  *
- * This is a rough estimate based on blob size and epoch count.
- * Actual cost may vary based on Walrus pricing.
+ * Cost depends on:
+ * - Blob size (determines storage requirements)
+ * - Number of epochs (storage duration)
+ * - Current WAL/SUI prices
  *
  * @param sizeBytes - Size of blob in bytes
  * @param epochs - Number of epochs to store
@@ -328,10 +412,20 @@ export async function getBlobMetadata(blobId: string): Promise<{
  */
 export function estimateStorageCost(
 	sizeBytes: number,
-	epochs: number = 1,
+	epochs: number = DEFAULT_EPOCHS,
 ): number {
-	// Placeholder formula: 1 MIST per KB per epoch
-	// TODO: Update with actual Walrus pricing
+	// Rough estimate: ~0.001 WAL per KB per epoch
+	// This is approximate and actual cost depends on network conditions
 	const sizeKB = Math.ceil(sizeBytes / 1024);
-	return sizeKB * epochs * 1_000; // Cost in MIST
+	return sizeKB * epochs * 1_000_000; // Cost in MIST (rough estimate)
+}
+
+/**
+ * Reset the Walrus client
+ *
+ * Useful when encountering RetryableWalrusClientError during epoch changes.
+ */
+export function resetWalrusClient(): void {
+	const client = getWalrusClient();
+	client.walrus.reset();
 }

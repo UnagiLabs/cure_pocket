@@ -18,7 +18,11 @@ import {
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
 import { PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
+import {
+	downloadFromWalrusByBlobId,
+	type TransactionExecutor,
+	uploadToWalrus,
+} from "@/lib/walrus";
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 
@@ -53,6 +57,7 @@ type EncryptBinaryParams = {
 	file: File | Blob;
 	address: string;
 	suiClient: SuiClient;
+	signAndExecuteTransaction: TransactionExecutor;
 };
 
 /**
@@ -63,6 +68,7 @@ export async function encryptAndStoreImagingBinary({
 	file,
 	address,
 	suiClient,
+	signAndExecuteTransaction,
 }: EncryptBinaryParams): Promise<{
 	blobId: string;
 	contentType: string;
@@ -89,7 +95,10 @@ export async function encryptAndStoreImagingBinary({
 		data: envelope,
 	});
 
-	const walrusRef = await uploadToWalrus(encryptedObject);
+	const walrusRef = await uploadToWalrus(encryptedObject, {
+		signAndExecuteTransaction,
+		owner: address,
+	});
 
 	return {
 		blobId: walrusRef.blobId,

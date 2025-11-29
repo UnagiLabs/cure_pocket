@@ -19,18 +19,15 @@ import {
 	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
-	encryptHealthData,
 } from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { parseSessionKeyFromHeader } from "@/lib/sessionKey";
 import {
 	getDataEntry,
-	getMedicalPassport,
 	getPassportIdByAddress,
 	getSuiClient,
 } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
-import type { HealthData, Medication } from "@/types/healthData";
+import { downloadFromWalrusByBlobId } from "@/lib/walrus";
+import type { Medication } from "@/types/healthData";
 
 export const runtime = "edge";
 
@@ -70,11 +67,12 @@ interface PostMedicationsRequest {
 
 /**
  * POST response format
+ * @deprecated Server-side upload is no longer supported. Use client-side upload.
  */
-interface PostMedicationsResponse {
-	blobId: string;
-	message: string;
-}
+// interface PostMedicationsResponse {
+// 	blobId: string;
+// 	message: string;
+// }
 
 // ==========================================
 // Helper Functions
@@ -336,61 +334,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// 3. Fetch MedicalPassport from blockchain
-		const suiClient = getSuiClient();
-		const passportId = await getPassportIdByAddress(body.address);
+		// NOTE: Walrus SDK upload requires wallet signature which is not available server-side.
+		// This endpoint is deprecated. Use client-side upload via useEncryptAndStore hook instead.
+		console.warn(
+			"[API] POST /api/medications is deprecated. Walrus SDK requires client-side wallet signature.",
+		);
 
-		if (!passportId) {
-			return errorResponse(
-				"MedicalPassport not found for this address",
-				404,
-				"PASSPORT_NOT_FOUND",
-			);
-		}
+		return errorResponse(
+			"Server-side upload is no longer supported. Please use client-side upload with wallet signature.",
+			501,
+			"NOT_IMPLEMENTED",
+		);
 
-		const passport = await getMedicalPassport(passportId);
-
-		// Generate seal_id for medications data type
-		const medicationsSealId = await generateSealId(body.address, "medications");
-
-		// 4. Construct HealthData object
-		const healthData: HealthData = {
-			meta: {
-				schema_version: "1.0.0",
-				updated_at: Date.now(),
-				generator: "CurePocket_API_v1",
-			},
-			profile: {
-				birth_date: "1900-01-01",
-				nationality: passport.countryCode,
-				gender: "other",
-				allergies: [],
-				blood_type: "Unknown",
-			},
-			medications: body.medications,
-			conditions: [],
-			lab_results: [],
-			imaging: [],
-			allergies: [],
-		};
-
-		// 5. Encrypt with Seal
-		const sealClient = createSealClient(suiClient);
-		const { encryptedObject } = await encryptHealthData({
-			healthData,
-			sealClient,
-			sealId: medicationsSealId,
-		});
-
-		// 6. Upload to Walrus
-		const blobRef = await uploadToWalrus(encryptedObject);
-
-		// 7. Return blob_id
-		return NextResponse.json({
-			blobId: blobRef.blobId,
-			message:
-				"Data encrypted and uploaded. Call replace_data_entry on-chain to update passport.",
-		} satisfies PostMedicationsResponse);
+		// Legacy code - kept for reference
+		// const blobRef = await uploadToWalrus(encryptedObject, { signAndExecuteTransaction, owner });
+		// return NextResponse.json({
+		// 	blobId: blobRef.blobId,
+		// 	message:
+		// 		"Data encrypted and uploaded. Call replace_data_entry on-chain to update passport.",
+		// } satisfies PostMedicationsResponse);
 	} catch (error) {
 		console.error("POST /api/medications error:", error);
 		return errorResponse(

@@ -1,6 +1,10 @@
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSuiClient,
+} from "@mysten/dapp-kit";
 import {
 	Camera,
 	ChevronDown,
@@ -94,6 +98,8 @@ export default function AddLabPage() {
 	// Walrus関連フック
 	const suiClient = useSuiClient();
 	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } =
+		useSignAndExecuteTransaction();
 	const { passport } = usePassport();
 	const { updatePassportData, isUpdating } = useUpdatePassportData();
 	const { sessionKey } = useSessionKeyManager();
@@ -365,7 +371,10 @@ export default function AddLabPage() {
 			);
 
 			// Walrusにアップロード（データBlob）
-			const walrusRef = await uploadToWalrus(encryptedObject);
+			const walrusRef = await uploadToWalrus(encryptedObject, {
+				signAndExecuteTransaction,
+				owner: currentAccount.address,
+			});
 
 			console.log(
 				`[AddLab] Data blob upload complete, blobId: ${walrusRef.blobId}`,
@@ -393,7 +402,10 @@ export default function AddLabPage() {
 			});
 
 			// メタデータBlobをアップロード
-			const metadataRef = await uploadToWalrus(encryptedMetadata);
+			const metadataRef = await uploadToWalrus(encryptedMetadata, {
+				signAndExecuteTransaction,
+				owner: currentAccount.address,
+			});
 			console.log(
 				`[AddLab] Metadata blob upload complete, blobId: ${metadataRef.blobId}`,
 			);

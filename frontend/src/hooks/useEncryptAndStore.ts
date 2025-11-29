@@ -38,7 +38,11 @@
  */
 "use client";
 
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSuiClient,
+} from "@mysten/dapp-kit";
 import { useCallback, useState } from "react";
 import { encryptAndStoreImagingBinary } from "@/lib/imagingBinary";
 import {
@@ -159,6 +163,8 @@ export interface UseEncryptAndStoreReturn {
 export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 	const suiClient = useSuiClient();
 	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } =
+		useSignAndExecuteTransaction();
 
 	const [progress, setProgress] = useState<EncryptionProgress>("idle");
 	const [error, setError] = useState<string | null>(null);
@@ -246,7 +252,10 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				setProgress("uploading");
 				console.log("[EncryptAndStore] Uploading to Walrus...");
 
-				const walrusRef = await uploadToWalrus(encryptedObject);
+				const walrusRef = await uploadToWalrus(encryptedObject, {
+					signAndExecuteTransaction,
+					owner: currentAccount.address,
+				});
 
 				console.log(
 					`[EncryptAndStore] Upload complete, blobId: ${walrusRef.blobId}`,
@@ -274,7 +283,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[suiClient, currentAccount],
+		[suiClient, currentAccount, signAndExecuteTransaction],
 	);
 
 	/**
@@ -398,7 +407,9 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				);
 
 				// Step 5: Encrypt all items in parallel (each with its own seal_id)
-				const encryptionPromises = itemsWithSealId.map(async (item) => {
+				// Note: Walrus uploads are done sequentially to avoid wallet popup issues
+				const results: EncryptionResult[] = [];
+				for (const item of itemsWithSealId) {
 					const { encryptedObject, backupKey } = await encryptHealthData({
 						healthData: item.data,
 						sealClient,
@@ -410,24 +421,23 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 						`[EncryptAndStoreMultiple] Encrypted ${item.dataType}, size: ${encryptedObject.length} bytes`,
 					);
 
-					// Step 6: Upload to Walrus
-					const walrusRef = await uploadToWalrus(encryptedObject);
+					// Step 6: Upload to Walrus (sequential to handle wallet signatures)
+					const walrusRef = await uploadToWalrus(encryptedObject, {
+						signAndExecuteTransaction,
+						owner: currentAccount.address,
+					});
 
 					console.log(
 						`[EncryptAndStoreMultiple] Uploaded ${item.dataType}, blobId: ${walrusRef.blobId}`,
 					);
 
-					return {
+					results.push({
 						blobId: walrusRef.blobId,
 						dataType: item.dataType,
 						sealId: item.sealId,
 						backupKey,
-					};
-				});
-
-				// Step 7: Wait for all uploads to complete
-				setProgress("uploading");
-				const results = await Promise.all(encryptionPromises);
+					});
+				}
 
 				console.log(
 					`[EncryptAndStoreMultiple] All ${results.length} items encrypted and uploaded successfully`,
@@ -448,7 +458,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				throw new Error(errorMessage);
 			}
 		},
-		[suiClient, currentAccount],
+		[suiClient, currentAccount, signAndExecuteTransaction],
 	);
 
 	const decryptMultiple = useCallback(
@@ -541,6 +551,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				file,
 				address: currentAccount.address,
 				suiClient,
+				signAndExecuteTransaction,
 			});
 
 			console.log(
@@ -549,7 +560,7 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 
 			return result;
 		},
-		[suiClient, currentAccount],
+		[suiClient, currentAccount, signAndExecuteTransaction],
 	);
 
 	return {

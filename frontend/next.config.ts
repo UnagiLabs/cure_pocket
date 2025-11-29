@@ -9,12 +9,19 @@ const nextConfig: NextConfig = {
 	experimental: {
 		// 開発モードでのCSP警告を抑制（本番環境では適切なCSPヘッダーを設定することを推奨）
 	},
-	// Webpack設定でevalの使用を許可（開発モードのみ）
+	// APIルートでWASMバンドルをスキップ（@mysten/walrus用）
+	serverExternalPackages: ["@mysten/walrus", "@mysten/walrus-wasm"],
+	// Webpack設定
 	webpack: (config, { dev }) => {
 		if (dev) {
 			// 開発モードでのみ、evalの使用を許可
 			config.devtool = "eval-cheap-module-source-map";
 		}
+		// WASM サポート（@mysten/walrus SDK用）
+		config.experiments = {
+			...config.experiments,
+			asyncWebAssembly: true,
+		};
 		return config;
 	},
 };
