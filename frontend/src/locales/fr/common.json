@@ -172,8 +172,7 @@
 		"validFor": "Valide pour : {duration}",
 		"downloadImage": "Télécharger l'image",
 		"currentMedications": "Médicaments actuels",
-		"scanToView": "Scanner pour voir",
-		"englishVersion": "Version anglaise disponible",
+		"scanToView": "Partage sécurisé par scan",
 		"selectCategories": "Sélectionner les catégories à partager",
 		"emergencyInfo": {
 			"title": "Comment utiliser",
@@ -342,15 +341,33 @@
 		"referenceRange": "Plage de référence",
 		"testDate": "Date du test",
 		"testedBy": "Installation de test",
+		"facility": "Laboratoire",
 		"category": "Catégorie",
 		"notes": "Notes",
 		"noResults": "Aucun résultat de laboratoire enregistré",
 		"allCategories": "Tous",
 		"selectTest": "Veuillez sélectionner un test",
 		"valuePlaceholder": "Entrez la valeur",
+		"items": "éléments",
+		"inputFromImage": "Saisie depuis image",
+		"manualInput": "Saisie manuelle",
+		"uploadOrTakePhoto": "Télécharger ou prendre une photo",
+		"tapToUpload": "Appuyez pour sélectionner des images",
+		"runOCR": "Exécuter OCR",
+		"ocrProcessing": "Traitement OCR...",
+		"ocrSuccess": "Traitement OCR terminé",
+		"ocrError": "Échec du traitement OCR",
+		"saving": "Enregistrement...",
+		"basicInfo": "Informations de base",
+		"facilityPlaceholder": "ex. : Hôpital Exemple, Laboratoire",
+		"notesPlaceholder": "Notes (facultatif)",
+		"testValues": "Valeurs des tests",
+		"itemsFilled": "éléments remplis",
 		"validation": {
 			"required": "Veuillez entrer le nom du test et la valeur",
-			"noValues": "Veuillez entrer au moins une valeur de laboratoire."
+			"noValues": "Veuillez entrer au moins une valeur de laboratoire.",
+			"testDateRequired": "Veuillez entrer la date du test",
+			"facilityRequired": "Veuillez entrer le nom du laboratoire"
 		},
 		"categories": {
 			"CBC": "NFS",
@@ -707,11 +724,24 @@
 		"newRecord": "Enregistrer de nouvelles données",
 		"dataHistory": "Historique des données",
 		"saveRecord": "Enregistrer",
+		"saving": "Enregistrement...",
+		"records": "Enregistrements",
+		"noRecords": "Aucun enregistrement",
+		"confirmDelete": "Êtes-vous sûr de vouloir supprimer cet enregistrement ?",
 		"period": {
 			"week": "1 semaine",
 			"month": "1 mois",
 			"3months": "3 mois",
 			"year": "1 an"
+		},
+		"validation": {
+			"bloodPressureRequired": "Veuillez entrer la pression artérielle systolique et diastolique",
+			"valueRequired": "Veuillez entrer une valeur"
+		},
+		"error": {
+			"saveFailed": "Échec de l'enregistrement du signe vital",
+			"deleteFailed": "Échec de la suppression du signe vital",
+			"editFailed": "Échec de la modification du signe vital"
 		}
 	},
 	"validation": {
@@ -857,6 +887,10 @@
 	},
 	"common": {
 		"download": "Télécharger",
-		"back": "Retour"
+		"back": "Retour",
+		"save": "Enregistrer",
+		"cancel": "Annuler",
+		"edit": "Modifier",
+		"delete": "Supprimer"
 	}
 }

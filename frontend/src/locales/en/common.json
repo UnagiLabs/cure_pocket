@@ -172,8 +172,7 @@
 		"validFor": "Valid for: {duration}",
 		"downloadImage": "Download Image",
 		"currentMedications": "Current Medications",
-		"scanToView": "Scan to view",
-		"englishVersion": "English version available",
+		"scanToView": "Securely share via scan",
 		"selectCategories": "Select categories to share",
 		"emergencyInfo": {
 			"title": "How to use",
@@ -342,15 +341,33 @@
 		"referenceRange": "Reference Range",
 		"testDate": "Test Date",
 		"testedBy": "Test Facility",
+		"facility": "Test Facility",
 		"category": "Category",
 		"notes": "Notes",
 		"noResults": "No lab results registered",
 		"allCategories": "All",
 		"selectTest": "Please select a test",
 		"valuePlaceholder": "Enter value",
+		"items": "items",
+		"inputFromImage": "Input from Image",
+		"manualInput": "Manual Input",
+		"uploadOrTakePhoto": "Upload or Take Photo",
+		"tapToUpload": "Tap to select images",
+		"runOCR": "Run OCR",
+		"ocrProcessing": "Processing OCR...",
+		"ocrSuccess": "OCR completed successfully",
+		"ocrError": "OCR processing failed",
+		"saving": "Saving...",
+		"basicInfo": "Basic Information",
+		"facilityPlaceholder": "e.g., Sample Hospital Lab",
+		"notesPlaceholder": "Notes (optional)",
+		"testValues": "Test Values",
+		"itemsFilled": "items filled",
 		"validation": {
 			"required": "Please enter test name and value",
-			"noValues": "Please enter at least one lab value."
+			"noValues": "Please enter at least one lab value.",
+			"testDateRequired": "Please enter test date",
+			"facilityRequired": "Please enter facility name"
 		},
 		"categories": {
 			"CBC": "CBC",
@@ -707,11 +724,24 @@
 		"newRecord": "Record New Data",
 		"dataHistory": "Data History",
 		"saveRecord": "Save Record",
+		"saving": "Saving...",
+		"records": "Records",
+		"noRecords": "No records yet",
+		"confirmDelete": "Are you sure you want to delete this record?",
 		"period": {
 			"week": "1 Week",
 			"month": "1 Month",
 			"3months": "3 Months",
 			"year": "1 Year"
+		},
+		"validation": {
+			"bloodPressureRequired": "Please enter both systolic and diastolic blood pressure",
+			"valueRequired": "Please enter a value"
+		},
+		"error": {
+			"saveFailed": "Failed to save vital sign",
+			"deleteFailed": "Failed to delete vital sign",
+			"editFailed": "Failed to edit vital sign"
 		}
 	},
 	"validation": {
@@ -857,6 +887,10 @@
 	},
 	"common": {
 		"download": "Download",
-		"back": "Back"
+		"back": "Back",
+		"save": "Save",
+		"cancel": "Cancel",
+		"edit": "Edit",
+		"delete": "Delete"
 	}
 }

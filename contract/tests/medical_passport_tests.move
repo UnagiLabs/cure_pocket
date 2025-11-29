@@ -18,8 +18,8 @@ module cure_pocket::medical_passport_tests {
         (string::utf8(b"JP"), true)
     }
 
-    fun sample_blob_ids(): vector<String> {
-        vector[string::utf8(b"blob_a"), string::utf8(b"blob_b")]
+    fun sample_metadata_blob_id(): String {
+        string::utf8(b"metadata_blob_001")
     }
 
     #[test]
@@ -43,7 +43,7 @@ module cure_pocket::medical_passport_tests {
     }
 
     #[test]
-    fun add_dynamic_field_registers_blob_ids() {
+    fun add_dynamic_field_registers_metadata_blob_id() {
         let mut scenario = ts::begin(ADMIN);
         {
             let ctx = ts::ctx(&mut scenario);
@@ -57,18 +57,16 @@ module cure_pocket::medical_passport_tests {
             let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"lab_results");
             let entry_seal_id = b"entry-seal-001";
-            let blobs = sample_blob_ids();
-            accessor::add_data_entry(&mut passport, key, entry_seal_id, blobs, &clk);
+            let metadata_blob_id = sample_metadata_blob_id();
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, metadata_blob_id, &clk);
 
             let entry = accessor::get_data_entry(&passport, key);
-            let stored = accessor::get_entry_blob_ids(entry);
-            assert!(vector::length(stored) == 2, 0);
-            assert!(*vector::borrow(stored, 0) == string::utf8(b"blob_a"), 1);
-            assert!(*vector::borrow(stored, 1) == string::utf8(b"blob_b"), 2);
+            let stored = accessor::get_entry_metadata_blob_id(entry);
+            assert!(*stored == string::utf8(b"metadata_blob_001"), 0);
 
             // Verify seal_id is stored correctly
             let stored_seal_id = accessor::get_entry_seal_id(entry);
-            assert!(*stored_seal_id == b"entry-seal-001", 3);
+            assert!(*stored_seal_id == b"entry-seal-001", 1);
 
             accessor::remove_data_entry(&mut passport, key);
             clock::destroy_for_testing(clk);
@@ -92,27 +90,26 @@ module cure_pocket::medical_passport_tests {
             let mut clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"basic_profile");
             let entry_seal_id = b"entry-seal-001";
-            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_metadata_blob_id(), &clk);
 
             // Advance clock to verify updated_at changes
             clock::increment_for_testing(&mut clk, 1000);
 
-            let new_blobs = vector[string::utf8(b"new_blob")];
+            let new_metadata_blob_id = string::utf8(b"new_metadata_blob");
             let new_seal_id = b"entry-seal-002";
-            accessor::replace_data_entry(&mut passport, key, new_seal_id, new_blobs, &clk);
+            accessor::replace_data_entry(&mut passport, key, new_seal_id, new_metadata_blob_id, &clk);
 
             let entry = accessor::get_data_entry(&passport, key);
-            let stored = accessor::get_entry_blob_ids(entry);
-            assert!(vector::length(stored) == 1, 0);
-            assert!(*vector::borrow(stored, 0) == string::utf8(b"new_blob"), 1);
+            let stored = accessor::get_entry_metadata_blob_id(entry);
+            assert!(*stored == string::utf8(b"new_metadata_blob"), 0);
 
             // Verify seal_id was updated
             let stored_seal_id = accessor::get_entry_seal_id(entry);
-            assert!(*stored_seal_id == b"entry-seal-002", 2);
+            assert!(*stored_seal_id == b"entry-seal-002", 1);
 
             // Verify updated_at is 1000ms (after clock increment)
             let updated_at = accessor::get_entry_updated_at(entry);
-            assert!(updated_at == 1000, 3);
+            assert!(updated_at == 1000, 2);
 
             accessor::remove_data_entry(&mut passport, key);
             clock::destroy_for_testing(clk);
@@ -137,9 +134,9 @@ module cure_pocket::medical_passport_tests {
             let clk = clock::create_for_testing(ctx);
             let key = string::utf8(b"medications");
             let entry_seal_id = b"entry-seal-001";
-            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_metadata_blob_id(), &clk);
             // 2回目は同じキーで登録しようとすると abort
-            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_blob_ids(), &clk);
+            accessor::add_data_entry(&mut passport, key, entry_seal_id, sample_metadata_blob_id(), &clk);
 
             accessor::remove_data_entry(&mut passport, key);
             clock::destroy_for_testing(clk);

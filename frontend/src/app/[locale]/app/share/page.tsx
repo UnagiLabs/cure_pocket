@@ -455,20 +455,11 @@ export default function EmergencyCardPage() {
 								>
 									{t("share.scanToView")}
 								</p>
-								<p
-									className="text-sm"
-									style={{ color: theme.colors.textSecondary }}
-								>
-									{t("share.englishVersion")}
-								</p>
 							</>
 						) : (
 							<>
 								<QrCode className="mx-auto mb-2 h-32 w-32 text-gray-400" />
 								<p className="text-sm text-gray-600">{t("share.scanToView")}</p>
-								<p className="text-sm text-gray-600">
-									{t("share.englishVersion")}
-								</p>
 							</>
 						)}
 					</div>

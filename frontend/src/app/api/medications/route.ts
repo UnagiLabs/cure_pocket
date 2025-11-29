@@ -1,5 +1,5 @@
 /**
- * Medications API Routes
+ * Medications API Routes (v3.0.0 - Metadata Blob Architecture)
  *
  * GET /api/medications - Retrieve medications for a wallet address
  * POST /api/medications - Add/update medications for a wallet address
@@ -8,8 +8,8 @@
  * - SessionKey required in X-Session-Key header (base64 encoded JSON)
  * - Wallet address required in query parameter or request body
  *
- * Data Flow:
- * READ:  wallet → passport → dynamic fields → blob_ids → walrus → decrypt → medications[]
+ * Data Flow (v3.0.0):
+ * READ:  wallet → passport → dynamic fields → metadata_blob_id → walrus → decrypt metadata → entries[] → decrypt data blobs → medications[]
  * WRITE: medications[] → encrypt → walrus → blob_id (client updates on-chain)
  */
 
@@ -24,7 +24,7 @@ import {
 import { generateSealId } from "@/lib/sealIdGenerator";
 import { parseSessionKeyFromHeader } from "@/lib/sessionKey";
 import {
-	getDataEntryBlobIds,
+	getDataEntry,
 	getMedicalPassport,
 	getPassportIdByAddress,
 	getSuiClient,
@@ -165,13 +165,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// Generate seal_id for medications data type
-		const medicationsSealId = await generateSealId(address, "medications");
+		// v3.0.0: Get EntryData (seal_id + metadata_blob_id) from Dynamic Fields
+		const entryData = await getDataEntry(passportId, "medications");
 
-		// 4. Get blob_ids from Dynamic Fields
-		const blobIds = await getDataEntryBlobIds(passportId, "medications");
-
-		if (blobIds.length === 0) {
+		if (!entryData || !entryData.metadataBlobId) {
 			// No medications data yet - return empty array
 			return NextResponse.json({
 				medications: [],
@@ -179,47 +176,85 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			});
 		}
 
-		// 5-8. Download, decrypt, and merge medications from all blobs
+		const { sealId: medicationsSealId, metadataBlobId } = entryData;
+
+		// 5-8. Download metadata, then data blobs, decrypt, and merge medications
 		const sealClient = createSealClient(suiClient);
 		const allMedications: Medication[] = [];
 
-		for (const blobId of blobIds) {
-			try {
-				// 5. Download encrypted data from Walrus
-				const encryptedData = await downloadFromWalrusByBlobId(blobId);
+		try {
+			// Step 1: Download and decrypt metadata blob
+			const encryptedMetadata =
+				await downloadFromWalrusByBlobId(metadataBlobId);
 
-				// 6. Build PTB for patient access
-				const txBytes = await buildPatientAccessPTB({
-					passportObjectId: passportId,
-					registryObjectId: PASSPORT_REGISTRY_ID,
-					suiClient,
-					sealId: medicationsSealId,
-					dataType: "medications",
+			const metadataTxBytes = await buildPatientAccessPTB({
+				passportObjectId: passportId,
+				registryObjectId: PASSPORT_REGISTRY_ID,
+				suiClient,
+				sealId: medicationsSealId,
+				dataType: "medications",
+			});
+
+			const metadataData = await decryptHealthData({
+				encryptedData: encryptedMetadata,
+				sealClient,
+				sessionKey,
+				txBytes: metadataTxBytes,
+				sealId: medicationsSealId,
+			});
+
+			// Get entries from metadata
+			const metadata = metadataData as unknown as {
+				entries?: Array<{ blob_id: string }>;
+			};
+			const entries = metadata?.entries || [];
+
+			if (entries.length === 0) {
+				return NextResponse.json({
+					medications: [],
+					totalBlobs: 0,
 				});
-
-				// 7. Decrypt with Seal
-				const healthData = await decryptHealthData({
-					encryptedData,
-					sealClient,
-					sessionKey,
-					txBytes,
-					sealId: medicationsSealId,
-				});
-
-				// 8. Merge medications
-				if (healthData.medications && Array.isArray(healthData.medications)) {
-					allMedications.push(...healthData.medications);
-				}
-			} catch (error) {
-				console.error(`Failed to process blob ${blobId}:`, error);
-				// Continue processing other blobs even if one fails
 			}
+
+			// Step 2: Download and decrypt each data blob
+			for (const entry of entries) {
+				try {
+					const encryptedData = await downloadFromWalrusByBlobId(entry.blob_id);
+
+					const txBytes = await buildPatientAccessPTB({
+						passportObjectId: passportId,
+						registryObjectId: PASSPORT_REGISTRY_ID,
+						suiClient,
+						sealId: medicationsSealId,
+						dataType: "medications",
+					});
+
+					const healthData = await decryptHealthData({
+						encryptedData,
+						sealClient,
+						sessionKey,
+						txBytes,
+						sealId: medicationsSealId,
+					});
+
+					// Merge medications
+					if (healthData.medications && Array.isArray(healthData.medications)) {
+						allMedications.push(...healthData.medications);
+					}
+				} catch (error) {
+					console.error(`Failed to process blob ${entry.blob_id}:`, error);
+					// Continue processing other blobs even if one fails
+				}
+			}
+		} catch (error) {
+			console.error("Failed to process metadata blob:", error);
+			throw error;
 		}
 
 		// 9. Return medications array
 		return NextResponse.json({
 			medications: allMedications,
-			totalBlobs: blobIds.length,
+			totalBlobs: 1, // Now tracking metadata blob count
 		} satisfies GetMedicationsResponse);
 	} catch (error) {
 		console.error("GET /api/medications error:", error);

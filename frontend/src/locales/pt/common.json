@@ -172,8 +172,7 @@
 		"validFor": "Válido por: {duration}",
 		"downloadImage": "Baixar imagem",
 		"currentMedications": "Medicamentos atuais",
-		"scanToView": "Escanear para visualizar",
-		"englishVersion": "Versão em inglês disponível",
+		"scanToView": "Compartilhe com segurança via scan",
 		"selectCategories": "Selecionar categorias para compartilhar",
 		"emergencyInfo": {
 			"title": "Como usar",
@@ -342,15 +341,33 @@
 		"referenceRange": "Faixa de referência",
 		"testDate": "Data do teste",
 		"testedBy": "Instalação de teste",
+		"facility": "Laboratório",
 		"category": "Categoria",
 		"notes": "Notas",
 		"noResults": "Nenhum resultado de laboratório registrado",
 		"allCategories": "Todos",
 		"selectTest": "Por favor, selecione um teste",
 		"valuePlaceholder": "Digite o valor",
+		"items": "itens",
+		"inputFromImage": "Entrada por imagem",
+		"manualInput": "Entrada manual",
+		"uploadOrTakePhoto": "Carregar ou tirar foto",
+		"tapToUpload": "Toque para selecionar imagens",
+		"runOCR": "Executar OCR",
+		"ocrProcessing": "Processando OCR...",
+		"ocrSuccess": "Processamento OCR concluído",
+		"ocrError": "Falha no processamento OCR",
+		"saving": "Salvando...",
+		"basicInfo": "Informações Básicas",
+		"facilityPlaceholder": "ex.: Hospital Exemplo, Laboratório",
+		"notesPlaceholder": "Notas (opcional)",
+		"testValues": "Valores dos Testes",
+		"itemsFilled": "itens preenchidos",
 		"validation": {
 			"required": "Por favor, insira o nome do teste e o valor",
-			"noValues": "Por favor, insira pelo menos um valor de laboratório."
+			"noValues": "Por favor, insira pelo menos um valor de laboratório.",
+			"testDateRequired": "Por favor, insira a data do teste",
+			"facilityRequired": "Por favor, insira o nome do laboratório"
 		},
 		"categories": {
 			"CBC": "Hemograma",
@@ -707,11 +724,24 @@
 		"newRecord": "Registrar novos dados",
 		"dataHistory": "Histórico de dados",
 		"saveRecord": "Salvar registro",
+		"saving": "Salvando...",
+		"records": "Registros",
+		"noRecords": "Nenhum registro ainda",
+		"confirmDelete": "Tem certeza de que deseja excluir este registro?",
 		"period": {
 			"week": "1 semana",
 			"month": "1 mês",
 			"3months": "3 meses",
 			"year": "1 ano"
+		},
+		"validation": {
+			"bloodPressureRequired": "Por favor, insira a pressão arterial sistólica e diastólica",
+			"valueRequired": "Por favor, insira um valor"
+		},
+		"error": {
+			"saveFailed": "Falha ao salvar sinal vital",
+			"deleteFailed": "Falha ao excluir sinal vital",
+			"editFailed": "Falha ao editar sinal vital"
 		}
 	},
 	"validation": {
@@ -857,6 +887,10 @@
 	},
 	"common": {
 		"download": "Baixar",
-		"back": "Voltar"
+		"back": "Voltar",
+		"save": "Salvar",
+		"cancel": "Cancelar",
+		"edit": "Editar",
+		"delete": "Excluir"
 	}
 }

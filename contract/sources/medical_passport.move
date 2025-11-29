@@ -62,19 +62,20 @@ public struct PassportRegistry has key {
     id: object::UID,
 }
 
-/// データエントリ構造体
+/// データエントリ構造体 (v3.0.0)
 ///
 /// ## 設計
 /// - 各データ型（basic_profile, medications など）に対して個別の暗号化キーを持つ
-/// - Walrus Blob ID と更新タイムスタンプを含む
+/// - メタデータBlob IDと更新タイムスタンプを含む
+/// - メタデータBlobが各データBlobへの参照を保持する2層構造
 ///
 /// ## フィールド
 /// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
-/// - `blob_ids`: Walrus Blob ID の配列
+/// - `metadata_blob_id`: メタデータBlobのWalrus Blob ID
 /// - `updated_at`: 最終更新時刻（Unix timestamp ms）
 public struct EntryData has store, drop {
     seal_id: vector<u8>,
-    blob_ids: vector<String>,
+    metadata_blob_id: String,
     updated_at: u64,
 }
 
@@ -166,8 +167,8 @@ const E_NOT_OWNER_FOR_MIGRATION: u64 = 8;
 /// データ種キーが空
 const E_EMPTY_DATA_TYPE_KEY: u64 = 9;
 
-/// Blob ID リストが空
-const E_EMPTY_BLOB_IDS: u64 = 10;
+/// メタデータBlob IDが空
+const E_EMPTY_METADATA_BLOB_ID: u64 = 10;
 
 /// 指定データ種が既に存在
 const E_DATA_ENTRY_ALREADY_EXISTS: u64 = 11;
@@ -391,10 +392,11 @@ fun is_valid_data_type(data_type: &String): bool {
 // パッケージ内部関数: 動的フィールド (医療データ参照)
 // ============================================================
 
-/// パスポート配下に Walrus Blob ID リストを新規追加
+/// パスポート配下にメタデータBlob IDを新規追加 (v3.0.0)
 ///
 /// ## 用途
-/// - 医療データ種（例: `basic_profile`, `medications` など）ごとの Blob ID 配列を登録
+/// - 医療データ種（例: `basic_profile`, `medications` など）のメタデータBlobを登録
+/// - メタデータBlobが各データBlobへの参照を保持する2層構造
 /// - データ種キー未登録の場合のみ追加（重複登録はabort）
 /// - 各データ種に個別の Seal ID を設定可能
 ///
@@ -402,26 +404,26 @@ fun is_valid_data_type(data_type: &String): bool {
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: データ種キー（文字列）
 /// - `seal_id`: このデータエントリ専用の Seal 暗号化 ID（バイナリ形式）
-/// - `blob_ids`: Walrus Blob ID の配列（1件以上必須）
+/// - `metadata_blob_id`: メタデータBlobのWalrus Blob ID（空文字不可）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 /// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
-/// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
+/// - `E_EMPTY_METADATA_BLOB_ID`: メタデータBlob IDが空
 /// - `E_DATA_ENTRY_ALREADY_EXISTS`: 既に同じキーが登録済み
 public(package) fun add_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
     seal_id: vector<u8>,
-    blob_ids: vector<String>,
+    metadata_blob_id: String,
     clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
     assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
-    assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
+    assert!(!string::is_empty(&metadata_blob_id), E_EMPTY_METADATA_BLOB_ID);
     assert!(
         !df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_ALREADY_EXISTS
@@ -429,43 +431,43 @@ public(package) fun add_data_entry(
 
     let entry = EntryData {
         seal_id,
-        blob_ids,
+        metadata_blob_id,
         updated_at: sui::clock::timestamp_ms(clock),
     };
 
     df::add(&mut passport.id, data_type, entry);
 }
 
-/// 既存のデータ種に紐づく EntryData を丸ごと置き換える
+/// 既存のデータ種に紐づく EntryData を丸ごと置き換える (v3.0.0)
 ///
 /// ## 用途
 /// - 最新データへの差し替え
-/// - Seal ID、Blob ID、タイムスタンプを全て更新
+/// - Seal ID、メタデータBlob ID、タイムスタンプを全て更新
 ///
 /// ## パラメータ
 /// - `passport`: MedicalPassport への可変参照
 /// - `data_type`: 置き換えるデータ種キー（文字列）
 /// - `seal_id`: 新しい Seal 暗号化 ID（バイナリ形式）
-/// - `blob_ids`: 新しい Blob ID 配列（1件以上必須）
+/// - `metadata_blob_id`: 新しいメタデータBlob ID（空文字不可）
 /// - `clock`: Sui Clock（タイムスタンプ取得用）
 ///
 /// ## Aborts
 /// - `E_EMPTY_DATA_TYPE_KEY`: データ種キーが空
 /// - `E_INVALID_DATA_TYPE`: 無効なデータ型（data_schema.md v2.0.0 に定義された7種以外）
 /// - `E_EMPTY_ENTRY_SEAL_ID`: Seal ID が空
-/// - `E_EMPTY_BLOB_IDS`: Blob ID 配列が空
+/// - `E_EMPTY_METADATA_BLOB_ID`: メタデータBlob IDが空
 /// - `E_DATA_ENTRY_NOT_FOUND`: 指定キーが未登録
 public(package) fun replace_data_entry(
     passport: &mut MedicalPassport,
     data_type: String,
     seal_id: vector<u8>,
-    blob_ids: vector<String>,
+    metadata_blob_id: String,
     clock: &Clock
 ) {
     assert!(!string::is_empty(&data_type), E_EMPTY_DATA_TYPE_KEY);
     assert!(is_valid_data_type(&data_type), E_INVALID_DATA_TYPE);
     assert!(!vector::is_empty(&seal_id), E_EMPTY_ENTRY_SEAL_ID);
-    assert!(!vector::is_empty(&blob_ids), E_EMPTY_BLOB_IDS);
+    assert!(!string::is_empty(&metadata_blob_id), E_EMPTY_METADATA_BLOB_ID);
     assert!(
         df::exists_<String>(&passport.id, data_type),
         E_DATA_ENTRY_NOT_FOUND
@@ -474,7 +476,7 @@ public(package) fun replace_data_entry(
     let entry_ref = df::borrow_mut<String, EntryData>(&mut passport.id, data_type);
     *entry_ref = EntryData {
         seal_id,
-        blob_ids,
+        metadata_blob_id,
         updated_at: sui::clock::timestamp_ms(clock),
     };
 }
@@ -536,15 +538,15 @@ public(package) fun get_entry_seal_id(entry: &EntryData): &vector<u8> {
     &entry.seal_id
 }
 
-/// EntryData から Blob ID 配列を取得
+/// EntryData からメタデータBlob IDを取得 (v3.0.0)
 ///
 /// ## パラメータ
 /// - `entry`: EntryData への参照
 ///
 /// ## 返り値
-/// - Blob ID 配列への参照
-public(package) fun get_entry_blob_ids(entry: &EntryData): &vector<String> {
-    &entry.blob_ids
+/// - メタデータBlob IDへの参照
+public(package) fun get_entry_metadata_blob_id(entry: &EntryData): &String {
+    &entry.metadata_blob_id
 }
 
 /// EntryData から更新時刻を取得

@@ -32,11 +32,15 @@ import {
 	SEAL_KEY_SERVERS,
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
-import { getDataEntryBlobIds, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
+import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
 import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { Prescription, PrescriptionMedication } from "@/types";
 import type { Medication, MedicationsData } from "@/types/healthData";
+import {
+	createEmptyMetadata,
+	type MedicationsMetadataEntry,
+} from "@/types/metadata";
 
 type InputMode = "image" | "manual";
 
@@ -265,26 +269,19 @@ export default function AddPrescriptionPage() {
 			// PrescriptionをMedicationsData (JSON形式) に変換
 			const newMedicationsData = prescriptionToMedicationsData(prescription);
 
-			// 既存のmedicationsデータを読み込んでマージ
-			console.log("[AddMedication] Loading existing medications data...");
-			const existingBlobIds = await getDataEntryBlobIds(
-				passport.id,
-				"medications",
-			);
+			// v3.0.0: 既存のmedicationsメタデータを読み込む
+			console.log("[AddMedication] Loading existing medications metadata...");
+			const existingEntry = await getDataEntry(passport.id, "medications");
 
-			let existingMedications: Medication[] = [];
-			if (existingBlobIds.length > 0) {
+			const existingMedications: Medication[] = [];
+			const isNewEntry = existingEntry === null;
+
+			if (existingEntry?.metadataBlobId) {
 				console.log(
-					`[AddMedication] Found ${existingBlobIds.length} existing blob(s), loading latest...`,
+					`[AddMedication] Found existing metadata blob: ${existingEntry.metadataBlobId.substring(0, 16)}...`,
 				);
 
-				// 最新のblobIdを取得
-				const latestBlobId = existingBlobIds[existingBlobIds.length - 1];
-
 				try {
-					// Walrusからダウンロード
-					const encryptedData = await downloadFromWalrusByBlobId(latestBlobId);
-
 					// SessionKeyチェック
 					if (!sessionKey) {
 						throw new Error(
@@ -304,17 +301,46 @@ export default function AddPrescriptionPage() {
 					// Seal clientを作成
 					const sealClient = createSealClient(suiClient);
 
-					// 復号化
-					const decryptedData = await decryptHealthData({
-						encryptedData,
+					// メタデータBlobをダウンロード・復号化
+					const encryptedMetadata = await downloadFromWalrusByBlobId(
+						existingEntry.metadataBlobId,
+					);
+					const metadataData = await decryptHealthData({
+						encryptedData: encryptedMetadata,
 						sealClient,
 						sessionKey,
 						txBytes,
 						sealId: medicationsSealId,
 					});
 
-					const existingData = decryptedData as unknown as MedicationsData;
-					existingMedications = existingData.medications || [];
+					const metadata = metadataData as unknown as {
+						entries: Array<{ blob_id: string }>;
+					};
+
+					// 各データBlobを読み込んでマージ
+					for (const entry of metadata.entries || []) {
+						try {
+							const encryptedData = await downloadFromWalrusByBlobId(
+								entry.blob_id,
+							);
+							const decryptedData = await decryptHealthData({
+								encryptedData,
+								sealClient,
+								sessionKey,
+								txBytes,
+								sealId: medicationsSealId,
+							});
+
+							const existingData = decryptedData as unknown as MedicationsData;
+							existingMedications.push(...(existingData.medications || []));
+						} catch (blobError) {
+							console.error(
+								`[AddMedication] Failed to load blob ${entry.blob_id}:`,
+								blobError,
+							);
+						}
+					}
+
 					console.log(
 						`[AddMedication] Loaded ${existingMedications.length} existing medications`,
 					);
@@ -372,12 +398,41 @@ export default function AddPrescriptionPage() {
 				`[AddMedication] Encrypted data size: ${encryptedObject.byteLength} bytes`,
 			);
 
-			// Walrusにアップロード
+			// Walrusにアップロード（データBlob）
 			const walrusRef = await uploadToWalrus(encryptedObject);
 			setIsSaving(false);
 
 			console.log(
-				`[AddMedication] Upload complete, blobId: ${walrusRef.blobId}`,
+				`[AddMedication] Data blob upload complete, blobId: ${walrusRef.blobId}`,
+			);
+
+			// v3.0.0: メタデータBlobを作成してアップロード
+			const prescriptionId = `prescription-${Date.now()}`;
+			const metadataEntry: MedicationsMetadataEntry = {
+				blob_id: walrusRef.blobId,
+				prescription_id: prescriptionId,
+				prescription_date: prescription.prescriptionDate,
+				clinic: prescription.clinic,
+				medication_count: newMedicationsData.medications.length,
+			};
+
+			const metadata = {
+				...createEmptyMetadata("medications"),
+				entries: [metadataEntry],
+			};
+
+			// メタデータを暗号化
+			const { encryptedObject: encryptedMetadata } = await encryptHealthData({
+				healthData: metadata as unknown as never,
+				sealClient,
+				sealId: medicationsSealId,
+				threshold,
+			});
+
+			// メタデータBlobをアップロード
+			const metadataRef = await uploadToWalrus(encryptedMetadata);
+			console.log(
+				`[AddMedication] Metadata blob upload complete, blobId: ${metadataRef.blobId}`,
 			);
 
 			// パスポートのDynamic Fieldを更新
@@ -385,8 +440,8 @@ export default function AddPrescriptionPage() {
 			await updatePassportData({
 				passportId: passport.id,
 				dataType: "medications",
-				blobIds: [walrusRef.blobId],
-				replace: existingBlobIds.length > 0, // 既存データがあれば置き換え、なければ新規追加
+				metadataBlobId: metadataRef.blobId,
+				replace: !isNewEntry, // 既存データがあれば置き換え、なければ新規追加
 			});
 
 			console.log("[AddMedication] Save complete!");

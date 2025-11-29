@@ -1,8 +1,8 @@
 /**
- * useDecryptAndFetch Hook
+ * useDecryptAndFetch Hook (v3.0.0)
  *
  * Fetches encrypted data from Walrus and decrypts with Seal using SessionKey.
- * Retrieves seal_id from SBT Dynamic Fields (EntryData) for accurate decryption.
+ * Uses metadata blob architecture for efficient data access.
  *
  * ## Features
  * - Download encrypted data from Walrus
@@ -12,12 +12,11 @@
  * - Polymorphic decryption (JSON for health data, binary for images)
  * - Progress tracking for multi-step operation
  *
- * ## Decryption Flow
- * 1. Fetch EntryData from SBT Dynamic Field to get seal_id and blob_ids
- * 2. Fetch encrypted blob from Walrus by blob_id
- * 3. Build PTB with seal_approve_patient_only call
- * 4. Decrypt with Seal using SessionKey, PTB, and seal_id from DF
- * 5. Parse based on dataType (JSON or binary envelope)
+ * ## Decryption Flow (v3.0.0)
+ * 1. Fetch EntryData from SBT Dynamic Field to get seal_id and metadata_blob_id
+ * 2. Fetch and decrypt metadata blob to get data blob references
+ * 3. Fetch and decrypt required data blob(s)
+ * 4. Parse based on dataType (JSON or binary envelope)
  *
  * ## Usage
  * ```typescript
@@ -51,7 +50,7 @@ import {
 	createSealClient,
 	decryptHealthData,
 } from "@/lib/seal";
-import { getDataEntry } from "@/lib/suiClient";
+import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type {
 	BasicProfileData,
@@ -63,6 +62,7 @@ import type {
 	MedicationsData,
 	SelfMetricsData,
 } from "@/types/healthData";
+import type { BaseMetadata, BaseMetadataEntry } from "@/types/metadata";
 
 /**
  * Decryption progress stages
@@ -70,6 +70,7 @@ import type {
 export type DecryptionProgress =
 	| "idle"
 	| "fetching_entry"
+	| "fetching_metadata"
 	| "fetching"
 	| "building_ptb"
 	| "decrypting"
@@ -77,7 +78,7 @@ export type DecryptionProgress =
 	| "error";
 
 /**
- * Decryption parameters (seal_id and blob_ids fetched from SBT Dynamic Fields)
+ * Decryption parameters (seal_id and metadata_blob_id fetched from SBT Dynamic Fields)
  */
 export interface DecryptionParams {
 	/** Data type for DF lookup */
@@ -88,8 +89,8 @@ export interface DecryptionParams {
 	passportId: string;
 	/** PassportRegistry object ID (optional, defaults to env) */
 	registryId?: string;
-	/** Optional: specific blob index to decrypt (defaults to 0 = latest) */
-	blobIndex?: number;
+	/** Optional: partition key value to select specific entry from metadata */
+	partitionKeyValue?: string;
 }
 
 /**
@@ -160,6 +161,10 @@ export interface UseDecryptAndFetchReturn {
 	decryptWithSealId: <T extends DataType>(
 		params: DirectDecryptionParams & { dataType: T },
 	) => Promise<DecryptedData<T>>;
+	/** Decrypt metadata blob to get entries list */
+	decryptMetadata: <TEntry extends BaseMetadataEntry>(
+		params: DecryptionParams,
+	) => Promise<BaseMetadata<TEntry>>;
 	/** Decrypt multiple data types in parallel */
 	decryptMultiple: (
 		params: DecryptionParams[],
@@ -176,7 +181,7 @@ export interface UseDecryptAndFetchReturn {
 
 /**
  * Fetch encrypted data from Walrus and decrypt with Seal
- * Retrieves seal_id from SBT Dynamic Fields (EntryData) for accurate decryption
+ * Uses metadata blob architecture (v3.0.0)
  *
  * @returns Decryption and fetch controls
  */
@@ -203,8 +208,7 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 				params;
 
 			// Get registry ID from environment if not provided
-			const effectiveRegistryId =
-				registryId || process.env.NEXT_PUBLIC_PASSPORT_REGISTRY_ID;
+			const effectiveRegistryId = registryId || PASSPORT_REGISTRY_ID;
 
 			if (!effectiveRegistryId) {
 				throw new Error("PassportRegistry ID not configured");
@@ -276,8 +280,97 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 	);
 
 	/**
-	 * Fetch and decrypt data from Walrus
-	 * seal_id is fetched from SBT Dynamic Fields (EntryData)
+	 * Decrypt metadata blob to get entries list (v3.0.0)
+	 */
+	const decryptMetadata = useCallback(
+		async <TEntry extends BaseMetadataEntry>(
+			params: DecryptionParams,
+		): Promise<BaseMetadata<TEntry>> => {
+			const { dataType, sessionKey, passportId, registryId } = params;
+
+			setProgress("fetching_entry");
+			setError(null);
+
+			try {
+				// Wallet address check
+				if (!currentAccount?.address) {
+					throw new Error("Wallet not connected");
+				}
+
+				// Fetch EntryData from SBT Dynamic Field
+				console.log(
+					`[DecryptAndFetch] Fetching EntryData for ${dataType} from passport ${passportId}...`,
+				);
+				const entryData = await getDataEntry(passportId, dataType);
+
+				if (!entryData) {
+					throw new Error(`No data found for type: ${dataType}`);
+				}
+
+				const { sealId, metadataBlobId } = entryData;
+
+				console.log(
+					`[DecryptAndFetch] Retrieved seal_id from DF: ${sealId.substring(0, 16)}...`,
+				);
+				console.log(
+					`[DecryptAndFetch] Metadata blob: ${metadataBlobId.substring(0, 16)}...`,
+				);
+
+				// Get registry ID
+				const effectiveRegistryId = registryId || PASSPORT_REGISTRY_ID;
+				if (!effectiveRegistryId) {
+					throw new Error("PassportRegistry ID not configured");
+				}
+
+				// Fetch and decrypt metadata blob
+				setProgress("fetching_metadata");
+				console.log("[DecryptAndFetch] Fetching metadata blob...");
+
+				const encryptedMetadata =
+					await downloadFromWalrusByBlobId(metadataBlobId);
+
+				// Build PTB
+				setProgress("building_ptb");
+				const txBytes = await buildPatientAccessPTB({
+					passportObjectId: passportId,
+					registryObjectId: effectiveRegistryId,
+					suiClient,
+					sealId,
+					dataType,
+				});
+
+				// Decrypt metadata
+				setProgress("decrypting");
+				const sealClient = createSealClient(suiClient);
+				const metadata = await decryptHealthData({
+					encryptedData: encryptedMetadata,
+					sealClient,
+					sessionKey,
+					txBytes,
+					sealId,
+				});
+
+				console.log("[DecryptAndFetch] Metadata decryption complete");
+				setProgress("completed");
+
+				return metadata as unknown as BaseMetadata<TEntry>;
+			} catch (err) {
+				console.error("[DecryptAndFetch] Metadata decryption failed:", err);
+				setProgress("error");
+
+				const errorMessage =
+					err instanceof Error ? err.message : "Failed to decrypt metadata";
+				setError(errorMessage);
+
+				throw new Error(errorMessage);
+			}
+		},
+		[suiClient, currentAccount],
+	);
+
+	/**
+	 * Fetch and decrypt data from Walrus (v3.0.0)
+	 * Uses metadata blob architecture - first decrypts metadata, then data blob
 	 */
 	const decrypt = useCallback(
 		async <T extends DataType>(
@@ -288,19 +381,19 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 				sessionKey,
 				passportId,
 				registryId,
-				blobIndex = 0,
+				partitionKeyValue,
 			} = params;
 
 			setProgress("fetching_entry");
 			setError(null);
 
 			try {
-				// Step 0: Wallet address check
+				// Wallet address check
 				if (!currentAccount?.address) {
 					throw new Error("Wallet not connected");
 				}
 
-				// Step 1: Fetch EntryData from SBT Dynamic Field
+				// Fetch EntryData from SBT Dynamic Field
 				console.log(
 					`[DecryptAndFetch] Fetching EntryData for ${dataType} from passport ${passportId}...`,
 				);
@@ -310,29 +403,90 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 					throw new Error(`No data found for type: ${dataType}`);
 				}
 
-				if (entryData.blobIds.length === 0) {
-					throw new Error(`No blob IDs found for type: ${dataType}`);
-				}
-
-				const sealId = entryData.sealId;
-				const blobId = entryData.blobIds[blobIndex];
-
-				if (!blobId) {
-					throw new Error(
-						`Blob index ${blobIndex} out of range (${entryData.blobIds.length} blobs available)`,
-					);
-				}
+				const { sealId, metadataBlobId } = entryData;
 
 				console.log(
 					`[DecryptAndFetch] Retrieved seal_id from DF: ${sealId.substring(0, 16)}...`,
 				);
 				console.log(
-					`[DecryptAndFetch] Using blob_id[${blobIndex}]: ${blobId.substring(0, 16)}...`,
+					`[DecryptAndFetch] Metadata blob: ${metadataBlobId.substring(0, 16)}...`,
 				);
 
-				// Step 2-4: Decrypt using internal function
+				// Get registry ID
+				const effectiveRegistryId = registryId || PASSPORT_REGISTRY_ID;
+				if (!effectiveRegistryId) {
+					throw new Error("PassportRegistry ID not configured");
+				}
+
+				// Fetch and decrypt metadata blob
+				setProgress("fetching_metadata");
+				console.log("[DecryptAndFetch] Fetching metadata blob...");
+
+				const encryptedMetadata =
+					await downloadFromWalrusByBlobId(metadataBlobId);
+
+				// Build PTB
+				setProgress("building_ptb");
+				const txBytes = await buildPatientAccessPTB({
+					passportObjectId: passportId,
+					registryObjectId: effectiveRegistryId,
+					suiClient,
+					sealId,
+					dataType,
+				});
+
+				// Decrypt metadata
+				setProgress("decrypting");
+				const sealClient = createSealClient(suiClient);
+				const metadata = (await decryptHealthData({
+					encryptedData: encryptedMetadata,
+					sealClient,
+					sessionKey,
+					txBytes,
+					sealId,
+				})) as unknown as BaseMetadata<BaseMetadataEntry>;
+
+				console.log(
+					`[DecryptAndFetch] Metadata decrypted, ${metadata.entries?.length ?? 0} entries`,
+				);
+
+				// Select data blob based on partition key or use first entry
+				let targetEntry: BaseMetadataEntry | undefined;
+
+				if (
+					partitionKeyValue &&
+					metadata.entries &&
+					metadata.entries.length > 0
+				) {
+					// Find entry by partition key value
+					targetEntry = metadata.entries.find((entry) => {
+						// Check common partition keys
+						const e = entry as unknown as Record<string, unknown>;
+						return (
+							e.month_key === partitionKeyValue ||
+							e.prescription_id === partitionKeyValue ||
+							e.test_date === partitionKeyValue ||
+							e.study_id === partitionKeyValue
+						);
+					});
+				}
+
+				if (!targetEntry && metadata.entries && metadata.entries.length > 0) {
+					// Use first entry if no partition key match
+					targetEntry = metadata.entries[0];
+				}
+
+				if (!targetEntry) {
+					throw new Error(`No data blob found for type: ${dataType}`);
+				}
+
+				// Fetch and decrypt data blob
+				console.log(
+					`[DecryptAndFetch] Fetching data blob: ${targetEntry.blob_id.substring(0, 16)}...`,
+				);
+
 				return await decryptInternal({
-					blobId,
+					blobId: targetEntry.blob_id,
 					sealId,
 					dataType,
 					sessionKey,
@@ -434,6 +588,7 @@ export function useDecryptAndFetch(): UseDecryptAndFetchReturn {
 	return {
 		decrypt,
 		decryptWithSealId,
+		decryptMetadata,
 		decryptMultiple,
 		isDecrypting:
 			progress !== "idle" && progress !== "completed" && progress !== "error",

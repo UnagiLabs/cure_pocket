@@ -172,8 +172,7 @@
 		"validFor": "有效期：{duration}",
 		"downloadImage": "下载图片",
 		"currentMedications": "当前用药",
-		"scanToView": "扫描查看",
-		"englishVersion": "提供英文版本",
+		"scanToView": "扫描安全共享",
 		"selectCategories": "选择要共享的类别",
 		"emergencyInfo": {
 			"title": "使用方法",
@@ -342,15 +341,33 @@
 		"referenceRange": "参考范围",
 		"testDate": "检验日期",
 		"testedBy": "检验机构",
+		"facility": "检验机构",
 		"category": "类别",
 		"notes": "备注",
 		"noResults": "未注册检验结果",
 		"allCategories": "全部",
 		"selectTest": "请选择检验项目",
 		"valuePlaceholder": "请输入值",
+		"items": "项",
+		"inputFromImage": "从图片输入",
+		"manualInput": "手动输入",
+		"uploadOrTakePhoto": "上传或拍照",
+		"tapToUpload": "点击选择图片",
+		"runOCR": "执行 OCR",
+		"ocrProcessing": "OCR 处理中...",
+		"ocrSuccess": "OCR 处理完成",
+		"ocrError": "OCR 处理失败",
+		"saving": "保存中...",
+		"basicInfo": "基本信息",
+		"facilityPlaceholder": "例：〇〇医院 检验科",
+		"notesPlaceholder": "备注（可选）",
+		"testValues": "检验值",
+		"itemsFilled": "项已填写",
 		"validation": {
 			"required": "请输入检验名称和值",
-			"noValues": "请输入至少一个检验值。"
+			"noValues": "请输入至少一个检验值。",
+			"testDateRequired": "请输入检验日期",
+			"facilityRequired": "请输入检验机构名称"
 		},
 		"categories": {
 			"CBC": "血常规",
@@ -707,11 +724,24 @@
 		"newRecord": "记录新数据",
 		"dataHistory": "数据历史",
 		"saveRecord": "保存记录",
+		"saving": "保存中...",
+		"records": "记录",
+		"noRecords": "尚无记录",
+		"confirmDelete": "确定要删除此记录吗？",
 		"period": {
 			"week": "1周",
 			"month": "1个月",
 			"3months": "3个月",
 			"year": "1年"
+		},
+		"validation": {
+			"bloodPressureRequired": "请输入收缩压和舒张压",
+			"valueRequired": "请输入值"
+		},
+		"error": {
+			"saveFailed": "保存生命体征失败",
+			"deleteFailed": "删除生命体征失败",
+			"editFailed": "编辑生命体征失败"
 		}
 	},
 	"validation": {
@@ -857,6 +887,10 @@
 	},
 	"common": {
 		"download": "下载",
-		"back": "返回"
+		"back": "返回",
+		"save": "保存",
+		"cancel": "取消",
+		"edit": "编辑",
+		"delete": "删除"
 	}
 }

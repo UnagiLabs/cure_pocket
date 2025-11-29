@@ -172,8 +172,7 @@
 		"validFor": "有効期限: {duration}",
 		"downloadImage": "画像をダウンロード",
 		"currentMedications": "服用薬一覧",
-		"scanToView": "スキャンすると",
-		"englishVersion": "英語版も表示",
+		"scanToView": "スキャンで安全に情報共有",
 		"selectCategories": "共有するカテゴリーを選択",
 		"emergencyInfo": {
 			"title": "使い方",
@@ -342,15 +341,33 @@
 		"referenceRange": "基準範囲",
 		"testDate": "検査日",
 		"testedBy": "検査機関",
+		"facility": "検査機関",
 		"category": "カテゴリー",
 		"notes": "メモ",
 		"noResults": "検査値は登録されていません",
 		"allCategories": "すべて",
 		"selectTest": "検査項目を選択してください",
 		"valuePlaceholder": "値を入力してください",
+		"items": "項目",
+		"inputFromImage": "画像から入力",
+		"manualInput": "手入力する",
+		"uploadOrTakePhoto": "検査結果をアップロード/撮影",
+		"tapToUpload": "タップして画像を選択",
+		"runOCR": "OCR実行",
+		"ocrProcessing": "OCR処理中...",
+		"ocrSuccess": "OCR処理が完了しました",
+		"ocrError": "OCR処理に失敗しました",
+		"saving": "保存中...",
+		"basicInfo": "基本情報",
+		"facilityPlaceholder": "例：〇〇病院 検査部",
+		"notesPlaceholder": "メモ（任意）",
+		"testValues": "検査値",
+		"itemsFilled": "項目入力済み",
 		"validation": {
 			"required": "検査項目と値を入力してください",
-			"noValues": "少なくとも1つ以上の検査値を入力してください。"
+			"noValues": "少なくとも1つ以上の検査値を入力してください。",
+			"testDateRequired": "検査日を入力してください",
+			"facilityRequired": "検査機関名を入力してください"
 		},
 		"categories": {
 			"CBC": "血算",
@@ -707,11 +724,24 @@
 		"newRecord": "新しいデータを記録",
 		"dataHistory": "データ履歴",
 		"saveRecord": "記録を保存",
+		"saving": "保存中...",
+		"records": "記録一覧",
+		"noRecords": "記録がありません",
+		"confirmDelete": "この記録を削除してもよろしいですか？",
 		"period": {
 			"week": "1週間",
 			"month": "1ヶ月",
 			"3months": "3ヶ月",
 			"year": "1年"
+		},
+		"validation": {
+			"bloodPressureRequired": "最高血圧と最低血圧の両方を入力してください",
+			"valueRequired": "値を入力してください"
+		},
+		"error": {
+			"saveFailed": "バイタルデータの保存に失敗しました",
+			"deleteFailed": "バイタルデータの削除に失敗しました",
+			"editFailed": "バイタルデータの編集に失敗しました"
 		}
 	},
 	"validation": {
@@ -857,6 +887,10 @@
 	},
 	"common": {
 		"download": "ダウンロード",
-		"back": "戻る"
+		"back": "戻る",
+		"save": "保存",
+		"cancel": "キャンセル",
+		"edit": "編集",
+		"delete": "削除"
 	}
 }
