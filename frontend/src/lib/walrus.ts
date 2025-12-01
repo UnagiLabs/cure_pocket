@@ -41,9 +41,22 @@ const MAX_BLOB_SIZE = 1 * 1024 * 1024;
 const DEFAULT_EPOCHS = Number(process.env.NEXT_PUBLIC_WALRUS_EPOCHS) || 5;
 
 /**
- * Upload relay configuration (optional, reduces request count)
+ * Upload relay configuration (mandatory)
+ * リレー未設定での直アクセスはサポートしない。
  */
-const UPLOAD_RELAY_HOST = process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY;
+const resolvedUploadRelay =
+	process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY ||
+	(SUI_NETWORK === "testnet"
+		? process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY_TESTNET
+		: process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY_MAINNET);
+
+if (!resolvedUploadRelay) {
+	throw new Error(
+		"[Walrus] Upload relay host is required. Set NEXT_PUBLIC_WALRUS_UPLOAD_RELAY or network-specific relay env.",
+	);
+}
+
+const UPLOAD_RELAY_HOST: string = resolvedUploadRelay;
 
 // ==========================================
 // Walrus Client Setup
@@ -64,15 +77,13 @@ function createWalrusClient(): WalrusExtendedClient {
 		network: SUI_NETWORK,
 	};
 
-	// Add upload relay if configured
-	if (UPLOAD_RELAY_HOST) {
-		walrusOptions.uploadRelay = {
-			host: UPLOAD_RELAY_HOST,
-			sendTip: {
-				max: 10_000, // Max tip in MIST
-			},
-		};
-	}
+	// Upload relay is required
+	walrusOptions.uploadRelay = {
+		host: UPLOAD_RELAY_HOST,
+		sendTip: {
+			max: 10_000, // Max tip in MIST
+		},
+	};
 
 	// Add WASM URL for browser environments
 	if (typeof window !== "undefined") {

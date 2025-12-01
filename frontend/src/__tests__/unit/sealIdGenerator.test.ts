@@ -9,13 +9,14 @@
  * - SHA-256 hash format
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { generateSealId } from "@/lib/sealIdGenerator";
 
 describe("SealIdGenerator", () => {
 	describe("Deterministic Output", () => {
 		it("should return same output for same input", async () => {
-			const address = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+			const address =
+				"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 			const dataType = "vital_signs";
 
 			const id1 = await generateSealId(address, dataType);
@@ -159,8 +160,8 @@ describe("SealIdGenerator", () => {
 		});
 
 		it("should handle very long inputs", async () => {
-			const longAddress = "0x" + "a".repeat(1000);
-			const longDataType = "type_" + "b".repeat(1000);
+			const longAddress = `0x${"a".repeat(1000)}`;
+			const longDataType = `type_${"b".repeat(1000)}`;
 
 			const id = await generateSealId(longAddress, longDataType);
 

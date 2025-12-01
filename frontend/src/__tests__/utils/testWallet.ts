@@ -5,10 +5,10 @@
  * Uses Ed25519 keypair for deterministic test wallets.
  */
 
+import { fromHex } from "@mysten/bcs";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import type { Transaction } from "@mysten/sui/transactions";
-import { fromHex } from "@mysten/bcs";
 
 // ==========================================
 // Configuration

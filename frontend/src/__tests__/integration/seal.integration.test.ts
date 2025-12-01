@@ -14,17 +14,15 @@
  * - NEXT_PUBLIC_PACKAGE_ID environment variable (for PTB building)
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
-	createSealClient,
-	encryptHealthData,
-	decryptHealthData,
-	createSessionKey,
-	signSessionKey,
-	buildPatientAccessPTB,
 	calculateThreshold,
+	createSealClient,
+	createSessionKey,
+	encryptHealthData,
 	resolveKeyServers,
 	SUI_NETWORK,
+	signSessionKey,
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
 import {
@@ -104,7 +102,10 @@ describe("Seal Integration Tests", () => {
 					{ name: "Vitamin D", dosage: "1000IU" },
 				],
 			};
-			const medicationsSealId = await generateSealId(ctx.address, "medications");
+			const medicationsSealId = await generateSealId(
+				ctx.address,
+				"medications",
+			);
 			const encryptedMedications = await encryptHealthData({
 				healthData: medicationsData,
 				sealClient,
@@ -152,7 +153,11 @@ describe("Seal Integration Tests", () => {
 					blood_type: "A+",
 				},
 				allergies: [
-					{ allergen: "Penicillin", severity: "severe", reaction: "Anaphylaxis" },
+					{
+						allergen: "Penicillin",
+						severity: "severe",
+						reaction: "Anaphylaxis",
+					},
 					{ allergen: "Peanuts", severity: "moderate", reaction: "Hives" },
 				],
 				medications: Array.from({ length: 10 }, (_, i) => ({
@@ -238,7 +243,6 @@ describe("Seal Integration Tests", () => {
 			};
 
 			const sealId = await generateSealId(ctx.address, "self_metrics");
-			const dataType = "self_metrics";
 
 			// Encrypt
 			const { encryptedObject } = await encryptHealthData({
@@ -289,7 +293,7 @@ describe("Seal Integration Tests", () => {
 			const originalData = { test: "wrong-seal-id-test" };
 			const correctSealId = await generateSealId(ctx.address, "correct_type");
 
-			const { encryptedObject } = await encryptHealthData({
+			await encryptHealthData({
 				healthData: originalData,
 				sealClient,
 				sealId: correctSealId,

@@ -10,17 +10,17 @@
  * - For full decrypt testing: Deployed MedicalPassport contract
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { uploadToWalrus, downloadFromWalrusByBlobId } from "@/lib/walrus";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
-	createSealClient,
-	encryptHealthData,
-	decryptHealthData,
-	createSessionKey,
-	signSessionKey,
 	buildPatientAccessPTB,
+	createSealClient,
+	createSessionKey,
+	decryptHealthData,
+	encryptHealthData,
+	signSessionKey,
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
+import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import {
 	createTestContext,
 	ensureSufficientBalance,
@@ -64,7 +64,7 @@ describe("Full Flow Integration Tests", () => {
 			console.log("[FullFlow] Step 1: Encrypting data with Seal...");
 
 			// 2. Encrypt with Seal
-			const { encryptedObject, backupKey } = await encryptHealthData({
+			const { encryptedObject } = await encryptHealthData({
 				healthData: originalData,
 				sealClient,
 				sealId,
@@ -88,7 +88,9 @@ describe("Full Flow Integration Tests", () => {
 			});
 
 			expect(uploadResult.blobId).toBeDefined();
-			console.log(`[FullFlow] Uploaded to Walrus, blobId: ${uploadResult.blobId}`);
+			console.log(
+				`[FullFlow] Uploaded to Walrus, blobId: ${uploadResult.blobId}`,
+			);
 
 			console.log("[FullFlow] Step 3: Downloading from Walrus...");
 
@@ -131,7 +133,9 @@ describe("Full Flow Integration Tests", () => {
 				console.log(
 					"[FullFlow] Full decrypt test skipped - contract not deployed or passport not created",
 				);
-				console.log("[FullFlow] Encryption → Upload → Download verified successfully!");
+				console.log(
+					"[FullFlow] Encryption → Upload → Download verified successfully!",
+				);
 				return;
 			}
 
@@ -287,7 +291,12 @@ describe("Full Flow Integration Tests", () => {
 		it("should handle multiple data types with unique seal IDs", async () => {
 			const sealClient = createSealClient(ctx.suiClient);
 
-			const dataTypes = ["vital_signs", "medications", "lab_results", "allergies"];
+			const dataTypes = [
+				"vital_signs",
+				"medications",
+				"lab_results",
+				"allergies",
+			];
 			const results: Array<{
 				dataType: string;
 				sealId: string;
