@@ -16,19 +16,38 @@ import { fromHex } from "@mysten/bcs";
 
 const SUI_NETWORK = "testnet" as const;
 
+// Cached instances to avoid re-creation
+let cachedKeypair: Ed25519Keypair | null = null;
+let cachedSuiClient: SuiClient | null = null;
+
 /**
  * Get test keypair from environment or generate new one
  *
  * For CI/CD: Set TEST_WALLET_PRIVATE_KEY environment variable
  * For local development: Will generate a new keypair (requires faucet funding)
+ *
+ * Supports two formats:
+ * - Bech32: suiprivkey1... (from `sui keytool export`)
+ * - Hex: 64-character hex string (raw 32 bytes)
  */
 export function getTestKeypair(): Ed25519Keypair {
+	if (cachedKeypair) {
+		return cachedKeypair;
+	}
+
 	const privateKey = process.env.TEST_WALLET_PRIVATE_KEY;
 
 	if (privateKey) {
-		// Use environment variable (32 bytes hex)
+		// Bech32 format (suiprivkey1...)
+		if (privateKey.startsWith("suiprivkey")) {
+			cachedKeypair = Ed25519Keypair.fromSecretKey(privateKey);
+			return cachedKeypair;
+		}
+
+		// Hex format (32 bytes = 64 characters)
 		const secretKey = fromHex(privateKey);
-		return Ed25519Keypair.fromSecretKey(secretKey);
+		cachedKeypair = Ed25519Keypair.fromSecretKey(secretKey);
+		return cachedKeypair;
 	}
 
 	// Generate new keypair for local testing
@@ -36,7 +55,8 @@ export function getTestKeypair(): Ed25519Keypair {
 	console.warn(
 		"[TestWallet] No TEST_WALLET_PRIVATE_KEY set, generating new keypair",
 	);
-	return Ed25519Keypair.generate();
+	cachedKeypair = Ed25519Keypair.generate();
+	return cachedKeypair;
 }
 
 /**
@@ -48,12 +68,16 @@ export function getTestAddress(): string {
 }
 
 /**
- * Create SuiClient for testnet
+ * Create SuiClient for testnet (cached)
  */
 export function createTestSuiClient(): SuiClient {
-	return new SuiClient({
+	if (cachedSuiClient) {
+		return cachedSuiClient;
+	}
+	cachedSuiClient = new SuiClient({
 		url: getFullnodeUrl(SUI_NETWORK),
 	});
+	return cachedSuiClient;
 }
 
 /**

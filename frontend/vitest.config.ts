@@ -9,6 +9,11 @@ export default defineConfig({
 		include: ["src/**/*.test.ts", "src/**/*.integration.test.ts"],
 		// 統合テスト用のリトライ設定
 		retry: 2,
+		// .env.test を読み込む
+		env: {
+			// dotenvで.env.testを読み込み
+		},
+		setupFiles: ["./src/__tests__/setup.ts"],
 	},
 	resolve: {
 		alias: {
