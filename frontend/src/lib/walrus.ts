@@ -246,9 +246,9 @@ export async function uploadToWalrus(
  * Download blob from Walrus by blob ID using SDK
  *
  * Download flow:
- * 1. Use SDK readBlob to fetch from storage nodes
+ * 1. Use SDK getFiles to fetch from storage nodes (matches writeFilesFlow upload)
  * 2. SDK handles erasure decoding automatically
- * 3. Return decrypted data as Uint8Array
+ * 3. Extract bytes from WalrusFile and return as Uint8Array
  *
  * @param blobId - Walrus blob ID (content-addressed)
  * @param _options - Optional download options
@@ -262,8 +262,17 @@ export async function downloadFromWalrusByBlobId(
 	try {
 		const client = getWalrusClient();
 
-		// Download using SDK readBlob
-		const data = await client.walrus.readBlob({ blobId });
+		// Download using SDK getFiles (matches writeFilesFlow upload pattern)
+		// writeFilesFlow stores data as WalrusFile, so we use getFiles to read it
+		const files = await client.walrus.getFiles({ ids: [blobId] });
+
+		if (!files || files.length === 0) {
+			throw new Error(`Blob not found: ${blobId}`);
+		}
+
+		// Extract raw bytes from WalrusFile
+		const walrusFile = files[0];
+		const data = await walrusFile.bytes();
 
 		return data;
 	} catch (error) {
@@ -335,8 +344,9 @@ export async function downloadFromWalrusByObjectId(
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
 		const client = getWalrusClient();
-		const blob = await client.walrus.getBlob({ blobId });
-		return blob !== null;
+		// Use getFiles to check existence (matches writeFilesFlow upload pattern)
+		const files = await client.walrus.getFiles({ ids: [blobId] });
+		return files && files.length > 0;
 	} catch {
 		return false;
 	}
@@ -368,6 +378,9 @@ export async function deleteBlob(
 /**
  * Get blob metadata without downloading content
  *
+ * Note: This downloads the full content to get accurate size.
+ * For large blobs, consider using a lighter check.
+ *
  * @param blobId - Walrus blob ID
  * @returns Blob metadata
  * @throws Error if blob not found
@@ -379,14 +392,18 @@ export async function getBlobMetadata(blobId: string): Promise<{
 }> {
 	try {
 		const client = getWalrusClient();
-		const blob = await client.walrus.getBlob({ blobId });
+		// Use getFiles to match writeFilesFlow upload pattern
+		const files = await client.walrus.getFiles({ ids: [blobId] });
 
-		if (!blob) {
+		if (!files || files.length === 0) {
 			throw new Error(`Blob not found: ${blobId}`);
 		}
 
+		const walrusFile = files[0];
+		const data = await walrusFile.bytes();
+
 		return {
-			size: 0, // SDK doesn't expose size directly
+			size: data.length,
 			contentType: "application/octet-stream",
 			certified: true,
 		};

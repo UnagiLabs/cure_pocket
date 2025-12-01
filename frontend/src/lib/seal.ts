@@ -66,7 +66,7 @@ const CLOCK_OBJECT_ID = "0x6";
 /**
  * Sui network for key server lookup
  */
-const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
+export const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 	| "mainnet"
 	| "testnet"
 	| "devnet"
@@ -85,17 +85,34 @@ const VERIFY_KEY_SERVERS =
 // ==========================================
 
 /**
+ * Default Testnet Key Server (Studio Mirai open testnet)
+ * Used as fallback when environment variable is not set
+ */
+const TESTNET_DEFAULT_KEY_SERVERS = [
+	"0x164ac3d2b3b8694b8181c13f671950004765c23f270321a45fdd04d40cccf0f2",
+];
+
+/**
  * Get allowlisted key servers for the network
  *
  * @param network - Sui network (testnet, mainnet, devnet)
  * @returns Array of key server object IDs
  */
-function resolveKeyServers(
+export function resolveKeyServers(
 	network: "mainnet" | "testnet" | "devnet" | "localnet",
 ): string[] {
 	if (SEAL_KEY_SERVERS.length > 0) {
 		return SEAL_KEY_SERVERS;
 	}
+
+	// Testnet fallback: use default key servers
+	if (network === "testnet") {
+		console.warn(
+			"[resolveKeyServers] NEXT_PUBLIC_SEAL_KEY_SERVERS not set, using default testnet key servers",
+		);
+		return TESTNET_DEFAULT_KEY_SERVERS;
+	}
+
 	// No SDK helper available in @mysten/seal v0.9.x; require env configuration.
 	throw new Error(
 		`No Seal key servers configured for ${network}. Set NEXT_PUBLIC_SEAL_KEY_SERVERS.`,
@@ -197,9 +214,22 @@ export async function encryptHealthData<T = HealthData>(params: {
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
 	const { healthData, sealClient, sealId, threshold } = params;
 
+	// Validate key servers before encryption to prevent creating invalid encrypted objects
+	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
+	if (serverObjectIds.length === 0) {
+		throw new Error(
+			"[encryptHealthData] Cannot encrypt: No key servers configured. " +
+				"Ensure NEXT_PUBLIC_SEAL_KEY_SERVERS is set.",
+		);
+	}
+
 	// If threshold not provided, calculate based on key server count
 	const effectiveThreshold =
-		threshold ?? calculateThreshold(SEAL_KEY_SERVERS.length);
+		threshold ?? calculateThreshold(serverObjectIds.length);
+
+	console.log("[encryptHealthData] Using key servers:", serverObjectIds);
+	console.log("[encryptHealthData] Using threshold:", effectiveThreshold);
+	console.log("[encryptHealthData] sealId:", sealId);
 
 	// Serialize to JSON
 	const json = JSON.stringify(healthData);
@@ -248,12 +278,35 @@ export async function decryptHealthData(params: {
 		`[decryptHealthData] encryptedData length: ${encryptedData.length}`,
 	);
 
-	// Optional sanity check: ensure the encrypted object matches expected id
-	if (sealId) {
-		try {
-			const parsed = EncryptedObject.parse(encryptedData);
-			console.log(`[decryptHealthData] parsed.id: ${parsed.id}`);
+	// Validate encrypted object metadata before decryption
+	// This catches corrupted data early with a user-friendly error message
+	try {
+		const parsed = EncryptedObject.parse(encryptedData);
+		console.log(`[decryptHealthData] parsed.id: ${parsed.id}`);
+		console.log(`[decryptHealthData] parsed.threshold: ${parsed.threshold}`);
+		console.log(`[decryptHealthData] parsed.services:`, parsed.services);
 
+		// Check for corrupted encryption metadata (threshold=0 or empty services)
+		// This happens when data was encrypted with misconfigured SEAL key servers
+		if (
+			parsed.threshold === 0 ||
+			!parsed.services ||
+			parsed.services.length === 0
+		) {
+			console.error(
+				"[decryptHealthData] Corrupted encryption metadata detected:",
+				{
+					threshold: parsed.threshold,
+					servicesCount: parsed.services?.length ?? 0,
+				},
+			);
+			throw new Error(
+				"DATA_CORRUPTED: This data was encrypted with invalid settings and cannot be decrypted. Please re-register your information.",
+			);
+		}
+
+		// Optional: verify seal_id matches if provided
+		if (sealId) {
 			const normalize = (value: string): string => {
 				if (!value) return "";
 				let normalized = value.startsWith("0x") ? value.slice(2) : value;
@@ -277,13 +330,20 @@ export async function decryptHealthData(params: {
 				);
 			}
 			console.log("[decryptHealthData] seal_id match verified");
-		} catch (parseError) {
-			console.error(
-				"[decryptHealthData] EncryptedObject.parse or validation failed:",
-				parseError,
-			);
+		}
+	} catch (parseError) {
+		// Re-throw DATA_CORRUPTED errors as-is for proper handling upstream
+		if (
+			parseError instanceof Error &&
+			parseError.message.startsWith("DATA_CORRUPTED:")
+		) {
 			throw parseError;
 		}
+		console.error(
+			"[decryptHealthData] EncryptedObject.parse or validation failed:",
+			parseError,
+		);
+		throw parseError;
 	}
 
 	// Decrypt with Seal

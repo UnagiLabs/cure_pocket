@@ -49,7 +49,8 @@ import {
 	calculateThreshold,
 	createSealClient,
 	encryptHealthData,
-	SEAL_KEY_SERVERS,
+	resolveKeyServers,
+	SUI_NETWORK,
 } from "@/lib/seal";
 import { generateSealId } from "@/lib/sealIdGenerator";
 import {
@@ -230,10 +231,11 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				const sealClient = createSealClient(suiClient);
 
 				// Step 4: Calculate threshold based on number of key servers
-				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
+				const serverObjectIds = resolveKeyServers(SUI_NETWORK);
+				const threshold = calculateThreshold(serverObjectIds.length);
 
 				console.log(
-					`[EncryptAndStore] Encrypting HealthData with Seal (threshold: ${threshold}, servers: ${SEAL_KEY_SERVERS.length})...`,
+					`[EncryptAndStore] Encrypting HealthData with Seal (threshold: ${threshold}, servers: ${serverObjectIds.length})...`,
 				);
 
 				// Step 5: Encrypt HealthData
@@ -399,11 +401,12 @@ export function useEncryptAndStore(): UseEncryptAndStoreReturn {
 				setProgress("encrypting");
 				const sealClient = createSealClient(suiClient);
 
-				// Step 4: Calculate threshold
-				const threshold = calculateThreshold(SEAL_KEY_SERVERS.length);
+				// Step 4: Calculate threshold based on resolved key servers
+				const serverObjectIds = resolveKeyServers(SUI_NETWORK);
+				const threshold = calculateThreshold(serverObjectIds.length);
 
 				console.log(
-					`[EncryptAndStoreMultiple] Batch encrypting ${dataItems.length} items with Seal (threshold: ${threshold})...`,
+					`[EncryptAndStoreMultiple] Batch encrypting ${dataItems.length} items with Seal (threshold: ${threshold}, servers: ${serverObjectIds.length})...`,
 				);
 
 				// Step 5: Encrypt all items in parallel (each with its own seal_id)
