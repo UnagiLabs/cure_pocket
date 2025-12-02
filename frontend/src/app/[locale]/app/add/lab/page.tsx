@@ -22,6 +22,17 @@ import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
 import {
+	buildPatientAccessPTB,
+	calculateThreshold,
+	createSealClient,
+	decryptHealthData,
+	downloadFromWalrusByBlobId,
+	encryptHealthData,
+	generateSealId,
+	SEAL_KEY_SERVERS,
+	uploadToWalrus,
+} from "@/lib/crypto/walrusSeal";
+import {
 	calculateFlag,
 	createMetaData,
 	formatReferenceRange,
@@ -33,18 +44,8 @@ import {
 	type LabGroupId,
 	mapOCRResultToFormValues,
 } from "@/lib/labResultsConverter";
-import {
-	buildPatientAccessPTB,
-	calculateThreshold,
-	createSealClient,
-	decryptHealthData,
-	encryptHealthData,
-	SEAL_KEY_SERVERS,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
 import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { LabResult, LabResultsData } from "@/types/healthData";
 import {
 	createEmptyMetadata,

@@ -44,15 +44,17 @@ import {
 	useSuiClient,
 } from "@mysten/dapp-kit";
 import { useCallback, useState } from "react";
-import { encryptAndStoreImagingBinary } from "@/lib/imagingBinary";
 import {
 	calculateThreshold,
 	createSealClient,
+	downloadFromWalrusByBlobId,
 	encryptHealthData,
+	generateSealId,
 	resolveKeyServers,
 	SUI_NETWORK,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+	uploadToWalrus,
+} from "@/lib/crypto/walrusSeal";
+import { encryptAndStoreImagingBinary } from "@/lib/data/binaryAdapter";
 import {
 	HealthDataValidationError,
 	validateBasicProfileData,
@@ -63,7 +65,6 @@ import {
 	validateMedicationsData,
 	validateSelfMetricsData,
 } from "@/lib/validation/healthDataValidator";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type {
 	BasicProfileData,
 	ConditionsData,

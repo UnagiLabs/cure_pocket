@@ -28,12 +28,13 @@ import {
 	calculateThreshold,
 	createSealClient,
 	decryptHealthData,
+	downloadFromWalrusByBlobId,
 	encryptHealthData,
+	generateSealId,
 	SEAL_KEY_SERVERS,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+	uploadToWalrus,
+} from "@/lib/crypto/walrusSeal";
 import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { DataType } from "@/types/healthData";
 import {
 	type BaseMetadata,

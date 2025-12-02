@@ -8,8 +8,8 @@ import {
 	buildSealAuthPayloadBytes,
 	createSealClient,
 	decryptHealthData,
-} from "@/lib/seal";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
+	downloadFromWalrusByBlobId,
+} from "@/lib/crypto/walrusSeal";
 import type { HealthData } from "@/types/healthData";
 
 export type ConsentDecryptionStage =

@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { generateSealId } from "@/lib/sealIdGenerator";
+import { generateSealId } from "@/lib/crypto/walrusSeal";
 
 describe("SealIdGenerator", () => {
 	describe("Deterministic Output", () => {

@@ -5,9 +5,9 @@ import {
 	createSessionKey,
 	decryptHealthData,
 	encryptHealthData,
+	generateSealId,
 	signSessionKey,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+} from "@/lib/crypto/walrusSeal";
 import {
 	createTestContext,
 	ensureSufficientBalance,
@@ -15,8 +15,11 @@ import {
 } from "../utils/testWallet";
 
 // Helper to reload module with fresh env
+// Import directly from seal.ts to ensure fresh env evaluation
 async function loadSealModule() {
-	return await import(`@/lib/seal?cache_bust=${Date.now()}_${Math.random()}`);
+	return await import(
+		`@/lib/crypto/seal?cache_bust=${Date.now()}_${Math.random()}`
+	);
 }
 
 describe("seal utils (unit)", () => {

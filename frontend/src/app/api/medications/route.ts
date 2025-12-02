@@ -19,14 +19,14 @@ import {
 	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
-} from "@/lib/seal";
+	downloadFromWalrusByBlobId,
+} from "@/lib/crypto/walrusSeal";
 import { parseSessionKeyFromHeader } from "@/lib/sessionKey";
 import {
 	getDataEntry,
 	getPassportIdByAddress,
 	getSuiClient,
 } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type { Medication } from "@/types/healthData";
 
 export const runtime = "edge";

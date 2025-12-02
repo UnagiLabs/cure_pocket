@@ -45,7 +45,7 @@ import {
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useState } from "react";
-import { generateSealId } from "@/lib/sealIdGenerator";
+import { generateSealId } from "@/lib/crypto/walrusSeal";
 import type { DataType } from "@/types/healthData";
 
 // Re-export DataType for backward compatibility

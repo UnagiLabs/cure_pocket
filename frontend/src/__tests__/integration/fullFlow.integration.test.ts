@@ -4,8 +4,8 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
+import { createSessionKey, signSessionKey } from "@/lib/crypto/walrusSeal";
 import { loadJson, saveJson } from "@/lib/data/jsonAdapter";
-import { createSessionKey, signSessionKey } from "@/lib/seal";
 import {
 	createTestContext,
 	ensureSufficientBalance,

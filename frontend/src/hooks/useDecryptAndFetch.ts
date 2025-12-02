@@ -44,14 +44,14 @@
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import type { SessionKey } from "@mysten/seal";
 import { useCallback, useState } from "react";
-import { decryptImagingBinaryInternal } from "@/lib/imagingBinary";
 import {
 	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
-} from "@/lib/seal";
+	downloadFromWalrusByBlobId,
+} from "@/lib/crypto/walrusSeal";
+import { decryptImagingBinaryInternal } from "@/lib/data/binaryAdapter";
 import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type {
 	BasicProfileData,
 	ConditionsData,

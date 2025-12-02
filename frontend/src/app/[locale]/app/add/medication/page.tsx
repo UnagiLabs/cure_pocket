@@ -24,21 +24,22 @@ import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
 import { useUpdatePassportData } from "@/hooks/useUpdatePassportData";
 import {
-	createMetaData,
-	prescriptionToMedicationsData,
-} from "@/lib/prescriptionConverter";
-import {
 	buildPatientAccessPTB,
 	calculateThreshold,
 	createSealClient,
 	decryptHealthData,
+	downloadFromWalrusByBlobId,
 	encryptHealthData,
+	generateSealId,
 	SEAL_KEY_SERVERS,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+	uploadToWalrus,
+} from "@/lib/crypto/walrusSeal";
+import {
+	createMetaData,
+	prescriptionToMedicationsData,
+} from "@/lib/prescriptionConverter";
 import { getDataEntry, PASSPORT_REGISTRY_ID } from "@/lib/suiClient";
 import { getTheme } from "@/lib/themes";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
 import type { Prescription, PrescriptionMedication } from "@/types";
 import type { Medication, MedicationsData } from "@/types/healthData";
 import {

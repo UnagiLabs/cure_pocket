@@ -10,20 +10,20 @@ import {
 } from "react";
 import { usePassport } from "@/hooks/usePassport";
 import { useSessionKeyManager } from "@/hooks/useSessionKeyManager";
-import { formatReferenceRange } from "@/lib/labResultsConverter";
-import { calculateAgeBandFromDate } from "@/lib/profileConverter";
 import {
 	buildPatientAccessPTB,
 	createSealClient,
 	decryptHealthData,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+	downloadFromWalrusByBlobId,
+	generateSealId,
+} from "@/lib/crypto/walrusSeal";
+import { formatReferenceRange } from "@/lib/labResultsConverter";
+import { calculateAgeBandFromDate } from "@/lib/profileConverter";
 import {
 	getDataEntry,
 	getSuiClient,
 	PASSPORT_REGISTRY_ID,
 } from "@/lib/suiClient";
-import { downloadFromWalrusByBlobId } from "@/lib/walrus";
 import type {
 	Allergy,
 	AppState,

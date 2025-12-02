@@ -6,7 +6,10 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { downloadFromWalrusByBlobId, uploadToWalrus } from "@/lib/walrus";
+import {
+	downloadFromWalrusByBlobId,
+	uploadToWalrus,
+} from "@/lib/crypto/walrusSeal";
 import {
 	createTestContext,
 	ensureSufficientBalance,

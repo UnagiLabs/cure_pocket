@@ -1,22 +1,81 @@
+/**
+ * Walrus + Seal Unified Adapter
+ *
+ * This module provides a unified interface for:
+ * - Seal-based encryption/decryption
+ * - Walrus-based blob storage
+ * - High-level APIs for common operations
+ *
+ * All Walrus/Seal operations should import from this file.
+ */
+
 import type { SessionKey } from "@mysten/seal";
 import { SealClient } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
+
+// Internal imports from crypto directory
 import {
 	buildPatientAccessPTB,
 	calculateThreshold,
 	resolveKeyServers,
 	SUI_NETWORK,
-} from "@/lib/seal";
-import { generateSealId } from "@/lib/sealIdGenerator";
+} from "./seal";
+import { generateSealId } from "./sealId";
 import {
 	downloadFromWalrusByBlobId,
 	type TransactionExecutor,
 	uploadToWalrus,
-} from "@/lib/walrus";
+} from "./walrus";
+
+// ==========================================
+// Re-exports from internal modules
+// ==========================================
+
+// Seal exports
+export {
+	buildConsentAccessPTB,
+	buildPatientAccessPTB,
+	buildSealAuthPayloadBytes,
+	calculateThreshold,
+	createSealClient,
+	createSessionKey,
+	decryptHealthData,
+	encryptHealthData,
+	resolveKeyServers,
+	SEAL_KEY_SERVERS,
+	SUI_NETWORK,
+	signSessionKey,
+} from "./seal";
+
+// SealId exports
+export { generateSealId } from "./sealId";
+
+// Walrus exports
+export {
+	blobExists,
+	type DownloadOptions,
+	deleteBlob,
+	downloadFromWalrusByBlobId,
+	downloadFromWalrusByObjectId,
+	estimateStorageCost,
+	getBlobMetadata,
+	resetWalrusClient,
+	type TransactionExecutor,
+	type UploadOptions,
+	uploadToWalrus,
+} from "./walrus";
+
+// ==========================================
+// Constants
+// ==========================================
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 const DEFAULT_TESTNET_KEY_SERVER =
 	"0x164ac3d2b3b8694b8181c13f671950004765c23f270321a45fdd04d40cccf0f2";
+
+// ==========================================
+// High-Level API Types
+// ==========================================
 
 export interface EncryptUploadOptions {
 	address: string;
@@ -37,6 +96,17 @@ export interface DecryptDownloadOptions {
 	sessionKey: SessionKey;
 }
 
+// ==========================================
+// High-Level API Functions
+// ==========================================
+
+/**
+ * Encrypt data and upload to Walrus in one operation
+ *
+ * @param payload - Raw data to encrypt and upload (Uint8Array)
+ * @param options - Encryption and upload options
+ * @returns Object containing blobId, sealId, size, and dataType
+ */
 export async function encryptAndUpload(
 	payload: Uint8Array,
 	{
@@ -82,6 +152,12 @@ export async function encryptAndUpload(
 	};
 }
 
+/**
+ * Download from Walrus and decrypt in one operation
+ *
+ * @param options - Download and decryption options
+ * @returns Object containing decrypted data, sealId, and dataType
+ */
 export async function downloadAndDecrypt({
 	blobId,
 	dataType,
