@@ -1,16 +1,16 @@
 /**
- * Seal Encryption Service Integration
+ * Seal暗号化サービス統合
  *
- * This module provides utilities for encrypting and decrypting medical data
- * using Mysten Labs' Seal identity-based encryption service.
+ * このモジュールは、Mysten LabsのSealアイデンティティベース暗号化サービスを使用して
+ * 医療データを暗号化・復号化するためのユーティリティを提供します。
  *
- * Seal Architecture:
- * - Identity-Based Encryption (IBE) with threshold cryptography
- * - Access control enforced via Move smart contract policies
- * - SessionKey with wallet signature for time-limited access
- * - Programmable Transaction Blocks (PTB) for policy verification
+ * Sealアーキテクチャ:
+ * - しきい値暗号化を使用したアイデンティティベース暗号化（IBE）
+ * - Moveスマートコントラクトポリシーによるアクセス制御
+ * - 時間制限付きアクセスのためのウォレット署名付きSessionKey
+ * - ポリシー検証のためのProgrammable Transaction Blocks（PTB）
  *
- * Official Documentation: https://seal-docs.wal.app/
+ * 公式ドキュメント: https://seal-docs.wal.app/
  */
 
 import { fromHex } from "@mysten/bcs";
@@ -21,12 +21,12 @@ import { normalizeSuiAddress } from "@mysten/sui/utils";
 import type { HealthData } from "@/types/healthData";
 
 // ==========================================
-// Environment Configuration
+// 環境設定
 // ==========================================
 
 /**
- * Seal KeyServer ObjectIds from environment
- * Comma-separated list of key server object IDs
+ * 環境変数から取得するSeal KeyServer ObjectIds
+ * カンマ区切りのキーサーバーオブジェクトIDのリスト
  */
 export const SEAL_KEY_SERVERS =
 	process.env.NEXT_PUBLIC_SEAL_KEY_SERVERS?.split(",")
@@ -34,18 +34,18 @@ export const SEAL_KEY_SERVERS =
 		.filter(Boolean) || [];
 
 /**
- * Calculate appropriate threshold based on number of key servers
- * - 1 server: threshold = 1 (single point of failure, but functional)
- * - 2+ servers: threshold = 2 (recommended for redundancy and security)
+ * キーサーバーの数に基づいて適切なしきい値を計算
+ * - 1サーバー: threshold = 1（単一障害点だが機能する）
+ * - 2サーバー以上: threshold = 2（冗長性とセキュリティのため推奨）
  *
- * @param keyServerCount - Number of key servers configured
- * @returns Appropriate threshold value (1 or 2)
+ * @param keyServerCount - 設定されたキーサーバーの数
+ * @returns 適切なしきい値（1または2）
  *
  * @example
  * ```typescript
- * calculateThreshold(1) // Returns 1
- * calculateThreshold(2) // Returns 2
- * calculateThreshold(5) // Returns 2
+ * calculateThreshold(1) // 1を返す
+ * calculateThreshold(2) // 2を返す
+ * calculateThreshold(5) // 2を返す
  * ```
  */
 export function calculateThreshold(keyServerCount: number): number {
@@ -53,18 +53,18 @@ export function calculateThreshold(keyServerCount: number): number {
 }
 
 /**
- * SessionKey TTL in minutes (default: 10 minutes)
+ * SessionKeyのTTL（分単位、デフォルト: 10分）
  */
 const DEFAULT_SESSION_TTL_MIN = 10;
 
 /**
- * Package ID for access control policies
+ * アクセス制御ポリシー用のパッケージID
  */
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
 const CLOCK_OBJECT_ID = "0x6";
 
 /**
- * Sui network for key server lookup
+ * キーサーバー検索用のSuiネットワーク
  */
 export const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 	| "mainnet"
@@ -73,30 +73,30 @@ export const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 	| "localnet";
 
 /**
- * Verify key server URLs against on-chain metadata
- * Enable in production to prevent endpoint spoofing
+ * オンチェーンメタデータに対してキーサーバーURLを検証
+ * 本番環境ではエンドポイントのなりすましを防ぐために有効化
  */
 const VERIFY_KEY_SERVERS =
 	(process.env.NEXT_PUBLIC_SEAL_VERIFY_KEY_SERVERS || "").toLowerCase() ===
 	"true";
 
 // ==========================================
-// Core Seal Functions
+// コアSeal関数
 // ==========================================
 
 /**
- * Default Testnet Key Server (Studio Mirai open testnet)
- * Used as fallback when environment variable is not set
+ * デフォルトのTestnetキーサーバー（Studio Miraiオープンテストネット）
+ * 環境変数が設定されていない場合のフォールバックとして使用
  */
 const TESTNET_DEFAULT_KEY_SERVERS = [
 	"0x164ac3d2b3b8694b8181c13f671950004765c23f270321a45fdd04d40cccf0f2",
 ];
 
 /**
- * Get allowlisted key servers for the network
+ * ネットワーク用の許可リストキーサーバーを取得
  *
- * @param network - Sui network (testnet, mainnet, devnet)
- * @returns Array of key server object IDs
+ * @param network - Suiネットワーク（testnet、mainnet、devnet）
+ * @returns キーサーバーオブジェクトIDの配列
  */
 export function resolveKeyServers(
 	network: "mainnet" | "testnet" | "devnet" | "localnet",
@@ -105,7 +105,7 @@ export function resolveKeyServers(
 		return SEAL_KEY_SERVERS;
 	}
 
-	// Testnet fallback: use default key servers
+	// Testnetフォールバック: デフォルトのキーサーバーを使用
 	if (network === "testnet") {
 		console.warn(
 			"[resolveKeyServers] NEXT_PUBLIC_SEAL_KEY_SERVERS not set, using default testnet key servers",
@@ -113,24 +113,24 @@ export function resolveKeyServers(
 		return TESTNET_DEFAULT_KEY_SERVERS;
 	}
 
-	// No SDK helper available in @mysten/seal v0.9.x; require env configuration.
+	// @mysten/seal v0.9.xではSDKヘルパーが利用できないため、環境設定が必要
 	throw new Error(
 		`No Seal key servers configured for ${network}. Set NEXT_PUBLIC_SEAL_KEY_SERVERS.`,
 	);
 }
 
 /**
- * Create and initialize a Seal client
+ * Sealクライアントを作成して初期化
  *
- * @param suiClient - Sui blockchain client
- * @returns Initialized SealClient instance
- * @throws Error if KeyServer configuration is invalid
+ * @param suiClient - Suiブロックチェーンクライアント
+ * @returns 初期化されたSealClientインスタンス
+ * @throws KeyServer設定が無効な場合にエラーをスロー
  */
-// Cache SealClient to avoid re-creating (reduces key fetch / auth prompts)
+// SealClientをキャッシュして再作成を回避（キー取得/認証プロンプトを削減）
 let cachedSealClient: { key: string; client: SealClient } | null = null;
 
 export function createSealClient(suiClient: SuiClient): SealClient {
-	// Get key server object IDs
+	// キーサーバーオブジェクトIDを取得
 	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
 
 	if (serverObjectIds.length === 0) {
@@ -147,13 +147,13 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 		return cachedSealClient.client;
 	}
 
-	// Create server configs with equal weights
+	// 等しい重みでサーバー設定を作成
 	const serverConfigs = serverObjectIds.map((objectId) => ({
 		objectId,
 		weight: 1,
 	}));
 
-	// Initialize SealClient
+	// SealClientを初期化
 	const client = new SealClient({
 		suiClient,
 		serverConfigs,
@@ -165,16 +165,16 @@ export function createSealClient(suiClient: SuiClient): SealClient {
 }
 
 /**
- * Create a SessionKey for time-limited decryption access
+ * 時間制限付き復号アクセス用のSessionKeyを作成
  *
- * SessionKey flow (Official API):
- * 1. Create SessionKey with SessionKey.create()
- * 2. Get personal message with getPersonalMessage()
- * 3. User signs message with wallet
- * 4. Set signature with setPersonalMessageSignature()
+ * SessionKeyフロー（公式API）:
+ * 1. SessionKey.create()でSessionKeyを作成
+ * 2. getPersonalMessage()でパーソナルメッセージを取得
+ * 3. ユーザーがウォレットでメッセージに署名
+ * 4. setPersonalMessageSignature()で署名を設定
  *
- * @param options - SessionKey creation options
- * @returns Initialized SessionKey (not yet signed)
+ * @param options - SessionKey作成オプション
+ * @returns 初期化されたSessionKey（まだ署名されていない）
  */
 export async function createSessionKey(options: {
 	address: string;
@@ -183,7 +183,7 @@ export async function createSessionKey(options: {
 }): Promise<SessionKey> {
 	const { address, suiClient, ttlMin = DEFAULT_SESSION_TTL_MIN } = options;
 
-	// Create SessionKey
+	// SessionKeyを作成
 	const sessionKey = await SessionKey.create({
 		address,
 		packageId: PACKAGE_ID,
@@ -195,26 +195,26 @@ export async function createSessionKey(options: {
 }
 
 /**
- * Encrypt health data using Seal's threshold IBE
+ * Sealのしきい値IBEを使用して医療データを暗号化
  *
- * Official API flow:
- * 1. Call client.encrypt() with threshold, packageId, id, and data
- * 2. Returns { encryptedObject, key }
- * 3. encryptedObject is stored in Walrus
- * 4. key can be used for backup/recovery
+ * 公式APIフロー:
+ * 1. threshold、packageId、id、dataを指定してclient.encrypt()を呼び出し
+ * 2. { encryptedObject, key }を返す
+ * 3. encryptedObjectはWalrusに保存される
+ * 4. keyはバックアップ/復旧に使用可能
  *
- * @param params - Encryption parameters
- * @returns Encrypted data and symmetric key
+ * @param params - 暗号化パラメータ
+ * @returns 暗号化されたデータと対称鍵
  */
 export async function encryptHealthData<T = HealthData>(params: {
 	healthData: T;
 	sealClient: SealClient;
-	sealId: string; // hex string (without package prefix)
+	sealId: string; // 16進数文字列（パッケージプレフィックスなし）
 	threshold?: number;
 }): Promise<{ encryptedObject: Uint8Array; backupKey: Uint8Array }> {
 	const { healthData, sealClient, sealId, threshold } = params;
 
-	// Validate key servers before encryption to prevent creating invalid encrypted objects
+	// 無効な暗号化オブジェクトの作成を防ぐため、暗号化前にキーサーバーを検証
 	const serverObjectIds = resolveKeyServers(SUI_NETWORK);
 	if (serverObjectIds.length === 0) {
 		throw new Error(
@@ -223,7 +223,7 @@ export async function encryptHealthData<T = HealthData>(params: {
 		);
 	}
 
-	// If threshold not provided, calculate based on key server count
+	// しきい値が提供されていない場合、キーサーバー数に基づいて計算
 	const effectiveThreshold =
 		threshold ?? calculateThreshold(serverObjectIds.length);
 
@@ -231,12 +231,12 @@ export async function encryptHealthData<T = HealthData>(params: {
 	console.log("[encryptHealthData] Using threshold:", effectiveThreshold);
 	console.log("[encryptHealthData] sealId:", sealId);
 
-	// Serialize to JSON
+	// JSONにシリアライズ
 	const json = JSON.stringify(healthData);
 	const data = new TextEncoder().encode(json);
 
-	// Encrypt with Seal
-	// sealId（hex文字列）をそのまま渡す
+	// Sealで暗号化
+	// sealId（16進数文字列）をそのまま渡す
 	// Seal SDKは内部でfromHex()を使用してバイナリに変換する
 	const { encryptedObject, key: backupKey } = await sealClient.encrypt({
 		threshold: effectiveThreshold,
@@ -249,17 +249,17 @@ export async function encryptHealthData<T = HealthData>(params: {
 }
 
 /**
- * Decrypt health data using SessionKey and PTB
+ * SessionKeyとPTBを使用して医療データを復号
  *
- * Official API flow:
- * 1. Create PTB with seal_approve* function call
- * 2. Build PTB with onlyTransactionKind: true
- * 3. Call client.decrypt({ data, sessionKey, txBytes })
- * 4. Returns decrypted Uint8Array
+ * 公式APIフロー:
+ * 1. seal_approve*関数呼び出しでPTBを作成
+ * 2. onlyTransactionKind: trueでPTBをビルド
+ * 3. client.decrypt({ data, sessionKey, txBytes })を呼び出し
+ * 4. 復号されたUint8Arrayを返す
  *
- * @param params - Decryption parameters
- * @returns Decrypted HealthData
- * @throws Error if access is denied or decryption fails
+ * @param params - 復号パラメータ
+ * @returns 復号されたHealthData
+ * @throws アクセスが拒否された場合、または復号に失敗した場合にエラーをスロー
  */
 export async function decryptHealthData(params: {
 	encryptedData: Uint8Array;
@@ -278,16 +278,16 @@ export async function decryptHealthData(params: {
 		`[decryptHealthData] encryptedData length: ${encryptedData.length}`,
 	);
 
-	// Validate encrypted object metadata before decryption
-	// This catches corrupted data early with a user-friendly error message
+	// 復号前に暗号化オブジェクトのメタデータを検証
+	// これにより、ユーザーフレンドリーなエラーメッセージで破損データを早期に検出
 	try {
 		const parsed = EncryptedObject.parse(encryptedData);
 		console.log(`[decryptHealthData] parsed.id: ${parsed.id}`);
 		console.log(`[decryptHealthData] parsed.threshold: ${parsed.threshold}`);
 		console.log(`[decryptHealthData] parsed.services:`, parsed.services);
 
-		// Check for corrupted encryption metadata (threshold=0 or empty services)
-		// This happens when data was encrypted with misconfigured SEAL key servers
+		// 破損した暗号化メタデータをチェック（threshold=0または空のservices）
+		// これは、誤設定されたSEALキーサーバーでデータが暗号化された場合に発生
 		if (
 			parsed.threshold === 0 ||
 			!parsed.services ||
@@ -305,7 +305,7 @@ export async function decryptHealthData(params: {
 			);
 		}
 
-		// Optional: verify seal_id matches if provided
+		// オプション: seal_idが提供されている場合、一致を確認
 		if (sealId) {
 			const normalize = (value: string): string => {
 				if (!value) return "";
@@ -332,7 +332,7 @@ export async function decryptHealthData(params: {
 			console.log("[decryptHealthData] seal_id match verified");
 		}
 	} catch (parseError) {
-		// Re-throw DATA_CORRUPTED errors as-is for proper handling upstream
+		// DATA_CORRUPTEDエラーは上流での適切な処理のため、そのまま再スロー
 		if (
 			parseError instanceof Error &&
 			parseError.message.startsWith("DATA_CORRUPTED:")
@@ -346,7 +346,7 @@ export async function decryptHealthData(params: {
 		throw parseError;
 	}
 
-	// Decrypt with Seal
+	// Sealで復号
 	try {
 		console.log("[decryptHealthData] Calling sealClient.decrypt...");
 		console.log(
@@ -364,7 +364,7 @@ export async function decryptHealthData(params: {
 			`[decryptHealthData] Decrypted ${decryptedBytes.length} bytes successfully`,
 		);
 
-		// Parse JSON
+		// JSONをパース
 		const json = new TextDecoder().decode(decryptedBytes);
 		const healthData = JSON.parse(json) as HealthData;
 		console.log("[decryptHealthData] Successfully parsed health data");
@@ -377,7 +377,7 @@ export async function decryptHealthData(params: {
 			"[decryptHealthData] error constructor:",
 			(decryptError as Error)?.constructor?.name,
 		);
-		// If error is undefined, wrap it with a descriptive message
+		// エラーがundefinedの場合、説明的なメッセージでラップ
 		if (decryptError === undefined) {
 			throw new Error(
 				"Seal SDK decrypt() rejected with undefined. Check network tab for key server response.",
@@ -388,9 +388,9 @@ export async function decryptHealthData(params: {
 }
 
 /**
- * Build SealAuthPayload bytes for consent-based access
+ * 同意ベースアクセス用のSealAuthPayloadバイトを構築
  *
- * Layout (BCS):
+ * レイアウト（BCS）:
  *  - vector<u8> secret
  *  - address target_passport_id
  *  - vector<u8> requested_scope (UTF-8)
@@ -418,10 +418,10 @@ export function buildSealAuthPayloadBytes(params: {
 }
 
 /**
- * Build PTB for consent-based access (seal_approve_consent)
+ * 同意ベースアクセス用のPTBを構築（seal_approve_consent）
  *
- * @param params - PTB parameters
- * @returns Transaction bytes for Seal verification
+ * @param params - PTBパラメータ
+ * @returns Seal検証用のトランザクションバイト
  */
 export async function buildConsentAccessPTB(params: {
 	passportObjectId: string; // MedicalPassport object ID
@@ -446,7 +446,7 @@ export async function buildConsentAccessPTB(params: {
 
 	const tx = new Transaction();
 
-	// Call seal_approve_consent(id, auth_payload, consent_token, passport, data_type, clock)
+	// seal_approve_consent(id, auth_payload, consent_token, passport, data_type, clock)を呼び出し
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_consent`,
 		arguments: [
@@ -459,7 +459,7 @@ export async function buildConsentAccessPTB(params: {
 		],
 	});
 
-	// Build transaction bytes with onlyTransactionKind: true
+	// onlyTransactionKind: trueでトランザクションバイトをビルド
 	const txBytes = await tx.build({
 		client: suiClient,
 		onlyTransactionKind: true,
@@ -469,15 +469,15 @@ export async function buildConsentAccessPTB(params: {
 }
 
 /**
- * Build PTB for patient-only access (seal_approve_patient_only)
+ * 患者専用アクセス用のPTBを構築（seal_approve_patient_only）
  *
- * Official API requirement:
- * - Build PTB with seal_approve* function call
- * - Use onlyTransactionKind: true
- * - PTB is evaluated by key servers via dry_run_transaction_block
+ * 公式API要件:
+ * - seal_approve*関数呼び出しでPTBを構築
+ * - onlyTransactionKind: trueを使用
+ * - PTBはdry_run_transaction_block経由でキーサーバーによって評価される
  *
- * @param params - PTB parameters
- * @returns Transaction bytes for Seal verification
+ * @param params - PTBパラメータ
+ * @returns Seal検証用のトランザクションバイト
  */
 export async function buildPatientAccessPTB(params: {
 	passportObjectId: string;
@@ -491,21 +491,21 @@ export async function buildPatientAccessPTB(params: {
 
 	const tx = new Transaction();
 
-	// Call seal_approve_patient_only(id, passport, registry, data_type)
-	// First argument is the identity (seal_id) as binary bytes
-	// sealId is a hex string that gets decoded to binary using fromHex()
-	// This matches how Seal SDK internally handles the id during encryption
+	// seal_approve_patient_only(id, passport, registry, data_type)を呼び出し
+	// 最初の引数はバイナリバイトとしてのアイデンティティ（seal_id）
+	// sealIdは16進数文字列で、fromHex()を使用してバイナリにデコードされる
+	// これは、Seal SDKが暗号化中にidを内部的に処理する方法と一致
 	tx.moveCall({
 		target: `${PACKAGE_ID}::accessor::seal_approve_patient_only`,
 		arguments: [
-			tx.pure.vector("u8", Array.from(fromHex(sealId))), // hex-decoded binary
+			tx.pure.vector("u8", Array.from(fromHex(sealId))), // 16進数デコードされたバイナリ
 			tx.object(passportObjectId),
 			tx.object(registryObjectId),
-			tx.pure.string(dataType), // Data type for scope-based access
+			tx.pure.string(dataType), // スコープベースアクセス用のデータ型
 		],
 	});
 
-	// Build transaction bytes with onlyTransactionKind: true
+	// onlyTransactionKind: trueでトランザクションバイトをビルド
 	const txBytes = await tx.build({
 		client: suiClient,
 		onlyTransactionKind: true,
@@ -515,18 +515,18 @@ export async function buildPatientAccessPTB(params: {
 }
 
 /**
- * Helper: Sign SessionKey with wallet
+ * ヘルパー: ウォレットでSessionKeyに署名
  *
- * This is a client-side operation that should be done in the frontend.
- * Example usage:
+ * これはフロントエンドで実行すべきクライアント側の操作です。
+ * 使用例:
  *
  * const sessionKey = await createSessionKey({ address, suiClient });
  * const message = sessionKey.getPersonalMessage();
  * const { signature } = await wallet.signPersonalMessage(message);
  * sessionKey.setPersonalMessageSignature(signature);
  *
- * @param sessionKey - SessionKey instance
- * @param signPersonalMessage - Wallet's signPersonalMessage function
+ * @param sessionKey - SessionKeyインスタンス
+ * @param signPersonalMessage - ウォレットのsignPersonalMessage関数
  */
 export async function signSessionKey(
 	sessionKey: SessionKey,
@@ -538,7 +538,7 @@ export async function signSessionKey(
 }
 
 // ==========================================
-// Internal helpers
+// 内部ヘルパー
 // ==========================================
 
 function encodeUleb128(value: number): Uint8Array {

@@ -1,27 +1,27 @@
 /**
  * Seal ID Generator
  *
- * Generates deterministic seal_id from wallet address and data type
+ * ウォレットアドレスとデータ型から決定論的なseal_idを生成
  * seal_id = SHA256(address + "::" + "cure_pocket" + "::" + dataType)
  *
- * This ensures that each data type has a unique seal_id per wallet,
- * enabling scope-based encryption and access control.
+ * これにより、各データ型がウォレットごとに一意のseal_idを持ち、
+ * スコープベースの暗号化とアクセス制御が可能になります。
  */
 
 /**
- * Generate seal_id from wallet address and data type
+ * ウォレットアドレスとデータ型からseal_idを生成
  *
- * The seal_id is computed as SHA256(address::cure_pocket::dataType)
- * to create a deterministic identifier unique to each data type.
+ * seal_idはSHA256(address::cure_pocket::dataType)として計算され、
+ * 各データ型に対して一意の決定論的識別子を作成します。
  *
- * @param address - Sui wallet address (normalized 0x... format)
- * @param dataType - Data type identifier (e.g., "medications", "lab_results", "basic_profile")
- * @returns Promise<seal_id as hex string>
+ * @param address - Suiウォレットアドレス（正規化された0x...形式）
+ * @param dataType - データ型識別子（例: "medications", "lab_results", "basic_profile"）
+ * @returns seal_idを16進数文字列として返すPromise
  *
  * @example
  * ```typescript
  * const sealId = await generateSealId("0x1234...", "medications");
- * console.log(sealId); // "a1b2c3d4..." (unique per address + dataType combination)
+ * console.log(sealId); // "a1b2c3d4..." (アドレス + dataTypeの組み合わせごとに一意)
  * ```
  */
 export async function generateSealId(

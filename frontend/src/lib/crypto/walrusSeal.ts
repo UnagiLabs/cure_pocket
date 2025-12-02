@@ -1,19 +1,19 @@
 /**
- * Walrus + Seal Unified Adapter
+ * Walrus + Seal統合アダプター
  *
- * This module provides a unified interface for:
- * - Seal-based encryption/decryption
- * - Walrus-based blob storage
- * - High-level APIs for common operations
+ * このモジュールは以下のための統合インターフェースを提供します:
+ * - Sealベースの暗号化/復号化
+ * - Walrusベースのblobストレージ
+ * - 一般的な操作のための高レベルAPI
  *
- * All Walrus/Seal operations should import from this file.
+ * すべてのWalrus/Seal操作はこのファイルからインポートしてください。
  */
 
 import type { SessionKey } from "@mysten/seal";
 import { SealClient } from "@mysten/seal";
 import type { SuiClient } from "@mysten/sui/client";
 
-// Internal imports from crypto directory
+// cryptoディレクトリからの内部インポート
 import {
 	buildPatientAccessPTB,
 	calculateThreshold,
@@ -28,10 +28,10 @@ import {
 } from "./walrus";
 
 // ==========================================
-// Re-exports from internal modules
+// 内部モジュールからの再エクスポート
 // ==========================================
 
-// Seal exports
+// Sealエクスポート
 export {
 	buildConsentAccessPTB,
 	buildPatientAccessPTB,
@@ -47,10 +47,10 @@ export {
 	signSessionKey,
 } from "./seal";
 
-// SealId exports
+// SealIdエクスポート
 export { generateSealId } from "./sealId";
 
-// Walrus exports
+// Walrusエクスポート
 export {
 	blobExists,
 	type DownloadOptions,
@@ -66,7 +66,7 @@ export {
 } from "./walrus";
 
 // ==========================================
-// Constants
+// 定数
 // ==========================================
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
@@ -74,7 +74,7 @@ const DEFAULT_TESTNET_KEY_SERVER =
 	"0x164ac3d2b3b8694b8181c13f671950004765c23f270321a45fdd04d40cccf0f2";
 
 // ==========================================
-// High-Level API Types
+// 高レベルAPI型
 // ==========================================
 
 export interface EncryptUploadOptions {
@@ -97,15 +97,15 @@ export interface DecryptDownloadOptions {
 }
 
 // ==========================================
-// High-Level API Functions
+// 高レベルAPI関数
 // ==========================================
 
 /**
- * Encrypt data and upload to Walrus in one operation
+ * データを暗号化してWalrusにアップロード（1つの操作で実行）
  *
- * @param payload - Raw data to encrypt and upload (Uint8Array)
- * @param options - Encryption and upload options
- * @returns Object containing blobId, sealId, size, and dataType
+ * @param payload - 暗号化してアップロードする生データ（Uint8Array）
+ * @param options - 暗号化とアップロードのオプション
+ * @returns blobId、sealId、size、dataTypeを含むオブジェクト
  */
 export async function encryptAndUpload(
 	payload: Uint8Array,
@@ -153,10 +153,10 @@ export async function encryptAndUpload(
 }
 
 /**
- * Download from Walrus and decrypt in one operation
+ * Walrusからダウンロードして復号（1つの操作で実行）
  *
- * @param options - Download and decryption options
- * @returns Object containing decrypted data, sealId, and dataType
+ * @param options - ダウンロードと復号のオプション
+ * @returns 復号されたデータ、sealId、dataTypeを含むオブジェクト
  */
 export async function downloadAndDecrypt({
 	blobId,

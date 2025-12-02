@@ -1,18 +1,18 @@
 /**
- * Walrus Blob Storage Integration
+ * Walrus Blob ストレージ統合モジュール
  *
- * This module provides utilities for storing and retrieving encrypted medical data
- * using Walrus decentralized blob storage.
+ * このモジュールは、Walrus 分散型 Blob ストレージを使用して
+ * 暗号化された医療データを保存・取得するためのユーティリティを提供します。
  *
- * Walrus Architecture:
- * - Decentralized storage with erasure coding
- * - Content-addressed blobs with on-chain references
- * - SDK writeBlobFlow for uploads (raw Uint8Array support)
- * - SDK readBlob for downloads with HTTP API fallback
+ * Walrus アーキテクチャ:
+ * - イレイジャーコーディングによる分散ストレージ
+ * - オンチェーン参照付きコンテンツアドレス指定 Blob
+ * - アップロード用 SDK writeBlobFlow（生の Uint8Array サポート）
+ * - ダウンロード用 SDK readBlob（HTTP API フォールバック付き）
  *
- * Key API Choices:
- * - writeBlobFlow: For raw Uint8Array (Seal encrypted data) - NOT writeFilesFlow
- * - readBlob: For raw blob download - NOT getFiles
+ * API 選択の要点:
+ * - writeBlobFlow: 生の Uint8Array 用（Seal 暗号化データ）- writeFilesFlow ではない
+ * - readBlob: 生の Blob ダウンロード用 - getFiles ではない
  */
 
 import { getFullnodeUrl } from "@mysten/sui/client";
@@ -22,31 +22,31 @@ import { type WalrusClient, walrus } from "@mysten/walrus";
 import type { WalrusBlobReference } from "@/types/healthData";
 
 // ==========================================
-// Environment Configuration
+// 環境設定
 // ==========================================
 
 /**
- * Sui network configuration
+ * Sui ネットワーク設定
  */
 const SUI_NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet") as
 	| "mainnet"
 	| "testnet";
 
 /**
- * Maximum blob size (1MB default)
+ * 最大 Blob サイズ（デフォルト 1MB）
  */
 const MAX_BLOB_SIZE = 1 * 1024 * 1024;
 
 /**
- * Default storage epochs (1 epoch ≈ 1 day on testnet)
- * Testnet has epoch limits, SDK examples use epochs: 3
- * Can be configured via environment variable for production
+ * デフォルトのストレージエポック数（testnet では 1 エポック ≈ 1 日）
+ * testnet にはエポック制限があり、SDK の例では epochs: 3 を使用
+ * 本番環境では環境変数で設定可能
  */
 const DEFAULT_EPOCHS = Number(process.env.NEXT_PUBLIC_WALRUS_EPOCHS) || 5;
 
 /**
- * Upload relay configuration (mandatory)
- * リレー未設定での直アクセスはサポートしない。
+ * アップロードリレー設定（必須）
+ * リレー未設定での直アクセスはサポートしない
  */
 const resolvedUploadRelay =
 	process.env.NEXT_PUBLIC_WALRUS_UPLOAD_RELAY ||
@@ -63,33 +63,33 @@ if (!resolvedUploadRelay) {
 const UPLOAD_RELAY_HOST: string = resolvedUploadRelay;
 
 // ==========================================
-// Walrus Client Setup
+// Walrus クライアントセットアップ
 // ==========================================
 
-// Type for the extended client with walrus methods
+// walrus メソッドを持つ拡張クライアントの型
 interface WalrusExtendedClient extends SuiJsonRpcClient {
 	walrus: WalrusClient;
 }
 
 /**
- * Create Walrus-enabled Sui client
- * Uses $extend pattern to add walrus functionality
+ * Walrus 対応 Sui クライアントを作成
+ * $extend パターンを使用して walrus 機能を追加
  */
 function createWalrusClient(): WalrusExtendedClient {
-	// Build walrus options
+	// walrus オプションを構築
 	const walrusOptions: Parameters<typeof walrus>[0] = {
 		network: SUI_NETWORK,
 	};
 
-	// Upload relay is required
+	// アップロードリレーは必須
 	walrusOptions.uploadRelay = {
 		host: UPLOAD_RELAY_HOST,
 		sendTip: {
-			max: 10_000, // Max tip in MIST
+			max: 10_000, // MIST 単位の最大チップ
 		},
 	};
 
-	// Add WASM URL for browser environments
+	// ブラウザ環境用の WASM URL を追加
 	if (typeof window !== "undefined") {
 		walrusOptions.wasmUrl =
 			process.env.NEXT_PUBLIC_WALRUS_WASM_URL ||
@@ -101,17 +101,17 @@ function createWalrusClient(): WalrusExtendedClient {
 		network: SUI_NETWORK,
 	});
 
-	// Extend with walrus functionality
-	// Explicitly pass name to satisfy type requirements
+	// walrus 機能で拡張
+	// 型要件を満たすために明示的に name を渡す
 	const walrusExtension = walrus({ ...walrusOptions, name: "walrus" as const });
 	return baseClient.$extend(walrusExtension) as unknown as WalrusExtendedClient;
 }
 
-// Singleton client instance
+// シングルトンクライアントインスタンス
 let walrusClient: ReturnType<typeof createWalrusClient> | null = null;
 
 /**
- * Get or create Walrus client instance
+ * Walrus クライアントインスタンスを取得または作成
  */
 function getWalrusClient() {
 	if (!walrusClient) {
@@ -121,62 +121,62 @@ function getWalrusClient() {
 }
 
 // ==========================================
-// Type Definitions
+// 型定義
 // ==========================================
 
 /**
- * Transaction executor function type
- * Compatible with dapp-kit's signAndExecuteTransaction
+ * トランザクション実行関数の型
+ * dapp-kit の signAndExecuteTransaction と互換性あり
  */
 export type TransactionExecutor = (params: {
 	transaction: Transaction;
 }) => Promise<{ digest: string }>;
 
 /**
- * Options for upload operations using writeBlobFlow
+ * writeBlobFlow を使用したアップロード操作のオプション
  */
 export interface UploadOptions {
-	/** Function to sign and execute transactions (from dapp-kit) */
+	/** トランザクションに署名して実行する関数（dapp-kit から） */
 	signAndExecuteTransaction: TransactionExecutor;
-	/** Owner address for the blob */
+	/** Blob の所有者アドレス */
 	owner: string;
-	/** Number of epochs to store (default: DEFAULT_EPOCHS) */
+	/** ストレージエポック数（デフォルト: DEFAULT_EPOCHS） */
 	epochs?: number;
-	/** Whether the blob can be deleted later (default: false for medical data) */
+	/** 後で削除可能かどうか（医療データではデフォルト: false） */
 	deletable?: boolean;
 }
 
 /**
- * Options for download operations (no signer needed)
+ * ダウンロード操作のオプション（署名者は不要）
  */
 export interface DownloadOptions {
-	/** Optional timeout in milliseconds */
+	/** オプションのタイムアウト（ミリ秒） */
 	timeout?: number;
 }
 
 // ==========================================
-// Core Walrus Functions
+// Walrus コア関数
 // ==========================================
 
 /**
- * Upload encrypted data to Walrus using SDK writeBlobFlow
+ * SDK writeBlobFlow を使用して暗号化データを Walrus にアップロード
  *
- * Uses the SDK's writeBlobFlow which handles raw Uint8Array directly.
- * This is the correct API for Seal encrypted data (NOT writeFilesFlow).
+ * SDK の writeBlobFlow は生の Uint8Array を直接処理します。
+ * これは Seal 暗号化データに適した API です（writeFilesFlow ではない）。
  *
- * Upload flow:
- * 1. Validate data size
- * 2. Create writeBlobFlow with raw Uint8Array
- * 3. Encode the blob
- * 4. Register on-chain (sign and execute transaction)
- * 5. Upload to relay
- * 6. Certify on-chain (sign and execute transaction)
- * 7. Get blob info and return reference
+ * アップロードフロー:
+ * 1. データサイズを検証
+ * 2. 生の Uint8Array で writeBlobFlow を作成
+ * 3. Blob をエンコード
+ * 4. オンチェーンに登録（トランザクションに署名して実行）
+ * 5. リレーにアップロード
+ * 6. オンチェーンで認証（トランザクションに署名して実行）
+ * 7. Blob 情報を取得して参照を返す
  *
- * @param data - Encrypted data to upload (Uint8Array)
- * @param options - Upload options including signAndExecuteTransaction
- * @returns Walrus blob reference
- * @throws Error if upload fails or data exceeds size limit
+ * @param data - アップロードする暗号化データ（Uint8Array）
+ * @param options - signAndExecuteTransaction を含むアップロードオプション
+ * @returns Walrus blob 参照
+ * @throws アップロード失敗またはデータがサイズ制限を超えた場合はエラー
  */
 export async function uploadToWalrus(
 	data: Uint8Array,
@@ -189,7 +189,7 @@ export async function uploadToWalrus(
 		deletable = false,
 	} = options;
 
-	// Validate size
+	// サイズを検証
 	if (data.length > MAX_BLOB_SIZE) {
 		throw new Error(
 			`Data size ${data.length} bytes exceeds maximum ${MAX_BLOB_SIZE} bytes`,
@@ -203,14 +203,14 @@ export async function uploadToWalrus(
 
 		const client = getWalrusClient();
 
-		// Step 1: Create flow with raw Uint8Array (NOT WalrusFile)
+		// ステップ 1: 生の Uint8Array でフローを作成（WalrusFile ではない）
 		const flow = client.walrus.writeBlobFlow({ blob: data });
 
-		// Step 2: Encode the blob
+		// ステップ 2: Blob をエンコード
 		console.log("[Walrus] Encoding blob...");
 		await flow.encode();
 
-		// Step 3: Register on-chain
+		// ステップ 3: オンチェーンに登録
 		console.log("[Walrus] Registering blob on-chain...");
 		const registerTx = flow.register({ epochs, owner, deletable });
 		const { digest: registerDigest } = await signAndExecuteTransaction({
@@ -218,11 +218,11 @@ export async function uploadToWalrus(
 		});
 		console.log(`[Walrus] Register transaction: ${registerDigest}`);
 
-		// Step 4: Upload to relay
+		// ステップ 4: リレーにアップロード
 		console.log("[Walrus] Uploading to relay...");
 		await flow.upload({ digest: registerDigest });
 
-		// Step 5: Certify on-chain
+		// ステップ 5: オンチェーンで認証
 		console.log("[Walrus] Certifying blob on-chain...");
 		const certifyTx = flow.certify();
 		const { digest: certifyDigest } = await signAndExecuteTransaction({
@@ -230,7 +230,7 @@ export async function uploadToWalrus(
 		});
 		console.log(`[Walrus] Certify transaction: ${certifyDigest}`);
 
-		// Step 6: Get blob info
+		// ステップ 6: Blob 情報を取得
 		const { blobId } = await flow.getBlob();
 		console.log(`[Walrus] Upload complete, blobId: ${blobId}`);
 
@@ -248,7 +248,7 @@ export async function uploadToWalrus(
 }
 
 /**
- * HTTP Aggregator URLs for fallback download
+ * フォールバックダウンロード用 HTTP Aggregator URL
  */
 const WALRUS_AGGREGATORS = [
 	"https://aggregator.walrus-testnet.walrus.space",
@@ -256,14 +256,14 @@ const WALRUS_AGGREGATORS = [
 ];
 
 /**
- * Download blob from Walrus using HTTP API (fallback method)
+ * HTTP API を使用して Walrus から Blob をダウンロード（フォールバック方式）
  *
- * This is the reliable method that works with raw blob data.
- * Used as fallback when SDK methods fail.
+ * 生の Blob データで動作する信頼性の高い方式です。
+ * SDK メソッドが失敗した場合のフォールバックとして使用されます。
  *
  * @param blobId - Walrus blob ID
- * @returns Encrypted data as Uint8Array
- * @throws Error if all aggregators fail
+ * @returns 暗号化データ（Uint8Array）
+ * @throws すべてのアグリゲーターが失敗した場合はエラー
  */
 async function downloadViaHttpApi(blobId: string): Promise<Uint8Array> {
 	for (const aggregator of WALRUS_AGGREGATORS) {
@@ -288,18 +288,18 @@ async function downloadViaHttpApi(blobId: string): Promise<Uint8Array> {
 }
 
 /**
- * Download blob from Walrus by blob ID using SDK readBlob
+ * SDK readBlob を使用して blob ID から Walrus の Blob をダウンロード
  *
- * Download flow (with fallback):
- * 1. Try SDK readBlob (raw blob access - matches writeBlobFlow upload)
- * 2. If readBlob fails, fallback to HTTP API
+ * ダウンロードフロー（フォールバック付き）:
+ * 1. SDK readBlob を試行（生の Blob アクセス - writeBlobFlow アップロードと対応）
+ * 2. readBlob が失敗した場合、HTTP API にフォールバック
  *
- * Note: Using readBlob (not getFiles) because writeBlobFlow stores raw blobs.
+ * 注: writeBlobFlow は生の Blob を保存するため、readBlob を使用（getFiles ではない）
  *
- * @param blobId - Walrus blob ID (content-addressed)
- * @param _options - Optional download options
- * @returns Encrypted data as Uint8Array
- * @throws Error if download fails or blob not found
+ * @param blobId - Walrus blob ID（コンテンツアドレス指定）
+ * @param _options - オプションのダウンロードオプション
+ * @returns 暗号化データ（Uint8Array）
+ * @throws ダウンロード失敗または Blob が見つからない場合はエラー
  */
 export async function downloadFromWalrusByBlobId(
 	blobId: string,
@@ -307,7 +307,7 @@ export async function downloadFromWalrusByBlobId(
 ): Promise<Uint8Array> {
 	const client = getWalrusClient();
 
-	// Strategy 1: SDK readBlob (matches writeBlobFlow upload)
+	// 戦略 1: SDK readBlob（writeBlobFlow アップロードと対応）
 	try {
 		console.log("[Walrus] Downloading via SDK readBlob...");
 		const data = await client.walrus.readBlob({ blobId });
@@ -319,7 +319,7 @@ export async function downloadFromWalrusByBlobId(
 		console.log("[Walrus] SDK readBlob failed:", error);
 	}
 
-	// Strategy 2: HTTP API fallback
+	// 戦略 2: HTTP API フォールバック
 	try {
 		console.log("[Walrus] Trying HTTP API fallback...");
 		const data = await downloadViaHttpApi(blobId);
@@ -332,14 +332,14 @@ export async function downloadFromWalrusByBlobId(
 }
 
 /**
- * Download blob from Walrus by Sui object ID
+ * Sui オブジェクト ID から Walrus の Blob をダウンロード
  *
- * Note: SDK requires blobId for download. This function first
- * retrieves the blobId from the Sui object, then downloads.
+ * 注: SDK はダウンロードに blobId を必要とします。この関数は最初に
+ * Sui オブジェクトから blobId を取得し、その後ダウンロードします。
  *
- * @param objectId - Sui blob object ID
- * @returns Encrypted data as Uint8Array
- * @throws Error if download fails or blob not found
+ * @param objectId - Sui blob オブジェクト ID
+ * @returns 暗号化データ（Uint8Array）
+ * @throws ダウンロード失敗または Blob が見つからない場合はエラー
  */
 export async function downloadFromWalrusByObjectId(
 	objectId: string,
@@ -347,7 +347,7 @@ export async function downloadFromWalrusByObjectId(
 	try {
 		const client = getWalrusClient();
 
-		// Get blob object to extract blobId
+		// blobId を抽出するために Blob オブジェクトを取得
 		const blobObject = await client.getObject({
 			id: objectId,
 			options: { showContent: true },
@@ -357,7 +357,7 @@ export async function downloadFromWalrusByObjectId(
 			throw new Error(`Blob object not found: ${objectId}`);
 		}
 
-		// Extract blobId from object content
+		// オブジェクトコンテンツから blobId を抽出
 		const content = blobObject.data.content;
 		if (content.dataType !== "moveObject") {
 			throw new Error(`Invalid blob object type: ${objectId}`);
@@ -370,7 +370,7 @@ export async function downloadFromWalrusByObjectId(
 			throw new Error(`No blobId found in object: ${objectId}`);
 		}
 
-		// Download using blobId
+		// blobId を使用してダウンロード
 		return downloadFromWalrusByBlobId(blobId);
 	} catch (error) {
 		if (error instanceof Error) {
@@ -381,15 +381,15 @@ export async function downloadFromWalrusByObjectId(
 }
 
 /**
- * Check if a blob exists in Walrus
+ * Walrus に Blob が存在するか確認
  *
- * @param blobId - Walrus blob ID to check
- * @returns True if blob exists, false otherwise
+ * @param blobId - 確認する Walrus blob ID
+ * @returns Blob が存在する場合は true、そうでなければ false
  */
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
 		const client = getWalrusClient();
-		// Use readBlob to check existence (matches writeBlobFlow upload pattern)
+		// readBlob を使用して存在確認（writeBlobFlow アップロードパターンと対応）
 		const data = await client.walrus.readBlob({ blobId });
 		return data && data.length > 0;
 	} catch {
@@ -398,14 +398,14 @@ export async function blobExists(blobId: string): Promise<boolean> {
 }
 
 /**
- * Delete a blob from Walrus (if deletable)
+ * Walrus から Blob を削除（削除可能な場合）
  *
- * Note: Only blobs created with deletable=true can be deleted.
- * Medical data should typically be non-deletable.
+ * 注: deletable=true で作成された Blob のみ削除可能です。
+ * 医療データは通常、削除不可にすべきです。
  *
- * @param blobId - Walrus blob ID to delete
- * @param signAndExecuteTransaction - Transaction executor function
- * @returns True if deleted, false otherwise
+ * @param blobId - 削除する Walrus blob ID
+ * @param signAndExecuteTransaction - トランザクション実行関数
+ * @returns 削除された場合は true、そうでなければ false
  */
 export async function deleteBlob(
 	blobId: string,
@@ -415,20 +415,20 @@ export async function deleteBlob(
 		`Walrus blob deletion attempted: ${blobId}. Medical data should typically be non-deletable.`,
 	);
 
-	// TODO: Implement deletion when SDK supports it
-	// For now, log warning and return false
+	// TODO: SDK が対応したら削除を実装
+	// 現時点では警告をログ出力して false を返す
 	return false;
 }
 
 /**
- * Get blob metadata without downloading content
+ * コンテンツをダウンロードせずに Blob メタデータを取得
  *
- * Note: This downloads the full content to get accurate size.
- * For large blobs, consider using a lighter check.
+ * 注: 正確なサイズを取得するためにコンテンツ全体をダウンロードします。
+ * 大きな Blob の場合は、より軽量なチェックの使用を検討してください。
  *
  * @param blobId - Walrus blob ID
- * @returns Blob metadata
- * @throws Error if blob not found
+ * @returns Blob メタデータ
+ * @throws Blob が見つからない場合はエラー
  */
 export async function getBlobMetadata(blobId: string): Promise<{
 	size: number;
@@ -437,7 +437,7 @@ export async function getBlobMetadata(blobId: string): Promise<{
 }> {
 	try {
 		const client = getWalrusClient();
-		// Use readBlob to match writeBlobFlow upload pattern
+		// writeBlobFlow アップロードパターンに合わせて readBlob を使用
 		const data = await client.walrus.readBlob({ blobId });
 
 		if (!data || data.length === 0) {
@@ -458,31 +458,31 @@ export async function getBlobMetadata(blobId: string): Promise<{
 }
 
 /**
- * Estimate storage cost for a blob
+ * Blob のストレージコストを見積もり
  *
- * Cost depends on:
- * - Blob size (determines storage requirements)
- * - Number of epochs (storage duration)
- * - Current WAL/SUI prices
+ * コストは以下に依存:
+ * - Blob サイズ（ストレージ要件を決定）
+ * - エポック数（ストレージ期間）
+ * - 現在の WAL/SUI 価格
  *
- * @param sizeBytes - Size of blob in bytes
- * @param epochs - Number of epochs to store
- * @returns Estimated cost in MIST (1 SUI = 1,000,000,000 MIST)
+ * @param sizeBytes - Blob のサイズ（バイト）
+ * @param epochs - ストレージエポック数
+ * @returns 推定コスト（MIST 単位、1 SUI = 1,000,000,000 MIST）
  */
 export function estimateStorageCost(
 	sizeBytes: number,
 	epochs: number = DEFAULT_EPOCHS,
 ): number {
-	// Rough estimate: ~0.001 WAL per KB per epoch
-	// This is approximate and actual cost depends on network conditions
+	// 概算: KB あたり エポックあたり 約 0.001 WAL
+	// これは概算であり、実際のコストはネットワーク状況に依存
 	const sizeKB = Math.ceil(sizeBytes / 1024);
-	return sizeKB * epochs * 1_000_000; // Cost in MIST (rough estimate)
+	return sizeKB * epochs * 1_000_000; // MIST 単位のコスト（概算）
 }
 
 /**
- * Reset the Walrus client
+ * Walrus クライアントをリセット
  *
- * Useful when encountering RetryableWalrusClientError during epoch changes.
+ * エポック変更時に RetryableWalrusClientError が発生した場合に便利です。
  */
 export function resetWalrusClient(): void {
 	const client = getWalrusClient();
