@@ -2,19 +2,23 @@
  * Walrus Blob Storage Integration
  *
  * This module provides utilities for storing and retrieving encrypted medical data
- * using Walrus decentralized blob storage via @mysten/walrus SDK.
+ * using Walrus decentralized blob storage.
  *
  * Walrus Architecture:
  * - Decentralized storage with erasure coding
  * - Content-addressed blobs with on-chain references
- * - Direct storage node interaction via SDK
- * - Uses writeFilesFlow for browser-compatible uploads with dapp-kit
+ * - SDK writeBlobFlow for uploads (raw Uint8Array support)
+ * - SDK readBlob for downloads with HTTP API fallback
+ *
+ * Key API Choices:
+ * - writeBlobFlow: For raw Uint8Array (Seal encrypted data) - NOT writeFilesFlow
+ * - readBlob: For raw blob download - NOT getFiles
  */
 
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Transaction } from "@mysten/sui/transactions";
-import { type WalrusClient, WalrusFile, walrus } from "@mysten/walrus";
+import { type WalrusClient, walrus } from "@mysten/walrus";
 import type { WalrusBlobReference } from "@/types/healthData";
 
 // ==========================================
@@ -129,7 +133,7 @@ export type TransactionExecutor = (params: {
 }) => Promise<{ digest: string }>;
 
 /**
- * Options for upload operations using writeFilesFlow
+ * Options for upload operations using writeBlobFlow
  */
 export interface UploadOptions {
 	/** Function to sign and execute transactions (from dapp-kit) */
@@ -155,19 +159,22 @@ export interface DownloadOptions {
 // ==========================================
 
 /**
- * Upload encrypted data to Walrus using SDK writeFilesFlow
+ * Upload encrypted data to Walrus using SDK writeBlobFlow
  *
- * Upload flow (browser-compatible with dapp-kit):
+ * Uses the SDK's writeBlobFlow which handles raw Uint8Array directly.
+ * This is the correct API for Seal encrypted data (NOT writeFilesFlow).
+ *
+ * Upload flow:
  * 1. Validate data size
- * 2. Create WalrusFile and initialize writeFilesFlow
- * 3. Encode the blob data
- * 4. Register the blob (requires transaction signature)
- * 5. Upload data to storage nodes
- * 6. Certify the blob (requires transaction signature)
- * 7. Return blob reference for on-chain storage
+ * 2. Create writeBlobFlow with raw Uint8Array
+ * 3. Encode the blob
+ * 4. Register on-chain (sign and execute transaction)
+ * 5. Upload to relay
+ * 6. Certify on-chain (sign and execute transaction)
+ * 7. Get blob info and return reference
  *
  * @param data - Encrypted data to upload (Uint8Array)
- * @param options - Upload options including transaction executor
+ * @param options - Upload options including signAndExecuteTransaction
  * @returns Walrus blob reference
  * @throws Error if upload fails or data exceeds size limit
  */
@@ -190,58 +197,45 @@ export async function uploadToWalrus(
 	}
 
 	try {
+		console.log(
+			`[Walrus] Uploading ${data.length} bytes via SDK writeBlobFlow for ${epochs} epochs...`,
+		);
+
 		const client = getWalrusClient();
 
-		// Create WalrusFile from data
-		const walrusFile = WalrusFile.from({
-			contents: data,
-			identifier: `medical-data-${Date.now()}`,
-		});
+		// Step 1: Create flow with raw Uint8Array (NOT WalrusFile)
+		const flow = client.walrus.writeBlobFlow({ blob: data });
 
-		// Initialize writeFilesFlow for browser-compatible upload
-		const flow = client.walrus.writeFilesFlow({
-			files: [walrusFile],
-		});
-
-		// Step 1: Encode the blob
+		// Step 2: Encode the blob
 		console.log("[Walrus] Encoding blob...");
 		await flow.encode();
 
-		// Step 2: Register the blob (requires wallet signature)
-		console.log("[Walrus] Registering blob...");
-		const registerTx = flow.register({
-			epochs,
-			owner,
-			deletable,
-		});
+		// Step 3: Register on-chain
+		console.log("[Walrus] Registering blob on-chain...");
+		const registerTx = flow.register({ epochs, owner, deletable });
 		const { digest: registerDigest } = await signAndExecuteTransaction({
 			transaction: registerTx,
 		});
 		console.log(`[Walrus] Register transaction: ${registerDigest}`);
 
-		// Step 3: Upload data to storage nodes
-		console.log("[Walrus] Uploading to storage nodes...");
+		// Step 4: Upload to relay
+		console.log("[Walrus] Uploading to relay...");
 		await flow.upload({ digest: registerDigest });
 
-		// Step 4: Certify the blob (requires wallet signature)
-		console.log("[Walrus] Certifying blob...");
+		// Step 5: Certify on-chain
+		console.log("[Walrus] Certifying blob on-chain...");
 		const certifyTx = flow.certify();
 		const { digest: certifyDigest } = await signAndExecuteTransaction({
 			transaction: certifyTx,
 		});
 		console.log(`[Walrus] Certify transaction: ${certifyDigest}`);
 
-		// Step 5: Get the uploaded file info
-		const files = await flow.listFiles();
-		if (files.length === 0) {
-			throw new Error("No files returned after upload");
-		}
-
-		const uploadedFile = files[0];
-		console.log(`[Walrus] Upload complete, blobId: ${uploadedFile.blobId}`);
+		// Step 6: Get blob info
+		const { blobId } = await flow.getBlob();
+		console.log(`[Walrus] Upload complete, blobId: ${blobId}`);
 
 		return {
-			blobId: uploadedFile.blobId,
+			blobId,
 			uploadedAt: Date.now(),
 			size: data.length,
 		};
@@ -254,12 +248,53 @@ export async function uploadToWalrus(
 }
 
 /**
- * Download blob from Walrus by blob ID using SDK
+ * HTTP Aggregator URLs for fallback download
+ */
+const WALRUS_AGGREGATORS = [
+	"https://aggregator.walrus-testnet.walrus.space",
+	"https://walrus-testnet-aggregator.mystenlabs.com",
+];
+
+/**
+ * Download blob from Walrus using HTTP API (fallback method)
  *
- * Download flow:
- * 1. Use SDK getFiles to fetch from storage nodes (matches writeFilesFlow upload)
- * 2. SDK handles erasure decoding automatically
- * 3. Extract bytes from WalrusFile and return as Uint8Array
+ * This is the reliable method that works with raw blob data.
+ * Used as fallback when SDK methods fail.
+ *
+ * @param blobId - Walrus blob ID
+ * @returns Encrypted data as Uint8Array
+ * @throws Error if all aggregators fail
+ */
+async function downloadViaHttpApi(blobId: string): Promise<Uint8Array> {
+	for (const aggregator of WALRUS_AGGREGATORS) {
+		const url = `${aggregator}/v1/${blobId}`;
+		try {
+			const response = await fetch(url);
+			if (response.ok) {
+				const arrayBuffer = await response.arrayBuffer();
+				console.log(
+					`[Walrus] HTTP API download success from ${aggregator}, size: ${arrayBuffer.byteLength}`,
+				);
+				return new Uint8Array(arrayBuffer);
+			}
+			console.log(
+				`[Walrus] HTTP API ${aggregator} returned ${response.status}`,
+			);
+		} catch (error) {
+			console.log(`[Walrus] HTTP API ${aggregator} failed:`, error);
+		}
+	}
+	throw new Error(`Blob not found via HTTP API: ${blobId}`);
+}
+
+/**
+ * Download blob from Walrus by blob ID using SDK readBlob
+ *
+ * Download flow (with fallback):
+ * 1. Try SDK readBlob (raw blob access - matches writeBlobFlow upload)
+ * 2. If readBlob fails, fallback to HTTP API
+ *
+ * Note: Using readBlob (not getFiles) because writeBlobFlow stores raw blobs.
  *
  * @param blobId - Walrus blob ID (content-addressed)
  * @param _options - Optional download options
@@ -270,31 +305,30 @@ export async function downloadFromWalrusByBlobId(
 	blobId: string,
 	_options?: DownloadOptions,
 ): Promise<Uint8Array> {
+	const client = getWalrusClient();
+
+	// Strategy 1: SDK readBlob (matches writeBlobFlow upload)
 	try {
-		const client = getWalrusClient();
-
-		// Download using SDK getFiles (matches writeFilesFlow upload pattern)
-		// writeFilesFlow stores data as WalrusFile, so we use getFiles to read it
-		const files = await client.walrus.getFiles({ ids: [blobId] });
-
-		if (!files || files.length === 0) {
-			throw new Error(`Blob not found: ${blobId}`);
+		console.log("[Walrus] Downloading via SDK readBlob...");
+		const data = await client.walrus.readBlob({ blobId });
+		if (data && data.length > 0) {
+			console.log(`[Walrus] SDK readBlob success, size: ${data.length}`);
+			return data;
 		}
+	} catch (error) {
+		console.log("[Walrus] SDK readBlob failed:", error);
+	}
 
-		// Extract raw bytes from WalrusFile
-		const walrusFile = files[0];
-		const data = await walrusFile.bytes();
-
+	// Strategy 2: HTTP API fallback
+	try {
+		console.log("[Walrus] Trying HTTP API fallback...");
+		const data = await downloadViaHttpApi(blobId);
 		return data;
 	} catch (error) {
-		if (error instanceof Error) {
-			if (error.message.includes("not found")) {
-				throw new Error(`Blob not found: ${blobId}`);
-			}
-			throw new Error(`Failed to download from Walrus: ${error.message}`);
-		}
-		throw new Error("Failed to download from Walrus: Unknown error");
+		console.log("[Walrus] HTTP API fallback failed:", error);
 	}
+
+	throw new Error(`Blob not found: ${blobId}. All download strategies failed.`);
 }
 
 /**
@@ -355,9 +389,9 @@ export async function downloadFromWalrusByObjectId(
 export async function blobExists(blobId: string): Promise<boolean> {
 	try {
 		const client = getWalrusClient();
-		// Use getFiles to check existence (matches writeFilesFlow upload pattern)
-		const files = await client.walrus.getFiles({ ids: [blobId] });
-		return files && files.length > 0;
+		// Use readBlob to check existence (matches writeBlobFlow upload pattern)
+		const data = await client.walrus.readBlob({ blobId });
+		return data && data.length > 0;
 	} catch {
 		return false;
 	}
@@ -403,15 +437,12 @@ export async function getBlobMetadata(blobId: string): Promise<{
 }> {
 	try {
 		const client = getWalrusClient();
-		// Use getFiles to match writeFilesFlow upload pattern
-		const files = await client.walrus.getFiles({ ids: [blobId] });
+		// Use readBlob to match writeBlobFlow upload pattern
+		const data = await client.walrus.readBlob({ blobId });
 
-		if (!files || files.length === 0) {
+		if (!data || data.length === 0) {
 			throw new Error(`Blob not found: ${blobId}`);
 		}
-
-		const walrusFile = files[0];
-		const data = await walrusFile.bytes();
 
 		return {
 			size: data.length,
